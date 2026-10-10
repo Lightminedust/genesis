@@ -1,0 +1,18 @@
+# --- Dossier Python (logic) ---
+logic/__pycache__/
+logic/*.py[cod]
+logic/venv/
+logic/.venv/
+logic/.env
+
+# --- Dossier Java (sim) ---
+sim/.gradle/
+sim/build/
+sim/out/
+sim/bin/
+sim/*.class
+
+# --- Fichiers IDE généraux (optionnel mais recommandé) ---
+.idea/
+.vscode/
+*.iml

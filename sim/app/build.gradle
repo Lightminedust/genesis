@@ -1,0 +1,153 @@
+/*
+ * Client JavaFX de Genesis : rend les frames streamées par le moteur Python via gRPC.
+ */
+
+plugins {
+    id 'java'
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'com.google.protobuf' version '0.9.4'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = "21"
+    modules = [ 'javafx.controls', 'javafx.graphics' ]
+}
+
+def grpcVersion = '1.62.2'
+def protobufVersion = '3.25.3'
+
+dependencies {
+    implementation "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    implementation "io.grpc:grpc-protobuf:${grpcVersion}"
+    implementation "io.grpc:grpc-stub:${grpcVersion}"
+    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+    compileOnly 'org.apache.tomcat:annotations-api:6.0.53'
+
+
+    testImplementation platform('org.junit:junit-bom:5.10.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+sourceSets {
+    main {
+        proto {
+            // Le contrat partagé avec le moteur Python vit à la racine du repo
+            srcDir '../../core'
+        }
+        // Les dossiers de sources générées sont ajoutés automatiquement
+        // par le plugin protobuf : ne pas les redéclarer ici.
+    }
+}
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:${protobufVersion}" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+application {
+    mainClass = 'org.genesis.App'
+    // Deux fenêtres (la carte et la vue rapprochée) : avec la synchro écran, chacune l'attend à son tour et la cadence
+    // tombe de moitié. En mode fenêtré, le compositeur de Windows évite déjà les déchirures.
+    applicationDefaultJvmArgs = ['-Dprism.vsync=false']
+}
+
+// Permet de viser un autre moteur sans recompiler :
+//   gradlew run -PgenesisHost=192.168.1.20 -PgenesisPort=50052
+tasks.named('run', JavaExec) {
+    systemProperty 'genesis.host', findProperty('genesisHost') ?: 'localhost'
+    systemProperty 'genesis.port', findProperty('genesisPort') ?: '50051'
+    if (findProperty('genesisFps')) systemProperty 'genesis.fps', 'true'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+
+tasks.register('fusionPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.FusionPreview'
+    args findProperty('frame') ?: '../../artifacts/fusion-run.pb',
+         findProperty('out') ?: '../../artifacts/fusion-preview.png',
+         findProperty('time') ?: '-2e-20',
+         findProperty('width') ?: '1440',
+         findProperty('height') ?: '1000',
+         findProperty('inspect') ? 'inspect' : ''
+}
+
+tasks.register('fusionPlaybackPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.FusionPlaybackPreview'
+    args findProperty('frame') ?: '../../artifacts/fusion-run.pb',
+         findProperty('out') ?: '../../artifacts/fusion-playback',
+         findProperty('duration') ?: '24',
+         findProperty('probe') ?: ''
+}
+
+tasks.register('labPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.QuantumLabPreview'
+    args findProperty('frame') ?: '../../artifacts/lab.pb',
+         findProperty('out') ?: '../../artifacts/lab-preview',
+         findProperty('at') ?: '-3 0.2 1 4 12',
+         findProperty('tab') ?: 'collision'
+}
+
+tasks.register('mascotPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.MascotPreview'
+    args findProperty('out') ?: '../../artifacts/mascot.png', findProperty('size') ?: '300'
+}
+
+tasks.register('atomPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.AtomPreview'
+    args findProperty('frames') ?: '../../artifacts/frames', findProperty('out') ?: '../../artifacts/atom3d',
+            findProperty('only') ?: ''
+}
+
+tasks.register('dashboardPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.DashboardPreview'
+    args findProperty('frames') ?: '../../artifacts/frames', findProperty('out') ?: '../../artifacts/dashboard'
+}
+
+tasks.register('journalPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.JournalPreview'
+    args findProperty('out') ?: '../../artifacts/journal.png'
+}
+
+tasks.register('partonPreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.PartonPreview'
+    args findProperty('frame') ?: '../../artifacts/parton-run.pb',
+         findProperty('out') ?: '../../artifacts/parton-preview',
+         findProperty('at') ?: '0 .3 .6 1'
+}
+
+tasks.register('fusionLivePreview', JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'org.genesis.FusionLivePreview'
+    args findProperty('out') ?: '../../artifacts/fusion-live',
+         findProperty('a') ?: '3007', findProperty('b') ?: '118294',
+         findProperty('energy') ?: '40000', findProperty('force') ?: 'false',
+         findProperty('genesisPort') ?: '50051'
+}

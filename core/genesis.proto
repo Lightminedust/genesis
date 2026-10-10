@@ -1,0 +1,1313 @@
+syntax = "proto3";
+
+// Contrat partagé entre le moteur Python (vérité physique)
+// et le client JavaFX (rendu + animation).
+package genesis;
+
+option java_multiple_files = true;
+option java_package = "com.studio.genesis.grpc";
+option java_outer_classname = "GenesisProto";
+
+// --------------------------------------------------------
+// 1. LE SERVICE
+// --------------------------------------------------------
+service UniverseEngine {
+  // Le client stream ses actions. Le moteur fait tourner le temps simulé,
+  // applique les règles physiques, et répond par l'état évalué et les
+  // ÉVÉNEMENTS qui en découlent (émission, absorption, désintégration...).
+  // Une frame dès qu'il se passe quelque chose, et quatre par seconde tant
+  // que le temps s'écoule.
+  rpc RunSimulation (stream UserAction) returns (stream UniverseFrame) {}
+
+  // Table périodique complète, demandée une fois au démarrage.
+  rpc GetPeriodicTable (TableRequest) returns (PeriodicTable) {}
+}
+
+message TableRequest {}
+
+message PeriodicTable {
+  repeated Element elements = 1;
+  int32 protocol_version = 2;
+  repeated ParticleInfo particles = 3;   // le zoo de particules, servi une fois
+}
+
+// Propriétés intrinsèques d'une particule (CODATA, PDG).
+message ParticleInfo {
+  string key = 1;                 // "electron", "proton", "photon"...
+  string symbol = 2;
+  string name = 3;
+  string family = 4;              // "lepton · fermion"...
+  double mass_mev = 5;            // MeV/c²
+  string charge = 6;              // en charges élémentaires : "−1", "+2/3"
+  string spin = 7;                // "1/2", "1"
+  string magnetic = 8;
+  string lifetime = 9;
+  string interactions = 10;
+  string note = 11;
+  string source = 12;
+}
+
+// --------------------------------------------------------
+// 2. LES ACTIONS
+// --------------------------------------------------------
+message UserAction {
+  enum ActionType {
+    HELLO = 0;            // Poignée de main : demande la frame initiale
+    ADD_PROTON = 1;
+    REMOVE_PROTON = 2;
+    ADD_NEUTRON = 3;
+    REMOVE_NEUTRON = 4;
+    ADD_ELECTRON = 5;
+    REMOVE_ELECTRON = 6;
+    RESET = 7;
+    LOAD_ELEMENT = 8;     // Charge l'isotope de référence pour `value` (Z)
+    reserved 9, 10, 11;   // v3 : EXCITE, RELAX, DECAY scénarisés, remplacés par des règles
+    FIRE_PHOTON = 12;     // Un photon de longueur d'onde `amount` (nm) part vers l'atome
+    HEAT = 13;            // Collision thermique (flamme) : l'atome est excité
+    SET_SPEED = 14;       // Vitesse du temps simulé : index `value` dans speed_labels
+    TOGGLE_PAUSE = 15;
+    NEXT_EVENT = 16;      // Avance le temps jusqu'au prochain événement tiré au hasard
+    SET_STEP_MODE = 17;   // value = 1 : le temps s'arrête après chaque événement (analyse)
+    MATTER_START = 18;    // échelle de la matière : des centaines d'atomes de l'élément courant
+    MATTER_STOP = 19;     // retour à l'atome seul
+    SET_WALL_TEMPERATURE = 20;  // `amount` = température des parois, en K
+    SET_PISTON = 21;      // `amount` = position du mur mobile, fraction de la longueur (0,25 à 1)
+    CHEMISTRY_START = 22; // échelle de la molécule : l'atome courant et un partenaire de numéro `value`
+    CHEMISTRY_STOP = 23;
+    SET_BOND_LENGTH = 24; // `amount` = distance entre les noyaux (Å) ; on les tient
+    RELEASE_BOND = 25;    // on lâche les noyaux : la force quantique décide
+    FUSION_START = 26;    // écran de la chambre de collision (fusion)
+    FUSION_STOP = 27;
+    reserved 28, 29, 30, 31;   // ancien tokamak : chauffage, combustible, densité
+    SET_NUCLEUS_A = 32;   // `value` = 1000 Z + A
+    SET_NUCLEUS_B = 33;
+    SET_COLLISION_ENERGY = 34;  // `amount` = énergie du choc, en keV
+    COLLIDE = 35;         // `value` = 0 : un choc ; 1 : insister jusqu'à la fusion
+    STAR_START = 36;      // écran du cœur d'étoile (plasma, réseau nucléaire)
+    STAR_STOP = 37;
+    SET_STAR_PRESET = 38;       // `value` = indice du lieu (Soleil, géante, réacteur...)
+    SET_STAR_TEMPERATURE = 39;  // `amount` = température, en K
+    SET_STAR_DENSITY = 40;      // `amount` = densité, en g/cm³
+    SET_STAR_SPEED = 41;        // `value` = indice dans speed_labels du cœur d'étoile
+    SET_IMPACT = 42;            // `amount` = visée (paramètre d'impact), en fm
+    SET_THERMAL = 43;           // `value` = 1 : plasma (énergies tirées au hasard) ; 0 : faisceau
+    REACTOR_START = 44;         // écran du réacteur à fusion (tokamak)
+    REACTOR_STOP = 45;
+    REACTOR_FIRE = 46;          // nouvelle collision, issue non imposée
+    SET_REACTOR_FUEL = 47;      // `value` = indice du combustible (D + T, D + D, D + ³He)
+    SET_REACTOR_TEMPERATURE = 48;  // `amount` = température des ions, en keV
+    SET_REACTOR_FIELD = 49;        // champ externe uniforme local, teslas
+    SET_REACTOR_NUCLEUS_A = 50;    // value = 1000 Z + A
+    SET_REACTOR_NUCLEUS_B = 51;
+    SET_REACTOR_ENERGY = 52;       // amount = energie du centre de masse, keV
+    SET_REACTOR_IMPACT = 53;       // amount = parametre d'impact asymptotique, fm
+    SET_REACTOR_THERMAL = 54;      // value != 0 : flux maxwellien, sinon faisceau monoenergetique
+    SET_REACTOR_DENSITY = 55;      // amount = densité d'ions du plasma, m⁻³
+    SET_REACTOR_CONFINEMENT = 56;  // amount = temps de confinement de l'énergie, s
+    SUBATOMIC_START = 57;
+    SUBATOMIC_STOP = 58;
+    SUBATOMIC_SET_PROTONS = 59;
+    SUBATOMIC_SET_NEUTRONS = 60;
+    SUBATOMIC_SET_ELECTRONS = 61;
+    SUBATOMIC_SET_IMPULSE = 62;
+    SUBATOMIC_RESET = 63;
+    SUBATOMIC_KICK = 64; // value = particule ; amount = index échantillon ; vector = Δv en unités de c
+    NUCLEON_START = 65;       // le nucléon de l'intérieur : trois quarks dans une corde de couleur
+    NUCLEON_STOP = 66;
+    NUCLEON_SET_HADRON = 67;  // value : 0 proton, 1 neutron
+    NUCLEON_STRIKE = 68;      // value = quark frappé (0–2) ; amount = transfert de moment (MeV/c) ; vector = direction
+    NUCLEON_RESET = 69;       // nouveau tirage (nouvelle graine), même coup
+    PARTONS_START = 70;       // la mer de partons : amount = Q² (GeV²), vector[0] = x_min
+    PARTONS_SET = 71;         // nouvelle résolution (Q², x_min)
+    PARTONS_STOP = 72;
+    PARTONS_RESET = 73;       // nouveau tirage, même résolution
+    COLLISION_RUN = 74;       // projectile + nucléon : value = cible (0 p, 1 n), amount = énergie (MeV ; hadrons : impulsion MeV/c),
+                              // angle ≤ 0 : tiré par la physique selon dσ/dΩ ;
+                              // vector = [angle (°), projectile (0 e⁻, 1 e⁺, 2 μ⁻, 3 μ⁺, 4 ν_μ, 5 ν̄_μ, 6 p, 7 π⁺, 8 π⁻)]
+    COLLISION_RESAMPLE = 75;  // nouvel événement tiré dans le même spectre
+    HADRON_TEST = 76;         // atelier : value = état de spin choisi, vector = triplets (saveur, anti, couleur) des quarks posés
+    HADRON_DECAY = 77;        // atelier : nouvelle désintégration de l'objet courant
+    HADRON_CLEAR = 78;        // atelier : vider la table
+    COLLISION_FORCE = 79;     // un événement du cas choisi sur le spectre : value = indice du canal
+  }
+  ActionType type = 1;
+  int32 value = 2;
+  double amount = 3;
+  repeated double vector = 4;
+}
+
+// --------------------------------------------------------
+// 3. L'ÉTAT ÉVALUÉ
+// --------------------------------------------------------
+enum Stability {
+  STABILITY_UNKNOWN = 0;
+  STABLE = 1;
+  UNSTABLE = 2;
+  NOT_AN_ATOM = 3;
+}
+
+// Un nucléon, positionné en 3D et en femtomètres dans le noyau.
+message Nucleon {
+  enum Kind {
+    PROTON = 0;
+    NEUTRON = 1;
+  }
+  Kind kind = 1;
+  float x = 2;  // fm
+  float y = 3;  // fm
+  float z = 4;  // fm
+}
+
+// Une couche électronique (K, L, M...)
+message Shell {
+  int32 index = 1;
+  string name = 2;
+  int32 capacity = 3;
+  int32 electrons = 4;
+  string configuration = 5;
+}
+
+// Une sous-couche : c'est l'unité où s'appliquent Pauli, Hund et Klechkowski.
+message Subshell {
+  int32 n = 1;
+  int32 l = 2;                    // 0=s, 1=p, 2=d, 3=f
+  int32 electrons = 3;
+  int32 capacity = 4;             // 2(2l+1)
+  float radius_pm = 5;            // rayon le plus probable (Slater, ou Bohr exact)
+  float z_eff = 6;
+  float energy_ev = 7;
+  string label = 8;               // "3d"
+  repeated int32 occupation = 9;  // électrons par orbitale, remplie selon Hund
+}
+
+// Un niveau d'énergie du diagramme.
+message EnergyLevel {
+  int32 n = 1;
+  string label = 2;
+  float energy_ev = 3;
+  int32 electrons = 4;
+  string source = 5;              // "exact" ou "estimation Slater"
+  bool has_measured = 6;
+  float measured_ev = 7;          // énergie mesurée (NIST), si connue
+}
+
+// Une raie du spectre d'émission.
+message SpectralLine {
+  float wavelength_nm = 1;        // air au-delà de 200 nm, vide en deçà
+  float energy_ev = 2;
+  float intensity = 3;
+  string label = 4;
+  int32 from_n = 5;
+  int32 to_n = 6;
+}
+
+// Ce qui vient d'arriver, et le calcul qui l'explique.
+message SimEvent {
+  string kind = 1;                // emitted, absorbed, passed, photo_ionized, photon_fired,
+                                  // captured, rejected, ionized, excited, decay, nucleon,
+                                  // structure, info
+  double time_s = 2;              // instant, en temps simulé
+  string title = 3;
+  string formula = 4;
+  string detail = 5;
+  float wavelength_nm = 6;        // photon concerné, 0 sinon
+  float energy_ev = 7;
+  repeated float extra_wavelengths_nm = 8;  // second photon (2s -> 1s)
+  string from_state = 9;
+  string to_state = 10;
+  string decay_mode = 11;
+  repeated string particles = 12; // particules émises par le noyau
+  double kinetic_ev = 13;         // énergie cinétique d'une particule éjectée
+  float q_mev = 14;
+  string particle = 15;           // "electron", "proton", "neutron" pour les actions
+  int32 count = 16;
+}
+
+// L'échelle de la matière : N atomes en dynamique moléculaire (Lennard-Jones).
+message MatterState {
+  bool active = 1;
+  string symbol = 2;
+  string name = 3;
+  int32 count = 4;
+  repeated float x = 5;                   // positions, en Å
+  repeated float y = 6;
+  repeated float z = 7;
+  repeated float atom_temperature_k = 8;  // agitation de chaque atome (m v² / 3k, lissée)
+  repeated int32 phase = 9;               // 0 gaz, 1 liquide, 2 solide
+  float box_x = 10;                       // dimensions de la boîte, en Å
+  float box_y = 11;
+  float box_z = 12;
+  float box_max_x = 13;
+  float temperature_k = 14;               // température mesurée de l'échantillon
+  float wall_temperature_k = 15;          // consigne des parois
+  float pressure_bar = 16;                // mesurée par les chocs sur les parois
+  float density_kg_m3 = 17;
+  float solid = 18;                       // fractions des atomes dans chaque état
+  float liquid = 19;
+  float gas = 20;
+  repeated float hit_x = 21;              // chocs sur les parois depuis la frame précédente, en Å
+  repeated float hit_y = 22;
+  repeated float hit_z = 23;
+  double time_ps = 24;
+  float sigma_angstrom = 25;
+  float epsilon_k = 26;
+  float mass_u = 27;
+  string source = 28;                     // d'où viennent ε et σ
+  float melting_k = 29;                   // valeurs réelles mesurées (mendeleev), 0 si inconnues
+  float boiling_k = 30;
+  float critical_k = 31;
+  float triple_k = 32;
+  bool supercritical = 33;                // au-delà du point critique : liquide et gaz confondus
+  float model_critical_k = 34;            // point critique du modèle (T* = 1,085)
+}
+
+// Une orbitale (atomique ou moléculaire) : énergie, remplissage, symétrie.
+message OrbitalLevel {
+  float energy_ev = 1;
+  float occupation = 2;          // 0 ou 1 électron de ce spin
+  string label = 3;              // σg, πu... pour une molécule
+}
+
+message OrbitalSet {
+  repeated OrbitalLevel alpha = 1;   // spin ↑
+  repeated OrbitalLevel beta = 2;    // spin ↓
+}
+
+// Le calcul quantique à une distance R entre les noyaux.
+message BondPoint {
+  float r = 1;                       // Å
+  float energy_ev = 2;               // par rapport aux atomes séparés
+  float charge_a = 3;                // charge de l'atome A (Mulliken)
+  float bond_order = 4;              // indice de Mayer
+  repeated float density = 5;        // ρ dans le plan des noyaux, e/Å³ (grid_ny lignes de grid_nx)
+  repeated float difference = 6;     // ρ(molécule) − ρ(atomes isolés)
+  OrbitalSet orbitals = 7;
+}
+
+// L'échelle de la molécule : deux atomes et leurs électrons, calculés par la chimie quantique.
+message ChemistryState {
+  bool active = 1;
+  string symbol_a = 2;
+  string symbol_b = 3;
+  string name_a = 4;
+  string name_b = 5;
+  int32 z_a = 6;
+  int32 z_b = 7;
+  string status = 8;
+  float progress = 9;
+  bool ready = 10;
+  string failed = 11;
+  int32 table_version = 12;
+  repeated BondPoint points = 13;    // envoyés une seule fois, quand table_version change
+  OrbitalSet atom_a = 14;
+  OrbitalSet atom_b = 15;
+  int32 spin = 16;                   // 2S de la molécule (O₂ : 2, triplet)
+  int32 spin_a = 17;
+  int32 spin_b = 18;
+  float de_ev = 19;
+  float re_angstrom = 20;
+  float period_fs = 21;
+  bool bound = 22;
+  float chi_a = 23;                  // électronégativités de Pauling, pour comparer
+  float chi_b = 24;
+  string method = 25;
+  int32 grid_nx = 26;
+  int32 grid_ny = 27;
+  float extent_x = 28;               // demi-largeurs de la coupe, Å
+  float extent_y = 29;
+  float r = 30;                      // distance actuelle
+  float velocity = 31;               // Å/fs
+  float energy_ev = 32;              // énergie potentielle actuelle
+  float kinetic_ev = 33;
+  bool held = 34;
+  double time_fs = 35;
+}
+
+// La carte d'identité d'un noyau.
+message NucleusCard {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;             // "D", "He-4"...
+  string name = 4;              // "deutérium"
+  int32 protons = 5;
+  int32 neutrons = 6;
+  double mass_u = 7;            // masse atomique mesurée (AME)
+  string status = 8;            // "stable", "radioactif, t½ 12,3 ans"
+  string spin_parity = 9;       // spin nucléaire mesuré : "1+", "1/2+"
+}
+
+// ------------------------------------------------------------------
+// Le laboratoire de fusion : deux isotopes quelconques, en 3D.
+// ------------------------------------------------------------------
+message LabIsotope {
+  int32 a = 1;
+  double mass_u = 2;
+  bool stable = 3;
+  double half_life_s = 4;
+  double abundance = 5;
+}
+
+message LabElement {
+  int32 z = 1;
+  string symbol = 2;
+  string name = 3;
+  string category = 4;
+  string color = 5;
+  int32 row = 6;
+  int32 col = 7;
+  int32 default_a = 8;
+  repeated LabIsotope isotopes = 9;
+}
+
+message LabNucleus {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  string name = 4;
+  string symbol = 5;
+  double mass_u = 6;
+  bool estimated = 7;                 // masse estimée (jamais pesé)
+  string spin_parity = 8;
+  string status = 9;
+  double radius_fm = 10;
+  repeated float nucleons = 11;       // x, y, z (fm) de chaque nucléon
+  repeated bool protons = 12;         // vrai : proton, faux : neutron
+  repeated float cloud = 13;          // x, y, z (pm) : points tirés selon |ψ|²
+  repeated sint32 cloud_sign = 14;    // signe de l'onde en ce point (+1 / −1)
+  repeated int32 cloud_shell = 15;    // indice de sous-couche
+  repeated string shells = 16;        // "1s2", "2p6"...
+  float cloud_radius_pm = 17;
+  bool has_cloud = 18;                // faux : le client garde le nuage déjà reçu
+  double ionization_ev = 19;          // pour arracher le dernier électron
+  string color = 20;                  // couleur de l'élément (Jmol)
+  double magnetic_moment = 21;        // moment magnétique mesuré, en magnétons nucléaires
+}
+
+message LabProduct {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  string name = 4;
+  double kinetic_mev = 5;
+  double speed_c = 6;
+  string kind = 7;                    // nucleus, neutron, gamma, positron
+  float dx = 8;
+  float dy = 9;
+  float dz = 10;
+  string spin_parity = 11;            // spin mesuré du produit
+  double magnetic_moment = 12;        // magnétons nucléaires
+  string color = 13;                  // couleur de l'élément
+  string status = 14;                 // stable, demi-vie...
+  string element = 15;                // nom de l'élément (« hélium »)
+}
+
+message LabChannel {
+  string label = 1;
+  double share = 2;
+  double q_mev = 3;
+  string kind = 4;
+}
+
+// Une grandeur traduite pour un profane : « 17,6 MeV » → « 2 millions de fois une réaction chimique ».
+message LabFact {
+  string quantity = 1;
+  string value = 2;
+  string meaning = 3;
+}
+
+// Un produit instable qui se brise aussitôt (Be-8 → 2 α).
+message ChainStep {
+  int32 index = 1;
+  string daughter = 2;
+  string ejected = 3;
+  double q_mev = 4;
+  double half_life_s = 5;
+}
+
+message FusionLabState {
+  bool active = 1;
+  repeated LabElement catalog = 2;    // envoyé une fois
+  LabNucleus a = 3;
+  LabNucleus b = 4;
+  LabNucleus compound = 5;
+  double energy_kev = 6;
+  double impact_fm = 7;
+  int32 angular_momentum = 8;
+  repeated float potential_r = 9;     // V(r) : la colline
+  repeated float potential_v = 10;
+  double barrier_mev = 11;
+  double barrier_r_fm = 12;
+  double contact_fm = 13;
+  double inside_fm = 14;
+  double well_mev = 15;
+  double turning_fm = 16;
+  double tunneling = 17;
+  double probability = 18;
+  double temperature_k = 19;
+  string preview = 20;
+  string energy_level = 21;           // au-dessus, tunnel, rare, impossible
+  string energy_verdict = 22;
+  repeated LabChannel channels = 23;
+  string source = 24;
+  double strong_range_fm = 25;
+  double force_contact_n = 26;
+  int32 run = 30;
+  bool fired = 31;
+  bool fused = 32;
+  bool never = 33;
+  int64 attempts = 34;
+  bool above = 35;
+  repeated float path = 36;           // t (s), x, y (fm) : le mouvement relatif
+  int32 tunnel_index = 37;
+  double closest_fm = 38;
+  double duration_s = 39;
+  repeated LabProduct products = 40;
+  repeated ChainStep chain = 41;
+  double q_mev = 42;
+  double mass_before_u = 43;
+  double mass_after_u = 44;
+  string kind = 45;
+  double excitation_mev = 46;
+  repeated string verdict = 47;
+  repeated LabFact facts = 48;
+  repeated string expert = 49;
+  double nuclear_depth_mev = 50;      // profondeur V₀ du potentiel nucléaire (Woods-Saxon)
+  double diffuseness_fm = 51;
+  double reduced_mass_mev = 52;
+  bool reflected = 53;                // renvoyé au-dessus du sommet (réflexion quantique)
+  bool quasi_fission = 54;            // contact, puis séparation (aucun noyau composé possible)
+  bool thermal = 55;                  // plasma : énergie et visée de chaque choc tirées au hasard
+  double shot_energy_kev = 56;        // énergie réelle du dernier choc
+  double impact_used_fm = 57;         // visée réelle du dernier choc
+  double precession_deg = 58;         // rotation réelle du spin de A pendant le choc (Bloch)
+  double lorentz_max_n = 59;          // force de Lorentz q·v×B maximale
+  double lorentz_deflection_fm = 60;  // déviation de trajectoire due à q·v×B
+  double gamow_peak_kev = 61;         // énergie la plus efficace du plasma
+  float spin_ax = 62;                 // orientation initiale du spin de A
+  float spin_ay = 63;
+  float spin_az = 64;
+  bool deflected = 65;                // passé à côté : visée décalée (moment cinétique l > 1)
+  int32 orbital_l = 66;
+  repeated float ghosts = 67;         // chocs ratés (échantillon) : t, x, y concaténés
+  repeated int32 ghost_sizes = 68;    // nombre de points de chacun
+  double mass_a_u = 69;               // masses, pour le mouvement dans le centre de masse
+  double mass_b_u = 70;
+}
+
+// ------------------------------------------------------------------
+// Le cœur d'étoile : un plasma où les noyaux fusionnent (réseau REACLIB).
+// ------------------------------------------------------------------
+message StarSpecies {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  string name = 4;
+  string spin_parity = 5;
+  double mass_fraction = 6;
+  double initial_mass_fraction = 7;
+  double created_per_kg = 8;          // noyaux créés par kg depuis le début
+  double destroyed_per_kg = 9;
+  double mean_charge = 10;            // charge moyenne de l'ion : électrons arrachés
+  int32 box_created = 11;             // dans la fenêtre
+  int32 box_destroyed = 12;
+  double mass_u = 13;
+}
+
+message StarReaction {
+  string label = 1;                   // "p + p → D + e⁺ + ν"
+  string chain = 2;                   // "chaîne p-p", "cycle CNO", "triple-α"...
+  double per_kg_s = 3;                // réactions par kg et par seconde
+  double power_w_kg = 4;              // chaleur déposée (neutrinos exclus)
+  double q_mev = 5;
+  double neutrino_mev = 6;
+  repeated int32 reactants = 7;       // indices dans `species`
+  repeated int32 products = 8;
+  bool weak = 9;                      // interaction faible (un proton devient neutron)
+}
+
+message StarParticle {
+  int32 id = 1;
+  int32 species = 2;
+}
+
+// Une fusion dans la fenêtre : qui disparaît, qui apparaît.
+message StarFusion {
+  int32 reaction = 1;
+  repeated int32 consumed = 2;
+  repeated int32 created = 3;
+  repeated int32 arrived = 4;         // venus de l'étoile autour de la fenêtre
+  double q_mev = 5;
+  double neutrino_mev = 6;
+}
+
+message StarState {
+  bool active = 1;
+  bool ready = 2;                     // la bibliothèque nucléaire est chargée
+  int32 preset = 3;
+  repeated string presets = 4;
+  string about = 5;
+  double temperature_k = 6;
+  double density_g_cm3 = 7;
+  double pressure_pa = 8;
+  double pressure_ions_pa = 9;
+  double pressure_electrons_pa = 10;
+  double pressure_radiation_pa = 11;
+  double degeneracy = 12;             // η = μ/kT des électrons (> 0 : dégénérés)
+  double ionized_fraction = 13;
+  double ipd_ev = 14;                 // abaissement du potentiel d'ionisation
+  double spacing_m = 15;              // distance entre noyaux voisins
+  double optical_depth = 16;
+  double age_s = 17;
+  int32 speed_index = 18;
+  repeated string speed_labels = 19;
+  bool paused = 20;
+  double power_w_kg = 21;
+  double neutrino_w_kg = 22;
+  double energy_j_kg = 23;            // chaleur cumulée depuis le début
+  double neutrino_j_kg = 24;
+  repeated StarSpecies species = 25;
+  repeated StarReaction reactions = 26;
+  repeated StarParticle particles = 27;
+  repeated StarFusion fusions = 28;
+  double window_rate = 29;            // fusions par seconde réelle dans la fenêtre
+  int64 hidden = 30;                  // fusions survenues sans être montrées
+  double window_size_m = 31;          // côté de la fenêtre
+  double thermal_speed_m_s = 32;      // vitesse d'agitation d'un proton
+  double kt_kev = 33;
+  string fuel = 34;
+  double fuel_left_s = 35;
+  double proton_wait_s = 36;
+  double barrier_kev = 37;
+  double gamow_kev = 38;
+  string main_reaction = 39;
+  repeated string story = 40;         // ce qui se passe, interprété
+  double size_m = 41;                 // taille du système (cœur, plasma du réacteur)
+}
+
+// Un maillon de la chaîne de désintégration (la voie dominante à chaque pas).
+message ChainLink {
+  string nuclide = 1;             // "U-238"
+  int32 z = 2;
+  int32 a = 3;
+  string element = 4;             // "Uranium"
+  double half_life_s = 5;         // 0 si stable
+  string half_life = 6;           // lisible
+  string mode = 7;                // voie vers le maillon suivant ("" si stable)
+  float fraction = 8;             // part de cette voie
+  bool stable = 9;
+  bool estimated = 10;            // demi-vie estimée (noyau jamais observé)
+}
+
+// Une voie de désintégration possible, avec sa part mesurée.
+message DecayChannel {
+  string mode = 1;
+  float fraction = 2;
+  string daughter = 3;
+}
+
+// Le noyau tel que les données le décrivent maintenant.
+message NuclearStatus {
+  string nuclide = 1;             // "Pa-234m"
+  bool unstable = 2;
+  double half_life_s = 3;
+  string half_life = 4;           // lisible
+  string source = 5;              // mesure, ou estimation et laquelle
+  double decay_rate = 6;          // probabilité de désintégration par seconde (s^-1)
+  repeated DecayChannel channels = 7;
+  repeated ChainLink chain = 12;  // la suite la plus probable, du noyau actuel au noyau stable
+  string spin_parity = 8;         // spin nucléaire mesuré, ex. "0+", "3/2+"
+  double atomic_mass_u = 9;       // masse atomique mesurée (AME), 0 si inconnue
+  double nucleons_mass_u = 10;    // Z m(H) + N m(n) : les constituants séparés
+  double binding_measured_mev = 11; // énergie de liaison tirée des masses mesurées
+}
+
+// Un terme du bilan énergétique du noyau (Weizsäcker).
+message NuclearTerm {
+  string key = 1;
+  string name = 2;
+  string description = 3;
+  float mev = 4;
+}
+
+// L'orbitale de valence : coupe |psi|² dans le plan xz.
+message Orbital {
+  repeated float density = 1;     // grille size x size, ligne par ligne, max = 1
+  int32 size = 2;
+  float extent_pm = 3;            // demi-largeur de la coupe
+  string label = 4;               // "3d6"
+  int32 n = 5;
+  int32 l = 6;
+  float z_eff = 7;
+  int32 radial_nodes = 8;
+  repeated string orbital_names = 9;
+  repeated int32 occupation = 10; // remplissage de Hund, orbitale par orbitale
+}
+
+message Calculation {
+  string label = 1;
+  string formula = 2;
+  string substitution = 3;
+  string result = 4;
+  string note = 5;
+  string severity = 6;
+}
+
+message Element {
+  int32 z = 1;
+  string symbol = 2;
+  string name = 3;
+  string category = 4;
+  string color_hex = 5;
+  repeated int32 stable_isotopes = 6;
+  int32 table_row = 7;
+  int32 table_col = 8;
+  string configuration = 9;
+}
+
+message AtomState {
+  int32 protons = 1;
+  int32 neutrons = 2;
+  int32 electrons = 3;
+  int32 mass_number = 4;
+  int32 net_charge = 5;
+  Stability stability = 6;
+  string ion_label = 7;
+  string isotope_label = 8;
+  string decay_mode = 9;
+  float binding_energy_mev = 10;
+  float binding_energy_per_nucleon = 11;
+  int32 valence_electrons = 12;
+  bool octet_satisfied = 13;
+  float neutron_proton_ratio = 14;
+  float mass_defect_u = 15;
+  float nuclear_radius_fm = 16;
+  string half_life = 17;
+  bool one_electron = 18;
+}
+
+message UniverseFrame {
+  int64 tick = 1;
+  AtomState atom = 2;
+  Element element = 3;
+  repeated Nucleon nucleons = 4;
+  repeated Shell shells = 5;
+  repeated Calculation calculations = 6;
+  string headline = 7;
+  string source = 8;
+  int32 protocol_version = 9;
+  repeated string console_lines = 10;
+  reserved 11, 12;                // ancien profil radial, remplacé par `orbital`
+
+  repeated Subshell subshells = 13;
+  repeated EnergyLevel levels = 14;
+  repeated SpectralLine spectrum = 15;
+  string spectrum_source = 16;
+  reserved 17, 21, 22;            // v3 : photons et désintégration scénarisés
+  int32 excitation_level = 18;    // n de l'électron excité, 0 au fondamental
+  float excited_radius_pm = 19;
+  repeated NuclearTerm nuclear_terms = 20;
+  Orbital orbital = 23;
+  bool has_orbital = 24;
+  float ionization_model_ev = 25;
+  float ionization_measured_ev = 26;
+  bool has_ionization_measured = 27;
+  string last_action = 28;        // nom de l'action qui a produit cette frame
+
+  // v4 : le temps et ce qui s'y passe
+  double sim_time_s = 29;
+  int32 speed_index = 30;
+  repeated string speed_labels = 31;
+  bool paused = 32;
+  string electron_state = 33;     // "2p", "excité", "fondamental"
+  double electron_lifetime_s = 34; // durée de vie moyenne de l'état excité, 0 au repos
+  repeated SimEvent events = 35;  // événements survenus depuis la frame précédente
+  repeated double absorbable_nm = 36; // précision nécessaire pour la largeur naturelle des raies
+  NuclearStatus nucleus = 37;
+  double ionization_now_ev = 38;  // énergie pour arracher un électron, état actuel
+  bool structure_changed = 39;    // Z, N, E ou état excité ont changé
+  double speed = 40;              // secondes simulées par seconde réelle
+  bool step_mode = 41;            // le temps s'arrête après chaque événement
+  string electron_spin = 42;      // système à un électron : "+1/2" ou "−1/2"
+  MatterState matter = 43;        // échelle de la matière, si elle est active
+  ChemistryState chemistry = 44;  // échelle de la molécule, si elle est active
+  reserved 45;                    // ancien tokamak
+  reserved 46;                    // ancienne chambre de collision 2D
+  StarState star = 47;            // cœur d'étoile, si l'écran est ouvert
+  FusionLabState lab = 48;        // laboratoire de fusion 3D, si l'écran est ouvert
+  ReactorState reactor = 49;      // réacteur à fusion (tokamak), si l'écran est ouvert
+  SubatomicState subatomic = 50;
+  NucleonState nucleon = 51;      // le nucléon de l'intérieur (quarks, corde de couleur), si l'écran est ouvert
+  PartonState partons = 52;       // la mer de partons (gluons, paires q q̄) à une résolution donnée
+  StandardModelState standard_model = 53;   // le tableau des 17 particules et leurs fiches calculées (envoyé une fois)
+  CollisionState collision = 54;  // la sonde électronique : cas, spectre, étapes calculées
+  HadronLabState hadron_lab = 55; // l'atelier de hadrons : validité, masse, destin
+  BagState bag = 56;              // la forme des hadrons (sac du MIT, tube de flux) et le puits de Coulomb du proton
+}
+
+message SubatomicParticle {
+  enum Kind { PROTON = 0; NEUTRON = 1; }
+  Kind kind = 1;
+  repeated double position_fm = 2;
+  repeated double velocity_c = 3;
+  double mass_mev = 4;
+}
+
+message SubatomicPair {
+  int32 first = 1;
+  int32 second = 2;
+  double separation_fm = 3;
+  double effective_force_mev_fm = 4; // signé, radial sortant ; inclut la pression effective pp/nn
+  double effective_potential_mev = 5;
+}
+
+message SubatomicSample {
+  double time_fmc = 1;
+  repeated SubatomicParticle particles = 2;
+  double kinetic_mev = 3;
+  double strong_mev = 4;
+  double coulomb_mev = 5;
+  double total_mev = 6;
+  double separation_fm = 7;        // deux corps seulement
+  double radial_force_mev_fm = 8;  // signé : négatif attractif
+  repeated SubatomicPair pairs = 9;
+  double binding_margin_mev = 10; // deux corps : -E relatif ; N>2 : minimum local pour arracher un nucléon
+  int32 locally_bound_count = 11;
+}
+
+message SubatomicState {
+  bool active = 1;
+  int32 run = 2;
+  int32 protons = 3;
+  int32 neutrons = 4;
+  int32 electrons = 5;
+  double impulse_mev = 6;
+  double electron_radius_pm = 7;
+  double energy_error_mev = 8;
+  string status = 9;
+  string note = 10;
+  repeated SubatomicSample samples = 11;
+  double electron_binding_ev = 12; // hydrogenoide exact si un e-, Slater sinon
+  repeated double radial_fm = 13;   // profil V(r) de la paire choisie
+  repeated double potential_mev = 14;
+}
+
+// ---------------------------------------------------------------- le nucléon de l'intérieur
+// Un quark ou un antiquark : saveur, couleur (0 rouge, 1 vert, 2 bleu ; pour un antiquark, l'anticouleur), position, vitesse.
+message NucleonQuark {
+  int32 id = 1;
+  string flavor = 2;          // u, d, s
+  bool anti = 3;
+  int32 color = 4;
+  int32 cluster = 5;          // l'amas (hadron) auquel il appartient
+  double charge = 6;          // en e : 2/3, −1/3…
+  double mass_mev = 7;        // masse constituante
+  repeated double position_fm = 8;
+  repeated double velocity_c = 9;
+}
+
+// Un hadron en formation : un baryon (trois quarks, corde en Y) ou un méson (quark + antiquark, corde droite).
+message NucleonCluster {
+  int32 id = 1;
+  string kind = 2;            // baryon | meson
+  repeated int32 quarks = 3;  // indices dans NucleonSample.quarks
+  repeated double junction_fm = 4;  // la jonction du Y (le milieu pour un méson)
+  string name = 5;            // proton, neutron, π⁺, Λ…
+  double mass_mev = 6;        // masse mesurée du hadron nommé
+  double excitation_mev = 7;  // énergie interne au-dessus de son fondamental
+  double string_mev = 8;      // σ × longueur de corde
+  double momentum_mev = 9;    // |P| de l'amas
+}
+
+message NucleonSample {
+  double time_fmc = 1;
+  repeated NucleonQuark quarks = 2;
+  repeated NucleonCluster clusters = 3;
+  double kinetic_mev = 4;       // Σ √(p² + m²)
+  double string_mev = 5;        // σ·L
+  double coulomb_mev = 6;       // échange de gluons
+  double total_mev = 7;         // doit rester constant
+  double break_probability = 8; // 1 − exp(−∫ taux dt) depuis le coup
+}
+
+// Une rupture de corde : l'instant, le lieu, la saveur de la paire créée et les hadrons qui en sortent.
+message NucleonBreak {
+  double time_fmc = 1;
+  repeated double position_fm = 2;
+  string flavor = 3;
+  double separation_fm = 4;
+  double released_mev = 5;      // σ·d : l'énergie du champ de couleur changée en masse
+  repeated string hadrons = 6;
+}
+
+message NucleonState {
+  bool active = 1;
+  int32 run = 2;
+  string hadron = 3;            // proton | neutron
+  int32 struck = 4;
+  double momentum_mev = 5;
+  repeated double direction = 6;
+  double nu_mev = 7;            // énergie transférée
+  double q2_mev2 = 8;           // Q² = q² − ν²
+  double w_mev = 9;             // masse invariante du système final
+  double size_fm = 10;          // taille variationnelle b
+  double energy_error_mev = 11;
+  double sigma_mev_fm = 12;
+  double alpha_s = 13;
+  string status = 14;
+  string note = 15;
+  repeated NucleonSample samples = 16;
+  repeated NucleonBreak breaks = 17;
+  double mass_pdg_mev = 18;
+  double break_rate = 19;       // Γ₀ (fm⁻²)
+}
+
+// ---------------------------------------------------------------- la mer de partons
+// Un parton : quark, antiquark ou gluon, avec sa couleur, sa fraction d'impulsion x et sa durée de vie.
+message PartonRecord {
+  int32 id = 1;
+  string kind = 2;              // q | qbar | g
+  string flavor = 3;            // u, d, s ; vide pour un gluon
+  int32 color = 4;              // 0 rouge, 1 vert, 2 bleu ; −1 s'il n'y en a pas
+  int32 anticolor = 5;          // idem pour l'anticouleur
+  double x = 6;                 // fraction de l'impulsion du nucléon
+  repeated double position_fm = 7;   // illustrative : les PDF ne donnent pas de position
+  double born_fmc = 8;
+  double died_fmc = 9;          // −1 : vivant jusqu'à la fin du film
+  bool valence = 10;
+}
+
+// Un événement : scission ou fusion, avec les écarts de conservation mesurés.
+message PartonEvent {
+  double time_fmc = 1;
+  string kind = 2;              // g->qqbar | qqbar->g | g->gg | gg->g | q->qg | qg->q
+  repeated int32 parents = 3;
+  repeated int32 children = 4;
+  double dx = 5;
+  double dcharge = 6;
+  double dcolour = 7;
+}
+
+// Une courbe x·f(x) à la résolution choisie.
+message PartonCurve {
+  string name = 1;              // u_valence, d_valence, sea, gluon
+  repeated double x = 2;
+  repeated double xf = 3;
+}
+
+message PartonState {
+  bool active = 1;
+  int32 run = 2;
+  string hadron = 3;
+  double q2_gev2 = 4;
+  double x_min = 5;
+  double alpha_s = 6;
+  double tau_fmc = 7;           // ħc/Q
+  double duration_fmc = 8;
+  double momentum_valence = 9;  // parts de l'impulsion du nucléon
+  double momentum_sea = 10;
+  double momentum_gluon = 11;
+  double momentum_total = 12;   // règle de somme : 1
+  double n_gluon = 13;          // nombres attendus (∫f dx, x > x_min)
+  double n_sea_quark = 14;      // quarks de mer (la moitié de q + q̄)
+  double n_valence = 15;
+  repeated PartonCurve curves = 16;
+  repeated PartonRecord partons = 17;
+  repeated PartonEvent events = 18;
+  string note = 19;
+}
+
+// ---------------------------------------------------------------- le tableau du Modèle Standard
+message SmParticle {
+  string id = 1;
+  string symbol = 2;
+  string name = 3;
+  string family = 4;            // quark | lepton | gauge | scalar
+  int32 generation = 5;
+  double charge = 6;
+  double spin = 7;
+  double mass_mev = 8;
+  bool colour = 9;
+  string forces = 10;
+  string anti = 11;
+  repeated string lines = 12;   // fiche : « libellé : valeur », calculée par le moteur
+}
+
+message StandardModelState {
+  repeated SmParticle particles = 1;
+}
+
+// ---------------------------------------------------------------- la forme des hadrons et le champ du proton
+message BagState {
+  bool active = 1;
+  double charge_radius_fm = 2;   // −6 dG_E/dQ² à Q² = 0 (Kelly)
+  double radius_fm = 3;          // rayon du sac du nucléon : √(5/3) r
+  double pressure_mev_fm3 = 4;   // B
+  double b_quarter_mev = 5;      // B^(1/4)
+  double tube_radius_fm = 6;     // 2λ, λ = longueur de pénétration du champ de couleur
+  double quark_radius_fm = 7;    // rayon de la sphère de chaque quark dans la membrane : R − b
+  double density_length_fm = 8;  // a de la densité de charge exp(−r/a)
+  double well_depth_mev = 9;     // U(0)
+  repeated double well_levels_mev = 10;   // niveaux des isopotentielles
+  repeated double well_radii_fm = 11;     // leurs rayons
+  repeated double well_profile_r_fm = 12; // le puits échantillonné : r (fm)…
+  repeated double well_profile_u_mev = 13;// … U(r) d'un électron (MeV)
+  repeated double field_profile_mev_fm = 14; // … et |E|·e = |dU/dr| (MeV/fm), le champ électrique du proton
+}
+
+// ---------------------------------------------------------------- la collision électron – nucléon
+message CollisionChannel {
+  string key = 1;               // elastic | delta | dual | dis
+  string name = 2;
+  double xs_nb = 3;             // dσ/dΩ intégré sur le canal, nb/sr
+  double probability = 4;
+}
+
+message CollisionCurve {
+  string name = 1;              // delta | dual | dis
+  repeated double w_mev = 2;
+  repeated double xs = 3;       // dσ/dΩdW en nb/(sr·GeV)
+}
+
+message CollisionStep {
+  double time_fmc = 1;
+  string title = 2;
+  string formula = 3;
+  string values = 4;
+  string result = 5;
+}
+
+message CollisionState {
+  bool active = 1;
+  int32 run = 2;
+  string target = 3;
+  double energy_mev = 4;
+  double angle_deg = 5;
+  repeated CollisionChannel channels = 6;
+  repeated CollisionCurve spectrum = 7;
+  double elastic_xs_nb = 8;     // la raie élastique, à W = M
+  int32 chosen = 9;             // index du canal de cet événement
+  double w_mev = 10;
+  double e_out_mev = 11;
+  double q2_gev2 = 12;
+  double nu_mev = 13;
+  double q_mev = 14;
+  double x = 15;
+  double wavelength_fm = 16;
+  double impact_fm = 17;        // illustratif
+  double electron_mass_mev = 18;
+  repeated double q_vec = 19;
+  repeated double photon_from_fm = 20;
+  repeated double photon_to_fm = 21;
+  repeated double out_direction = 22;
+  double pre_roll_fmc = 23;
+  repeated CollisionStep steps = 24;
+  double w_max_mev = 25;
+  string note = 26;
+  bool forced = 27;             // le cas a été choisi sur le spectre (tirage conditionnel)
+  repeated double electron_path_fm = 28;  // trajectoire classique intégrée dans le champ du proton (x, y, z)…
+  double coulomb_deflection_deg = 29;     // ce que le seul champ de Coulomb a dévié l'électron sur ce chemin
+  double coulomb_max_deg = 30;            // la plus grande déviation possible par le seul champ de Coulomb
+  string projectile = 31;       // e-, e+, mu-, mu+, nu, nubar, p, pi+, pi-
+  string projectile_label = 32; // e⁻, ν_μ, π⁺…
+  double projectile_charge = 33;
+  string kind = 34;             // em (un photon), cc (un W), had (force forte)
+  string outgoing_label = 35;   // le lepton sortant (μ⁻ pour un ν_μ) ; vide pour un hadron
+  double outgoing_mass_mev = 36;
+  double outgoing_charge = 37;
+  string boson = 38;            // γ*, W⁺, W⁻ ; vide pour un hadron
+  double sigma_total_cm2 = 39;  // section efficace totale (neutrino : sur tous les angles ; hadron : σ_tot)
+  double interaction_probability = 40;  // neutrino : σ / π r_p², la chance d'interagir en traversant le nucléon
+  double sqrt_s_mev = 41;
+  double beam_momentum_mev = 42;
+  repeated double annihilation_fm = 43;   // formation d'un Δ par un pion : où la paire q q̄ s'annihile
+  bool angle_sampled = 44;      // l'angle a été tiré par la physique (dσ/dΩ), pas choisi au curseur
+  double angle_median_deg = 45; // la médiane de la distribution des angles
+  double angle_beyond_30 = 46;  // la probabilité de dévier de plus de 30°
+  repeated AngularLobe lobes = 47;  // les lois angulaires calculées, montrées en 3D (dσ/dΩ, désintégration du Δ)
+}
+
+// Une loi angulaire autour d'un axe : la densité (relative, max 1) en fonction de θ, partie d'un point.
+message AngularLobe {
+  string label = 1;
+  repeated double angle_deg = 2;
+  repeated double density = 3;
+  repeated double origin_fm = 4;
+  repeated double axis = 5;
+  bool log_scale = 6;           // rayon en échelle logarithmique (sur span_decades décades)
+  double span_decades = 7;
+  double chosen_deg = 8;        // l'angle de cet événement
+  repeated double chosen_dir = 9;
+}
+
+// ---------------------------------------------------------------- l'atelier de hadrons
+message HadronSpinState {
+  double spin = 1;
+  double model_mass_mev = 2;
+  string known_name = 3;
+  double known_mass_mev = 4;
+  double error_mev = 5;
+}
+
+message HadronChannel {
+  string label = 1;
+  double branching = 2;
+  string kind = 3;
+}
+
+message HadronProduct {
+  string name = 1;
+  double mass_mev = 2;
+  double charge = 3;
+  repeated double momentum_mev = 4;
+  double energy_mev = 5;
+  string content = 6;           // contenu en quarks (minuscules : quarks, majuscules : antiquarks) ; vide pour un lepton
+  bool from_w = 7;              // produit par le W virtuel (désintégration faible)
+}
+
+message HadronLabState {
+  bool active = 1;
+  int32 run = 2;
+  bool valid = 3;
+  repeated string reasons = 4;
+  string content = 5;
+  double charge = 6;
+  double baryon_number = 7;
+  int32 strangeness = 8;
+  int32 charm = 9;
+  int32 beauty = 10;
+  repeated HadronSpinState states = 11;
+  int32 chosen_state = 12;
+  string fate_kind = 13;
+  string fate_summary = 14;
+  double lifetime_s = 15;
+  double width_mev = 16;
+  repeated HadronChannel channels = 17;
+  repeated HadronProduct products = 18;   // une désintégration tirée : impulsions dans le repos du parent
+  string decay_label = 19;
+  double decay_mass_mev = 20;
+  double top_lifetime_s = 21;
+  double hadronisation_s = 22;
+  string name = 23;                       // nom du hadron reconnu
+  double mass_mev = 24;                   // masse retenue (mesurée si connue, sinon modèle)
+}
+
+// Une particule du réacteur, suivie du plasma jusqu'au noyau.
+message ReactorParticle {
+  string label = 1;                   // "D", "T", "He-4", "n"
+  string name = 2;                    // "deutérium"
+  int32 z = 3;
+  int32 a = 4;
+  string spin_parity = 5;             // spin mesuré
+  double magnetic_moment = 6;         // magnétons nucléaires
+  double radius_fm = 7;               // sphère uniforme de même rayon de charge (mesuré)
+  double binding_per_nucleon_mev = 8; // énergie de liaison mesurée, par nucléon
+  repeated float nucleons = 9;        // x, y, z (fm), 1 proton / 0 neutron
+  repeated double path = 10;          // t (s), x, y, z (m) : la trajectoire dans le tokamak
+  repeated float fine = 11;           // t (s), dx, dy, dz (m) relatifs au point de rencontre, pas à pas
+  double vx = 12;                     // vitesse au point de rencontre (m/s)
+  double vy = 13;
+  double vz = 14;
+  double kinetic_mev = 15;
+  double speed_m_s = 16;
+  double gyro_radius_m = 17;          // rayon de Larmor m·v⊥/(qB)
+  double gyro_period_s = 18;
+  double larmor_hz = 19;              // précession du spin dans B
+  double spin_x = 20;                 // axe du spin (unitaire ; nul pour un spin 0)
+  double spin_y = 21;
+  double spin_z = 22;
+  bool charged = 23;
+  bool confined = 24;                 // reste dans le plasma
+  double end_t = 25;                  // fin du trajet calculé (neutron : impact sur la paroi)
+  double wall_m = 26;                 // distance parcourue jusqu'à la paroi (neutron)
+}
+
+// Le réacteur à fusion : un tokamak aux dimensions d'ITER, et le dernier couple suivi.
+message ReactorState {
+  bool active = 1;
+  repeated string fuels = 2;
+  int32 fuel = 3;
+  double temperature_kev = 4;
+  string temperature_text = 5;
+  double major_radius_m = 6;
+  double minor_radius_m = 7;
+  double kappa = 8;
+  double field_t = 9;
+  double q_axis = 10;                 // mesuré en suivant les lignes de champ
+  double q_edge = 11;
+  repeated float boundary = 12;       // R, Z (m) : bord du plasma
+  repeated float wall = 13;           // R, Z (m) : première paroi
+  repeated float field_lines = 14;    // x, y, z (m) concaténés
+  repeated int32 field_line_sizes = 15;
+  repeated float field_line_rho = 16;
+  double density_m3 = 17;
+  double reactivity_m3_s = 18;        // ⟨σv⟩ maxwellien
+  double power_w_m3 = 19;
+  double wait_s = 20;                 // temps moyen avant qu'un noyau donné fusionne
+  double gamow_peak_kev = 21;
+  int32 run = 22;
+  bool fired = 23;
+  string reaction = 24;
+  repeated ReactorParticle reactants = 25;
+  repeated ReactorParticle products = 26;
+  ReactorParticle compound = 27;
+  double meet_x = 28;                 // point de rencontre (m)
+  double meet_y = 29;
+  double meet_z = 30;
+  double field_x = 31;                // B au point de rencontre (T)
+  double field_y = 32;
+  double field_z = 33;
+  double vcm_x = 34;                  // vitesse du centre de masse (m/s)
+  double vcm_y = 35;
+  double vcm_z = 36;
+  double axis_x = 37;                 // direction de la vitesse relative
+  double axis_y = 38;
+  double axis_z = 39;
+  double impact_x = 40;               // direction du paramètre d'impact
+  double impact_y = 41;
+  double impact_z = 42;
+  double ecm_kev = 43;
+  double impact_fm = 44;
+  double r_min_fm = 45;               // approche classique la plus serrée
+  double contact_fm = 46;
+  double barrier_kev = 47;
+  double barrier_r_fm = 48;
+  double gamow = 49;                  // pénétration exp(−2πη)
+  double tunneling = 50;              // WKB avec la force nucléaire
+  double cross_section_b = 51;        // mesurée (Bosch-Hale)
+  repeated double nuclear_path = 52;  // t (s), x, y (fm) : le choc dans son plan (centre de masse)
+  double q_mev = 53;
+  double compound_lifetime_s = 54;
+  string spin_text = 55;
+  repeated LabFact facts = 56;
+  double coulomb_n = 57;              // forces au plus près (N)
+  double strong_n = 58;
+  double lorentz_n = 59;
+  double dipole_n = 60;
+  double gravity_n = 61;
+  repeated float potential_r = 62;    // V(r) du couple (fm, MeV)
+  repeated float potential_v = 63;
+  double rho = 64;                    // rayon normalisé du point de rencontre
+  CollisionRun collision = 65;
+  repeated LabElement catalog = 66; // catalogue complet, une seule fois par session
+  CollisionNucleus selected_a = 67;
+  CollisionNucleus selected_b = 68;
+  double requested_energy_kev = 69;
+  double requested_impact_fm = 70;
+  bool thermal_mode = 71;
+  string status = 72;
+  string error = 73;
+  double suggested_energy_kev = 74;
+  LawsonState lawson = 75;          // le plasma réglé : bilan de puissance, critère de Lawson
+}
+
+message CollisionNucleus {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  string name = 4;
+  string symbol = 5;
+  string color_hex = 6;
+  double mass_u = 7;
+  double mass_mev = 8;
+  string mass_source = 9;
+  bool mass_estimated = 10;
+  double radius_fm = 11;
+  bool radius_measured = 12;
+  double magnetic_moment = 13;
+  bool moment_known = 14;
+  string spin_parity = 15;
+  bool stable = 16;
+  double half_life_s = 17;
+  double binding_per_nucleon_mev = 18;
+  int32 charge_state = 19; // noyaux entierement ionises
+}
+
+// Distances fm, vitesses m/s, moments en magnétons nucléaires signés.
+message CollisionBody {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  repeated double position = 4;
+  repeated double velocity = 5;
+  repeated double spin = 6;
+  double radius_fm = 7;
+  double magnetic_moment = 8;
+  string color_hex = 9;
+  string name = 10;
+  string spin_parity = 11;
+  double mass_mev = 12;
+  double excitation_mev = 13;
+  string kind = 14; // nucleus, neutron, gamma, unresolved_contact
+  bool known_moment = 15;
+  double kinetic_mev = 16; // photons : energie totale
+}
+message CollisionSample {
+  double time_s = 1;
+  string phase = 2;
+  repeated CollisionBody bodies = 3;
+  double coulomb_n = 4;
+  double nuclear_n = 5;
+  double kinetic_mev = 6;
+  double potential_mev = 7;
+}
+message CollisionRun {
+  int32 run = 1;
+  bool fused = 2;
+  repeated CollisionSample samples = 3;
+  double energy_kev = 4;
+  double probability = 5;
+  double cross_section_b = 6;
+  double aperture_fm = 7;
+  double impact_fm = 8;
+  double time_scale_s = 9;
+  double q_mev = 10;
+  double energy_error = 11;
+  string reaction = 12;
+  double field_t = 13;
+  repeated double radial_fm = 14;
+  repeated double potential_mev = 15;
+  repeated double wave_amplitude = 16;
+  double contact_fm = 17;
+  double depth_mev = 18;
+  double compound_duration_s = 19;
+  double wkb_transmission = 20;
+  int32 trials = 21;
+  int32 reactions = 22;
+  double barrier_mev = 23;
+  double reduced_mass_mev = 24;
+  string model = 25;
+  string outcome = 26;
+  bool outcome_resolved = 27;
+  double excitation_mev = 28;
+  string notes = 29;
+  int32 compound_z = 30;
+  int32 compound_a = 31;
+  double thermal_kev = 32;          // > 0 : énergie tirée dans un plasma à cette température
+  double rarity_log10 = 33;         // log₁₀ de la part des chocs au moins aussi énergiques
+}
+
+// Le plasma autour du choc (critère de Lawson). Puissances en W/m³.
+message LawsonState {
+  double temperature_kev = 1;
+  double density_m3 = 2;            // ions par m³
+  double confinement_s = 3;         // temps de confinement de l'énergie τ_E
+  double reactivity_m3_s = 4;       // ⟨σv⟩
+  double fusion_w_m3 = 5;
+  double deposited_w_m3 = 6;        // part emportée par les particules chargées (chauffe le plasma)
+  double bremsstrahlung_w_m3 = 7;
+  double conduction_w_m3 = 8;       // W / τ_E
+  double gain = 9;                  // Q = P_fus / P_ext ; −1 : ignition
+  bool ignited = 10;
+  double triple_product = 11;       // n τ T, keV·s/m³
+  double required_triple = 12;      // nτT nécessaire à cette température ; 0 = impossible
+  repeated double curve_t_kev = 13;
+  repeated double curve_ignition = 14;   // 0 = impossible à cette température
+  repeated double curve_breakeven = 15;
+  double q_mev = 16;
+  double charged_fraction = 17;
+  string model = 18;
+  string verdict = 19;
+  double wait_s = 20;               // temps moyen avant qu'un noyau donné fusionne
+  double best_t_kev = 21;
+  double best_triple = 22;
+}

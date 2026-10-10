@@ -1,0 +1,33 @@
+{
+  "seed": 2,
+  "a": 1002,
+  "b": 1003,
+  "energy_kev": 64,
+  "impact_fm": 0,
+  "field_t": 5.3,
+  "bytes": 416748,
+  "reaction": "D + T -> He-4 + n",
+  "outcome": "fusion_products",
+  "model": "Bosch-Hale (2-400 keV) + trajectoire relativiste",
+  "resolved": true,
+  "energy_error": 1.2188817663516538e-11,
+  "phase_times": {
+    "approach": [
+      -2.5295248523862426e-20,
+      -1.1212647363476616e-23
+    ],
+    "scattered": [
+      0.0,
+      0.0
+    ],
+    "compound": [
+      0.0,
+      2.9168505005247706e-21
+    ],
+    "products": [
+      3.08842994173211e-21,
+      4.921328975701421e-08
+    ]
+  },
+  "samples": 897
+}

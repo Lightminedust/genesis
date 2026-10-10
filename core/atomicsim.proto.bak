@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+// On définit le package pour éviter les conflits de nommage
+package genesis;
+
+// Configuration pour la génération du code Java
+option java_multiple_files = true;
+option java_package = "com.studio.gemmie.genesis.grpc";
+
+// --------------------------------------------------------
+// 1. LE SERVICE (Les méthodes appelables)
+// --------------------------------------------------------
+service QuantumEngine {
+  // Une connexion bidirectionnelle continue (le mot-clé 'stream' est crucial ici)
+  // Java stream les actions de l'utilisateur, Python stream le rendu physique à 60 FPS
+  rpc RunSimulation (stream UserAction) returns (stream SimulationFrame) {}
+}
+
+// --------------------------------------------------------
+// 2. LES MESSAGES (Les structures de données binaires)
+// --------------------------------------------------------
+
+// Une action envoyée par l'interface JavaFX vers le moteur Python
+message UserAction {
+  enum ActionType {
+    SPAWN_PROTON = 0;
+    SPAWN_NEUTRON = 1;
+    BOMBARD_PARTICLE = 2; // Pour l'accélérateur
+    RESET = 3;
+  }
+  ActionType type = 1;
+  float intensity = 2; // Ex: Puissance du bombardement (optionnel)
+}
+
+// Une particule individuelle
+message Particle {
+  int32 id = 1;
+  int32 type = 2;  // 1=Proton, 2=Neutron, 3=Electron (les entiers prennent moins de place)
+  float x = 3;     // Coordonnée X
+  float y = 4;     // Coordonnée Y
+  float energy = 5; // Pour dessiner l'aura/luminosité dans JavaFX
+}
+
+// L'état complet du laboratoire à l'instant T (La frame)
+message SimulationFrame {
+  int64 timestamp = 1;
+  bool is_nucleus_stable = 2;     // Pour afficher une alerte "Instable !" dans l'UI
+  float temperature = 3;          // Température globale du système
+  repeated Particle particles = 4; // Liste de toutes les particules ("repeated" = Array/List)
+}

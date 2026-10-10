@@ -1,0 +1,7 @@
+venv/
+none/
+__pycache__/
+*.pyc
+# Stubs regénérés au démarrage par entrypoint.sh
+genesis_pb2.py
+genesis_pb2_grpc.py

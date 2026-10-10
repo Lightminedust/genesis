@@ -1,0 +1,37 @@
+{
+  "seed": 7,
+  "a": 79197,
+  "b": 1003,
+  "energy_kev": 20000.0,
+  "impact_fm": 0,
+  "field_t": 5.3,
+  "bytes": 660823,
+  "reaction": "Au-197 + T -> 3 n + Hg-197 + gamma",
+  "outcome": "modelled_products",
+  "model": "Capture effective Woods-Saxon / WKB ; sigma par ondes partielles Hill-Wheeler",
+  "resolved": true,
+  "energy_error": 7.56980007565744e-09,
+  "phase_times": {
+    "approach": [
+      -4.20672340170165e-21,
+      0.0
+    ],
+    "merge": [
+      0.0,
+      1.007328960760616e-21
+    ],
+    "compound": [
+      1.007328960760616e-21,
+      2.631553782815937e-19
+    ],
+    "evaporation": [
+      2.631553782825937e-19,
+      1.2091101988654111e-15
+    ],
+    "products": [
+      1.2091101988654121e-15,
+      6.048948689051988e-08
+    ]
+  },
+  "samples": 933
+}

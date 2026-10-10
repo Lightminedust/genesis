@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # La base de données NoSQL
+  db:
+    image: mongo:latest
+    container_name: genesis-mongo
+    ports:
+      - "27017:27017" # Accessible depuis ton PC pour inspecter la BDD
+    volumes:
+      - mongo-data:/data/db # Les données persistent même si le conteneur s'arrête
+    networks:
+      - genesis-net
+
+  # Le moteur de simulation Python
+  logic:
+    image: genesis-logic-img
+    build: 
+      context: ./logic
+      dockerfile: Dockerfile
+    container_name: genesis-logic
+    ports:
+      - "50051:50051" # Le port gRPC exposé à ton client JavaFX
+    depends_on:
+      - db          # Attend que Mongo démarre avant de lancer Python
+    environment:
+      - MONGO_URI=mongodb://db:27017/genesis_db
+      - GENESIS_CHEM_CACHE=/app/chem-cache
+    networks:
+      - genesis-net
+    volumes:
+      # Monte le dossier 'core' dans le conteneur pour que Python trouve le .proto
+      - ./core:/app/core:ro
+      # Les calculs quantiques déjà faits (courbes E(R)) survivent aux redémarrages
+      - chem-cache:/app/chem-cache
+
+networks:
+  genesis-net:
+    driver: bridge
+
+volumes:
+  mongo-data:
+  chem-cache:
