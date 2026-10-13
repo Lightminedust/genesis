@@ -5,7 +5,7 @@ hadrons en bulles de verre, quarks lumineux, gluons en ressorts dorés, photon e
 calcule rien : il dessine ce que le moteur envoie (`NucleonState`, `CollisionState`, `HadronLabState`, `StandardModelState`,
 `PartonState`).
 
-## 1. Collision projectile – nucléon (`logic/scattering.py`, `logic/collision_events.py`, `logic/hadronic.py`, `logic/hadron_events.py`)
+## 1. Collision projectile – nucléon (`logic/quantumlab/scattering.py`, `logic/quantumlab/collision_events.py`, `logic/quantumlab/hadronic.py`, `logic/quantumlab/hadron_events.py`)
 
 Un électron d'énergie E frappe un proton ou un neutron au repos et ressort à l'angle θ. Au premier ordre en α il échange un
 photon virtuel (Q², ν). La section efficace inclusive est
@@ -66,7 +66,7 @@ panneau sur la scène de collision : des étiquettes sur les objets, un sous-tit
 pastilles cliquables au-dessus du sous-titre (rangée fixe). La caméra regarde le faisceau de trois quarts (lacet −90° + 34°,
 tangage 17°) : l'électron arrive en biais vers nous, ce qui montre la profondeur et les lentilles (ci-dessous).
 
-**La membrane des hadrons** est la surface de leur sac (`logic/bag.py`) :
+**La membrane des hadrons** est la surface de leur sac (`logic/quantumlab/bag.py`) :
 
 | Grandeur | Calcul |
 |---|---|
@@ -348,7 +348,7 @@ L'écran de collision reprend le style de la fusion (aucun calcul n'a changé, s
   la physique », préréglages), 04 les cas possibles (cliquables : forcer un cas) ; en bas, « Lancer » et « Autre événement ».
   La barre de lecture est celle de la fusion.
 
-## 2. L'atelier de hadrons (`logic/hadron_lab.py`, `logic/hadron_data.py`, `logic/standard_model.py`)
+## 2. L'atelier de hadrons (`logic/quantumlab/hadron_lab.py`, `logic/quantumlab/hadron_data.py`, `logic/quantumlab/standard_model.py`)
 
 On pioche des quarks dans le tableau du Modèle Standard, on choisit couleur et antiparticule, et l'on teste.
 
@@ -448,6 +448,6 @@ Voir [le modèle du nucléon](NUCLEON_MODEL.md) : DGLAP, populations de gluons e
 
 ## Tests et aperçus
 
-`logic/test_collision.py`, `test_hadron_lab.py`, `test_partons.py`, `test_nucleon*.py` ; `QuantumLabTest`, `PartonViewTest`.
+`logic/tests/test_collision.py`, `test_hadron_lab.py`, `test_partons.py`, `test_nucleon*.py` ; `QuantumLabTest`, `PartonViewTest`.
 Aperçu hors ligne : `gradlew labPreview -Pframe=<frame.pb> -Pout=<dossier> -Pat="-1 0.3 4" -Ptab=collision` (ou
 `-Ptab=bench:cU`).

@@ -62,7 +62,7 @@ protobuf {
 }
 
 application {
-    mainClass = 'org.genesis.App'
+    mainClass = 'org.genesis.app.App'
     // Deux fenêtres (la carte et la vue rapprochée) : avec la synchro écran, chacune l'attend à son tour et la cadence
     // tombe de moitié. En mode fenêtré, le compositeur de Windows évite déjà les déchirures.
     applicationDefaultJvmArgs = ['-Dprism.vsync=false']
@@ -83,7 +83,7 @@ tasks.named('test') {
 
 tasks.register('fusionPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.FusionPreview'
+    mainClass = 'org.genesis.fusion.FusionPreview'
     args findProperty('frame') ?: '../../artifacts/fusion-run.pb',
          findProperty('out') ?: '../../artifacts/fusion-preview.png',
          findProperty('time') ?: '-2e-20',
@@ -94,7 +94,7 @@ tasks.register('fusionPreview', JavaExec) {
 
 tasks.register('fusionPlaybackPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.FusionPlaybackPreview'
+    mainClass = 'org.genesis.fusion.FusionPlaybackPreview'
     args findProperty('frame') ?: '../../artifacts/fusion-run.pb',
          findProperty('out') ?: '../../artifacts/fusion-playback',
          findProperty('duration') ?: '24',
@@ -103,7 +103,7 @@ tasks.register('fusionPlaybackPreview', JavaExec) {
 
 tasks.register('labPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.QuantumLabPreview'
+    mainClass = 'org.genesis.subatomic.QuantumLabPreview'
     args findProperty('frame') ?: '../../artifacts/lab.pb',
          findProperty('out') ?: '../../artifacts/lab-preview',
          findProperty('at') ?: '-3 0.2 1 4 12',
@@ -112,32 +112,32 @@ tasks.register('labPreview', JavaExec) {
 
 tasks.register('mascotPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.MascotPreview'
+    mainClass = 'org.genesis.mascot.MascotPreview'
     args findProperty('out') ?: '../../artifacts/mascot.png', findProperty('size') ?: '300'
 }
 
 tasks.register('atomPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.AtomPreview'
+    mainClass = 'org.genesis.atom.AtomPreview'
     args findProperty('frames') ?: '../../artifacts/frames', findProperty('out') ?: '../../artifacts/atom3d',
             findProperty('only') ?: ''
 }
 
 tasks.register('dashboardPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.DashboardPreview'
+    mainClass = 'org.genesis.app.DashboardPreview'
     args findProperty('frames') ?: '../../artifacts/frames', findProperty('out') ?: '../../artifacts/dashboard'
 }
 
 tasks.register('journalPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.JournalPreview'
+    mainClass = 'org.genesis.app.JournalPreview'
     args findProperty('out') ?: '../../artifacts/journal.png'
 }
 
 tasks.register('partonPreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.PartonPreview'
+    mainClass = 'org.genesis.subatomic.PartonPreview'
     args findProperty('frame') ?: '../../artifacts/parton-run.pb',
          findProperty('out') ?: '../../artifacts/parton-preview',
          findProperty('at') ?: '0 .3 .6 1'
@@ -145,7 +145,7 @@ tasks.register('partonPreview', JavaExec) {
 
 tasks.register('fusionLivePreview', JavaExec) {
     classpath = sourceSets.test.runtimeClasspath
-    mainClass = 'org.genesis.FusionLivePreview'
+    mainClass = 'org.genesis.fusion.FusionLivePreview'
     args findProperty('out') ?: '../../artifacts/fusion-live',
          findProperty('a') ?: '3007', findProperty('b') ?: '118294',
          findProperty('energy') ?: '40000', findProperty('force') ?: 'false',

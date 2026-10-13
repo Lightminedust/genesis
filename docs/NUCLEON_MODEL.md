@@ -1,7 +1,7 @@
 # Le nucléon de l'intérieur — modèle
 
 Écran **◉ Le nucléon de l'intérieur** (touche **K**). Un proton (uud) ou un neutron (udd) est décrit par trois quarks de
-valence reliés par une corde de couleur. On frappe un quark ; le moteur (`logic/nucleon.py`) intègre le mouvement,
+valence reliés par une corde de couleur. On frappe un quark ; le moteur (`logic/quantumlab/nucleon.py`) intègre le mouvement,
 décide d'une éventuelle rupture de corde et nomme les hadrons qui en sortent. Le client ne calcule aucune physique : il
 projette les échantillons reçus (`NucleonState`, protocole v16) et lit dessus ses tableaux.
 
@@ -22,7 +22,7 @@ projette les échantillons reçus (`NucleonState`, protocole v16) et lit dessus 
 | Paire créée | saveur ∝ `exp(−π m²/σ)` parmi celles que l'énergie permet ; séparation `d` résolue pour que l'énergie totale soit **exactement** conservée | calcul |
 | Hadrons produits | nommés par leur contenu en quarks (p, n, Δ, Σ, Λ, Ξ, Ω, π, K, φ…) avec leurs masses mesurées (PDG) | table |
 
-Conservations vérifiées par les tests (`logic/test_nucleon.py`) et relues à l'écran sur les quarks eux-mêmes : énergie
+Conservations vérifiées par les tests (`logic/tests/test_nucleon.py`) et relues à l'écran sur les quarks eux-mêmes : énergie
 (< 1 MeV), charge, nombre baryonique, neutralité de couleur de chaque hadron (rouge+vert+bleu, ou couleur+anticouleur).
 
 ## Ce qu'on voit
@@ -53,7 +53,7 @@ Conservations vérifiées par les tests (`logic/test_nucleon.py`) et relues à l
 
 ## Tests
 
-`logic/test_nucleon.py` (physique), `logic/test_nucleon_engine.py` (remplissage du protocole, refus d'un coup
+`logic/tests/test_nucleon.py` (physique), `logic/tests/test_nucleon_engine.py` (remplissage du protocole, refus d'un coup
 impossible), `NucleonViewTest` (lecture des conservations, rendu). Aperçu hors ligne : `gradlew nucleonPreview
 -Pframe=<fichier.pb> -Pout=<dossier> -Pat="0 12 40"`.
 
@@ -67,7 +67,7 @@ la corde de couleur à grande séparation (QCD sur réseau), le triangle (« loi
 
 # La mer de partons (écran « Mer de partons », depuis le nucléon)
 
-Un nucléon sondé à la résolution Q² ne montre pas seulement ses trois quarks de valence. `logic/partons.py` calcule
+Un nucléon sondé à la résolution Q² ne montre pas seulement ses trois quarks de valence. `logic/quantumlab/partons.py` calcule
 l'évolution des distributions x·f(x, Q²) :
 
 | Élément | Loi |
@@ -78,10 +78,10 @@ l'évolution des distributions x·f(x, Q²) :
 | Mer | engendrée par g → q q̄ pendant l'évolution (rien n'est écrit à la main) |
 | Sonde | photon virtuel de longueur d'onde λ = ħc/Q, tracé à l'échelle de la sphère (rayon quadratique moyen 0,84 fm) |
 
-Vérifié par les tests (`logic/test_partons.py`) : impulsion totale = 1 à moins de 0,6 % de Q² = 0,26 à 1000 GeV², nombres de
+Vérifié par les tests (`logic/tests/test_partons.py`) : impulsion totale = 1 à moins de 0,6 % de Q² = 0,26 à 1000 GeV², nombres de
 valence 2,000 (u) et 1,000 (d), la mer croît avec Q², la valence cède son impulsion aux gluons, α_s décroît.
 
-**Population et fluctuations** (`logic/parton_cloud.py`). À (Q², x_min) le moteur tire la population : 3 quarks de valence, des
+**Population et fluctuations** (`logic/quantumlab/parton_cloud.py`). À (Q², x_min) le moteur tire la population : 3 quarks de valence, des
 paires de mer par saveur, des gluons, en nombres ∫ f dx (x > x_min), avec des couleurs de somme nulle. Elle fluctue par six
 processus — g ↔ q q̄ (création et **annihilation**), g ↔ g g (le gluon est coloré, il se scinde lui-même), q ↔ q g — avec :
 

@@ -478,3 +478,17 @@
 .view-button > .label, .view-button .label { -fx-text-fill: #9AA8C0; }
 .view-button:hover > .label { -fx-text-fill: #FFFFFF; }
 .view-button .arrow { -fx-background-color: #9AA8C0; }
+
+/* Journal : filtres */
+.log-chip {
+    -fx-background-color: transparent;
+    -fx-background-radius: 10;
+    -fx-border-color: #1E2A40;
+    -fx-border-radius: 10;
+    -fx-text-fill: #7C8BA6;
+    -fx-font-size: 10.5px;
+    -fx-padding: 2 8;
+    -fx-cursor: hand;
+}
+.log-chip:hover { -fx-border-color: #34507A; -fx-text-fill: #D7E0EE; }
+.log-chip:selected { -fx-background-color: #1B2B48; -fx-border-color: #4C6A9A; -fx-text-fill: #E6EDF7; }

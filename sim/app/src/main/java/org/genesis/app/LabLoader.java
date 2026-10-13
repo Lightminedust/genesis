@@ -1,0 +1,153 @@
+package org.genesis.app;
+
+import com.studio.genesis.grpc.UniverseFrame;
+import java.util.Locale;
+import java.util.function.Predicate;
+import javafx.geometry.Pos;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.CycleMethod;
+import javafx.scene.paint.RadialGradient;
+import javafx.scene.paint.Stop;
+import javafx.scene.shape.ArcType;
+
+/**
+ * L'écran d'attente : dès qu'on change de laboratoire, il dit que le moteur
+ * prépare ce qu'on a demandé, combien de temps s'est écoulé, et il s'efface
+ * quand le moteur a vraiment répondu (la frame annonce le laboratoire actif).
+ * S'il ne répond pas, il dit pourquoi : moteur obsolète, injoignable, ou lent.
+ */
+public final class LabLoader {
+    private final StackPane root = new StackPane();
+    private final Canvas spinner = new Canvas(84, 84);
+    private final Label title = new Label();
+    private final Label detail = new Label();
+    private final Label elapsedLabel = new Label();
+    private final Button cancel = new Button("Annuler");
+    private Predicate<UniverseFrame> ready;
+    private Runnable onCancel;
+    private double elapsed;
+    private double angle;
+    private double fade;
+    private boolean failed;
+    private boolean showing;
+
+    LabLoader() {
+        title.setStyle("-fx-text-fill: #E6EDF7; -fx-font-size: 17px; -fx-font-weight: bold;");
+        detail.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 12.5px;");
+        detail.setWrapText(true);
+        detail.setMaxWidth(380);
+        detail.setAlignment(Pos.CENTER);
+        detail.setStyle(detail.getStyle() + " -fx-text-alignment: center;");
+        elapsedLabel.setStyle("-fx-text-fill: #5B6B86; -fx-font-size: 11px; -fx-font-family: Consolas, monospace;");
+        cancel.getStyleClass().add("dash-button");
+        cancel.setFocusTraversable(false);
+        cancel.setOnAction(event -> {
+            hide();
+            if (onCancel != null) {
+                onCancel.run();
+            }
+        });
+        VBox card = new VBox(12, spinner, title, detail, elapsedLabel, new HBox(cancel));
+        ((HBox) card.getChildren().get(4)).setAlignment(Pos.CENTER);
+        card.setAlignment(Pos.CENTER);
+        card.setMaxSize(460, VBox.USE_PREF_SIZE);
+        card.setStyle("-fx-background-color: #0E1524; -fx-background-radius: 16; -fx-border-color: #26344F;"
+                + " -fx-border-radius: 16; -fx-padding: 28 34 24 34;"
+                + " -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 30, 0.2, 0, 10);");
+        root.getChildren().add(card);
+        root.setStyle("-fx-background-color: rgba(4,7,14,0.72);");
+        root.setVisible(false);
+        root.setOpacity(0);
+    }
+
+    StackPane getNode() {
+        return root;
+    }
+
+    boolean isShowing() {
+        return showing;
+    }
+
+    /** Attendre que le moteur ait ouvert (ou fermé) un écran : `ready` dit quand la frame le confirme. */
+    void show(String heading, String text, Predicate<UniverseFrame> ready, Runnable cancelAction) {
+        this.ready = ready;
+        this.onCancel = cancelAction;
+        title.setText(heading);
+        detail.setText(text);
+        elapsed = 0;
+        failed = false;
+        showing = true;
+        cancel.setText("Annuler");
+        root.setVisible(true);
+    }
+
+    /** Une frame est arrivée : si elle confirme l'écran demandé, l'attente est finie. */
+    void onFrame(UniverseFrame frame) {
+        if (showing && !failed && ready != null && ready.test(frame)) {
+            hide();
+        }
+    }
+
+    /** Le moteur ne pourra pas répondre : on le dit, au lieu d'attendre pour rien. */
+    void fail(String heading, String text) {
+        if (!showing) {
+            return;
+        }
+        failed = true;
+        title.setText(heading);
+        detail.setText(text);
+        cancel.setText("Fermer");
+    }
+
+    void hide() {
+        showing = false;
+    }
+
+    void tick(double dt) {
+        fade = Math.max(0, Math.min(1, fade + (showing ? dt / 0.18 : -dt / 0.25)));
+        root.setOpacity(fade);
+        if (fade <= 0 && !showing) {
+            root.setVisible(false);
+            return;
+        }
+        elapsed += dt;
+        angle += dt * (failed ? 0.4 : 2.4);
+        if (!failed) {
+            elapsedLabel.setText(String.format(Locale.FRANCE, "%.1f s", elapsed)
+                    + (elapsed > 20 ? " · le moteur calcule encore (ou il est arrêté)" : ""));
+        } else {
+            elapsedLabel.setText("");
+        }
+        draw();
+    }
+
+    /** Un petit atome qui tourne : deux électrons sur leurs orbites autour d'un noyau qui pulse. */
+    private void draw() {
+        GraphicsContext g = spinner.getGraphicsContext2D();
+        double w = spinner.getWidth();
+        double c = w / 2;
+        g.clearRect(0, 0, w, w);
+        Color accent = failed ? Color.web("#F87171") : Color.web("#7DD3FC");
+        g.setStroke(Color.web("#22304A"));
+        g.setLineWidth(3);
+        g.strokeOval(c - 32, c - 32, 64, 64);
+        g.setStroke(accent);
+        g.setLineCap(javafx.scene.shape.StrokeLineCap.ROUND);
+        g.strokeArc(c - 32, c - 32, 64, 64, Math.toDegrees(-angle), 90, ArcType.OPEN);
+        g.setStroke(Color.web("#F2B84B"));
+        g.setLineWidth(2);
+        g.strokeArc(c - 22, c - 22, 44, 44, Math.toDegrees(angle * 1.6), 70, ArcType.OPEN);
+        double pulse = 6 + 1.5 * Math.sin(angle * 2);
+        g.setFill(new RadialGradient(0, 0, c, c, pulse * 2, false, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#FCA5A5")), new Stop(0.5, Color.web("#F87171", 0.5)),
+                new Stop(1, Color.web("#F87171", 0))));
+        g.fillOval(c - pulse * 2, c - pulse * 2, pulse * 4, pulse * 4);
+    }
+}

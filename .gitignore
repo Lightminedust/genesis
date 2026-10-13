@@ -1,6 +1,7 @@
 # --- Dossier Python (logic) ---
-logic/__pycache__/
-logic/*.py[cod]
+logic/**/__pycache__/
+logic/**/*.py[cod]
+logic/molecular/cache/
 logic/venv/
 logic/.venv/
 logic/.env

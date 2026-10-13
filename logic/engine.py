@@ -24,13 +24,13 @@ import numpy as np
 
 import genesis_pb2
 import genesis_pb2_grpc
-import nuclear_data
-import nucleus as nucleus_model
-from atom import SHELL_NAMES, shell_capacity
-from repository import ElementRepository
-from particles import PARTICLES
-from simulation import SPEEDS, Session
-from units import format_duration
+from nuclear import nuclear_data
+from nuclear import nucleus as nucleus_model
+from atomic.atom import SHELL_NAMES, shell_capacity
+from simulator.repository import ElementRepository
+from common.particles import PARTICLES
+from simulator.simulation import SPEEDS, Session
+from common.units import format_duration
 
 # Incrémenté à chaque changement incompatible du contrat. Le client refuse de
 # dessiner une frame qui ne porte pas ce numéro : mieux vaut un message clair
@@ -312,7 +312,7 @@ def fill_subatomic(message, experiment, sent):
 
 def fill_nucleon(message, nucleon, strike, sent):
     """Le nucléon de l'intérieur : les paramètres du modèle à chaque frame, les échantillons une seule fois par tir."""
-    import nucleon as quarks
+    from quantumlab import nucleon as quarks
     message.active = True
     message.run = nucleon.run
     message.hadron = nucleon.hadron
@@ -362,7 +362,7 @@ _BAG_CACHE = {}
 
 def fill_bag(message, nucleon):
     """La forme des hadrons et le puits du proton : calculés une fois par cible, recopiés à chaque frame (quelques nombres)."""
-    import bag
+    from quantumlab import bag
     target = getattr(nucleon, 'hadron', 'proton')
     if target not in _BAG_CACHE:
         b = bag.bag(target)
@@ -396,7 +396,7 @@ def fill_standard_model(message, sent):
     """Les 17 particules et leurs fiches calculées : envoyées une fois par connexion."""
     if sent is not None and sent.get('standard_model'):
         return
-    import sm_cards
+    from quantumlab import sm_cards
     for p in sm_cards.particles():
         message.particles.add(id=p['id'], symbol=p['symbol'], name=p['name'], family=p['family'], generation=p['generation'],
                               charge=p['charge'], spin=p['spin'], mass_mev=p['mass'], colour=p['colour'], forces=p['forces'],
@@ -539,7 +539,7 @@ def fill_hadron(message, state):
     if d:
         message.decay_label = d['label']
         message.decay_mass_mev = d['parent_mass']
-        import hadron_data
+        from quantumlab import hadron_data
         weak = fate.get('kind', '') in ('weak', 'weak-heavy', 'top')
         for index, (name, mass, p) in enumerate(d['products']):
             try:
@@ -560,7 +560,7 @@ def fill_hadron(message, state):
 
 def fill_partons(message, cloud, view, sent):
     """La mer de partons : la résolution à chaque frame, les populations et courbes une seule fois par tirage."""
-    import partons as pdf
+    from quantumlab import partons as pdf
     message.active = True
     message.run = view['run']
     message.hadron = cloud.hadron
@@ -637,7 +637,7 @@ def fill_matter(message, m):
 
 def fill_star(message, s, paused):
     """Le cœur d'étoile : conditions, plasma, énergie, matière, fusions de la fenêtre."""
-    import star as star_module
+    from fusionlab import star as star_module
     message.active = True
     message.presets.extend(p["name"] for p in star_module.PRESETS)
     message.preset = s.preset
@@ -713,7 +713,7 @@ def fill_star(message, s, paused):
 
 
 def _lab_nucleus(message, lab, z, a, with_cloud=False):
-    import atomic_data
+    from atomic import atomic_data
     card = lab.describe(z, a)
     message.z, message.a, message.label, message.name = z, a, card["label"], card["name"]
     message.symbol, message.mass_u, message.estimated = card["symbol"], card["mass_u"], card["estimated"]
@@ -725,8 +725,8 @@ def _lab_nucleus(message, lab, z, a, with_cloud=False):
 
 def _reactor_particle(message, z, a, b_meet=None, data=None):
     """Une particule du réacteur : identité mesurée, nucléons, et (si elle a volé) sa trajectoire."""
-    import fusion
-    import reactor
+    from fusionlab import fusion
+    from fusionlab import reactor
     message.z, message.a = z, a
     message.label = "n" if (z, a) == (0, 1) else "p" if (z, a) == (1, 1) else fusion.label(z, a)
     message.name = fusion.full_name(z, a)
@@ -773,9 +773,9 @@ def _reactor_particle(message, z, a, b_meet=None, data=None):
 
 def fill_reactor(message, r):
     """Le réacteur : le tokamak (une fois), le plasma, et le dernier couple suivi (une fois par tir)."""
-    import fusion
-    import reactor
-    from fusion_dynamics import FusionExperiment
+    from fusionlab import fusion
+    from fusionlab import reactor
+    from fusionlab.fusion_dynamics import FusionExperiment
     if isinstance(r, FusionExperiment):
         fill_collision(message, r)
         return
@@ -875,7 +875,7 @@ def _fill_lawson(message, experiment):
 
 def fill_collision(message, experiment):
     """Calculs envoyés une fois ; le client interpole seulement ces échantillons."""
-    import reactor
+    from fusionlab import reactor
     import math
     from scipy import constants as sc
     message.active = True
@@ -884,8 +884,8 @@ def fill_collision(message, experiment):
     message.temperature_kev = experiment.kt_kev
     message.field_t = experiment.field_t
     message.run = experiment.run
-    from fusion_dynamics import collision_catalog, nucleus_properties
-    import fusion
+    from fusionlab.fusion_dynamics import collision_catalog, nucleus_properties
+    from fusionlab import fusion
     if not experiment.catalog_sent:
         for element in collision_catalog():
             entry = message.catalog.add(z=element['z'], symbol=element['symbol'], name=element['name'],
@@ -953,8 +953,8 @@ def fill_collision(message, experiment):
 
 def fill_lab(message, lab):
     """Le laboratoire de fusion : les deux noyaux, la colline, le dernier tir, et ce qu'ils veulent dire."""
-    import collider
-    import fusion
+    from fusionlab import collider
+    from fusionlab import fusion
     message.active = True
     if not lab.catalog_sent:
         for element in fusion.catalog():
@@ -1073,7 +1073,7 @@ def fill_chemistry(message, molecule, sent_table):
 
     sent_table : dictionnaire {"version": ...} propre à la connexion, mis à jour ici.
     """
-    import chemistry
+    from molecular import chemistry
     p = molecule.pair
     message.active = True
     message.symbol_a, message.symbol_b = p.symbols
@@ -1386,7 +1386,7 @@ def serve():
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(errors="backslashreplace")
     repository = ElementRepository()
-    import star
+    from fusionlab import star
     star.warm_up()          # la bibliothèque REACLIB met quelques secondes à se lire
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

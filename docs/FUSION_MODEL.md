@@ -21,7 +21,7 @@ La limite supplémentaire E_cm / A_réduit ≤ 10 MeV écarte le domaine de
 fragmentation à haute énergie. Une entrée hors domaine affiche une erreur
 et conserve la session.
 
-En mode **Plasma** (`logic/lawson.py`), T, n et τ sont réglables. La
+En mode **Plasma** (`logic/fusionlab/lawson.py`), T, n et τ sont réglables. La
 réactivité ⟨σv⟩ est intégrée sur la maxwellienne (Bosch–Hale pour D–T, D–D,
 D–³He ; ailleurs la section de capture du moteur). Le bilan compare la
 puissance de fusion déposée (part chargée) aux pertes W/τ et au rayonnement
@@ -32,7 +32,7 @@ avec la rareté de ce choc.
 
 ## Dynamique et issue
 
-Le moteur actif est `logic/fusion_dynamics.py`. Il réutilise les données
+Le moteur actif est `logic/fusionlab/fusion_dynamics.py`. Il réutilise les données
 de `fusion.py` et `reactor.py` ; leurs anciens écrans ne pilotent pas celui-ci.
 
 ```
@@ -406,8 +406,8 @@ elle ne franchit jamais les discontinuités de réaction.
 Depuis `logic` :
 
 ```powershell
-.\venv\Scripts\python.exe -m unittest test_fusion_dynamics
-.\venv\Scripts\python.exe export_collision.py --a 6:12 --b 8:16 --energy 20000 --out ../artifacts/carbon-oxygen.pb
+.\venv\Scripts\python.exe -m unittest tests.test_fusion_dynamics
+.\venv\Scripts\python.exe -m tools.export_collision --a 6:12 --b 8:16 --energy 20000 --out ../artifacts/carbon-oxygen.pb
 ```
 
 Depuis `sim` :

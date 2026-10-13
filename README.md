@@ -9,7 +9,7 @@ justifie.
 
 ```
 JavaFX (sim/)  --- gRPC bidirectionnel --->  Python (logic/)  ---> MongoDB
-  dessine les événements   genesis.proto v15   horloge + règles     table périodique
+  dessine les événements   genesis.proto v25   horloge + règles     table périodique
                                                scipy, radioactivedecay, mendeleev
 ```
 
@@ -123,7 +123,7 @@ Lois, sources et limites : [le monde subatomique](docs/SUBATOMIC_MODEL.md) et [l
 
 ## Ce qu'on peut faire
 
-L'écran de l'atome tient en trois bandes :
+Au lancement, le simulateur charge un atome d'uranium 238 et ouvre l'onglet Orbitale (la forme du nuage de valence, avant le spectre). L'écran de l'atome tient en trois bandes :
 
 - **La barre du haut** :
   - l'élément (clic : la table périodique, qui se referme dès qu'un élément est choisi, ou avec Échap) ;
@@ -420,22 +420,43 @@ atomes neutres.
 
 ## Genesis, la petite guide
 
-Genesis vit dans une boule de verre posée sur un socle (quatre câbles, losange doré, le vide du fond qui sert de voyant). Sa matière est faite de metaballs (contours calculés) et rappelle un petit nuage cosmique :
-- **Silhouette** : un corps rond et festonné, et deux grandes oreilles-nuages reliées par un col.
-- **Corps vivant** : quelques bouffées s'en détachent, s'éloignent et se recollent. Le corps est stable, pas figé.
-- **Dégradé** sur tout le corps : violet en bas, la nuit derrière le visage, les oreilles toutes bleues.
-- **Galaxies** : dans chaque oreille, une galaxie spirale qui tourne (en sens opposés).
-- **Que de la matière** : une nébuleuse en voile, des étoiles blanches, rien d'or sur elle.
+> **Mise de côté.** Genesis n'est plus affichée : le journal n'a qu'une vue, les logs. Son code est gardé dans `sim/app/.../mascot/` ; pour la retrouver, passer `GENESIS_ENABLED` à `true` dans `sim/app/.../app/App.java`. Ce qui suit décrit ce qu'elle fait quand elle est activée.
 
-Elle lit le journal : chaque événement devient une phrase dans sa bulle, avec le calcul en doré. Un
-clic éparpille sa matière, qui se rassemble aussitôt ; au bout de 80 s sans événement, elle s'endort et se ramasse en une seule
-masse. `gradlew mascotPreview` dessine ses états et une bande de son corps qui se sépare ; `gradlew journalPreview` le journal.
+Genesis est une boule de matière noire, pleine d'univers. Elle flotte dans une boule de verre posée sur un socle (quatre câbles, losange doré, le vide du fond qui sert de voyant).
+
+**Sa forme est solide et simple** (`GenesisBlob.java`) :
+- **Une boule ronde et deux oreilles arrondies**, avec un contour lumineux, bleu puis blanc, et un grand halo autour.
+- **Dedans, de l'espace** : le vide noir, une nébuleuse bleue qui tourne lentement, des étoiles.
+- **Au cœur, une lumière blanche.**
+- **En bas, de l'écume blanche**, percée de trous, avec quelques îlots qui s'en détachent vers le haut.
+- **Autour, des gouttelettes** qui sortent de la boule, flottent, puis y reviennent se fondre.
+- **Trois reflets clairs** en haut à droite, comme sur du verre.
+
+Elle n'a pas de visage. Ses humeurs passent par trois choses :
+- **Son cœur de lumière** : il se tourne vers la souris, bat quand elle parle, baisse quand elle dort.
+- **Ses oreilles**, montées sur ressort : elles traînent quand elle se déplace, se dressent quand elle est curieuse, tombent quand elle dort ; l'une d'elles frémit de temps en temps.
+- **Son corps de gelée** : il s'étire dans le sens où elle va, s'écrase quand on la touche, fait de petits bonds quand elle est contente ; l'écume penche et clapote avec ses mouvements.
+
+Elle bouge peu et doucement : elle flotte au milieu, penche vers la souris, se pose au fond pour dormir.
+
+**Un clic la divise** (`GenesisFlask.java`, 7,8 s) : elle rentre ses oreilles, se sépare en cinq masses qui flottent, se soudent et se séparent comme dans une flasque, puis se rassemble, se reconstitue et rejette des résidus de matière. Elle le fait aussi d'elle-même de temps en temps, au repos.
+
+La forme est une surface implicite (la distance à la boule, aux oreilles et aux gouttes, réunies par un minimum lissé) : le contour est lisse et net à toutes les tailles. Aucune bibliothèque n'est ajoutée.
+
+**Le journal a deux vues**, avec une bascule en haut à droite (le choix est mémorisé) :
+- **Journal** (sans Genesis) : les logs complets. Chaque ligne porte une étiquette de catégorie (Lumière, Électrons, Noyau, Info), le temps simulé, le titre, le calcul dans un encart et l'explication du moteur. Des filtres avec compteurs ne gardent qu'une catégorie.
+- **Genesis** : elle explique chaque événement en mots simples, en trois temps : ce qui s'est passé, « Pourquoi : », puis « Et maintenant : » (ou « À retenir : », « Essaie : », « En clair : »). Les logs restent dessous, en une ligne chacun ; un clic sur une ligne lui fait expliquer cet événement. Quand plusieurs événements arrivent au même instant, elle commence par le plus important (le noyau, puis la lumière, puis les électrons).
+
+Elle lit le journal : chaque événement devient une phrase dans sa bulle, avec le calcul en doré. Au bout de 80 s sans
+événement, elle s'endort : elle se pose au fond, les oreilles tombées, le cœur en veilleuse. `gradlew mascotPreview` dessine cinq planches : ses états,
+douze instants serrés (0,2 s d'écart, pour juger la continuité), huit instants plus espacés, ses réactions à la souris, et sa
+division après un clic ; `gradlew journalPreview` dessine le journal.
 
 ## L'atome en 3D
 
 L'écran de l'atome ne dessine plus d'orbites : tout y est calculé, en 3D, et
 on le fait tourner en le glissant (il tourne aussi, très lentement, de
-lui-même). `python export_atom_frames.py` (dans `logic`) écrit des frames réelles
+lui-même). `python -m tools.export_atom_frames` (dans `logic`) écrit des frames réelles
 du moteur dans `artifacts/frames` ; `gradlew dashboardPreview` rend l'écran entier (barres, scène, timeline) et une désintégration réelle de l'uranium dans `artifacts/dashboard` ; `gradlew atomPreview` les rend dans
 `artifacts/atom3d` (éléments, rotation, plongée, goutte, gouffre, photon absorbé
 par H, photoionisation de Na, écran étroit) et mesure le temps par image
@@ -482,7 +503,7 @@ d'affichage :
 - **Longueur du paquet** : une raie atomique ou nucléaire dure des nanosecondes, soit ~10⁷ à 10⁸ oscillations ; même un γ est un long paquet, pas un « éclat bref ». Le paquet est donc dessiné long.
 
 **Le photon en vraie 3D** (`Photon3DLayer`, JavaFX 3D sur la scène, projection parallèle alignée pixel pour pixel) :
-- **Volumes** : un fuseau (sphère étirée, matériau Phong translucide, reflet spéculaire), deux rubans maillés (TriangleMesh, E et B, auto-éclairés), un axe fin et une lumière ponctuelle embarquée qui éclaire ses volumes. L'orientation suit la caméra de l'atome.
+- **Volumes** : un fuseau fin et presque transparent (sphère étirée, matériau Phong, reflet spéculaire), pour que l'œil aille sur l'onde ; deux rubans maillés (TriangleMesh, E et B, auto-éclairés), un axe fin et une lumière ponctuelle embarquée qui éclaire ses volumes. L'orientation suit la caméra de l'atome.
 - **Le canevas garde** le halo du fuseau, les franges du photon ionisant, et la lueur qu'il projette dans le brouillard traversé. Cette lueur est un effet de rendu, pas une diffusion calculée.
 
 **Les particules :**
@@ -610,47 +631,76 @@ couleurs changent, la charge totale jamais (testé à chaque pas). La fiche
 ## Tests
 
 ```bash
-cd logic && python -m unittest test_fusion_dynamics test_lawson test_light_interaction test_atom test_simulation test_matter test_collider test_fusion test_reactor test_star test_chemistry test_nucleon test_nucleon_engine test_partons test_hadron_lab test_collision test_decay_chain
+cd logic && python -m unittest discover -s tests -t .     # tout le moteur (une dizaine de minutes)
+cd logic && python -m unittest tests.test_fusion          # un seul fichier de tests
 cd sim   && gradle test                                   # contrat et rendu
 ```
 
 ## Structure
 
+Le dépôt a cinq dossiers ; chacun a son README, qui dit ce qu'il contient et comment s'en servir.
+
+| Dossier | Contenu |
+|---|---|
+| [`core/`](core/README.md) | Le contrat gRPC partagé entre le moteur et le client (`genesis.proto`) |
+| [`logic/`](logic/README.md) | Le moteur Python : la physique, rangée par domaine |
+| [`sim/`](sim/README.md) | Le client JavaFX : les écrans, rangés par laboratoire |
+| [`docs/`](docs/README.md) | Les modèles physiques, expliqués en détail |
+| [`artifacts/`](artifacts/README.md) | Les images et les frames d'aperçu |
+
+Le moteur et le client sont rangés de la même façon, par domaine :
+
+| Domaine | Moteur (`logic/`) | Client (`sim/app/src/main/java/org/genesis/`) |
+|---|---|---|
+| Point d'entrée | `engine.py` | `app/` (l'application, le journal, la timeline) |
+| Liaison gRPC | `genesis_pb2*.py` (générés) | `engine/` |
+| Session, données | `simulator/` | — |
+| Outils partagés | `common/` | `common/` |
+| L'atome et sa lumière | `atomic/` | `atom/` |
+| Le noyau | `nuclear/` | `atom/` (panneaux du noyau) |
+| Molécule et matière | `molecular/` | `matter/` |
+| Fusion, réacteur, étoile | `fusionlab/` | `fusion/` |
+| Monde subatomique | `quantumlab/` | `subatomic/` |
+| Genesis (mise de côté, non affichée) | — | `mascot/` |
+| Outils et tests | `tools/`, `tests/` | `sim/app/src/test/java/org/genesis/` (mêmes paquets) |
+
+Fichier par fichier :
+
 | Chemin | Rôle |
 |---|---|
 | `core/genesis.proto` | Le contrat partagé (v25), longueurs d'onde absorbables en double précision |
-| `logic/light_interaction.py` | Profils naturels, faisceau gaussien et continuum hydrogénoïde 1s |
-| `logic/simulation.py` | L'horloge et les règles : la session qui vit |
+| `logic/atomic/light_interaction.py` | Profils naturels, faisceau gaussien et continuum hydrogénoïde 1s |
+| `logic/simulator/simulation.py` | L'horloge et les règles : la session qui vit |
 | `logic/engine.py` | Serveur gRPC : lit les actions, avance le temps, envoie les événements |
-| `logic/hydrogen.py` | Coefficients d'Einstein, durées de vie, absorption (un électron) |
-| `logic/nuclear_data.py` | Accès aux bases nucléaires (radioactivedecay, mendeleev) |
-| `logic/atomic_data.py` | Ionisations, affinités, raies de résonance, doublets de spin |
-| `logic/particles.py` | Le zoo de particules : masse, charge, spin… |
-| `logic/matter.py` | Dynamique moléculaire : Lennard-Jones, parois thermiques, états mesurés |
-| `logic/chemistry.py` | Deux atomes en chimie quantique : E(R), densité, orbitales, dynamique |
-| `logic/fusion.py` | Le laboratoire : potentiel, WKB, trajectoire, cascade d'évaporation, fission, nuages |ψ|², interprétations |
-| `logic/collider.py` | Réactions mesurées, étiquettes, cinématique à deux corps |
-| `logic/fusion_dynamics.py` | Collisions intégrées, soudure calculée (friction), issues probabilistes et cinématique des produits ; données nucléaires dans `reactor.py` |
-| `logic/lawson.py` | Le plasma : ⟨σv⟩ maxwellien, bremsstrahlung, critère de Lawson, tirage de l'énergie d'un choc |
-| `sim/app/.../ReactorView.java` | Laboratoire de fusion : la carte, les réglages, le bilan ; champs dans `FusionField`, rendu (carte ou au plus près) dans `FusionRenderer` |
-| `sim/app/.../ResultView.java` | Le bilan interactif : flottant ou fenêtre détachée ; un élément choisi y amène la vue |
-| `sim/app/.../CollisionTimeline.java` | Les étapes de lecture (temps physique, tunnel, soudure, produits sur la carte) |
-| `sim/app/.../FusionLab.java` | L'ancien laboratoire 3D (plus relié à l'interface) |
-| `sim/app/.../LabCamera.java` | La caméra à inertie et la projection en perspective |
-| `logic/star.py` | Le cœur d'étoile : réseau REACLIB, Saha, Fermi-Dirac, énergie, fenêtre de fusions |
-| `sim/app/.../StarView.java` | L'écran du cœur d'étoile |
-| `sim/app/.../MoleculeCanvas.java` | La molécule : densité, Δρ, E(R), diagramme d'orbitales |
-| `sim/app/.../MatterCanvas.java` | La boîte d'atomes en 3D, piston, mesures |
-| `logic/atom.py` | Évaluation de l'atome : couches, niveaux, orbitale, noyau |
-| `logic/halflife.py` | Estimations pour les noyaux jamais observés |
-| `sim/app/.../SimCanvas.java` | La carte : échelles, événements, loupe, plongée, gouffre, bandeau |
-| `sim/app/.../OrbitalCloud.java` | Le nuage 3D : |ψ|² projeté exactement, tranches de plongée, mesures fugaces |
-| `sim/app/.../NuclearDrop.java` | Le noyau goutte : vibrations de Bohr–Mottelson, échanges de pions p ↔ n |
-| `sim/app/.../Camera3D.java` | La caméra des vues 3D de l'atome et du noyau |
-| `sim/app/.../LabLoader.java` | L'écran d'attente quand on ouvre ou quitte un laboratoire |
-| `sim/app/.../Photon3DLayer.java` | Le photon en JavaFX 3D (fuseau, rubans E/B maillés, lumière), posé sur la scène |
-| `sim/app/.../TimelineBar.java` | La timeline : chaîne de désintégration en ligne de métro, vitesse du temps en clair |
-| `sim/app/.../PhotonPacket.java` | Le photon : paquet d'onde 3D (E, B, enveloppe) construit à partir de λ |
-| `sim/app/.../LightPanel.java` | Niveaux d'énergie et spectre (réglage du laser) |
-| `sim/app/.../NucleusPanel.java` | Vallée de stabilité et données du noyau |
-| `sim/app/.../EventJournal.java` | Le journal |
+| `logic/atomic/hydrogen.py` | Coefficients d'Einstein, durées de vie, absorption (un électron) |
+| `logic/nuclear/nuclear_data.py` | Accès aux bases nucléaires (radioactivedecay, mendeleev) |
+| `logic/atomic/atomic_data.py` | Ionisations, affinités, raies de résonance, doublets de spin |
+| `logic/common/particles.py` | Le zoo de particules : masse, charge, spin… |
+| `logic/molecular/matter.py` | Dynamique moléculaire : Lennard-Jones, parois thermiques, états mesurés |
+| `logic/molecular/chemistry.py` | Deux atomes en chimie quantique : E(R), densité, orbitales, dynamique |
+| `logic/fusionlab/fusion.py` | Le laboratoire : potentiel, WKB, trajectoire, cascade d'évaporation, fission, nuages |ψ|², interprétations |
+| `logic/fusionlab/collider.py` | Réactions mesurées, étiquettes, cinématique à deux corps |
+| `logic/fusionlab/fusion_dynamics.py` | Collisions intégrées, soudure calculée (friction), issues probabilistes et cinématique des produits ; données nucléaires dans `reactor.py` |
+| `logic/fusionlab/lawson.py` | Le plasma : ⟨σv⟩ maxwellien, bremsstrahlung, critère de Lawson, tirage de l'énergie d'un choc |
+| `sim/app/.../fusion/ReactorView.java` | Laboratoire de fusion : la carte, les réglages, le bilan ; champs dans `FusionField`, rendu (carte ou au plus près) dans `FusionRenderer` |
+| `sim/app/.../fusion/ResultView.java` | Le bilan interactif : flottant ou fenêtre détachée ; un élément choisi y amène la vue |
+| `sim/app/.../fusion/CollisionTimeline.java` | Les étapes de lecture (temps physique, tunnel, soudure, produits sur la carte) |
+| `sim/app/.../fusion/FusionLab.java` | L'ancien laboratoire 3D (plus relié à l'interface) |
+| `sim/app/.../common/LabCamera.java` | La caméra à inertie et la projection en perspective |
+| `logic/fusionlab/star.py` | Le cœur d'étoile : réseau REACLIB, Saha, Fermi-Dirac, énergie, fenêtre de fusions |
+| `sim/app/.../fusion/StarView.java` | L'écran du cœur d'étoile |
+| `sim/app/.../matter/MoleculeCanvas.java` | La molécule : densité, Δρ, E(R), diagramme d'orbitales |
+| `sim/app/.../matter/MatterCanvas.java` | La boîte d'atomes en 3D, piston, mesures |
+| `logic/atomic/atom.py` | Évaluation de l'atome : couches, niveaux, orbitale, noyau |
+| `logic/nuclear/halflife.py` | Estimations pour les noyaux jamais observés |
+| `sim/app/.../atom/SimCanvas.java` | La carte : échelles, événements, loupe, plongée, gouffre, bandeau |
+| `sim/app/.../atom/OrbitalCloud.java` | Le nuage 3D : |ψ|² projeté exactement, tranches de plongée, mesures fugaces |
+| `sim/app/.../atom/NuclearDrop.java` | Le noyau goutte : vibrations de Bohr–Mottelson, échanges de pions p ↔ n |
+| `sim/app/.../atom/Camera3D.java` | La caméra des vues 3D de l'atome et du noyau |
+| `sim/app/.../app/LabLoader.java` | L'écran d'attente quand on ouvre ou quitte un laboratoire |
+| `sim/app/.../atom/Photon3DLayer.java` | Le photon en JavaFX 3D (fuseau, rubans E/B maillés, lumière), posé sur la scène |
+| `sim/app/.../app/TimelineBar.java` | La timeline : chaîne de désintégration en ligne de métro, vitesse du temps en clair |
+| `sim/app/.../atom/PhotonPacket.java` | Le photon : paquet d'onde 3D (E, B, enveloppe) construit à partir de λ |
+| `sim/app/.../atom/LightPanel.java` | Niveaux d'énergie et spectre (réglage du laser) |
+| `sim/app/.../atom/NucleusPanel.java` | Vallée de stabilité et données du noyau |
+| `sim/app/.../app/EventJournal.java` | Le journal : logs par catégorie, filtres, vue compacte sous Genesis |
