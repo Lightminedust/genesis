@@ -7,6 +7,8 @@ traverse, un noyau instable se désintègre. Rien n'est scénarisé : chaque
 événement arrive au moment tiré par la loi physique, avec le calcul qui le
 justifie.
 
+Licence d'utilisation : [EULA.txt](EULA.txt).
+
 ```
 JavaFX (sim/)  --- gRPC bidirectionnel --->  Python (logic/)  ---> MongoDB
   dessine les événements   genesis.proto v25   horloge + règles     table périodique
