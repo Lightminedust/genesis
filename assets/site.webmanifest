@@ -1,0 +1,22 @@
+{
+  "name": "Genesis",
+  "short_name": "Genesis",
+  "description": "La matière, calculée sous vos yeux : un simulateur physique gratuit pour Windows.",
+  "icons": [
+    {
+      "src": "web-app-manifest-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "web-app-manifest-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "theme_color": "#f4f3ef",
+  "background_color": "#f4f3ef",
+  "display": "standalone"
+}

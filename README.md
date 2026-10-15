@@ -45,6 +45,34 @@ venv\Scripts\python engine.py
 Le build Docker garde les paquets téléchargés dans un cache : seul ce qui
 change est retéléchargé.
 
+## Paquet Windows
+
+Sur Windows, avec un JDK 21 (`jpackage`), `gradle` et l'environnement
+`logic/venv` déjà équipé des dépendances du moteur, installer PyInstaller dans
+cet environnement puis construire le paquet :
+
+```powershell
+.\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.1.1
+```
+
+Le script teste le moteur autonome, puis produit `dist/windows/Genesis`
+(application portable), `Genesis-0.1.1-portable.zip` et un installateur `.exe`.
+L'installateur place Genesis dans le profil utilisateur et ajoute les raccourcis
+au menu Démarrer et au bureau. Pour une nouvelle version, augmenter `-Version` ;
+le même identifiant d'installation permet la mise à niveau.
+
+Le paquet embarque le client JavaFX, son runtime Java et le moteur Python.
+Au premier démarrage, un écran de chargement reste visible jusqu'à ce que le
+moteur Python ait ouvert sa connexion locale. En cas d'échec, le journal est
+dans `%LOCALAPPDATA%\Genesis\logs\engine.log`.
+L'utilisateur n'a besoin ni de Gradle, ni de Python, ni de Docker ou MongoDB.
+Le moteur écoute uniquement sur `127.0.0.1` et s'arrête avec Genesis. Les
+journaux et le cache sont écrits dans `%LOCALAPPDATA%\Genesis\` ; l'application
+portable y écrit aussi. L'échelle Molécule reste masquée dans cette version.
+Le paquet n'est pas signé ; une signature de code et les notices des composants
+tiers sont à préparer avant diffusion publique.
+
 ## Laboratoire subatomique
 
 Depuis l'accueil, ouvrir **◈ Laboratoire subatomique** (touche **S**). Ce mode

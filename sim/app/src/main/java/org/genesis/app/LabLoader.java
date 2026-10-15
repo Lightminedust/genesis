@@ -90,7 +90,7 @@ public final class LabLoader {
 
     /** Une frame est arrivée : si elle confirme l'écran demandé, l'attente est finie. */
     void onFrame(UniverseFrame frame) {
-        if (showing && !failed && ready != null && ready.test(frame)) {
+        if (showing && ready != null && ready.test(frame)) {
             hide();
         }
     }
@@ -121,7 +121,7 @@ public final class LabLoader {
         angle += dt * (failed ? 0.4 : 2.4);
         if (!failed) {
             elapsedLabel.setText(String.format(Locale.FRANCE, "%.1f s", elapsed)
-                    + (elapsed > 20 ? " · le moteur calcule encore (ou il est arrêté)" : ""));
+                    + (elapsed > 20 ? " · le moteur prépare encore les données" : ""));
         } else {
             elapsedLabel.setText("");
         }

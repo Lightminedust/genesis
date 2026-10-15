@@ -362,6 +362,7 @@
     -fx-border-width: 1 0 0 0;
 }
 .dash-brand { -fx-text-fill: #8B9BB8; -fx-font-size: 11px; -fx-font-weight: bold; }
+.dash-logo { -fx-background-color: #FFFFFF; -fx-background-radius: 100; }
 .dash-label { -fx-text-fill: #5B6B86; -fx-font-size: 10px; -fx-font-weight: bold; }
 .dash-value { -fx-text-fill: #E6EDF7; -fx-font-size: 13px; -fx-font-weight: bold; -fx-font-family: "Consolas", monospace; }
 .dash-note { -fx-text-fill: #8B9BB8; -fx-font-size: 11.5px; }

@@ -13,7 +13,16 @@ sim/out/
 sim/bin/
 sim/*.class
 
+# Paquets Windows générés
+dist/
+packaging/__pycache__/
+
 # --- Fichiers IDE généraux (optionnel mais recommandé) ---
 .idea/
 .vscode/
 *.iml
+
+# --- Fichiers artifacts générés (optionnel mais recommandé) ---
+*.log
+artifacts/
+index.html

@@ -27,6 +27,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import org.genesis.app.Branding;
 import javafx.stage.Window;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -777,6 +778,7 @@ public final class ResultView {
         panel.getChildren().remove(body);
         window = new Stage();
         window.setTitle(TITLE);
+        Branding.applyWindowIcons(window);
         if (owner != null) window.initOwner(owner);
         Scene scene = new Scene(body, Math.max(480, panel.getPrefWidth()), Math.max(420, panel.getPrefHeight()), Color.web("#070C16"));
         if (owner != null && owner.getScene() != null) scene.getStylesheets().addAll(owner.getScene().getStylesheets());

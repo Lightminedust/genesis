@@ -1395,7 +1395,9 @@ def serve():
     )
 
     port = os.environ.get("GRPC_PORT", "50051")
-    server.add_insecure_port(f"[::]:{port}")
+    host = os.environ.get("GRPC_HOST", "[::]")
+    if server.add_insecure_port(f"{host}:{port}") == 0:
+        raise OSError(f"Port gRPC indisponible : {host}:{port}")
     server.start()
     print(f"Moteur atomique demarre sur le port {port} (protocole v{PROTOCOL_VERSION}).")
     server.wait_for_termination()

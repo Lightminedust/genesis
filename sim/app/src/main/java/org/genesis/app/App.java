@@ -1,6 +1,7 @@
 package org.genesis.app;
 
 import org.genesis.engine.EngineClient;
+import org.genesis.engine.BundledEngine;
 import org.genesis.fusion.FusionLab;
 import org.genesis.mascot.GenesisMascot;
 import org.genesis.atom.LightPanel;
@@ -47,6 +48,7 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -62,6 +64,8 @@ import javafx.stage.Popup;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.IOException;
 
 /**
  * Genesis - simulateur atomique.
@@ -119,6 +123,10 @@ public class App extends Application {
     /** Genesis, la petite guide : elle lit le journal et explique ce que le moteur a calculé. */
     private GenesisMascot genesis;
     private EngineClient client;
+    private BundledEngine bundledEngine;
+    private boolean engineConnected;
+    private boolean stopping;
+    private ActionType pendingLabStart;
 
     private final Circle statusDot = new Circle(4.5, Color.web("#64748B"));
     private final Tooltip statusTip = new Tooltip("Démarrage…");
@@ -168,6 +176,7 @@ public class App extends Application {
         Scene scene = buildScene(width, height);
 
         stage.setTitle("Genesis - Simulateur atomique");
+        Branding.applyWindowIcons(stage);
         stage.setScene(scene);
         stage.setMinWidth(Math.min(1000, screen.getWidth()));
         stage.setMinHeight(Math.min(640, screen.getHeight()));
@@ -181,7 +190,22 @@ public class App extends Application {
             stage.setY(screen.getMinY() + (screen.getHeight() - stage.getHeight()) / 2);
         }
 
-        connect();
+        if (Boolean.getBoolean("genesis.bundled")) {
+            loader.show("Démarrage du moteur Python",
+                    "Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.",
+                    frame -> true, null);
+            try {
+                bundledEngine = BundledEngine.start();
+                setStatus("Chargement du moteur Python embarqué…", "#FBBF24");
+                waitForBundledEngine(bundledEngine);
+            } catch (IOException error) {
+                simCanvas.setStatusMessage("Moteur Windows impossible à démarrer : " + error.getMessage());
+                setStatus("Moteur Windows impossible à démarrer : " + error.getMessage(), "#F87171");
+                loader.fail("Démarrage impossible", error.getMessage());
+            }
+        } else {
+            connect();
+        }
 
         new AnimationTimer() {
             private long previous;
@@ -407,6 +431,16 @@ public class App extends Application {
     private Region buildTopBar() {
         Label brand = new Label("GENESIS");
         brand.getStyleClass().add("dash-brand");
+        ImageView logo = new ImageView(Branding.logo());
+        logo.setFitWidth(42);
+        logo.setFitHeight(42);
+        logo.setPreserveRatio(true);
+        StackPane logoBadge = new StackPane(logo);
+        logoBadge.getStyleClass().add("dash-logo");
+        logoBadge.setMinSize(38, 38);
+        logoBadge.setMaxSize(38, 38);
+        HBox identity = new HBox(8, logoBadge, brand);
+        identity.setAlignment(Pos.CENTER_LEFT);
 
         elementSymbol.setMinSize(36, 36);
         elementSymbol.setMaxSize(36, 36);
@@ -483,7 +517,7 @@ public class App extends Application {
         Tooltip.install(statusDot, statusTip);
         Region grow = new Region();
         HBox.setHgrow(grow, Priority.ALWAYS);
-        HBox bar = new HBox(16, brand, tableButton, build, verticalRule(), light, grow, labs, statusDot);
+        HBox bar = new HBox(16, identity, tableButton, build, verticalRule(), light, grow, labs, statusDot);
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(8, 16, 8, 16));
         bar.getStyleClass().add("dash-bar");
@@ -788,9 +822,36 @@ public class App extends Application {
     // ------------------------------------------------------------------
     // Réseau
     // ------------------------------------------------------------------
+    private void waitForBundledEngine(BundledEngine engine) {
+        Thread startup = new Thread(() -> {
+            try {
+                engine.awaitReady(180);
+                Platform.runLater(() -> {
+                    if (!stopping) {
+                        setStatus("Moteur Python prêt · connexion en cours…", "#FBBF24");
+                        connect();
+                    }
+                });
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+            } catch (IOException error) {
+                Platform.runLater(() -> {
+                    if (!stopping) {
+                        loader.fail("Moteur Python indisponible", error.getMessage());
+                        simCanvas.setStatusMessage(error.getMessage());
+                        setStatus(error.getMessage(), "#F87171");
+                    }
+                });
+            }
+        }, "genesis-engine-startup");
+        startup.setDaemon(true);
+        startup.start();
+    }
+
     private void connect() {
-        String host = System.getProperty("genesis.host", "localhost");
-        int port = Integer.getInteger("genesis.port", 50051);
+        engineConnected = false;
+        String host = bundledEngine == null ? System.getProperty("genesis.host", "localhost") : "127.0.0.1";
+        int port = bundledEngine == null ? Integer.getInteger("genesis.port", 50051) : bundledEngine.port();
         simCanvas.setStatusMessage("Connexion au moteur atomique (" + host + ":" + port + ")...");
         int generation = ++connectionGeneration;
 
@@ -861,12 +922,18 @@ public class App extends Application {
         }
         protocolMismatchReported = false;
         reconnectAttempts = 0;
+        engineConnected = true;
         if (!startElementLoaded) {
             // Au lancement, un atome d'uranium 238 : son nuage, son noyau, et sa longue chaîne dans la timeline.
             startElementLoaded = true;
             if (client != null && frame.getAtom().getProtons() != START_ELEMENT) {
                 client.loadElement(START_ELEMENT);
             }
+        }
+        if (pendingLabStart != null) {
+            ActionType start = pendingLabStart;
+            pendingLabStart = null;
+            send(start);
         }
 
         simCanvas.applyFrame(frame);
@@ -956,8 +1023,15 @@ public class App extends Application {
     /** Demande un laboratoire au moteur ; l'écran d'attente reste jusqu'à ce que la frame le confirme. */
     private void openLab(ActionType start, String heading, String detail,
                          java.util.function.Predicate<UniverseFrame> ready, ActionType stop) {
-        loader.show(heading, detail, ready, () -> send(stop));
-        if (client == null) {
+        loader.show(heading, detail, ready, () -> {
+            pendingLabStart = null;
+            send(stop);
+        });
+        if (!engineConnected) {
+            if (bundledEngine != null) {
+                pendingLabStart = start;
+                return;
+            }
             loader.fail("Moteur injoignable", "Lance le moteur (docker compose up --build), la connexion reprendra seule.");
             return;
         }
@@ -1067,9 +1141,17 @@ public class App extends Application {
     }
 
     private void onError(Throwable error) {
-        loader.fail("Moteur injoignable", "La connexion au moteur est coupée ; elle reprendra seule dès qu'il répondra.");
-        simCanvas.setStatusMessage("Moteur injoignable.\nLance : docker compose up --build\n"
-                + "(reconnexion automatique en cours)");
+        engineConnected = false;
+        if (bundledEngine != null) {
+            String detail = "Connexion au moteur Python interrompue. Nouvel essai en cours. Journal : "
+                    + bundledEngine.logPath();
+            loader.fail("Moteur injoignable", detail);
+            simCanvas.setStatusMessage(detail);
+        } else {
+            loader.fail("Moteur injoignable", "La connexion au moteur est coupée ; elle reprendra seule dès qu'il répondra.");
+            simCanvas.setStatusMessage("Moteur injoignable.\nLance : docker compose up --build\n"
+                    + "(reconnexion automatique en cours)");
+        }
         scheduleReconnect();
     }
 
@@ -1267,6 +1349,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
+        stopping = true;
         if (tableDialog != null) {
             tableDialog.close();
         }
@@ -1275,6 +1358,9 @@ public class App extends Application {
         }
         if (client != null) {
             client.shutdown();
+        }
+        if (bundledEngine != null) {
+            bundledEngine.close();
         }
     }
 

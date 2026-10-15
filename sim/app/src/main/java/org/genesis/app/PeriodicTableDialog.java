@@ -92,6 +92,7 @@ public class PeriodicTableDialog {
         stage.initOwner(owner);
         stage.initModality(Modality.NONE);
         stage.setTitle(windowTitle);
+        Branding.applyWindowIcons(stage);
         Scene scene = new Scene(root);
         scene.getStylesheets().add(App.stylesheet());
         scene.setOnKeyPressed(event -> {
