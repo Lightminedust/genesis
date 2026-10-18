@@ -1,6 +1,7 @@
 package org.genesis.subatomic;
 
 import com.studio.genesis.grpc.UniverseFrame;
+import org.genesis.app.I18n;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,6 +33,7 @@ public final class QuantumLabPreview {
                     @Override public void force(int channel) {}
                 });
                 Scene scene = new Scene(lab.getNode(), 1365, 768);
+                I18n.attach(scene);
                 scene.getStylesheets().add(QuantumLabPreview.class.getResource("/genesis.css").toExternalForm());
                 lab.getNode().applyCss();
                 lab.getNode().resize(1365, 768);

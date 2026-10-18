@@ -101,18 +101,18 @@ public final class TimelineBar {
         this.actions = actions;
         play.getStyleClass().add("tl-play");
         play.setFocusTraversable(false);
-        play.setTooltip(new Tooltip("faire couler le temps, ou l'arrêter · Espace"));
+        play.setTooltip(I18n.tooltip("faire couler le temps, ou l'arrêter · Espace"));
         play.setOnAction(event -> actions.togglePause());
 
         Button next = new Button("⏭  Événement suivant");
         next.getStyleClass().add("dash-button");
         next.setFocusTraversable(false);
-        next.setTooltip(new Tooltip("avance le temps jusqu'au prochain événement, tiré au hasard · touche →"));
+        next.setTooltip(I18n.tooltip("avance le temps jusqu'au prochain événement, tiré au hasard · touche →"));
         next.setOnAction(event -> actions.next());
 
         step.getStyleClass().add("tl-toggle");
         step.setFocusTraversable(false);
-        step.setTooltip(new Tooltip("le temps s'arrête après chaque événement, pour le lire · touche A"));
+        step.setTooltip(I18n.tooltip("le temps s'arrête après chaque événement, pour le lire · touche A"));
         step.setOnAction(event -> actions.stepMode(step.isSelected()));
 
         Label speedTitle = new Label("VITESSE DU TEMPS");
@@ -406,7 +406,7 @@ public final class TimelineBar {
                 ChainLink from = chain.get(k - 1);
                 hover = from.getNuclide() + " → " + link.getNuclide() + " : " + modeName(from.getMode())
                         + ", demi-vie " + compact(from.getHalfLifeS())
-                        + (from.getFraction() < 0.999 ? String.format(Locale.FRANCE, " (voie suivie dans %.1f %% des cas)",
+                        + (from.getFraction() < 0.999 ? String.format(I18n.locale(), " (voie suivie dans %.1f %% des cas)",
                         100 * from.getFraction()) : "");
             }
             if (hovered) {
@@ -443,7 +443,7 @@ public final class TimelineBar {
         if (frame.getSpeed() > 0) {
             text.append(realWait(tau));
         }
-        text.append(" · déjà fait : ").append(String.format(Locale.FRANCE, "%.0f", 100 * p)).append(" %");
+        text.append(" · déjà fait : ").append(String.format(I18n.locale(), "%.0f", 100 * p)).append(" %");
         if (now.getEstimated()) {
             text.append(" · demi-vie estimée");
         }
@@ -457,10 +457,10 @@ public final class TimelineBar {
             return " (moins d'1 s réelle à cette vitesse)";
         }
         if (seconds < 120) {
-            return String.format(Locale.FRANCE, " (≈ %.0f s réelles à cette vitesse)", seconds);
+            return String.format(I18n.locale(), " (≈ %.0f s réelles à cette vitesse)", seconds);
         }
         if (seconds < 7200) {
-            return String.format(Locale.FRANCE, " (≈ %.0f min réelles à cette vitesse)", seconds / 60);
+            return String.format(I18n.locale(), " (≈ %.0f min réelles à cette vitesse)", seconds / 60);
         }
         return " (trop long à cette vitesse : accélère)";
     }
@@ -489,7 +489,7 @@ public final class TimelineBar {
         g.setFont(Font.font(UI, FontWeight.BOLD, r > 13 ? 12 : 10.5));
         g.setTextAlign(TextAlignment.CENTER);
         g.setTextBaseline(VPos.CENTER);
-        g.fillText(symbol, x, y);
+        I18n.fillText(g, symbol, x, y);
         g.setTextBaseline(VPos.BASELINE);
     }
 
@@ -499,7 +499,7 @@ public final class TimelineBar {
         g.setFill(colour);
         g.setTextAlign(centred ? TextAlignment.CENTER : TextAlignment.LEFT);
         g.setTextBaseline(VPos.BASELINE);
-        g.fillText(text, x, y);
+        I18n.fillText(g, text, x, y);
     }
 
     /** Une couleur par élément : la teinte tourne avec Z (angle d'or), lisible sur fond sombre. */

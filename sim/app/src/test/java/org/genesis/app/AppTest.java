@@ -20,6 +20,8 @@ import com.studio.genesis.grpc.UniverseFrame;
 import com.studio.genesis.grpc.UserAction;
 
 import javafx.scene.paint.Color;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -31,6 +33,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * La physique elle-même est testée côté Python (test_atom.py, test_simulation.py).
  */
 public class AppTest {
+    private static I18n.Language previousLanguage;
+
+    @BeforeAll static void useFrenchForExistingDisplayAssertions() {
+        previousLanguage = I18n.language();
+        I18n.setLanguage(I18n.Language.FR);
+    }
+
+    @AfterAll static void restoreLanguage() {
+        I18n.setLanguage(previousLanguage);
+    }
 
     // ------------------------------------------------------------------
     // Contrat

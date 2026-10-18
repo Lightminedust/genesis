@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.CycleMethod;
@@ -200,11 +201,11 @@ public final class PlasmaInset {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI Semibold", 9.5));
         gc.setFill(Color.web("#9FB6D2"));
-        gc.fillText(FusionDashboard.spaced("LE PLASMA AUTOUR"), x + 14, y + 19);
+        I18n.fillText(gc, FusionDashboard.spaced("LE PLASMA AUTOUR"), x + 14, y + 19);
         gc.setFont(Font.font("Segoe UI", 9.5));
         gc.setFill(Color.web("#7F98B8"));
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(fmt(medium.temperatureKev()) + " keV · " + scientificShort(medium.densityM3()) + " ions/m³", x + WIDTH - 14, y + 19);
+        I18n.fillText(gc, fmt(medium.temperatureKev()) + " keV · " + scientificShort(medium.densityM3()) + " ions/m³", x + WIDTH - 14, y + 19);
         // La boîte : quatre longueurs de Debye de côté.
         double bx = x + 14, by = y + 28;
         gc.setFill(Color.color(.01, .02, .05, .7));
@@ -261,13 +262,13 @@ public final class PlasmaInset {
             gc.setFont(Font.font("Segoe UI", 9));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(Color.color(.9, .95, 1, .8));
-            gc.fillText(debye >= spacing ? "λ_D" : "a", cx + rx * .72, cy - rx * .72);
+            I18n.fillText(gc, debye >= spacing ? "λ_D" : "a", cx + rx * .72, cy - rx * .72);
         }
         if (ionCount == 0) {
             gc.setFont(Font.font("Segoe UI", 9.5));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(Color.web("#9FB4CE"));
-            gc.fillText("≈ " + scientificShort(ions) + " ion dans la boîte", bx + bw / 2, by + bh / 2, bw - 10);
+            I18n.fillText(gc, "≈ " + scientificShort(ions) + " ion dans la boîte", bx + bw / 2, by + bh / 2, bw - 10);
         }
         Iterator<double[]> it = flashes.iterator();
         while (it.hasNext()) {
@@ -292,26 +293,26 @@ public final class PlasmaInset {
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.color(.85, .92, 1, .85));
-        gc.fillText(lengthText(pitch), bx + 12 + ruler, by + bh - 6);
+        I18n.fillText(gc, lengthText(pitch), bx + 12 + ruler, by + bh - 6);
         gc.restore();
         // Les chiffres : ce qui a été calculé, et ce qu'il représente.
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 9.5));
         gc.setFill(Color.web("#CFE0F4"));
         double row = by + bh + 14;
-        gc.fillText(debye >= spacing ? "largeur " + lengthText(box) + " = 4 λ_D · λ_D = " + lengthText(debye) + " · N_D = " + scientificShort(debyeNumber)
+        I18n.fillText(gc, debye >= spacing ? "largeur " + lengthText(box) + " = 4 λ_D · λ_D = " + lengthText(debye) + " · N_D = " + scientificShort(debyeNumber)
                 : "largeur 4a = " + lengthText(box) + " · λ_D = " + lengthText(debye) + " < a : N_D = " + scientificShort(debyeNumber) + " < 1", bx, row, bw);
-        gc.fillText("v_th : ions " + speed(ionSpeed) + " · électrons " + speed(electronSpeed) + " (√(m_i/m_e) fois plus vite)", bx, row + 13, bw);
-        gc.fillText("f_p = " + frequency(plasmaFrequency) + " · onde : δn/n = " + fmt(100 * WAVE_DENSITY) + " % (choisi) · 1 s = "
+        I18n.fillText(gc, "v_th : ions " + speed(ionSpeed) + " · électrons " + speed(electronSpeed) + " (√(m_i/m_e) fois plus vite)", bx, row + 13, bw);
+        I18n.fillText(gc, "f_p = " + frequency(plasmaFrequency) + " · onde : δn/n = " + fmt(100 * WAVE_DENSITY) + " % (choisi) · 1 s = "
                 + scientificShort(secondsPerSecond) + " s", bx, row + 26, bw);
-        gc.fillText("freinage " + power(medium.bremsWM3()) + " : " + rate(photonsPerSecond), bx, row + 39, bw);
+        I18n.fillText(gc, "freinage " + power(medium.bremsWM3()) + " : " + rate(photonsPerSecond), bx, row + 39, bw);
         double r = Math.max(1, sceneFm) * 1e-15, ratio = r / screening;
         double coupling = medium.zA() * medium.zB() * 1.43996e-9 / screening / (medium.temperatureKev() * 1e3);
         gc.setFill(Color.web("#9FB4CE"));
-        gc.fillText("à " + fmt(Math.max(1, sceneFm)) + " fm : e^(−r/λ) = " + (ratio < 1e-3 ? "1 − " + scientificShort(ratio) : fmt(Math.exp(-ratio)))
+        I18n.fillText(gc, "à " + fmt(Math.max(1, sceneFm)) + " fm : e^(−r/λ) = " + (ratio < 1e-3 ? "1 − " + scientificShort(ratio) : fmt(Math.exp(-ratio)))
                 + (coupling < 1 ? " · Salpeter f = " + factor(Math.exp(coupling)) : " · fortement couplé : Γ = Z₁Z₂e²/λkT = " + number(coupling)), bx, row + 52, bw);
         gc.setFill(Color.web("#6F86A3"));
-        gc.fillText((ionCount > 0 ? "1 point ≈ " + number(ions / ionCount) + " ions, " + number(electrons / Math.max(1, electronCount))
+        I18n.fillText(gc, (ionCount > 0 ? "1 point ≈ " + number(ions / ionCount) + " ions, " + number(electrons / Math.max(1, electronCount))
                 + " électrons" : "points : les particules réellement dans la boîte")
                 + " · couleur : ½mv² · traînée : v·" + scientificShort(exposure) + " s", bx, row + 65, bw);
         gc.restore();

@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import com.studio.genesis.grpc.SmParticle;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,10 +110,10 @@ public final class SmTable {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
         g.setFill(DocStyle.PALE);
-        g.fillText(DocStyle.caps("I"), x0 + cell * .45, y0 - 8);
-        g.fillText(DocStyle.caps("II"), x0 + (cell + gap) + cell * .42, y0 - 8);
-        g.fillText(DocStyle.caps("III"), x0 + 2 * (cell + gap) + cell * .4, y0 - 8);
-        g.fillText(DocStyle.caps("forces"), x0 + 3 * (cell + gap) + cell * .2, y0 - 8);
+        I18n.fillText(g, DocStyle.caps("I"), x0 + cell * .45, y0 - 8);
+        I18n.fillText(g, DocStyle.caps("II"), x0 + (cell + gap) + cell * .42, y0 - 8);
+        I18n.fillText(g, DocStyle.caps("III"), x0 + 2 * (cell + gap) + cell * .4, y0 - 8);
+        I18n.fillText(g, DocStyle.caps("forces"), x0 + 3 * (cell + gap) + cell * .2, y0 - 8);
         for (int row = 0; row < GRID.length; row++) {
             for (int col = 0; col < GRID[row].length; col++) {
                 String id = GRID[row][col];
@@ -131,12 +132,12 @@ public final class SmTable {
         g.translate(x0 - 6, y0 + 2 * cell + gap);
         g.rotate(-90);
         g.setTextAlign(TextAlignment.CENTER);
-        g.fillText(DocStyle.caps("quarks"), cell + gap / 2, 0);
-        g.fillText(DocStyle.caps("leptons"), -cell - gap / 2, 0);
+        I18n.fillText(g, DocStyle.caps("quarks"), cell + gap / 2, 0);
+        I18n.fillText(g, DocStyle.caps("leptons"), -cell - gap / 2, 0);
         g.restore();
         g.setFill(DocStyle.PALE);
         g.setTextAlign(TextAlignment.CENTER);
-        g.fillText(DocStyle.caps("scalaire"), right - cell / 2, y0 + cell + gap + 14);
+        I18n.fillText(g, DocStyle.caps("scalaire"), right - cell / 2, y0 + cell + gap + 14);
     }
 
     private void drawCell(GraphicsContext g, double x, double y, double s, SmParticle p, boolean chosen, boolean over) {
@@ -152,9 +153,9 @@ public final class SmTable {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", 8.2 * fs + 1));
         g.setFill(Color.web("#3B3550"));
-        g.fillText(mass(p.getMassMev()), x + 4, y + 10 * fs + 2);
-        g.fillText(charge(p.getCharge()), x + 4, y + 20 * fs + 2);
-        g.fillText(spin(p.getSpin()), x + 4, y + 30 * fs + 2);
+        I18n.fillText(g, mass(p.getMassMev()), x + 4, y + 10 * fs + 2);
+        I18n.fillText(g, charge(p.getCharge()), x + 4, y + 20 * fs + 2);
+        I18n.fillText(g, spin(p.getSpin()), x + 4, y + 30 * fs + 2);
         double r = s * .24, cx = x + s * .6, cy = y + s * .5;
         g.setFill(Color.WHITE.deriveColor(0, 1, 1, .85));
         g.fillOval(cx - r, cy - r, 2 * r, 2 * r);
@@ -164,17 +165,17 @@ public final class SmTable {
         g.setTextAlign(TextAlignment.CENTER);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 17 * fs + 2));
         g.setFill(ring.darker());
-        g.fillText(p.getSymbol(), cx, cy + 6 * fs + 1);
+        I18n.fillText(g, p.getSymbol(), cx, cy + 6 * fs + 1);
         g.setFont(Font.font("Segoe UI", 8 * fs + 1.5));
         g.setFill(Color.web("#3B3550"));
-        g.fillText(p.getName(), x + s / 2, y + s - 5, s - 6);
+        I18n.fillText(g, p.getName(), x + s / 2, y + s - 5, s - 6);
     }
 
     static String mass(double mev) {
         if (mev == 0) return "0";
-        if (mev >= 1000) return String.format(Locale.FRANCE, "%.3g GeV", mev / 1000);
-        if (mev >= 1) return String.format(Locale.FRANCE, "%.3g MeV", mev);
-        return String.format(Locale.FRANCE, "%.3g keV", mev * 1000);
+        if (mev >= 1000) return String.format(I18n.locale(), "%.3g GeV", mev / 1000);
+        if (mev >= 1) return String.format(I18n.locale(), "%.3g MeV", mev);
+        return String.format(I18n.locale(), "%.3g keV", mev * 1000);
     }
 
     static String charge(double q) {
@@ -186,6 +187,6 @@ public final class SmTable {
 
     static String spin(double s) {
         if (Math.abs(s - .5) < 1e-9) return "½";
-        return String.format(Locale.FRANCE, "%.0f", s);
+        return String.format(I18n.locale(), "%.0f", s);
     }
 }

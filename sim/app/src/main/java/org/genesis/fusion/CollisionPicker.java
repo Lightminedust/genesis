@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import com.studio.genesis.grpc.LabElement;
 import com.studio.genesis.grpc.LabIsotope;
 import javafx.geometry.Insets;
@@ -41,14 +42,16 @@ public final class CollisionPicker {
             tile.setMinSize(39,36);tile.setPrefSize(39,36);tile.setPadding(Insets.EMPTY);
             tile.setStyle("-fx-background-color:#152235;-fx-background-radius:5;-fx-cursor:hand;");
             tile.setAccessibleText(item.getName()+", numéro atomique "+item.getZ());
-            tile.setTooltip(new Tooltip(item.getName()+" · Z = "+item.getZ()+" · "+item.getIsotopesCount()+" isotopes"));
+            tile.setTooltip(I18n.tooltip(item.getName()+" · Z = "+item.getZ()+" · "+item.getIsotopesCount()+" isotopes"));
             tile.setOnAction(e->showIsotopes(item,item.getDefaultA()));
             int row=item.getRow();table.add(tile,Math.max(0,item.getCol()-1),Math.max(0,row>=9?row-1:row-1));
         }
         search.textProperty().addListener((o,b,q)->{
             String needle=fold(q);
             table.getChildren().forEach(node->{LabElement item=(LabElement)node.getUserData();
-                boolean matches=needle.isBlank()||fold(item.getName()).contains(needle)||fold(item.getSymbol()).equals(needle)||Integer.toString(item.getZ()).equals(needle);
+                boolean matches=needle.isBlank()||fold(item.getName()).contains(needle)
+                        ||fold(I18n.text(item.getName())).contains(needle)
+                        ||fold(item.getSymbol()).equals(needle)||Integer.toString(item.getZ()).equals(needle);
                 node.setOpacity(matches?1:.16);node.setDisable(!matches);
             });
         });
@@ -73,7 +76,7 @@ public final class CollisionPicker {
             ToggleButton button=new ToggleButton(item.getSymbol()+"–"+data.getA()+(data.getStable()?" •":""));
             button.setToggleGroup(group);button.setId("collision-isotope-"+item.getZ()+"-"+data.getA());
             button.setStyle("-fx-font-size:11px;-fx-padding:6 9;");
-            button.setTooltip(new Tooltip(data.getStable()?"Stable":data.getHalfLifeS()>0?"Demi-vie : "+String.format(Locale.FRANCE,"%.3g s",data.getHalfLifeS()):"Radioactif · demi-vie non renseignée"));
+            button.setTooltip(I18n.tooltip(data.getStable()?"Stable":data.getHalfLifeS()>0?"Demi-vie : "+String.format(I18n.locale(),"%.3g s",data.getHalfLifeS()):"Radioactif · demi-vie non renseignée"));
             button.setOnAction(e->{button.setSelected(true);select(item,data);});isotopes.getChildren().add(button);
             if(data.getA()==chosen){button.setSelected(true);select(item,data);}
         }
@@ -81,7 +84,7 @@ public final class CollisionPicker {
     }
     private void select(LabElement item,LabIsotope data) {
         isotope=data.getA();selected.setText(item.getName()+" · "+item.getSymbol()+"–"+isotope+"     "+item.getZ()+" protons / "+(isotope-item.getZ())+" neutrons");
-        mass.setText(String.format(Locale.FRANCE,"Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)",data.getMassU(),data.getStable()?"stable":"radioactif",item.getZ()));
+        mass.setText(String.format(I18n.locale(),"Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)",data.getMassU(),data.getStable()?"stable":"radioactif",item.getZ()));
     }
     private static String color(LabElement item){return item.getColor().isBlank()?"#AECDEB":item.getColor();}
     private static String fold(String text){return Normalizer.normalize(text.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","");}

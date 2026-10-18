@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.atom.NucleusPanel;
 import org.genesis.atom.SimCanvas;
 import org.genesis.common.Visuals;
@@ -208,7 +209,7 @@ public class StarView {
         });
         pause.setStyle(style("#161B26", "#E2E8F0"));
         pause.setFocusTraversable(false);
-        pause.setTooltip(new Tooltip("pause / reprise du temps de l'étoile"));
+        pause.setTooltip(I18n.tooltip("pause / reprise du temps de l'étoile"));
         pause.setOnAction(event -> onPause.run());
 
         FlowPane bar = new FlowPane(18, 8, back, group("LIEU", presets),
@@ -631,7 +632,7 @@ public class StarView {
             gc.setFont(Font.font(UI, FontWeight.BOLD, 16));
             gc.setFill(SOFT);
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("Lecture de la bibliothèque nucléaire REACLIB…", winX + winW / 2, winY + winH / 2);
+            I18n.fillText(gc, "Lecture de la bibliothèque nucléaire REACLIB…", winX + winW / 2, winY + winH / 2);
             return;
         }
         drawWindow();
@@ -650,19 +651,19 @@ public class StarView {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
         String name = state.getPresetsCount() > state.getPreset() ? state.getPresets(state.getPreset()) : "";
-        gc.fillText("Cœur d'étoile · " + name, 22, 12);
+        I18n.fillText(gc, "Cœur d'étoile · " + name, 22, 12);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
-        gc.fillText(state.getAbout(), 22, 42);
+        I18n.fillText(gc, state.getAbout(), 22, 42);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 14));
         gc.setFill(GOLD);
         double right = width - PANEL - 28;
-        gc.fillText(temperatureText(state.getTemperatureK()) + " · " + densityText(state.getDensityGCm3()), right, 14);
+        I18n.fillText(gc, temperatureText(state.getTemperatureK()) + " · " + densityText(state.getDensityGCm3()), right, 14);
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(SOFT);
         String speed = state.getSpeedLabelsCount() > state.getSpeedIndex() ? state.getSpeedLabels(state.getSpeedIndex()) : "";
-        gc.fillText((state.getPaused() ? "⏸ en pause · " : "▶ " + speed + " · ") + "âge " + Visuals.duration(state.getAgeS()),
+        I18n.fillText(gc, (state.getPaused() ? "⏸ en pause · " : "▶ " + speed + " · ") + "âge " + Visuals.duration(state.getAgeS()),
                 right, 38);
         gc.setTextBaseline(VPos.BASELINE);
     }
@@ -792,13 +793,13 @@ public class StarView {
             gc.setFill(Color.web("#E0F2FE"));
             gc.setTextAlign(TextAlignment.LEFT);
             String charge = bound < species.getZ() ? Visuals.superscript(species.getZ() - bound) + "⁺" : "";
-            gc.fillText(atomSymbol(species) + charge, x + r * 2.6 + 2, y - r * 2.2);
+            I18n.fillText(gc, atomSymbol(species) + charge, x + r * 2.6 + 2, y - r * 2.2);
         } else if (r >= 6) {
             gc.setFont(Font.font(UI, FontWeight.BOLD, Math.max(8, Math.min(12, r * 0.95))));
             gc.setFill(Color.web("#0B0E15"));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(shortLabel(species), x, y + 0.5);
+            I18n.fillText(gc, shortLabel(species), x, y + 0.5);
             gc.setTextBaseline(VPos.BASELINE);
         }
         gc.setGlobalAlpha(1);
@@ -854,10 +855,10 @@ public class StarView {
         gc.strokeRoundRect(bx, by, w, 42, 10, 10);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(TEXT);
-        gc.fillText(line, bx + w / 2, by + 17);
+        I18n.fillText(gc, line, bx + w / 2, by + 17);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
         gc.setFill(GOLD);
-        gc.fillText(energy, bx + w / 2, by + 34);
+        I18n.fillText(gc, energy, bx + w / 2, by + 34);
         gc.setGlobalAlpha(1);
     }
 
@@ -920,7 +921,7 @@ public class StarView {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(color);
-        gc.fillText(text, x, y);
+        I18n.fillText(gc, text, x, y);
         gc.setGlobalAlpha(1);
     }
 
@@ -938,7 +939,7 @@ public class StarView {
         gc.setFill(Color.web("#0B0E15", 0.8));
         gc.fillRoundRect(x - 8, y - 32, 380, 40, 8, 8);
         gc.setFill(SOFT);
-        gc.fillText("hauteur de la fenêtre : " + Visuals.formatLength(side)
+        I18n.fillText(gc, "hauteur de la fenêtre : " + Visuals.formatLength(side)
                 + " · " + state.getParticlesCount() + " noyaux (agrandis)", x, y - 16);
         double atom = HYDROGEN_ATOM_M * perMetre;
         if (atom < winH * 0.9 && atom > 6) {
@@ -951,15 +952,15 @@ public class StarView {
             gc.setLineDashes((double[]) null);
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(ELECTRON);
-            gc.fillText("taille d'un atome d'H", cx, cy + atom / 2 + 14);
+            I18n.fillText(gc, "taille d'un atome d'H", cx, cy + atom / 2 + 14);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(SOFT);
-            gc.fillText("pointillés : un atome d'hydrogène (106 pm) à la même échelle", x, y);
+            I18n.fillText(gc, "pointillés : un atome d'hydrogène (106 pm) à la même échelle", x, y);
         } else if (atom >= winH * 0.9) {
             gc.setFill(ELECTRON);
-            gc.fillText("un atome d'H (106 pm) ne tiendrait pas dans la fenêtre", x, y);
+            I18n.fillText(gc, "un atome d'H (106 pm) ne tiendrait pas dans la fenêtre", x, y);
         } else {
-            gc.fillText("un atome d'H (106 pm) : " + Visuals.format(atom) + " px, invisible à cette échelle", x, y);
+            I18n.fillText(gc, "un atome d'H (106 pm) : " + Visuals.format(atom) + " px, invisible à cette échelle", x, y);
         }
     }
 
@@ -979,7 +980,7 @@ public class StarView {
         double w = text.length() * 6.6 + 18;
         gc.fillRoundRect(winX + 10, winY + 10, w, 24, 8, 8);
         gc.setFill(GOLD);
-        gc.fillText(text, winX + 19, winY + 27);
+        I18n.fillText(gc, text, winX + 19, winY + 27);
     }
 
     // =================================================================
@@ -1011,13 +1012,13 @@ public class StarView {
             if (!head.isEmpty()) {
                 gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
                 gc.setFill(headColor(head));
-                gc.fillText(head, left, line);
+                I18n.fillText(gc, head, left, line);
                 line += 14;
             }
             gc.setFont(Font.font(UI, 11.5));
             gc.setFill(TEXT);
             for (String row : rows) {
-                gc.fillText(row, left, line);
+                I18n.fillText(gc, row, left, line);
                 line += 14;
             }
             line += 6;
@@ -1050,7 +1051,7 @@ public class StarView {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(title, x + 24, y + 19);
+        I18n.fillText(gc, title, x + 24, y + 19);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -1062,10 +1063,10 @@ public class StarView {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 22));
         gc.setFill(power > 0 ? GOLD : MUTED);
-        gc.fillText(power > 0 ? NucleusPanel.scientific(power) + " W/kg" : "0 W/kg", x + 16, y + 56);
+        I18n.fillText(gc, power > 0 ? NucleusPanel.scientific(power) + " W/kg" : "0 W/kg", x + 16, y + 56);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(SOFT);
-        gc.fillText("chaleur dégagée par chaque kilo de matière", x + 16, y + 72);
+        I18n.fillText(gc, "chaleur dégagée par chaque kilo de matière", x + 16, y + 72);
 
         double left = x + 16;
         double right = x + w - 16;
@@ -1086,7 +1087,7 @@ public class StarView {
             gc.setFill(MUTED);
             gc.setTextAlign(mark[1] == 0 ? TextAlignment.RIGHT : mark[1] == 1 ? TextAlignment.LEFT
                     : TextAlignment.CENTER);
-            gc.fillText(names[(int) mark[1]], mark[1] == 2 ? Math.min(right - 34, mx) : mx + (mark[1] == 0 ? -3 : 3),
+            I18n.fillText(gc, names[(int) mark[1]], mark[1] == 2 ? Math.min(right - 34, mx) : mx + (mark[1] == 0 ? -3 : 3),
                     top + 26);
         }
         if (power > 0) {
@@ -1101,7 +1102,7 @@ public class StarView {
         double total = state.getEnergyJKg();
         double nu = state.getNeutrinoWKg();
         String share = power + nu > 0 ? " · neutrinos " + Visuals.format(100 * nu / (power + nu)) + " % (perdus)" : "";
-        gc.fillText("depuis le début : " + NucleusPanel.scientific(total) + " J/kg" + share, x + 16, y + h - 14);
+        I18n.fillText(gc, "depuis le début : " + NucleusPanel.scientific(total) + " J/kg" + share, x + 16, y + h - 14);
         return y + h;
     }
 
@@ -1112,10 +1113,10 @@ public class StarView {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 18));
         gc.setFill(TEXT);
-        gc.fillText(NucleusPanel.scientific(total) + " Pa", x + 16, y + 52);
+        I18n.fillText(gc, NucleusPanel.scientific(total) + " Pa", x + 16, y + 52);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(SOFT);
-        gc.fillText("= " + NucleusPanel.scientific(total / 101325) + " atmosphères", x + 190, y + 52);
+        I18n.fillText(gc, "= " + NucleusPanel.scientific(total / 101325) + " atmosphères", x + 190, y + 52);
         double left = x + 16;
         double width = w - 32;
         double bar = y + 62;
@@ -1136,7 +1137,7 @@ public class StarView {
             gc.fillOval(lx, bar + 17, 7, 7);
             gc.setFill(SOFT);
             String text = names[i] + " " + (total > 0 ? Visuals.format(100 * parts[i] / total) : "0") + " %";
-            gc.fillText(text, lx + 10, bar + 24);
+            I18n.fillText(gc, text, lx + 10, bar + 24);
             lx += text.length() * 5.6 + 26;
         }
         List<String> badges = new ArrayList<>();
@@ -1160,7 +1161,7 @@ public class StarView {
             gc.setFill(Color.web("#1E2433"));
             gc.fillRoundRect(bx, y + h - 22, bw, 16, 8, 8);
             gc.setFill(Color.web("#C7D2FE"));
-            gc.fillText(badge, bx + 7, y + h - 10);
+            I18n.fillText(gc, badge, bx + 7, y + h - 10);
             bx += bw + 6;
         }
         return y + h;
@@ -1172,7 +1173,7 @@ public class StarView {
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText("barre : part de la masse (log) · trait : au départ · ± : dans la fenêtre", x + 16, y + 42);
+        I18n.fillText(gc, "barre : part de la masse (log) · trait : au départ · ± : dans la fenêtre", x + 16, y + 42);
         List<StarSpecies> shown = new ArrayList<>();
         for (StarSpecies species : state.getSpeciesList()) {
             if (species.getMassFraction() > 1e-14 || species.getInitialMassFraction() > 0
@@ -1193,11 +1194,11 @@ public class StarView {
             gc.fillOval(x + 16, row - 9, 10, 10);
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
             gc.setFill(TEXT);
-            gc.fillText(species.getLabel(), x + 32, row);
+            I18n.fillText(gc, species.getLabel(), x + 32, row);
             gc.setFont(Font.font(MONO, 9));
             gc.setFill(MUTED);
             if (!species.getSpinParity().isEmpty()) {
-                gc.fillText(species.getSpinParity(), x + 66, row);
+                I18n.fillText(gc, species.getSpinParity(), x + 66, row);
             }
             double frac = Math.max(-14, Math.log10(Math.max(species.getMassFraction(), 1e-16)));
             double barW = (frac + 14) / 14 * (barRight - barLeft);
@@ -1213,13 +1214,13 @@ public class StarView {
             }
             gc.setFont(Font.font(MONO, 10));
             gc.setFill(SOFT);
-            gc.fillText(fraction(species.getMassFraction()), barRight + 6, row);
+            I18n.fillText(gc, fraction(species.getMassFraction()), barRight + 6, row);
             int created = species.getBoxCreated();
             int destroyed = species.getBoxDestroyed();
             if (created > 0 || destroyed > 0) {
                 gc.setTextAlign(TextAlignment.RIGHT);
                 gc.setFill(created >= destroyed ? Color.web("#34D399") : Color.web("#F87171"));
-                gc.fillText((created > 0 ? "▲" + created : "") + (destroyed > 0 ? " ▼" + destroyed : ""), x + w - 12, row);
+                I18n.fillText(gc, (created > 0 ? "▲" + created : "") + (destroyed > 0 ? " ▼" + destroyed : ""), x + w - 12, row);
                 gc.setTextAlign(TextAlignment.LEFT);
             }
             row += 17;
@@ -1248,7 +1249,7 @@ public class StarView {
         if (active.isEmpty()) {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(MUTED);
-            gc.fillText("aucune : trop froid pour que les noyaux se touchent", x + 16, row + 4);
+            I18n.fillText(gc, "aucune : trop froid pour que les noyaux se touchent", x + 16, row + 4);
             return;
         }
         for (StarReaction reaction : active) {
@@ -1257,15 +1258,15 @@ public class StarView {
             }
             gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
             gc.setFill(TEXT);
-            gc.fillText(reaction.getLabel(), x + 16, row);
+            I18n.fillText(gc, reaction.getLabel(), x + 16, row);
             gc.setFont(Font.font(MONO, 10));
             gc.setFill(GOLD);
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText(Visuals.format(100 * Math.max(0, reaction.getPowerWKg()) / total) + " %", x + w - 14, row);
+            I18n.fillText(gc, Visuals.format(100 * Math.max(0, reaction.getPowerWKg()) / total) + " %", x + w - 14, row);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFont(Font.font(UI, 10));
             gc.setFill(MUTED);
-            gc.fillText(reaction.getChain() + " · " + NucleusPanel.scientific(reaction.getPerKgS()) + " /kg/s · Q "
+            I18n.fillText(gc, reaction.getChain() + " · " + NucleusPanel.scientific(reaction.getPerKgS()) + " /kg/s · Q "
                     + Visuals.format(reaction.getQMev()) + " MeV", x + 16, row + 13);
             row += 30;
         }

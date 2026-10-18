@@ -1,6 +1,6 @@
 package org.genesis.app;
 
-/** Point d'entrée indépendant de JavaFX pour le lanceur Windows jpackage. */
+/** Point d'entrée indépendant de JavaFX pour les lanceurs jpackage. */
 public final class GenesisLauncher {
     private GenesisLauncher() {
     }

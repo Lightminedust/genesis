@@ -1,5 +1,6 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.EnergyLevel;
@@ -1463,7 +1464,7 @@ public class SimCanvas {
         gc.setFill(over ? TEXT : SOFT);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("i", x, y + 1);
+        I18n.fillText(gc, "i", x, y + 1);
         if (over) {
             String[] lines = {
                     "Brouillard : |ψ|², la probabilité de présence des électrons, intégrée le long du regard.",
@@ -1481,7 +1482,7 @@ public class SimCanvas {
             gc.setTextAlign(TextAlignment.LEFT);
             for (int i = 0; i < lines.length; i++) {
                 gc.setFill(i == 3 ? MUTED : SOFT);
-                gc.fillText(lines[i], bx + 12, by + 18 + i * 18);
+                I18n.fillText(gc, lines[i], bx + 12, by + 18 + i * 18);
             }
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -1681,7 +1682,7 @@ public class SimCanvas {
                 gc.setFont(Font.font(UI, FontWeight.BOLD, 15));
                 gc.setFill(EXCITED.deriveColor(0, 1, 1, Math.min(1, nucleusFlash * 2)));
                 gc.setTextAlign(TextAlignment.CENTER);
-                gc.fillText(nucleusFlashLabel, cx, cy - radiusPx - 22);
+                I18n.fillText(gc, nucleusFlashLabel, cx, cy - radiusPx - 22);
             }
         }
     }
@@ -1889,10 +1890,10 @@ public class SimCanvas {
                 gc.setFont(Font.font(UI, FontWeight.BOLD, Math.min(18, quarkRadius * 1.1)));
                 gc.setTextAlign(TextAlignment.CENTER);
                 gc.setTextBaseline(VPos.CENTER);
-                gc.fillText(flavours[q] + spins[q], p[0], p[1]);
+                I18n.fillText(gc, flavours[q] + spins[q], p[0], p[1]);
                 gc.setFont(Font.font(MONO, Math.min(12, quarkRadius * 0.75)));
                 gc.setFill(TEXT);
-                gc.fillText(flavours[q].equals("u") ? "+2/3" : "−1/3", p[0], p[1] + quarkRadius * 2.1);
+                I18n.fillText(gc, flavours[q].equals("u") ? "+2/3" : "−1/3", p[0], p[1] + quarkRadius * 2.1);
                 gc.setTextBaseline(VPos.BASELINE);
             }
         }
@@ -1959,17 +1960,17 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
         gc.setFill(TEXT);
-        gc.fillText("noyau " + frame.getNucleus().getNuclide(), left, c[1] - LOUPE_RADIUS - 10);
+        I18n.fillText(gc, "noyau " + frame.getNucleus().getNuclide(), left, c[1] - LOUPE_RADIUS - 10);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(SOFT);
-        gc.fillText("grossi " + String.format(Locale.ROOT, "%,d", Math.round(magnification)).replace(',', ' ')
+        I18n.fillText(gc, "grossi " + String.format(Locale.ROOT, "%,d", Math.round(magnification)).replace(',', ' ')
                 + " fois", left, c[1] + LOUPE_RADIUS + 16);
         gc.setFill(MUTED);
-        gc.fillText("clic : entrer dans le noyau", left, c[1] + LOUPE_RADIUS + 30);
+        I18n.fillText(gc, "clic : entrer dans le noyau", left, c[1] + LOUPE_RADIUS + 30);
         if (nucleusFlash > 0 && !nucleusFlashLabel.isEmpty()) {
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
             gc.setFill(EXCITED.deriveColor(0, 1, 1, Math.min(1, nucleusFlash * 2)));
-            gc.fillText(nucleusFlashLabel, left, c[1] - LOUPE_RADIUS - 26);
+            I18n.fillText(gc, nucleusFlashLabel, left, c[1] - LOUPE_RADIUS - 26);
         }
     }
 
@@ -2146,7 +2147,7 @@ public class SimCanvas {
         gc.setFill(color.deriveColor(0, 0.6, 1.35, alpha));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(text, x + 18, y - 14);
+        I18n.fillText(gc, text, x + 18, y - 14);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -2154,7 +2155,7 @@ public class SimCanvas {
         gc.setFont(Font.font(UI, 11));
         gc.setFill(color);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText(text, x, y);
+        I18n.fillText(gc, text, x, y);
     }
 
     private static String wavelengthText(double nm) {
@@ -2182,20 +2183,20 @@ public class SimCanvas {
             gc.setFill(accent);
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(symbol, x + 25, 41);
+            I18n.fillText(gc, symbol, x + 25, 41);
             x += 64;
         }
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.TOP);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
-        gc.fillText(name.isEmpty() ? (nuclide.isEmpty() ? "Chambre vide" : nuclide) : name + "  " + nuclide, x, 14);
+        I18n.fillText(gc, name.isEmpty() ? (nuclide.isEmpty() ? "Chambre vide" : nuclide) : name + "  " + nuclide, x, 14);
         int charge = frame.getAtom().getNetCharge();
         String chargeText = charge == 0 ? "neutre" : charge > 0 ? "ion +" + charge : "ion " + charge;
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
         String spin = frame.getNucleus().getSpinParity();
-        gc.fillText(frame.getAtom().getProtons() + " p⁺   " + frame.getAtom().getNeutrons() + " n   "
+        I18n.fillText(gc, frame.getAtom().getProtons() + " p⁺   " + frame.getAtom().getNeutrons() + " n   "
                 + frame.getAtom().getElectrons() + " e⁻   ·   " + chargeText
                 + (unstable() ? "   ·   radioactif" : "")
                 + (spin.isEmpty() ? "" : "   ·   spin du noyau " + spin), x, 44);
@@ -2216,17 +2217,17 @@ public class SimCanvas {
         String hint = waitingHint();
         if (noticeAge < 5 && !notice.isEmpty()) {
             gc.setFill(TEXT);
-            gc.fillText("ℹ " + notice, 20, top + FOOTER / 2);
+            I18n.fillText(gc, "ℹ " + notice, 20, top + FOOTER / 2);
         } else if (frame.getPaused() && frame.getStepMode() && callout != null) {
             gc.setFill(FORMULA);
-            gc.fillText("⏸ Analyse : le temps est arrêté après l'événement.   ▶ reprendre   ·   ⏭ aller au suivant",
+            I18n.fillText(gc, "⏸ Analyse : le temps est arrêté après l'événement.   ▶ reprendre   ·   ⏭ aller au suivant",
                     20, top + FOOTER / 2);
         } else if (!hint.isEmpty()) {
             gc.setFill(ELECTRON);
-            gc.fillText("⏳ " + hint, 20, top + FOOTER / 2);
+            I18n.fillText(gc, "⏳ " + hint, 20, top + FOOTER / 2);
         } else {
             gc.setFill(SOFT);
-            gc.fillText("Construis un atome, éclaire-le, accélère le temps : les règles décident de ce qui arrive. "
+            I18n.fillText(gc, "Construis un atome, éclaire-le, accélère le temps : les règles décident de ce qui arrive. "
                     + "Glisser : tourner en 3D · clic droit glissé : déplacer · G : le gouffre des échelles.",
                     20, top + FOOTER / 2);
         }
@@ -2277,10 +2278,10 @@ public class SimCanvas {
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(Color.web("#CBD5E1"));
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(Visuals.formatLength(length), right, y - 8);
+        I18n.fillText(gc, Visuals.formatLength(length), right, y - 8);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(MUTED);
-        gc.fillText(switch (scale()) {
+        I18n.fillText(gc, switch (scale()) {
             case ATOME -> "échelle de l'atome";
             case NOYAU -> "échelle du noyau";
             case NUCLEON -> "échelle du nucléon";
@@ -2357,8 +2358,8 @@ public class SimCanvas {
             gc.setFont(Font.font(UI, 11));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(FORMULA.deriveColor(0, 1, 1, 0.9));
-            gc.fillText("presque vide : " + sci(inside) + " électron, en moyenne,", c[0], c[1] + middle + 4);
-            gc.fillText("entre " + Visuals.formatLength(fromPm * Visuals.PICOMETRE) + " et "
+            I18n.fillText(gc, "presque vide : " + sci(inside) + " électron, en moyenne,", c[0], c[1] + middle + 4);
+            I18n.fillText(gc, "entre " + Visuals.formatLength(fromPm * Visuals.PICOMETRE) + " et "
                     + Visuals.formatLength(edgePm * Visuals.PICOMETRE), c[0], c[1] + middle + 18);
         }
         drawGulfCard();
@@ -2396,10 +2397,10 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(Color.web("#CBD5E1"));
-        gc.fillText("×10 par anneau", right, y - 8);
+        I18n.fillText(gc, "×10 par anneau", right, y - 8);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(MUTED);
-        gc.fillText("échelle logarithmique (le gouffre)", right, y + 16);
+        I18n.fillText(gc, "échelle logarithmique (le gouffre)", right, y + 16);
     }
 
     /** Le bandeau de transmutation : « Uranium → Thorium », visible 3 s, même à un milliard d'années par seconde. */
@@ -2420,10 +2421,10 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
-        gc.fillText(transmutation, x, y - 6);
+        I18n.fillText(gc, transmutation, x, y - 6);
         gc.setFont(Font.font(UI, 11.5));
         gc.setFill(SOFT.deriveColor(0, 1, 1, alpha));
-        gc.fillText(transmutationDetail, x, y + 17);
+        I18n.fillText(gc, transmutationDetail, x, y + 17);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -2448,7 +2449,7 @@ public class SimCanvas {
         gc.setFill(FORMULA);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(text, stageCenterX(), y + 13);
+        I18n.fillText(gc, text, stageCenterX(), y + 13);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -2477,7 +2478,7 @@ public class SimCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(title, x + 24, y + 20);
+        I18n.fillText(gc, title, x + 24, y + 20);
         gc.setTextBaseline(VPos.BASELINE);
         return y + 44;
     }
@@ -2503,7 +2504,7 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
         gc.setFill(SOFT);
-        gc.fillText("▤  " + text + "   ◂", x + 12, y + 13);
+        I18n.fillText(gc, "▤  " + text + "   ◂", x + 12, y + 13);
         gc.setTextBaseline(VPos.BASELINE);
         panelChip = new double[]{x, y, w, 26};
     }
@@ -2562,7 +2563,7 @@ public class SimCanvas {
         gc.setFill(hovered ? TEXT : MUTED);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("»", close[0] + close[2] / 2, close[1] + close[3] / 2);
+        I18n.fillText(gc, "»", close[0] + close[2] / 2, close[1] + close[3] / 2);
         gc.setTextBaseline(VPos.BASELINE);
         panelClose = close;
     }
@@ -2585,10 +2586,10 @@ public class SimCanvas {
             gc.setFont(Font.font(MONO, FontWeight.BOLD, 14));
             gc.setFill(TEXT);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(row[0], x + 18, y + 4);
+            I18n.fillText(gc, row[0], x + 18, y + 4);
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
-            gc.fillText(row[1], x + 104, y + 4);
+            I18n.fillText(gc, row[1], x + 104, y + 4);
             y += 24;
         }
         y += 6;
@@ -2600,12 +2601,12 @@ public class SimCanvas {
         }
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(FORMULA);
-        gc.fillText("E = −13,6 · Z² / n² = " + Visuals.format(energy) + " eV", x + 18, y);
+        I18n.fillText(gc, "E = −13,6 · Z² / n² = " + Visuals.format(energy) + " eV", x + 18, y);
         y += 18;
-        gc.fillText("r = n² · a₀ / Z = " + Visuals.formatLength(electronRadiusPm() * Visuals.PICOMETRE), x + 18, y);
+        I18n.fillText(gc, "r = n² · a₀ / Z = " + Visuals.formatLength(electronRadiusPm() * Visuals.PICOMETRE), x + 18, y);
         y += 18;
         double mean = (3.0 * n * n - l * (l + 1)) / 2 * BOHR_PM / Math.max(1, frame.getAtom().getProtons());
-        gc.fillText("⟨r⟩ = (3n² − l(l+1))·a₀/2Z = " + Visuals.formatLength(mean * Visuals.PICOMETRE), x + 18, y);
+        I18n.fillText(gc, "⟨r⟩ = (3n² − l(l+1))·a₀/2Z = " + Visuals.formatLength(mean * Visuals.PICOMETRE), x + 18, y);
         y += 18;
         int nodes = n - l - 1;
         y = wrapped(x + 18, y, PANEL_WIDTH - 36, "nuage : |ψ|² exact, " + (nodes == 0 ? "aucun nœud radial"
@@ -2678,7 +2679,7 @@ public class SimCanvas {
             gc.setFill(over ? TEXT : MUTED);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(text, x + 18, y + box / 2);
+            I18n.fillText(gc, text, x + 18, y + box / 2);
             gc.setTextBaseline(VPos.BASELINE);
             shellsToggle = new double[]{x + 10, y - 2, PANEL_WIDTH - 20, rowHeight};
             y += rowHeight;
@@ -2691,7 +2692,7 @@ public class SimCanvas {
             gc.setFill(subshell == null ? MUTED : color);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(nl[0] + "spdf".substring(nl[1], nl[1] + 1), x + 18, y + box / 2);
+            I18n.fillText(gc, nl[0] + "spdf".substring(nl[1], nl[1] + 1), x + 18, y + box / 2);
             int orbitals = 2 * nl[1] + 1;
             for (int k = 0; k < orbitals; k++) {
                 double bx = x + 52 + k * (box + 3);
@@ -2712,7 +2713,7 @@ public class SimCanvas {
             gc.setFill(isNext ? FORMULA : MUTED);
             gc.setTextAlign(TextAlignment.RIGHT);
             String count = subshell == null ? "0/" + 2 * orbitals : subshell.getElectrons() + "/" + subshell.getCapacity();
-            gc.fillText(isNext ? "prochain e⁻ · " + count : count, x + PANEL_WIDTH - 16, y + box / 2);
+            I18n.fillText(gc, isNext ? "prochain e⁻ · " + count : count, x + PANEL_WIDTH - 16, y + box / 2);
             gc.setTextBaseline(VPos.BASELINE);
             y += rowHeight;
         }
@@ -2756,7 +2757,7 @@ public class SimCanvas {
             gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 12));
             gc.setFill(TEXT);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(term.getName(), x + 18, y + 4);
+            I18n.fillText(gc, term.getName(), x + 18, y + 4);
             Color color = value >= 0 ? STRONG : COULOMB;
             double length = Math.abs(value) / scaleMev * barWidth;
             gc.setFill(color.deriveColor(0, 1, 1, 0.75));
@@ -2764,16 +2765,16 @@ public class SimCanvas {
             gc.setFont(Font.font(MONO, 11));
             gc.setFill(color);
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText(Visuals.signed(value, 0), x + PANEL_WIDTH - 14, y + 4);
+            I18n.fillText(gc, Visuals.signed(value, 0), x + PANEL_WIDTH - 14, y + 4);
             gc.setFont(Font.font(UI, 10));
             gc.setFill(MUTED);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(term.getDescription(), x + 18, y + 18);
+            I18n.fillText(gc, term.getDescription(), x + 18, y + 18);
             y += 34;
         }
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
         gc.setFill(FORMULA);
-        gc.fillText("B = " + Visuals.format(total) + " MeV (modèle) · "
+        I18n.fillText(gc, "B = " + Visuals.format(total) + " MeV (modèle) · "
                 + Visuals.fixed(total / Math.max(1, frame.getAtom().getMassNumber()), 2) + " MeV/nucléon", x + 18, y + 6);
         return top + height;
     }
@@ -2800,7 +2801,7 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         for (String line : lines) {
             gc.setFill(line.startsWith("pions") || line.startsWith("à l'écran") ? TEXT : FORMULA);
-            gc.fillText(line, x + 18, y + 4);
+            I18n.fillText(gc, line, x + 18, y + 4);
             y += 19;
         }
         String note = "Les nucléons ne sont pas figés : la surface vibre (Bohr–Mottelson), et chaque pion "
@@ -2834,7 +2835,7 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         for (int i = 0; i < lines.length; i++) {
             gc.setFill(i == lines.length - 1 ? FORMULA : TEXT);
-            gc.fillText(lines[i], x + 18, y + 4);
+            I18n.fillText(gc, lines[i], x + 18, y + 4);
             y += 19;
         }
         wrapped(x + 18, y + 4, PANEL_WIDTH - 36, "Cette masse disparue est l'énergie qui tient le noyau "
@@ -2853,7 +2854,7 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         for (String line : lines) {
             gc.setFill(TEXT);
-            gc.fillText(line, x + 18, y + 4);
+            I18n.fillText(gc, line, x + 18, y + 4);
             y += 20;
         }
         ParticleInfo up = particles.get("up");
@@ -2862,9 +2863,9 @@ public class SimCanvas {
         if (up != null && down != null && self != null) {
             double quarks = proton ? 2 * up.getMassMev() + down.getMassMev() : up.getMassMev() + 2 * down.getMassMev();
             gc.setFill(FORMULA);
-            gc.fillText("3 quarks ≈ " + Visuals.format(quarks) + " MeV", x + 18, y + 6);
+            I18n.fillText(gc, "3 quarks ≈ " + Visuals.format(quarks) + " MeV", x + 18, y + 6);
             y += 20;
-            gc.fillText((proton ? "proton" : "neutron") + " = " + Visuals.format(self.getMassMev()) + " MeV", x + 18, y + 6);
+            I18n.fillText(gc, (proton ? "proton" : "neutron") + " = " + Visuals.format(self.getMassMev()) + " MeV", x + 18, y + 6);
             y += 28;
         }
         wrapped(x + 18, y, PANEL_WIDTH - 36, "99 % de la masse vient de l'énergie des gluons qui lient "
@@ -2878,7 +2879,7 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         List<String> lines = wrap(text, (int) (width / (size * 0.52)));
         for (int i = 0; i < Math.min(maxLines, lines.size()); i++) {
-            gc.fillText(lines.get(i), x, y);
+            I18n.fillText(gc, lines.get(i), x, y);
             y += size + 5;
         }
         return y;
@@ -2985,20 +2986,20 @@ public class SimCanvas {
         gc.setTextBaseline(VPos.CENTER);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(accent.deriveColor(0, 1, 1, alpha));
-        gc.fillText(kindLabel(callout) + "   ·   t = " + Visuals.duration(callout.getTimeS()), box[0] + 16, box[1] + 16);
+        I18n.fillText(gc, kindLabel(callout) + "   ·   t = " + Visuals.duration(callout.getTimeS()), box[0] + 16, box[1] + 16);
         gc.setFill(MUTED.deriveColor(0, 1, 1, alpha));
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font(UI, 13));
-        gc.fillText("✕", box[0] + box[2] - 12, box[1] + 15);
+        I18n.fillText(gc, "✕", box[0] + box[2] - 12, box[1] + 15);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 15));
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
-        gc.fillText(fit(callout.getTitle(), CALLOUT_WIDTH - 32, 7.3), box[0] + 16, box[1] + 33);
+        I18n.fillText(gc, fit(callout.getTitle(), CALLOUT_WIDTH - 32, 7.3), box[0] + 16, box[1] + 33);
         if (calloutFolded()) {
             gc.setFont(Font.font(UI, 10));
             gc.setFill(MUTED.deriveColor(0, 1, 1, alpha));
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText("clic : détails", box[0] + box[2] - 34, box[1] + 15);
+            I18n.fillText(gc, "clic : détails", box[0] + box[2] - 34, box[1] + 15);
             gc.setTextBaseline(VPos.BASELINE);
             return;
         }
@@ -3007,7 +3008,7 @@ public class SimCanvas {
             boolean formula = line[0].equals("f");
             gc.setFont(formula ? Font.font(MONO, 12) : Font.font(UI, 12));
             gc.setFill((formula ? FORMULA : SOFT).deriveColor(0, 1, 1, alpha));
-            gc.fillText(line[1], box[0] + 16, y);
+            I18n.fillText(gc, line[1], box[0] + 16, y);
             y += 17;
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -3059,7 +3060,7 @@ public class SimCanvas {
             gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(calloutTarget, labelX + 8, labelY + 11);
+            I18n.fillText(gc, calloutTarget, labelX + 8, labelY + 11);
             gc.setTextBaseline(VPos.BASELINE);
         }
     }
@@ -3097,7 +3098,7 @@ public class SimCanvas {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 26));
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(info.getSymbol(), box[0] + box[2] - 18, box[1] + 32);
+        I18n.fillText(gc, info.getSymbol(), box[0] + box[2] - 18, box[1] + 32);
         String mass = info.getMassMev() == 0 ? "0 (ou presque)" : Visuals.significant(info.getMassMev()) + " MeV/c²";
         String[][] rows = {
                 {"famille", info.getFamily()}, {"masse", mass}, {"charge", info.getCharge() + " e"},
@@ -3107,16 +3108,16 @@ public class SimCanvas {
         for (String[] row : rows) {
             gc.setFont(Font.font(UI, 11));
             gc.setFill(MUTED);
-            gc.fillText(row[0], box[0] + 18, y);
+            I18n.fillText(gc, row[0], box[0] + 18, y);
             gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 12));
             gc.setFill(TEXT);
-            gc.fillText(fit(row[1], 222, 6.3), box[0] + 104, y);
+            I18n.fillText(gc, fit(row[1], 222, 6.3), box[0] + 104, y);
             y += 17;
         }
         wrapped(box[0] + 18, y + 4, box[2] - 36, info.getNote(), 11, SOFT, 3);
         gc.setFont(Font.font(UI, 9));
         gc.setFill(MUTED);
-        gc.fillText("source : " + info.getSource() + " · clic pour fermer", box[0] + 18, box[1] + box[3] - 10);
+        I18n.fillText(gc, "source : " + info.getSource() + " · clic pour fermer", box[0] + 18, box[1] + box[3] - 10);
     }
 
     // --- Survol ------------------------------------------------------------
@@ -3168,7 +3169,7 @@ public class SimCanvas {
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(text, x + 10, y + 12);
+        I18n.fillText(gc, text, x + 10, y + 12);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -3219,7 +3220,7 @@ public class SimCanvas {
         gc.setTextBaseline(VPos.CENTER);
         String[] lines = text.split("\n");
         for (int i = 0; i < lines.length; i++) {
-            gc.fillText(lines[i], x, y + (i - (lines.length - 1) / 2.0) * (size + 6));
+            I18n.fillText(gc, lines[i], x, y + (i - (lines.length - 1) / 2.0) * (size + 6));
         }
         gc.setTextBaseline(VPos.BASELINE);
     }

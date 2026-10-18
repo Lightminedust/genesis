@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import com.studio.genesis.grpc.CollisionBody;
 import com.studio.genesis.grpc.CollisionNucleus;
 import com.studio.genesis.grpc.CollisionRun;
@@ -221,7 +222,7 @@ public final class FusionReadouts {
     }
 
     private static String fmtRatio(double r) {
-        return r >= 1e4 ? scientificShort(r) + " ×" : r >= 100 ? String.format(Locale.FRANCE, "%,.0f ×", r) : fmt(r) + " ×";
+        return r >= 1e4 ? scientificShort(r) + " ×" : r >= 100 ? String.format(I18n.locale(), "%,.0f ×", r) : fmt(r) + " ×";
     }
 
     private FusionDashboard.Board approach(CollisionRun run, FusionRenderer.Report r) {
@@ -746,7 +747,7 @@ public final class FusionReadouts {
 
     /** Une déformation β₂ : trois décimales, ou en notation scientifique quand elle est infime (jamais « −0,000 »). */
     static String deformation(double beta2) {
-        if (Math.abs(beta2) >= 1e-3) return String.format(Locale.FRANCE, "%.3f", beta2);
+        if (Math.abs(beta2) >= 1e-3) return String.format(I18n.locale(), "%.3f", beta2);
         return Math.abs(beta2) < 1e-12 ? "0" : scientificShort(beta2);
     }
 

@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.common.LabCamera;
 
 import com.studio.genesis.grpc.CollisionBody;
@@ -2227,7 +2228,7 @@ public final class FusionRenderer {
         // La légende, une fois : la convention et la valeur du champ.
         gc.setFont(javafx.scene.text.Font.font("Segoe UI", 10));
         gc.setFill(Color.color(.72, .86, 1, .55));
-        gc.fillText((Math.abs(along) > .55 ? along > 0 ? "⊙" : "⊗" : "—") + "  B = "
+        I18n.fillText(gc, (Math.abs(along) > .55 ? along > 0 ? "⊙" : "⊗" : "—") + "  B = "
                 + ReactorView.fmt(externalFieldT) + " T" + (Math.abs(along) > .55 ? along > 0 ? " · vers vous" : " · vers le fond" : " · dans le plan"),
                 16, height - 118);
     }

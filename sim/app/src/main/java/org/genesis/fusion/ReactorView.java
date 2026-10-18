@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.atom.SimCanvas;
 
 import com.studio.genesis.grpc.*;
@@ -155,7 +156,7 @@ public final class ReactorView {
         inspect.setId("collision-inspect");
         inspect.setFocusTraversable(false);
         inspect.getStyleClass().add("glass-toggle");
-        inspect.setTooltip(new Tooltip("Un clic dans la scène : la zone touchée (halo, zone du col, col du potentiel ou noyau) "
+        inspect.setTooltip(I18n.tooltip("Un clic dans la scène : la zone touchée (halo, zone du col, col du potentiel ou noyau) "
                 + "et les équations qui s'y appliquent, avec leurs valeurs"));
         inspect.setOnAction(e -> {
             probe = null;
@@ -171,15 +172,15 @@ public final class ReactorView {
         simpleView.getStyleClass().addAll("segment", "left");
         fullView.getStyleClass().addAll("segment", "right");
         simpleView.setSelected(true);
-        simpleView.setTooltip(new Tooltip("La loi de l'instant, trois mesures et l'issue : la lecture simple"));
-        fullView.setTooltip(new Tooltip("Toutes les métriques, les calques et le milieu"));
+        simpleView.setTooltip(I18n.tooltip("La loi de l'instant, trois mesures et l'issue : la lecture simple"));
+        fullView.setTooltip(I18n.tooltip("Toutes les métriques, les calques et le milieu"));
         simpleView.setOnAction(e -> { simpleView.setSelected(true); showAdvanced(); });
         fullView.setOnAction(e -> { fullView.setSelected(true); showAdvanced(); });
         mapMode.setId("collision-map");
         mapMode.setSelected(true);
         mapMode.setFocusTraversable(false);
         mapMode.getStyleClass().add("glass-toggle");
-        mapMode.setTooltip(new Tooltip("La carte : à l'éjection, la vue recule d'elle-même pour montrer tous les corps autour "
+        mapMode.setTooltip(I18n.tooltip("La carte : à l'éjection, la vue recule d'elle-même pour montrer tous les corps autour "
                 + "de l'élément créé (fixe) — leur direction de vol calculée, leur distance comprimée, leur vitesse. "
                 + "Un clic en approche un ; un clic dans le vide revient."));
         mapMode.setOnAction(e -> {
@@ -188,7 +189,7 @@ public final class ReactorView {
         });
         resultsButton.setFocusTraversable(false);
         resultsButton.setSelected(true);
-        resultsButton.setTooltip(new Tooltip("Le bilan interactif s'ouvre une fois la fusion faite : créé, rejeté, lumière, énergie"));
+        resultsButton.setTooltip(I18n.tooltip("Le bilan interactif s'ouvre une fois la fusion faite : créé, rejeté, lumière, énergie"));
         resultsButton.setOnAction(e -> {
             resultsWanted = resultsButton.isSelected();
             if (resultsWanted && finished()) openResults();
@@ -234,7 +235,7 @@ public final class ReactorView {
         controls.setAlignment(Pos.CENTER_LEFT);
         outcome.setTextOverrun(OverrunStyle.ELLIPSIS);
         outcome.setMaxWidth(Double.MAX_VALUE);
-        Tooltip fullReaction = new Tooltip();
+        Tooltip fullReaction = I18n.tooltip();
         outcome.setTooltip(fullReaction);
         outcome.textProperty().addListener((o, oldText, newText) -> fullReaction.setText(newText));
         VBox header = new VBox(2, controls, outcome);
@@ -346,7 +347,7 @@ public final class ReactorView {
 
     public static double width(String text, Font font) {
         MEASURE.setFont(font);
-        MEASURE.setText(text);
+        MEASURE.setText(I18n.text(text));
         return MEASURE.getLayoutBounds().getWidth();
     }
 
@@ -499,7 +500,7 @@ public final class ReactorView {
         force.getStyleClass().setAll("button", "glass-amber");
         force.setMaxWidth(Double.MAX_VALUE);
         force.setOnAction(e -> launch(true));
-        force.setTooltip(new Tooltip("Montre une fusion : la capture est retenue, sa vraie probabilité reste affichée"));
+        force.setTooltip(I18n.tooltip("Montre une fusion : la capture est retenue, sa vraie probabilité reste affichée"));
         collapse.setOnAction(e -> toggleSidebar());
         javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle(3.5, Color.web("#36CDF2"));
         dot.setEffect(new javafx.scene.effect.DropShadow(8, Color.web("#36CDF2")));
@@ -589,7 +590,7 @@ public final class ReactorView {
         b.setSelected(true);
         b.setFocusTraversable(false);
         b.getStyleClass().add("glass-toggle");
-        b.setTooltip(new Tooltip(tip));
+        b.setTooltip(I18n.tooltip(tip));
         b.setOnAction(e -> action.run());
         return b;
     }
@@ -625,10 +626,10 @@ public final class ReactorView {
         });
         speed.setPrefWidth(70);
         speed.setMaxWidth(70);
-        speed.setTooltip(new Tooltip("Vitesse de lecture"));
+        speed.setTooltip(I18n.tooltip("Vitesse de lecture"));
         for (ToggleButton t : new ToggleButton[]{loop, series}) { t.getStyleClass().add("glass-toggle"); t.setFocusTraversable(false); }
-        loop.setTooltip(new Tooltip("Rejouer le même calcul"));
-        series.setTooltip(new Tooltip("Calculer une nouvelle collision à chaque fin"));
+        loop.setTooltip(I18n.tooltip("Rejouer le même calcul"));
+        series.setTooltip(I18n.tooltip("Calculer une nouvelle collision à chaque fin"));
         HBox controls = new HBox(7, pause, replay, timeline, closest, products, text("×", 10, "#9DB1C8"), speed, loop, series);
         controls.setAlignment(Pos.CENTER_LEFT);
         VBox bar = new VBox(3, controls);
@@ -807,12 +808,12 @@ public final class ReactorView {
         for (double t : new double[]{1, 10, 100, 1000}) {
             double x = px.applyAsDouble(t);
             g.strokeLine(x, top, x, h - bottom);
-            g.fillText(t >= 1000 ? "1 MeV" : fmt(t) + " keV", x - 10, h - 5);
+            I18n.fillText(g, t >= 1000 ? "1 MeV" : fmt(t) + " keV", x - 10, h - 5);
         }
         for (int e = 19; e <= 27; e += 2) {
             double y = py.applyAsDouble(Math.pow(10, e));
             g.strokeLine(left, y, w - right, y);
-            g.fillText("10" + superscript(e), 2, y + 3);
+            I18n.fillText(g, "10" + superscript(e), 2, y + 3);
         }
         plot(g, lawson.getCurveTKevList(), lawson.getCurveBreakevenList(), px, py, Color.web("#FFB547"), h - bottom, top);
         plot(g, lawson.getCurveTKevList(), lawson.getCurveIgnitionList(), px, py, Color.web("#FF5A4E"), h - bottom, top);
@@ -821,11 +822,11 @@ public final class ReactorView {
         g.setFill(lawson.getIgnited() ? Color.web("#7FE3B0") : Color.WHITE);
         g.fillOval(x - 4, y - 4, 8, 8);
         g.setFill(Color.web("#FF8A7E"));
-        g.fillText("ignition", w - 46, top + 10);
+        I18n.fillText(g, "ignition", w - 46, top + 10);
         g.setFill(Color.web("#FFC870"));
-        g.fillText("Q = 1", w - 46, top + 21);
+        I18n.fillText(g, "Q = 1", w - 46, top + 21);
         g.setFill(Color.web("#9FB4CE"));
-        g.fillText("nτT", 3, top + 8);
+        I18n.fillText(g, "nτT", 3, top + 8);
     }
 
     private static void plot(GraphicsContext g, List<Double> ts, List<Double> vs, java.util.function.DoubleUnaryOperator px,
@@ -851,7 +852,7 @@ public final class ReactorView {
         data.setText(n.getZ() + " p⁺ / " + (n.getA() - n.getZ()) + " n  ·  charge +" + n.getChargeState() + "e  ·  r ≈ " + fmt(n.getRadiusFm()) + " fm\n"
                 + "spin " + n.getSpinParity() + "  ·  μ " + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : "inconnu") + "  ·  "
                 + (n.getStable() ? "stable" : n.getHalfLifeS() > 0 ? "demi-vie " + duration(n.getHalfLifeS()) : "radioactif"));
-        if (card.getTooltip() == null) card.setTooltip(new Tooltip());
+        if (card.getTooltip() == null) card.setTooltip(I18n.tooltip());
         card.getTooltip().setText(nuclide(n.getZ(), n.getA(), n.getSymbol()) + "\nMasse : " + fmt(n.getMassU()) + " u · "
                 + (n.getMassSource().isBlank() ? "source non renseignée" : n.getMassSource())
                 + "\nRayon : " + fmt(n.getRadiusFm()) + " fm · " + (n.getRadiusMeasured() ? "valeur mesurée" : "estimation du modèle")
@@ -1036,7 +1037,7 @@ public final class ReactorView {
             gc.setFont(Font.font("Segoe UI", 10));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(Color.web("#8896AB"));
-            gc.fillText("centre fixe : l'élément créé · clic : zoomer", 20, 126);
+            I18n.fillText(gc, "centre fixe : l'élément créé · clic : zoomer", 20, 126);
         }
         lawOnScene(gc, w, h, r);
         nucleusCards(gc, w, h, r);
@@ -1045,7 +1046,7 @@ public final class ReactorView {
             gc.setFont(Font.font("Segoe UI Semibold", 13));
             gc.setFill(Color.web("#F2F7FF"));
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(r.spinText, r.spinSum[0] + 8, r.spinSum[1] - 6);
+            I18n.fillText(gc, r.spinText, r.spinSum[0] + 8, r.spinSum[1] - 6);
         }
         scaleAndClock(gc, w, h, r);
         if (full && inspect.isSelected()) inspection(gc, w, h, r);
@@ -1071,7 +1072,7 @@ public final class ReactorView {
             gc.setFont(font);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(c);
-            gc.fillText(text, x, y + 12);
+            I18n.fillText(gc, text, x, y + 12);
             shown++;
         }
     }
@@ -1199,7 +1200,7 @@ public final class ReactorView {
                     gc.setFont(Font.font("Segoe UI", 10.5));
                     gc.setFill(Color.web("#8FA7C4"));
                     gc.setTextAlign(TextAlignment.LEFT);
-                    gc.fillText(symbolOf(body) + " → hors du cadre", 20, 150 + outside++ * 14);
+                    I18n.fillText(gc, symbolOf(body) + " → hors du cadre", 20, 150 + outside++ * 14);
                 }
                 continue;
             }
@@ -1243,17 +1244,17 @@ public final class ReactorView {
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFont(big);
             gc.setFill(color.interpolate(Color.WHITE, .15));
-            gc.fillText(symbol, x + 12, y + 17);
+            I18n.fillText(gc, symbol, x + 12, y + 17);
             gc.setFont(small);
             gc.setFill(Color.web("#B4C6DC"));
-            gc.fillText(data, x + 12 + sw + 8, y + 16);
+            I18n.fillText(gc, data, x + 12 + sw + 8, y + 16);
             if (!hot.isEmpty()) {
                 gc.setFill(Color.web("#FFB27A"));
-                gc.fillText(hot, x + 12 + sw + 8 + dw + 12, y + 16);
+                I18n.fillText(gc, hot, x + 12 + sw + 8 + dw + 12, y + 16);
             }
             if (map) {
                 gc.setFill(Color.web("#9FE0FF"));
-                gc.fillText(flight, x + 12, y + 31);
+                I18n.fillText(gc, flight, x + 12, y + 31);
             }
         }
     }
@@ -1308,18 +1309,18 @@ public final class ReactorView {
         gc.setFont(Font.font("Segoe UI Semibold", 17));
         gc.setFill(color);
         String symbol = symbolOf(b);
-        gc.fillText(symbol, x + 14, y + 25);
+        I18n.fillText(gc, symbol, x + 14, y + 25);
         gc.setFont(Font.font("Segoe UI", 12));
         gc.setFill(Color.web("#E6EEFA"));
         boolean fragmented = run != null && (run.getOutcome().equals("quasi_fission") || run.getOutcome().equals("fission"));
         String role = central != heaviest ? "projeté par la réaction" : r.stage.equals("compound") ? "noyau composé"
                 : fragmented ? "fragment de la rupture" : "créé par la fusion";
-        gc.fillText(name + "  ·  " + role, x + 22 + width(symbol, Font.font("Segoe UI Semibold", 17)), y + 24);
+        I18n.fillText(gc, name + "  ·  " + role, x + 22 + width(symbol, Font.font("Segoe UI Semibold", 17)), y + 24);
         gc.setFont(Font.font("Segoe UI", 11));
         double row = y + 44;
         for (String line : lines) {
             gc.setFill(Color.web(line.startsWith("excité") ? "#FFB27A" : line.startsWith("vitesse") ? "#9FE0FF" : "#B9C9DF"));
-            gc.fillText(line, x + 14, row, boxW - 24);
+            I18n.fillText(gc, line, x + 14, row, boxW - 24);
             row += 15;
         }
         return true;
@@ -1371,7 +1372,7 @@ public final class ReactorView {
             gc.setFont(f);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(Color.web("#EAF2FF"));
-            gc.fillText(text, x, y + 1, 380);
+            I18n.fillText(gc, text, x, y + 1, 380);
         }
         boolean pinned = probe != null;
         double px = pinned ? probe[0] : 20, py = pinned ? probe[1] : 158;
@@ -1444,15 +1445,15 @@ public final class ReactorView {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI Semibold", 10));
         gc.setFill(Color.web("#7FA6CF"));
-        gc.fillText(FusionDashboard.spaced(pinned ? "SONDE" : "THÉORIE"), cx + 16, cy + 19);
+        I18n.fillText(gc, FusionDashboard.spaced(pinned ? "SONDE" : "THÉORIE"), cx + 16, cy + 19);
         gc.setFont(Font.font("Segoe UI Semibold", 13.5));
         gc.setFill(c.accent().interpolate(Color.WHITE, .3));
-        gc.fillText(c.zone(), cx + 16, cy + 37, cw - 30);
+        I18n.fillText(gc, c.zone(), cx + 16, cy + 37, cw - 30);
         double y = cy + 54;
         gc.setFont(Font.font("Segoe UI", 10.5));
         gc.setFill(Color.web("#9FB4CE"));
         for (String line : about) {
-            gc.fillText(line, cx + 16, y, cw - 30);
+            I18n.fillText(gc, line, cx + 16, y, cw - 30);
             y += 14.5;
         }
         y += 6;
@@ -1461,12 +1462,12 @@ public final class ReactorView {
             gc.setFill(Color.web("#5FD3F5", .8));
             gc.fillOval(cx + 16, y - 6, 3, 3);
             gc.setFill(Color.web("#E2EDFA"));
-            gc.fillText(line, cx + 25, y, cw - 40);
+            I18n.fillText(gc, line, cx + 25, y, cw - 40);
             y += 16.5;
         }
         gc.setFont(Font.font("Segoe UI", 9.5));
         gc.setFill(Color.web("#6F86A3"));
-        gc.fillText(pinned ? "clic sur la sonde : revenir à la théorie · ▶ : reprendre"
+        I18n.fillText(gc, pinned ? "clic sur la sonde : revenir à la théorie · ▶ : reprendre"
                 : "cliquer dans la scène : sonder le champ à cet endroit", cx + 16, cy + ch - 10, cw - 30);
     }
 
@@ -1538,7 +1539,7 @@ public final class ReactorView {
         gc.setTextAlign(TextAlignment.LEFT);
         if (r.map) {
             // Sur la carte, une barre d'échelle mentirait : les distances sont comprimées.
-            gc.fillText("échelle comprimée (log)", x, y - 9);
+            I18n.fillText(gc, "échelle comprimée (log)", x, y - 9);
         } else {
             double target = 120 / px, exp = Math.floor(Math.log10(target)), base = Math.pow(10, exp), length = base;
             for (double v : new double[]{1, 2, 5}) if (v * base <= target) length = v * base;
@@ -1548,7 +1549,7 @@ public final class ReactorView {
             gc.strokeLine(x, y, x + bar, y);
             gc.strokeLine(x, y - 5, x, y + 5);
             gc.strokeLine(x + bar, y - 5, x + bar, y + 5);
-            gc.fillText(lengthText(length * 1e-15) + " · échelle réelle", x, y - 9);
+            I18n.fillText(gc, lengthText(length * 1e-15) + " · échelle réelle", x, y - 9);
         }
         if (fullView.isSelected() && renderer.showElectric && r.pressureMax > 0)
             pressureLegend(gc, x, run == null ? y + 22 : y + 36, r);
@@ -1564,7 +1565,7 @@ public final class ReactorView {
         // L'horloge tient sur une ligne : le temps physique, puis le ralenti.
         gc.setFont(Font.font("Segoe UI", 11));
         gc.setFill(Color.web("#B9C6D8"));
-        gc.fillText(clock + slow, x, y + 18);
+        I18n.fillText(gc, clock + slow, x, y + 18);
     }
 
     /**
@@ -1576,7 +1577,7 @@ public final class ReactorView {
         gc.setFont(font);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#BFCBDD"));
-        gc.fillText("halo : ε₀|Eᵢ|²/2 de chaque noyau, à la teinte de son isotope", x, y + 7);
+        I18n.fillText(gc, "halo : ε₀|Eᵢ|²/2 de chaque noyau, à la teinte de son isotope", x, y + 7);
         double row = y + 14;
         if (r.potentialTop > 0) {
             double bw = 84;
@@ -1585,7 +1586,7 @@ public final class ReactorView {
             gc.setFill(new javafx.scene.paint.LinearGradient(x, 0, x + bw, 0, false, javafx.scene.paint.CycleMethod.NO_CYCLE, stops));
             gc.fillRoundRect(x, row, bw, 6, 3, 3);
             gc.setFill(Color.web("#BFCBDD"));
-            gc.fillText("entre eux : U = eφ, " + energy(r.potentialTop * Math.pow(10, -FusionRenderer.POTENTIAL_DECADES) * 1000) + " → "
+            I18n.fillText(gc, "entre eux : U = eφ, " + energy(r.potentialTop * Math.pow(10, -FusionRenderer.POTENTIAL_DECADES) * 1000) + " → "
                     + energy(r.potentialTop * 1000) + " (col au contact) · lignes : isopotentielles", x + bw + 8, row + 7);
             row += 14;
         }
@@ -1597,7 +1598,7 @@ public final class ReactorView {
             gc.setFill(FusionRenderer.bodyColor(body.z(), body.a()));
             gc.fillOval(x + offset, row, 7, 7);
             gc.setFill(Color.web("#BFCBDD"));
-            gc.fillText(label, x + offset + 11, row + 7);
+            I18n.fillText(gc, label, x + offset + 11, row + 7);
             offset += Math.max(48, width(label, font) + 22);
             if (offset > 210) break;
         }
@@ -1728,7 +1729,7 @@ public final class ReactorView {
         int n = a - z;
         double rest = mass - excitation;
         out.add(z + " proton" + (z > 1 ? "s" : "") + " · " + n + " neutron" + (n > 1 ? "s" : "") + " · A = " + a);
-        out.add("masse " + String.format(Locale.FRANCE, "%,.2f", rest) + " MeV/c² = " + String.format(Locale.FRANCE, "%.4f", rest / 931.49410242) + " u");
+        out.add("masse " + String.format(I18n.locale(), "%,.2f", rest) + " MeV/c² = " + String.format(I18n.locale(), "%.4f", rest / 931.49410242) + " u");
         if (z > 0 && a > 1) {
             double binding = z * 938.27208816 + n * 939.56542052 - rest;
             out.add("énergie de liaison " + fmt(binding) + " MeV · " + fmt(binding / a) + " MeV par nucléon");
@@ -1906,15 +1907,15 @@ public final class ReactorView {
             exp++;
             mantissa /= 10;
         }
-        return String.format(Locale.FRANCE, "%.2g", mantissa) + "·10" + superscript(exp);
+        return String.format(I18n.locale(), "%.2g", mantissa) + "·10" + superscript(exp);
     }
 
     public static String fmt(double v) {
-        return String.format(Locale.FRANCE, Math.abs(v) >= 100 ? "%.0f" : Math.abs(v) >= 10 ? "%.1f" : "%.2f", v);
+        return String.format(I18n.locale(), Math.abs(v) >= 100 ? "%.0f" : Math.abs(v) >= 10 ? "%.1f" : "%.2f", v);
     }
 
     static String scientific(double v) {
-        return v == 0 ? "0" : String.format(Locale.FRANCE, "%.2e", v);
+        return v == 0 ? "0" : String.format(I18n.locale(), "%.2e", v);
     }
 
     static String energy(double kev) {

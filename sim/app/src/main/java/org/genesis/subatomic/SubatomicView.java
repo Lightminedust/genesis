@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.common.LabCamera;
 
 import com.studio.genesis.grpc.SubatomicParticle;
@@ -327,7 +328,7 @@ public final class SubatomicView {
         g.fillRect(0, 0, w, h);
         if (state == null || samples.isEmpty()) {
             g.setFill(INK);
-            g.fillText("En attente du calcul Python…", w*.42, h*.5);
+            I18n.fillText(g, "En attente du calcul Python…", w*.42, h*.5);
             return;
         }
         int index = Math.min(samples.size()-1, (int) cursor);
@@ -388,7 +389,7 @@ public final class SubatomicView {
         camera.setup(w, h, w*.5, h*.5, camera.distance());
         if (sample.getParticlesCount() == 0) {
             g.setFill(INK);
-            g.fillText("Ajoute un proton ou un neutron.", w*.4, h*.5);
+            I18n.fillText(g, "Ajoute un proton ou un neutron.", w*.4, h*.5);
             return;
         }
         double[] origin = camera.project(0, 0, 0);
@@ -424,7 +425,7 @@ public final class SubatomicView {
             g.setLineWidth(1.2);
             g.strokeOval(p[0]-radius, p[1]-radius, radius*2, radius*2);
             g.setFill(INK);
-            g.fillText((proton ? "p⁺" : "n") + "  β=" + String.format("%.3f",
+            I18n.fillText(g, (proton ? "p⁺" : "n") + "  β=" + String.format("%.3f",
                     Math.sqrt(particle.getVelocityCList().stream().mapToDouble(v -> v*v).sum())),
                     p[0]+radius+8, p[1]-radius*.2);
         }
@@ -433,7 +434,7 @@ public final class SubatomicView {
             double r2 = 0;
             for (int i=0;i<3;i++) r2 += Math.pow(a[i]-b[i], 2);
             g.setFill(Color.web("#B6CFE4"));
-            g.fillText(String.format("r = %.3f fm  ·  E = %.3f MeV", Math.sqrt(r2), sample.getTotalMev()), 24, 36);
+            I18n.fillText(g, String.format("r = %.3f fm  ·  E = %.3f MeV", Math.sqrt(r2), sample.getTotalMev()), 24, 36);
         }
         if (grabbed >= 0 && grabbed < projected.length && projected[grabbed] != null) {
             double[] p = projected[grabbed];
@@ -441,12 +442,12 @@ public final class SubatomicView {
             g.setLineWidth(2);
             g.strokeLine(p[0], p[1], dragX, dragY);
             g.setFill(INK);
-            g.fillText(String.format("Δv ≈ %.3f c", Math.min(.16,
+            I18n.fillText(g, String.format("Δv ≈ %.3f c", Math.min(.16,
                     Math.hypot(dragX-grabX, dragY-grabY)*.00045)), dragX+8, dragY-8);
         }
         if (state.getElectrons() > 0) drawElectronInset(g, w, sample);
         g.setFill(Color.web("#82A7C5"));
-        g.fillText("ÉCHELLE NUCLÉAIRE · glisser une particule pour lui donner une impulsion · fond pour tourner · molette pour zoomer", 24, h-22);
+        I18n.fillText(g, "ÉCHELLE NUCLÉAIRE · glisser une particule pour lui donner une impulsion · fond pour tourner · molette pour zoomer", 24, h-22);
     }
 
     private void drawCouplings(GraphicsContext g, SubatomicSample sample, SubatomicSample next,
@@ -465,7 +466,7 @@ public final class SubatomicView {
             g.strokeLine(a[0], a[1], b[0], b[1]);
         }
         g.setFill(Color.web("#A2C2D5"));
-        g.fillText("F effective par paire · cyan : attraction · ambre : répulsion · épaisseur ∝ |F|", 24, 56);
+        I18n.fillText(g, "F effective par paire · cyan : attraction · ambre : répulsion · épaisseur ∝ |F|", 24, 56);
     }
 
     /** Hermite entre deux résultats Python ; ses tangentes sont les vitesses intégrées par Verlet. */
@@ -485,7 +486,7 @@ public final class SubatomicView {
     private void drawElectronScale(GraphicsContext g, double w, double h) {
         if (state.getElectrons() == 0 || state.getProtons() == 0) {
             g.setFill(INK);
-            g.fillText("Ajoute un électron pour voir sa densité orbitale.", w*.32, h*.5);
+            I18n.fillText(g, "Ajoute un électron pour voir sa densité orbitale.", w*.32, h*.5);
             return;
         }
         double cx = w*.5, cy = h*.5;
@@ -496,10 +497,10 @@ public final class SubatomicView {
         g.strokeLine(cx-8, cy, cx+8, cy);
         g.strokeLine(cx, cy-8, cx, cy+8);
         g.setFill(INK);
-        g.fillText(String.format("Coupe |ψ₁ₛ|² ∝ exp(−2r/a) · a = %.3f pm · fenêtre ±%.0f pm", 
+        I18n.fillText(g, String.format("Coupe |ψ₁ₛ|² ∝ exp(−2r/a) · a = %.3f pm · fenêtre ±%.0f pm",
                 state.getElectronRadiusPm(), electronSpanPm), 24, 36);
-        g.fillText("Noyau au centre : taille sous-pixel à cette échelle. Molette : échelle électronique.", 24, h-44);
-        g.fillText("Nuage stationnaire 1s : aucune orbite ponctuelle ni force de Pauli électron–proton.", 24, h-22);
+        I18n.fillText(g, "Noyau au centre : taille sous-pixel à cette échelle. Molette : échelle électronique.", 24, h-44);
+        I18n.fillText(g, "Nuage stationnaire 1s : aucune orbite ponctuelle ni force de Pauli électron–proton.", 24, h-22);
         drawNuclearInset(g, w, h);
     }
 
@@ -512,8 +513,8 @@ public final class SubatomicView {
         g.setFill(Color.web("#F5B19E"));
         g.fillOval(x+size/2-2,y+size/2-2,4,4);
         g.setFill(INK);
-        g.fillText(String.format("e⁻ 1s · a = %.1f pm", state.getElectronRadiusPm()),x+3,y+size+17);
-        g.fillText("Échelle électronique",x+3,y+size+31);
+        I18n.fillText(g, String.format("e⁻ 1s · a = %.1f pm", state.getElectronRadiusPm()),x+3,y+size+17);
+        I18n.fillText(g, "Échelle électronique",x+3,y+size+31);
     }
 
     private void drawNuclearInset(GraphicsContext g, double width, double height) {
@@ -540,7 +541,7 @@ public final class SubatomicView {
             g.fillOval(cx+view[0]*14-6,cy-view[1]*14-6,12,12);
         }
         g.setFill(INK);
-        g.fillText("Noyau grossi · positions Python",x+8,y+188);
+        I18n.fillText(g, "Noyau grossi · positions Python",x+8,y+188);
     }
 
     private void electronCloud(double width, double height, int electrons,
@@ -576,9 +577,9 @@ public final class SubatomicView {
         g.setFill(Color.web(margin>=0 ? "#70D3C4" : "#EAB17B"));
         g.fillRoundRect(extent>=0 ? mid : mid+extent,9,Math.abs(extent),13,4,4);
         g.setFill(Color.web("#A7BED1"));
-        g.fillText("séparation",7,h-4);
-        g.fillText("0",mid-3,h-4);
-        g.fillText("liaison",w-41,h-4);
+        I18n.fillText(g, "séparation",7,h-4);
+        I18n.fillText(g, "0",mid-3,h-4);
+        I18n.fillText(g, "liaison",w-41,h-4);
     }
 
     private void plot() {
@@ -609,7 +610,7 @@ public final class SubatomicView {
         double x=left+pw*cursor/(samples.size()-1);
         g.strokeLine(x, 0, x, h-18);
         g.setFill(Color.web("#93ABC2"));
-        g.fillText("K cyan · V ambre · E blanc", 8, h-5);
+        I18n.fillText(g, "K cyan · V ambre · E blanc", 8, h-5);
     }
 
     private void plotPotential(SubatomicSample sample) {
@@ -646,6 +647,6 @@ public final class SubatomicView {
             }
         }
         g.setFill(Color.web("#93ABC2"));
-        g.fillText("r : 0,5–7 fm · axe V compressé (asinh)", 8, h-5);
+        I18n.fillText(g, "r : 0,5–7 fm · axe V compressé (asinh)", 8, h-5);
     }
 }

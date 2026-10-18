@@ -1,5 +1,6 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.EnergyLevel;
@@ -240,7 +241,7 @@ public class LightPanel {
             gc.setFont(Font.font("Segoe UI", 12));
             gc.setFill(MUTED);
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("aucun électron : aucun niveau occupé", width / 2, (top + bottom) / 2);
+            I18n.fillText(gc, "aucun électron : aucun niveau occupé", width / 2, (top + bottom) / 2);
             gc.setTextBaseline(VPos.BASELINE);
             return;
         }
@@ -262,7 +263,7 @@ public class LightPanel {
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText("ÉNERGIE DE L'ÉLECTRON (eV, échelle logarithmique)", 12, 11);
+        I18n.fillText(gc, "ÉNERGIE DE L'ÉLECTRON (eV, échelle logarithmique)", 12, 11);
 
         // 0 eV : l'électron est libre, au-delà l'atome est ionisé.
         double zeroY = top;
@@ -272,7 +273,7 @@ public class LightPanel {
         gc.setLineDashes((double[]) null);
         gc.setFont(Font.font("Segoe UI", 10));
         gc.setFill(MUTED);
-        gc.fillText("0 · électron libre", right + 6, zeroY);
+        I18n.fillText(gc, "0 · électron libre", right + 6, zeroY);
 
         boolean oneElectron = frame.getAtom().getElectrons() == 1 && frame.getAtom().getProtons() >= 1;
         int current = oneElectron ? SimCanvas.principal(frame.getElectronState()) : 0;
@@ -287,9 +288,9 @@ public class LightPanel {
                 gc.setFont(Font.font("Consolas", 10));
                 gc.setFill(occupied ? TEXT : MUTED);
                 gc.setTextAlign(TextAlignment.RIGHT);
-                gc.fillText(Visuals.format(level.getEnergyEv()), left - 6, y);
+                I18n.fillText(gc, Visuals.format(level.getEnergyEv()), left - 6, y);
                 gc.setTextAlign(TextAlignment.LEFT);
-                gc.fillText(level.getLabel(), right + 6, y);
+                I18n.fillText(gc, level.getLabel(), right + 6, y);
                 previousLabelY = y;
             }
             int electrons = oneElectron ? (occupied ? 1 : 0) : level.getElectrons();
@@ -321,7 +322,7 @@ public class LightPanel {
             gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
             gc.setFill(color);
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText(Visuals.format(jump.nm()) + " nm", x - 6, (fromY + toY) / 2);
+            I18n.fillText(gc, Visuals.format(jump.nm()) + " nm", x - 6, (fromY + toY) / 2);
             x -= 54;
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -346,7 +347,7 @@ public class LightPanel {
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText("SPECTRE · cliquer pour régler le laser", 12, top - 8);
+        I18n.fillText(gc, "SPECTRE · cliquer pour régler le laser", 12, top - 8);
 
         gc.setFill(Color.web("#0B1120"));
         gc.fillRect(12, top, width - 24, height);
@@ -407,21 +408,21 @@ public class LightPanel {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.TOP);
         for (double tick : new double[]{100, 200, 400, 700, 1000, 2000, 4000}) {
-            gc.fillText(tick >= 1000 ? Visuals.format(tick / 1000) + " µm" : Visuals.format(tick),
+            I18n.fillText(gc, tick >= 1000 ? Visuals.format(tick / 1000) + " µm" : Visuals.format(tick),
                     xOf(tick), top + height + 11);
         }
         gc.setFill(Color.web("#94A3B8"));
-        gc.fillText("UV", xOf(150), top + 12);
-        gc.fillText("IR", xOf(1400), top + 12);
+        I18n.fillText(gc, "UV", xOf(150), top + 12);
+        I18n.fillText(gc, "IR", xOf(1400), top + 12);
 
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 10));
         gc.setFill(Color.web("#FDE68A"));
-        gc.fillText("▲ absorbable maintenant", 12, top + height + 24);
+        I18n.fillText(gc, "▲ absorbable maintenant", 12, top + height + 24);
         if (ionization > 0) {
             gc.setFill(Color.web("#38BDF8"));
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText("◀ λ < " + Visuals.format(HC_EV_NM / ionization) + " nm arrache l'électron",
+            I18n.fillText(gc, "◀ λ < " + Visuals.format(HC_EV_NM / ionization) + " nm arrache l'électron",
                     width - 12, top + height + 24);
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -438,7 +439,7 @@ public class LightPanel {
             gc.fillRoundRect(boxX, top - 30, boxWidth, 18, 6, 6);
             gc.setFill(Color.WHITE);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(text, boxX + 6, top - 17);
+            I18n.fillText(gc, text, boxX + 6, top - 17);
         }
     }
 }

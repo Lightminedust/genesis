@@ -120,7 +120,7 @@ public final class LabLoader {
         elapsed += dt;
         angle += dt * (failed ? 0.4 : 2.4);
         if (!failed) {
-            elapsedLabel.setText(String.format(Locale.FRANCE, "%.1f s", elapsed)
+            elapsedLabel.setText(String.format(I18n.locale(), "%.1f s", elapsed)
                     + (elapsed > 20 ? " · le moteur prépare encore les données" : ""));
         } else {
             elapsedLabel.setText("");

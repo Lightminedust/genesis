@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.fusion.ReactorView;
 
 import com.studio.genesis.grpc.HadronChannel;
@@ -286,7 +287,7 @@ public final class HadronBench {
         offset = new double[3];
         StringBuilder rest = new StringBuilder();
         for (Slot sl : slots) rest.append(sl.anti() ? sl.id().toUpperCase(Locale.ROOT) : sl.id());
-        tell(String.format(Locale.FRANCE, "La corde a cassé : σ·ΔL = %.0f MeV paie une paire %s%s̄ (%s MeV). Le quark arraché part avec "
+        tell(String.format(I18n.locale(), "La corde a cassé : σ·ΔL = %.0f MeV paie une paire %s%s̄ (%s MeV). Le quark arraché part avec "
                 + "l'%s dans un %s — on n'isole jamais un quark. Il reste %s : teste-le.", stored, f, f,
                 f.equals("s") ? "2 × 486" : "2 × 336", s.anti() ? "quark " + f : "antiquark " + f + "̄", name, pretty(rest.toString())));
     }
@@ -617,7 +618,7 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.CENTER);
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
                 g.setFill(Color.WHITE);
-                g.fillText(p.getSymbol(), dragX, dragY + 5);
+                I18n.fillText(g, p.getSymbol(), dragX, dragY + 5);
             }
         }
     }
@@ -630,7 +631,7 @@ public final class HadronBench {
         g.setFont(Font.font("Segoe UI", 11));
         double cy = y + 34;
         g.setFill(DocStyle.PALE);
-        g.fillText(String.format(Locale.FRANCE, "%s · spin %s · charge %s · antiparticule %s", p.getFamily().equals("quark") ? "quark"
+        I18n.fillText(g, String.format(I18n.locale(), "%s · spin %s · charge %s · antiparticule %s", p.getFamily().equals("quark") ? "quark"
                 : p.getFamily().equals("lepton") ? "lepton" : p.getFamily().equals("scalar") ? "boson scalaire" : "boson vecteur",
                 SmTable.spin(p.getSpin()), SmTable.charge(p.getCharge()), p.getAnti()), x, cy);
         cy += 20;
@@ -709,10 +710,10 @@ public final class HadronBench {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9.5));
         g.setFill(DocStyle.PALE);
-        g.fillText(DocStyle.caps("la couleur du sac"), textX, y - 46);
+        I18n.fillText(g, DocStyle.caps("la couleur du sac"), textX, y - 46);
         g.setFont(Font.font("Segoe UI", 10));
         g.setFill(DocStyle.DIM);
-        g.fillText("synthèse additive : rouge + vert + bleu = blanc", textX, y + 50);
+        I18n.fillText(g, "synthèse additive : rouge + vert + bleu = blanc", textX, y + 50);
         g.setFill(white(c) ? DocStyle.GOOD : DocStyle.WHITE);
         wrap(g, mixAdvice(c), textX, y + 68, Math.min(140, width * .3), 15, Font.font("Segoe UI", 11.5));
     }
@@ -782,7 +783,7 @@ public final class HadronBench {
             if (stretching >= 0 && stretching < n) {
                 double e = stored(stretching);
                 double[] anchor = n == 2 ? at.get(1 - stretching) : junction;
-                render.tag(SubRender.lerp(anchor, at.get(stretching), .5), .1, "corde tendue", String.format(Locale.FRANCE,
+                render.tag(SubRender.lerp(anchor, at.get(stretching), .5), .1, "corde tendue", String.format(I18n.locale(),
                         "σ·ΔL = %.0f MeV  ·  une paire u ū coûte %.0f MeV", e, LIGHT_PAIR), DocStyle.GOLD, 1);
             }
             drawGluons(at, junction, parent);
@@ -821,8 +822,8 @@ public final class HadronBench {
         g.setTextAlign(TextAlignment.RIGHT);
         g.setFont(Font.font("Segoe UI", 10));
         g.setFill(DocStyle.DIM);
-        g.fillText("clic : couleur  ·  clic droit : antiquark  ·  double clic : retirer", benchRight - 8, GAP + 14);
-        g.fillText("glisser un quark : tendre sa corde  ·  vide : tourner  ·  molette : zoom", benchRight - 8, GAP + 28);
+        I18n.fillText(g, "clic : couleur  ·  clic droit : antiquark  ·  double clic : retirer", benchRight - 8, GAP + 14);
+        I18n.fillText(g, "glisser un quark : tendre sa corde  ·  vide : tourner  ·  molette : zoom", benchRight - 8, GAP + 28);
         if (matches) {
             String name = result.getName().isEmpty() ? (result.getValid() ? (result.getFateKind().equals("top") ? "aucun hadron possible"
                     : "état prédit") : "refusé") : CollisionScene.pretty(result.getName());
@@ -876,12 +877,12 @@ public final class HadronBench {
             g.setFill(ring.deriveColor(0, 1, 1, .9 * alpha));
             if (mode == MESON) {
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-                g.fillText(place == 0 ? "+" : "−", x, y + 6);
+                I18n.fillText(g, place == 0 ? "+" : "−", x, y + 6);
                 g.setFont(Font.font("Segoe UI", 10.5));
-                g.fillText(place == 0 ? "quark (matière)" : "antiquark (antimatière)", x, y + r + 15);
+                I18n.fillText(g, place == 0 ? "quark (matière)" : "antiquark (antimatière)", x, y + r + 15);
             } else {
                 g.setFont(Font.font("Segoe UI", 10.5));
-                g.fillText("quark", x, y + 4);
+                I18n.fillText(g, "quark", x, y + 4);
             }
         }
     }
@@ -1029,14 +1030,14 @@ public final class HadronBench {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9.5));
         g.setFill(DocStyle.PALE);
-        g.fillText(DocStyle.caps("la masse"), x, y);
+        I18n.fillText(g, DocStyle.caps("la masse"), x, y);
         boolean known = resultMatches() && result.getValid() && result.getMassMev() > 0;
         g.setFont(Font.font("Segoe UI", 10.5));
         if (!known) {
             g.setFill(DocStyle.WHITE);
-            g.fillText(String.format(Locale.FRANCE, "masses des quarks (Higgs) : Σ m = %s MeV", DocStyle.number(current)), x, y + 18);
+            I18n.fillText(g, String.format(I18n.locale(), "masses des quarks (Higgs) : Σ m = %s MeV", DocStyle.number(current)), x, y + 18);
             g.setFill(DocStyle.DIM);
-            g.fillText("teste : l'interaction forte donne le reste", x, y + 34);
+            I18n.fillText(g, "teste : l'interaction forte donne le reste", x, y + 34);
             return;
         }
         double big = result.getMassMev();
@@ -1045,7 +1046,7 @@ public final class HadronBench {
         double shownMass = current + (big - current) * f;
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 22));
         g.setFill(DocStyle.WHITE);
-        g.fillText(DocStyle.number(shownMass) + " MeV", x, y + 28);
+        I18n.fillText(g, DocStyle.number(shownMass) + " MeV", x, y + 28);
         double bar = w, quarkPart = Math.min(1, current / big);
         g.setFill(Color.color(1, 1, 1, .08));
         g.fillRoundRect(x, y + 38, bar, 8, 4, 4);
@@ -1055,9 +1056,9 @@ public final class HadronBench {
         g.fillRoundRect(x + bar * quarkPart, y + 38, bar * (1 - quarkPart) * f, 8, 4, 4);
         g.setFont(Font.font("Segoe UI", 10));
         g.setFill(Color.web("#C4B5FD"));
-        g.fillText(String.format(Locale.FRANCE, "quarks (Higgs) : %s MeV · %.0f %%", DocStyle.number(current), 100 * quarkPart), x, y + 60);
+        I18n.fillText(g, String.format(I18n.locale(), "quarks (Higgs) : %s MeV · %.0f %%", DocStyle.number(current), 100 * quarkPart), x, y + 60);
         g.setFill(DocStyle.GOLD.deriveColor(0, 1, 1, Math.max(.3, f)));
-        g.fillText(String.format(Locale.FRANCE, "interaction forte : %s MeV · %.0f %%", DocStyle.number(big - current), 100 * (1 - quarkPart)), x, y + 74);
+        I18n.fillText(g, String.format(I18n.locale(), "interaction forte : %s MeV · %.0f %%", DocStyle.number(big - current), 100 * (1 - quarkPart)), x, y + 74);
         g.setFill(DocStyle.DIM);
         wrap(g, "le mouvement des quarks confinés et le champ des gluons, devenus masse (E = mc²)", x, y + 89, w, 13, Font.font("Segoe UI", 9.5));
         String content = result.getContent();
@@ -1131,7 +1132,7 @@ public final class HadronBench {
             g.setTextAlign(TextAlignment.RIGHT);
             g.setFont(Font.font("Segoe UI", 10.5));
             g.setFill(DocStyle.PALE);
-            g.fillText(rows[r][0], x0 - 8, y + 4);
+            I18n.fillText(g, rows[r][0], x0 - 8, y + 4);
             double allIn = 0;
             for (int k = 0; k < t.size(); k++) {
                 Slot s = slots.get(order.get(k));
@@ -1151,10 +1152,10 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.CENTER);
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
                 g.setFill(Color.WHITE);
-                g.fillText(t.get(k)[0], cx, cy + 4);
+                I18n.fillText(g, t.get(k)[0], cx, cy + 4);
                 if (k > 0 && f > .9) {
                     g.setFill(DocStyle.PALE);
-                    g.fillText("+", ex - gapX / 2, ey + 4);
+                    I18n.fillText(g, "+", ex - gapX / 2, ey + 4);
                 }
             }
             double show = animate ? Math.max(0, Math.min(1, (since - allIn) / .3)) : 1;
@@ -1163,19 +1164,19 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.LEFT);
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 12.5 + 3 * (1 - show)));
                 g.setFill(DocStyle.WHITE.deriveColor(0, 1, 1, show));
-                g.fillText("=  " + rows[r][1], ex, y + 4.5);
+                I18n.fillText(g, "=  " + rows[r][1], ex, y + 4.5);
             }
         }
         if (spins == null && !order.isEmpty()) {
             g.setTextAlign(TextAlignment.CENTER);
             g.setFont(Font.font("Segoe UI", 10.5));
             g.setFill(DocStyle.DIM);
-            g.fillText("spin : teste l'assemblage pour connaître ses états (J)", benchX, y0 + 64);
+            I18n.fillText(g, "spin : teste l'assemblage pour connaître ses états (J)", benchX, y0 + 64);
         } else if (spins != null) {
             g.setTextAlign(TextAlignment.CENTER);
             g.setFont(Font.font("Segoe UI", 9.5));
             g.setFill(DocStyle.DIM);
-            g.fillText("(une configuration de l'état |J, M = J⟩, sans moment orbital : les projections ±½ s'ajoutent)", benchX, y0 + 80);
+            I18n.fillText(g, "(une configuration de l'état |J, M = J⟩, sans moment orbital : les projections ±½ s'ajoutent)", benchX, y0 + 80);
         }
     }
 
@@ -1191,7 +1192,7 @@ public final class HadronBench {
         if (Math.abs(j - .5) < .01) return "½";
         if (Math.abs(j - 1.5) < .01) return "3/2";
         if (Math.abs(j - 2.5) < .01) return "5/2";
-        return String.format(Locale.FRANCE, "%.0f", j);
+        return String.format(I18n.locale(), "%.0f", j);
     }
 
     /** La particule repoussée revient à sa case, et la raison s'affiche. */
@@ -1208,7 +1209,7 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.CENTER);
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
                 g.setFill(Color.WHITE);
-                g.fillText(p.getSymbol(), x, y + 5);
+                I18n.fillText(g, p.getSymbol(), x, y + 5);
             }
         }
         double age = clock - noticeStart;
@@ -1293,7 +1294,7 @@ public final class HadronBench {
             } else {
                 render.quark(where, .25, DocStyle.GOLD, name, 1);
             }
-            render.tag(where, lepton ? .1 : .7, CollisionScene.pretty(name), String.format(Locale.FRANCE, "p %s MeV/c · v %.2f c",
+            render.tag(where, lepton ? .1 : .7, CollisionScene.pretty(name), String.format(I18n.locale(), "p %s MeV/c · v %.2f c",
                     DocStyle.number(pm), beta), lepton ? DocStyle.ELECTRON : DocStyle.RIM, Math.min(1, f * 4));
         }
         if (weak) DocStyle.label(g, kind.equals("top") ? "le top se désintègre par le W" : "interaction faible : un W virtuel change la saveur",
@@ -1301,7 +1302,7 @@ public final class HadronBench {
         g.setTextAlign(TextAlignment.CENTER);
         g.setFont(Font.font("Segoe UI", 10.5));
         g.setFill(DocStyle.PALE);
-        g.fillText("film ralenti : directions et rapports de vitesses calculés, distances à l'échelle de v = p/E", benchX, h - 22);
+        I18n.fillText(g, "film ralenti : directions et rapports de vitesses calculés, distances à l'échelle de v = p/E", benchX, h - 22);
     }
 
     private void drawResult(GraphicsContext g, double x, double y, double w, double h) {
@@ -1324,12 +1325,12 @@ public final class HadronBench {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         g.setFill(result.getValid() ? DocStyle.GOOD : DocStyle.BAD);
-        g.fillText(result.getValid() ? "✓  assemblage viable" : "✕  assemblage refusé", cx, cy);
+        I18n.fillText(g, result.getValid() ? "✓  assemblage viable" : "✕  assemblage refusé", cx, cy);
         cy += 20;
         if (!matches) {
             g.setFont(Font.font("Segoe UI", 10.5));
             g.setFill(DocStyle.DIM);
-            g.fillText("(résultat de l'assemblage précédent)", cx, cy);
+            I18n.fillText(g, "(résultat de l'assemblage précédent)", cx, cy);
             cy += 16;
         }
         g.setFill(DocStyle.WHITE);
@@ -1341,15 +1342,15 @@ public final class HadronBench {
         cy += 4;
         g.setFont(Font.font("Segoe UI", 11));
         String[][] numbers = {{"contenu", pretty(result.getContent())}, {"charge", SmTable.charge(result.getCharge())},
-                {"nombre baryonique", String.format(Locale.FRANCE, "%.0f", result.getBaryonNumber())},
+                {"nombre baryonique", String.format(I18n.locale(), "%.0f", result.getBaryonNumber())},
                 {"étrangeté · charme · beauté", result.getStrangeness() + " · " + result.getCharm() + " · " + result.getBeauty()}};
         for (String[] row : numbers) {
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(DocStyle.PALE);
-            g.fillText(row[0], cx, cy);
+            I18n.fillText(g, row[0], cx, cy);
             g.setTextAlign(TextAlignment.RIGHT);
             g.setFill(DocStyle.WHITE);
-            g.fillText(row[1], cx + inner, cy);
+            I18n.fillText(g, row[1], cx + inner, cy);
             cy += 17;
         }
         if (result.getStatesCount() > 0) {
@@ -1367,13 +1368,13 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.LEFT);
                 g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11.5));
                 g.setFill(DocStyle.WHITE);
-                String spin = Math.abs(s.getSpin() - .5) < .01 ? "½" : Math.abs(s.getSpin() - 1.5) < .01 ? "3/2" : String.format(Locale.FRANCE, "%.0f", s.getSpin());
-                g.fillText("J = " + spin + (s.getKnownName().isEmpty() ? "  ·  inconnu du PDG" : "  ·  " + CollisionScene.pretty(s.getKnownName())), cx, cy + 14);
+                String spin = Math.abs(s.getSpin() - .5) < .01 ? "½" : Math.abs(s.getSpin() - 1.5) < .01 ? "3/2" : String.format(I18n.locale(), "%.0f", s.getSpin());
+                I18n.fillText(g, "J = " + spin + (s.getKnownName().isEmpty() ? "  ·  inconnu du PDG" : "  ·  " + CollisionScene.pretty(s.getKnownName())), cx, cy + 14);
                 g.setFont(Font.font("Segoe UI", 10.5));
                 g.setFill(DocStyle.PALE);
-                g.fillText(s.getKnownName().isEmpty()
-                        ? String.format(Locale.FRANCE, "modèle : %s MeV", DocStyle.number(s.getModelMassMev()))
-                        : String.format(Locale.FRANCE, "modèle %s MeV  ·  mesuré %s MeV  ·  écart %+.0f", DocStyle.number(s.getModelMassMev()),
+                I18n.fillText(g, s.getKnownName().isEmpty()
+                        ? String.format(I18n.locale(), "modèle : %s MeV", DocStyle.number(s.getModelMassMev()))
+                        : String.format(I18n.locale(), "modèle %s MeV  ·  mesuré %s MeV  ·  écart %+.0f", DocStyle.number(s.getModelMassMev()),
                         DocStyle.number(s.getKnownMassMev()), s.getErrorMev()), cx, cy + 28);
                 cy += 38;
             }
@@ -1387,7 +1388,7 @@ public final class HadronBench {
         if (result.getLifetimeS() > 0) {
             g.setFill(DocStyle.WAVE);
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11.5));
-            g.fillText("durée de vie τ = " + DocStyle.number(result.getLifetimeS()) + " s", cx, cy + 4);
+            I18n.fillText(g, "durée de vie τ = " + DocStyle.number(result.getLifetimeS()) + " s", cx, cy + 4);
             cy += 20;
         }
         if (result.getChannelsCount() > 0) {
@@ -1397,7 +1398,7 @@ public final class HadronBench {
                 g.setTextAlign(TextAlignment.LEFT);
                 g.setFont(Font.font("Segoe UI", 10.5));
                 g.setFill(DocStyle.PALE);
-                g.fillText(pretty(c.getLabel()), cx, cy + 4, inner * .72);
+                I18n.fillText(g, pretty(c.getLabel()), cx, cy + 4, inner * .72);
                 if (c.getBranching() > 0) {
                     g.setFill(Color.color(1, 1, 1, .1));
                     g.fillRoundRect(cx + inner * .74, cy - 4, inner * .26, 7, 3, 3);
@@ -1454,7 +1455,7 @@ public final class HadronBench {
             } else line = next;
         }
         if (!line.isEmpty()) rows.add(line);
-        for (int i = 0; i < rows.size(); i++) g.fillText(rows.get(i), x, y + i * lead);
+        for (int i = 0; i < rows.size(); i++) I18n.fillText(g, rows.get(i), x, y + i * lead);
         return rows.size() * lead;
     }
 }

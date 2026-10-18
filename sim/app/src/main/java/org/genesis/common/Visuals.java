@@ -1,5 +1,7 @@
 package org.genesis.common;
 
+import org.genesis.app.I18n;
+
 import javafx.scene.paint.Color;
 
 import java.util.Locale;
@@ -130,15 +132,17 @@ public final class Visuals {
         if (text.contains(".")) {
             text = text.replaceAll("0+$", "").replaceAll("\\.$", "");
         }
-        return text.replace('.', ',');
+        return I18n.language() == I18n.Language.FR ? text.replace('.', ',') : text;
     }
 
     public static String signed(double value, int decimals) {
-        return String.format(Locale.ROOT, "%+." + decimals + "f", value).replace('.', ',');
+        String text = String.format(Locale.ROOT, "%+." + decimals + "f", value);
+        return I18n.language() == I18n.Language.FR ? text.replace('.', ',') : text;
     }
 
     public static String fixed(double value, int decimals) {
-        return String.format(Locale.ROOT, "%." + decimals + "f", value).replace('.', ',');
+        String text = String.format(Locale.ROOT, "%." + decimals + "f", value);
+        return I18n.language() == I18n.Language.FR ? text.replace('.', ',') : text;
     }
 
     /**
@@ -173,7 +177,7 @@ public final class Visuals {
     /** Une durée lisible, de 10⁻²² s au milliard d'années (comme units.py côté moteur). */
     public static String duration(double seconds) {
         if (Double.isNaN(seconds) || Double.isInfinite(seconds)) {
-            return "infinie";
+            return I18n.text("infinie");
         }
         if (seconds <= 0) {
             return "0 s";
@@ -193,10 +197,10 @@ public final class Visuals {
         String[] names = {"ns", "µs", "ms", "s", "min", "h", "jours", "ans", "millions d'années"};
         for (int i = 0; i < units.length; i++) {
             if (seconds < units[i][0]) {
-                return significant(seconds / units[i][1]) + " " + names[i];
+                return significant(seconds / units[i][1]) + " " + I18n.text(names[i]);
             }
         }
-        return significant(seconds / (1e9 * YEAR_S)) + " milliards d'années";
+        return significant(seconds / (1e9 * YEAR_S)) + " " + I18n.text("milliards d'années");
     }
 
     /** Trois chiffres significatifs, sans exposant ; les milliers séparés par une espace. */
@@ -206,7 +210,7 @@ public final class Visuals {
         }
         String text = new java.math.BigDecimal(value).round(new java.math.MathContext(3)).stripTrailingZeros()
                 .toPlainString();
-        return text.replace('.', ',');
+        return I18n.language() == I18n.Language.FR ? text.replace('.', ',') : text;
     }
 
     public static String hex(Color color) {

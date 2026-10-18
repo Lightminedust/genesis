@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.fusion.FusionDashboard;
 import org.genesis.fusion.FusionRenderer;
 import org.genesis.common.LabCamera;
@@ -313,9 +314,9 @@ public final class CollisionScene {
                 + "amplifiée " + lensGain() + " fois — sinon invisible)." : "";
         // l'angle : tiré par la physique, ou choisi au curseur — on le dit
         String why = collision.getAngleSampled()
-                ? String.format(Locale.FRANCE, "Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°, "
+                ? String.format(I18n.locale(), "Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°, "
                         + "%.1f %% de plus de 30°. ", collision.getAngleMedianDeg(), 100 * collision.getAngleBeyond30())
-                : String.format(Locale.FRANCE, "Angle de %.0f° fixé au curseur : on regarde ce qui arrive aux tirs qui dévient là. ",
+                : String.format(I18n.locale(), "Angle de %.0f° fixé au curseur : on regarde ce qui arrive aux tirs qui dévient là. ",
                         collision.getAngleDeg());
         if (weak()) {
             beats.add(new Beat("approach", capital(beamName()) + " arrive",
@@ -327,7 +328,7 @@ public final class CollisionScene {
             beats.add(new Beat("photon", "Il échange un " + collision.getBoson() + " virtuel",
                     "En émettant un " + collision.getBoson() + ", " + beamName() + " devient un " + outLabel() + " et cède ν = "
                             + DocStyle.number(collision.getNuMev()) + " MeV et q = " + DocStyle.number(collision.getQMev())
-                            + " MeV/c : ce recul le dévie de " + String.format(Locale.FRANCE, "%.0f°", collision.getAngleDeg())
+                            + " MeV/c : ce recul le dévie de " + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg())
                             + ". Le " + outLabel() + " repart avec " + ep + " MeV.",
                     why + "Le " + collision.getBoson() + " emporte une charge : il change la saveur du quark qu'il touche.", 3.6, 0, 0, 0,
                     stepsMatching("boson", "peut voir", "cas possibles")));
@@ -335,14 +336,14 @@ public final class CollisionScene {
             String pull = collision.getProjectileCharge() > 0 ? "le repousse" : "l'attire";
             beats.add(new Beat("approach", capital(beamName()) + " arrive",
                     capital(beamName()) + " (" + beamLabel() + ") de " + e + " MeV fonce vers le " + target + ". " + lens + " Le champ du "
-                            + target + " " + pull + " à peine : " + String.format(Locale.FRANCE, "%.2f°", collision.getCoulombDeflectionDeg()) + ".",
-                    "Le champ de Coulomb seul ne peut pas le dévier de plus de " + String.format(Locale.FRANCE, "%.2f°", collision.getCoulombMaxDeg())
+                            + target + " " + pull + " à peine : " + String.format(I18n.locale(), "%.2f°", collision.getCoulombDeflectionDeg()) + ".",
+                    "Le champ de Coulomb seul ne peut pas le dévier de plus de " + String.format(I18n.locale(), "%.2f°", collision.getCoulombMaxDeg())
                             + " : les grands angles viennent du photon. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm).", 3.4, -pre * .6, 0, 0, stepsMatching("faisceau")));
             beats.add(new Beat("photon", "Il échange un photon virtuel",
                     "En émettant un photon virtuel, " + beamName() + " lui cède ν = " + DocStyle.number(collision.getNuMev()) + " MeV et q = "
                             + DocStyle.number(collision.getQMev()) + " MeV/c : c'est ce recul qui le dévie de "
-                            + String.format(Locale.FRANCE, "%.0f°", collision.getAngleDeg()) + " (action-réaction). Il repart avec " + ep + " MeV.",
-                    why + "Le champ du " + target + " est fait de tels photons : de loin, seulement des photons mous (" + String.format(Locale.FRANCE,
+                            + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()) + " (action-réaction). Il repart avec " + ep + " MeV.",
+                    why + "Le champ du " + target + " est fait de tels photons : de loin, seulement des photons mous (" + String.format(I18n.locale(),
                             "%.2f°", collision.getCoulombDeflectionDeg()) + ") ; un grand angle demande un photon dur, de longueur d'onde λ = ħc/Q = "
                             + lam + " fm.", 3.6, 0, 0, 0,
                     stepsMatching("photon virtuel", "peut voir", "cas possibles")));
@@ -448,7 +449,7 @@ public final class CollisionScene {
                         "Le pic de diffraction e^(Bt) et le théorème optique fixent la probabilité.", 2.8, 0, .4, 0, stepsMatching("diffraction")));
                 beats.add(new Beat("recoil", "Chacun repart intact",
                         "Ils repartent dos à dos, chacun avec p* ; dans le laboratoire, " + beamName() + " serait dévié de "
-                                + String.format(Locale.FRANCE, "%.1f°", collision.getAngleDeg()) + ". Personne ne casse.", "", 3.8, .4,
+                                + String.format(I18n.locale(), "%.1f°", collision.getAngleDeg()) + ". Personne ne casse.", "", 3.8, .4,
                         Math.min(end, 16), 0, stepsMatching("recul")));
             }
             case "formation" -> {
@@ -1129,9 +1130,9 @@ public final class CollisionScene {
             double alpha = decay ? (beat.startsWith("break") ? 1 : .75) : early ? 1 : .7;
             render.polarFloor(foot, flat, angles, density, lb.getLogScale(), lb.getSpanDecades(), radius, lb.getChosenDeg(), sign, c, alpha);
             String law = decay ? lb.getLabel().replace("désintégration du Δ : le pion sort selon ", "").replace(" (repos du Δ)", "")
-                    : lb.getLogScale() ? "échelle log, " + String.format(Locale.FRANCE, "%.0f", lb.getSpanDecades()) + " décades" : "échelle linéaire";
+                    : lb.getLogScale() ? "échelle log, " + String.format(I18n.locale(), "%.0f", lb.getSpanDecades()) + " décades" : "échelle linéaire";
             render.tag(SubRender.add(foot, SubRender.scale(flat, -radius * .2)), .1, decay ? "Δ → N π (au sol)" : hadronic() ? "dσ/dΩ* (au sol)" : "dσ/dΩ (au sol)",
-                    law + " · cet événement " + String.format(Locale.FRANCE, "%.0f°", lb.getChosenDeg()), c, alpha);
+                    law + " · cet événement " + String.format(I18n.locale(), "%.0f°", lb.getChosenDeg()), c, alpha);
         }
     }
 
@@ -1249,7 +1250,7 @@ public final class CollisionScene {
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#36CDF2"));
-        gc.fillText(FusionDashboard.spaced("LOUPE") + "   ×" + String.format(Locale.FRANCE, "%.0f", zoom), 12, 18);
+        I18n.fillText(gc, FusionDashboard.spaced("LOUPE") + "   ×" + String.format(I18n.locale(), "%.0f", zoom), 12, 18);
         double fm = close.scaleAt(closeFocus);
         if (fm > 1) {
             double bar = fm * (fm > 120 ? .5 : 1);
@@ -1259,7 +1260,7 @@ public final class CollisionScene {
             gc.strokeLine(12 + bar, ch - 18, 12 + bar, ch - 10);
             gc.setFont(Font.font("Consolas", 10));
             gc.setFill(Color.web("#C9D7EA"));
-            gc.fillText(fm > 120 ? "0,5 fm" : "1 fm", 18 + bar, ch - 10);
+            I18n.fillText(gc, fm > 120 ? "0,5 fm" : "1 fm", 18 + bar, ch - 10);
         }
     }
 
@@ -1371,9 +1372,9 @@ public final class CollisionScene {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(Color.web("#9FB0C8"));
         String dt = DocStyle.number(dotStep);
-        g.fillText("● un point toutes les " + dt + " fm/c : leur écart est la vitesse   ·   au sol : lois angulaires, fronts à c   ·   "
+        I18n.fillText(g, "● un point toutes les " + dt + " fm/c : leur écart est la vitesse   ·   au sol : lois angulaires, fronts à c   ·   "
                 + "comète : ce qui bouge, sa traînée derrière lui", x, h - 32);
-        g.fillText("après le dernier instant calculé, chaque hadron libre file en ligne droite   ·   molette : zoom   ·   glisser : tourner",
+        I18n.fillText(g, "après le dernier instant calculé, chaque hadron libre file en ligne droite   ·   molette : zoom   ·   glisser : tourner",
                 x, h - 14);
     }
 
@@ -1645,7 +1646,7 @@ public final class CollisionScene {
             if (now[1] < .3)
                 render.tag(v, .1, "−" + DocStyle.number(collision.getNuMev()) + " MeV", "cédés au " + bosonWord() + " · q = "
                         + DocStyle.number(collision.getQMev()) + " MeV/c · " + (weak() ? outLabel() + " créé à " : beamLabel() + " dévié de ")
-                        + String.format(Locale.FRANCE, "%.0f°", collision.getAngleDeg()), outColour, 1 - now[1] / .3);
+                        + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()), outColour, 1 - now[1] / .3);
         }
         double[] head = leaving.get(leaving.size() - 1);
         double seen = electronShown(head);
@@ -1653,7 +1654,7 @@ public final class CollisionScene {
                 ? collision.getOutgoingCharge() : collision.getProjectileCharge()), outLabel().contains("⁺"));
         if (beat.equals("photon") && seen > .02)
             render.tag(head, .1, outLabel() + (weak() ? " créé" : " diffusé"), DocStyle.number(collision.getEOutMev()) + " MeV · θ "
-                    + String.format(Locale.FRANCE, "%.0f°", collision.getAngleDeg()), outColour, Math.min(seen, now[1] * 2));
+                    + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()), outColour, Math.min(seen, now[1] * 2));
     }
 
     /**
@@ -1889,7 +1890,7 @@ public final class CollisionScene {
                 }
             }
             if (a != null && best > .4)
-                render.tag(SubRender.lerp(a, b, .5), .05, "corde", String.format(Locale.FRANCE, "%.1f fm · σL = %s MeV", best,
+                render.tag(SubRender.lerp(a, b, .5), .05, "corde", String.format(I18n.locale(), "%.1f fm · σL = %s MeV", best,
                         DocStyle.number(nucleon.getSigmaMevFm() * best)), DocStyle.GOLD, 1);
         }
     }
@@ -2061,10 +2062,10 @@ public final class CollisionScene {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
         g.setFill(Color.web("#36CDF2"));
-        g.fillText(FusionDashboard.spaced(("étape " + (beatIndex() + 1) + "/" + beats.size() + " · " + b.title()).toUpperCase(Locale.FRANCE)), x, y);
+        I18n.fillText(g, FusionDashboard.spaced(("étape " + (beatIndex() + 1) + "/" + beats.size() + " · " + b.title()).toUpperCase(I18n.locale())), x, y);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 21));
         g.setFill(Color.web("#EEF2FF"));
-        g.fillText(reactionTitle(), x, y + 30);
+        I18n.fillText(g, reactionTitle(), x, y + 30);
         // l'échelle réelle
         double[] a = render.project(focus), r = render.camera.right();
         double[] e = render.project(SubRender.add(focus, r));
@@ -2078,7 +2079,7 @@ public final class CollisionScene {
             g.strokeLine(x + px, sy - 5, x + px, sy + 5);
             g.setFont(Font.font("Segoe UI", 10.5));
             g.setFill(Color.web("#E8F0FF"));
-            g.fillText((fm < 1 ? String.format(Locale.FRANCE, "%.1f", fm) : String.format(Locale.FRANCE, "%.0f", fm)) + " fm · échelle réelle", x, sy - 9);
+            I18n.fillText(g, (fm < 1 ? String.format(I18n.locale(), "%.1f", fm) : String.format(I18n.locale(), "%.0f", fm)) + " fm · échelle réelle", x, sy - 9);
         }
         // le temps physique et le ralenti
         double seconds = now[0] * 3.33564095e-24;
@@ -2088,14 +2089,14 @@ public final class CollisionScene {
         else clock += "   ·   instant figé : l'échange dure ~10⁻²⁵ s";
         g.setFont(Font.font("Segoe UI", 11));
         g.setFill(Color.web("#B9C6D8"));
-        g.fillText(clock, x, y + 84);
+        I18n.fillText(g, clock, x, y + 84);
         // le récit
         double width = Math.min(stage * .5, 520), line = y + 112;
         Font font = Font.font("Segoe UI", 12.5);
         g.setFont(font);
         g.setFill(Color.web("#D6DEEA"));
         for (String l : wrap(b.caption(), font, width)) {
-            g.fillText(l, x, line);
+            I18n.fillText(g, l, x, line);
             line += 16;
         }
         if (!b.detail().isEmpty()) {
@@ -2103,7 +2104,7 @@ public final class CollisionScene {
             g.setFont(small);
             g.setFill(Color.web("#8EA6C0"));
             for (String l : wrap(b.detail(), small, width)) {
-                g.fillText(l, x, line + 2);
+                I18n.fillText(g, l, x, line + 2);
                 line += 14;
             }
         }
@@ -2112,7 +2113,7 @@ public final class CollisionScene {
     private static String scientific(double v) {
         if (v == 0) return "0";
         int exp = (int) Math.floor(Math.log10(Math.abs(v)));
-        return String.format(Locale.FRANCE, "%.2f", v / Math.pow(10, exp)) + "·10" + superscript(exp);
+        return String.format(I18n.locale(), "%.2f", v / Math.pow(10, exp)) + "·10" + superscript(exp);
     }
 
     private static String superscript(int n) {
@@ -2157,7 +2158,7 @@ public final class CollisionScene {
         for (int i = 0; i < collision.getChannelsCount(); i++) {
             CollisionChannel ch = collision.getChannels(i);
             bars.add(new FusionDashboard.Bar("ch" + i, (i == collision.getChosen() ? "▸ " : "") + ch.getName(),
-                    String.format(Locale.FRANCE, "%.1f %%", 100 * ch.getProbability()), ch.getProbability(), -1, ""));
+                    String.format(I18n.locale(), "%.1f %%", 100 * ch.getProbability()), ch.getProbability(), -1, ""));
         }
         List<String> formulas = new ArrayList<>();
         for (int k : b.steps()) {
@@ -2180,6 +2181,6 @@ public final class CollisionScene {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         g.setFill(DocStyle.WHITE);
-        g.fillText(pendingText, w / 2 - 145, h / 2 + 5, 340);
+        I18n.fillText(g, pendingText, w / 2 - 145, h / 2 + 5, 340);
     }
 }

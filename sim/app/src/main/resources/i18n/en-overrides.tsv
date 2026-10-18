@@ -1,0 +1,175 @@
+# Reviewed labels and scientific terms with preferred Genesis wording.
+Genesis - Simulateur atomique	Genesis - Atomic Simulator
+Français	French
+English	English
+Atome	Atom
+ATOME	ATOM
+Noyau	Nucleus
+NOYAU	NUCLEUS
+Nucléon	Nucleon
+NUCLÉON	NUCLEON
+Gouffre	Scale gap
+Chambre vide	Empty chamber
+Choisir un élément	Choose an element
+table périodique	periodic table
+TABLE PÉRIODIQUE	PERIODIC TABLE
+Laboratoires	Laboratories
+Vue	View
+Lumière	Light
+LUMIÈRE	LIGHT
+Orbitale	Orbital
+Rotation	Rotation
+Fusion de deux noyaux	Fusion of two nuclei
+Laboratoire subatomique	Subatomic laboratory
+Le monde subatomique (quarks, hadrons, partons)	The subatomic world (quarks, hadrons, partons)
+Énergie cinétique	Kinetic energy
+Énergie potentielle	Potential energy
+Énergie totale	Total energy
+Force forte	Strong force
+Gravité	Gravity
+Élan	Momentum
+Chaleur	Heat
+Pression	Pressure
+Réaction	Reaction
+Résultat	Result
+Bilan	Results
+Inspecter	Inspect
+Moteur injoignable	Engine unavailable
+Moteur Python indisponible	Python engine unavailable
+Retour à l'atome	Back to atom
+Connecté	Connected
+Déconnecté	Disconnected
+Stable	Stable
+Radioactif	Radioactive
+Stable (mesuré)	Stable (measured)
+aucun noyau	no nucleus
+aucun électron	no electron
+aucune particule	no particle
+Nuage électronique	Electron cloud
+Champ électrique	Electric field
+Champ magnétique	Magnetic field
+Répulsion électrique	Electric repulsion
+Force nucléaire effective	Effective nuclear force
+Temps simulé	Simulated time
+Vitesse relative	Relative speed
+Particules	Particles
+Éléments	Elements
+Électrons	Electrons
+Protons	Protons
+Neutrons	Neutrons
+Isotopes	Isotopes
+Tirer un photon	Fire a photon
+Chauffer dans une flamme	Heat in a flame
+De face (axe z vers le haut)	Front view (z axis up)
+De dessus	Top view
+De côté	Side view
+Trois-quarts	Three-quarter view
+JOURNAL	JOURNAL
+Journal	Journal
+Français / English	French / English
+GENESIS	GENESIS
+infinie	infinite
+jours	days
+ans	years
+millions d'années	million years
+milliards d'années	billion years
+# Periodic-table names that differ from French or need an unambiguous scientific translation.
+Bore	Boron
+Azote	Nitrogen
+Fluor	Fluorine
+Silicium	Silicon
+Soufre	Sulfur
+Chrome	Chromium
+Brome	Bromine
+Argent	Silver
+Tellure	Tellurium
+Iode	Iodine
+Lanthane	Lanthanum
+Praséodyme	Praseodymium
+Lutécium	Lutetium
+Or	Gold
+Américium	Americium
+Copernicium	Copernicium
+Moscovium	Moscovium
+Livermorium	Livermorium
+Tennesse	Tennessine
+Oganesson	Oganesson
+Non-métal	Nonmetal
+Gaz noble	Noble gas
+Métal alcalin	Alkali metal
+Alcalino-terreux	Alkaline earth metal
+Métalloïde	Metalloid
+Halogène	Halogen
+Métal de transition	Transition metal
+Métal pauvre	Post-transition metal
+Lanthanide	Lanthanide
+Actinide	Actinide
+✦  Tirer un photon	✦  Fire a photon
+⚛   Fusion de deux noyaux	⚛   Fusion of two nuclei
+◈   Laboratoire subatomique	◈   Subatomic laboratory
+◉   Le monde subatomique (quarks, hadrons, partons)	◉   The subatomic world (quarks, hadrons, partons)
+★   Cœur d'étoile	★   Stellar core
+⏭  Événement suivant	⏭  Next event
+VITESSE DU TEMPS	TIME SPEED
+TEMPS SIMULÉ	SIMULATED TIME
+Survole un élément pour le détailler.	Hover over an element to see its details.
+Boucle	Loop
+⌖  Inspecter	⌖  Inspect
+▶ Lecture	▶ Play
+Ⅱ Pause	Ⅱ Pause
+Échelle électronique	Electron scale
+Impulsion initiale  0 MeV	Initial impulse  0 MeV
+Forces : somme vectorielle de chaque paire	Forces: vector sum over every pair
+⏮ étape	⏮ step
+étape ⏭	step ⏭
+lent	Slow
+normal	Normal
+rapide	Fast
+moule	Template
+← Collision	← Collision
+Nouveau tirage	New sample
+Lancer l'électron  →	Launch the electron  →
+Astuce : dans l'onglet Lumière, un clic sur une raie accorde le laser exactement.	Tip: click a spectral line in the Light tab to tune the laser precisely.
+clic : entrer dans le noyau	click: enter the nucleus
+clair = densité · points = tirages dans la coupe xz · ↑↓ = spins	brightness = density · points = samples in the xz slice · ↑↓ = spins
+coupe xz · |ψ|² en échelle log (4 décades)	xz slice · |ψ|² on a log scale (4 decades)
+COUCHES · ORDRE DE REMPLISSAGE · SPINS	SHELLS · FILLING ORDER · SPINS
+CHAMBRE DE COLLISION	COLLISION CHAMBER
+LES DEUX NOYAUX	THE TWO NUCLEI
+NOYAU A	NUCLEUS A
+NOYAU B	NUCLEUS B
+LE CHOC	THE IMPACT
+LE PLASMA · LAWSON	PLASMA · LAWSON
+LE PLASMA AUTOUR	SURROUNDING PLASMA
+APPROCHE · L'ÉLAN DEVIENT RÉPULSION	APPROACH · MOMENTUM MEETS REPULSION
+CONTACT · LES DEUX NOYAUX TOURNENT ENSEMBLE	CONTACT · THE NUCLEI ORBIT TOGETHER
+FUSION · LA FORCE FORTE SOUDE LES DEUX NOYAUX	FUSION · THE STRONG FORCE BINDS THE NUCLEI
+FORCES ENTRE LES DEUX NOYAUX	FORCES BETWEEN THE TWO NUCLEI
+RÉPULSION DE COULOMB	COULOMB REPULSION
+Barrière de Coulomb : 	Coulomb barrier: 
+Visée b	Impact parameter b
+Au plus près	Closest approach
+Issue	Outcome
+↺ Rejouer	↺ Replay
+⚛  Jusqu'à la fusion	⚛  Until fusion
+·   ralenti ×10	·   slow motion ×10
+ralenti ×10	slow motion ×10
+millions de °C	million °C
+SONDE	PROBE
+THÉORIE	THEORY
+CHOISIR  ↗	SELECT  ↗
+²H · deutérium	²H · deuterium
+³H · tritium	³H · tritium
+Nouveaux tirs	New shots
+Calculer la collision  →	Calculate collision  →
+Provenance du modèle non fournie pour ce tir.	Model source unavailable for this collision.
+mer de partons	parton sea
+la cible	the target
+le tir	the shot
+LA CIBLE	THE TARGET
+LE TIR	THE SHOT
+LA MER DE PARTONS	THE PARTON SEA
+proton · uud\nm 938,3 MeV · charge +1 · spin ½\nrayon de charge 0,84 fm	proton · uud\nm 938.3 MeV · charge +1 · spin ½\ncharge radius 0.84 fm
+neutron · udd\nm 939,6 MeV · charge 0 · spin ½\naucun champ électrique autour	neutron · udd\nm 939.6 MeV · charge 0 · spin ½\nno surrounding electric field
+Angle de diffusion	Scattering angle
+Énergie du choc (centre de masse)	Collision energy (center of mass)

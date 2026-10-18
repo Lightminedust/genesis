@@ -82,6 +82,10 @@ tasks.named('run', JavaExec) {
     if (findProperty('genesisFps')) systemProperty 'genesis.fps', 'true'
 }
 
+tasks.withType(JavaExec).configureEach {
+    if (findProperty('genesisLang')) systemProperty 'genesis.lang', findProperty('genesisLang')
+}
+
 tasks.named('test') {
     useJUnitPlatform()
 }

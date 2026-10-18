@@ -1,4 +1,5 @@
 package org.genesis.fusion;
+import org.genesis.app.I18n;
 import com.studio.genesis.grpc.UniverseFrame;
 import javafx.application.Platform;
 import javafx.scene.Scene;
@@ -19,6 +20,7 @@ public final class FusionPreview {
                 int width=args.length>3?Integer.parseInt(args[3]):1440;
                 int height=args.length>4?Integer.parseInt(args[4]):1000;
                 Scene scene=new Scene(view.getNode(),width,height);
+                I18n.attach(scene);
                 scene.getStylesheets().add(FusionPreview.class.getResource("/genesis.css").toExternalForm());
                 view.getNode().applyCss();view.getNode().resize(width,height);view.getNode().layout();
                 view.applyFrame(frame);

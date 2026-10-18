@@ -1,5 +1,6 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -177,9 +178,9 @@ public final class PhotonPacket {
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
             g.setTextAlign(TextAlignment.CENTER);
             g.setFill(colour.deriveColor(0, 1, 1.2, fade));
-            g.fillText("E", ex[crest] + e1[0] * 9, ey[crest] + e1[1] * 9 + 3);
+            I18n.fillText(g, "E", ex[crest] + e1[0] * 9, ey[crest] + e1[1] * 9 + 3);
             g.setFill(pale.deriveColor(0, 1, 1, fade));
-            g.fillText("B", bx[crest] + e2[0] * 9, by[crest] + e2[1] * 9 + 3);
+            I18n.fillText(g, "B", bx[crest] + e2[0] * 9, by[crest] + e2[1] * 9 + 3);
         }
     }
 

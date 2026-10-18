@@ -1,5 +1,6 @@
 package org.genesis.mascot;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.SimEvent;
@@ -696,7 +697,7 @@ public final class GenesisMascot {
         if (e.getKind().equals("photon_fired")) return;
         double nm = e.getWavelengthNm(), ev = e.getEnergyEv() > 0 ? e.getEnergyEv() : nm > 0 ? 1239.84 / nm : 0;
         String calc = e.getFormula().length() <= 90 ? e.getFormula() : "";
-        String photon = nm > 0 ? String.format(Locale.FRANCE, " (%.0f nm, %.2f eV : %s)", nm, ev, lightName(nm)) : "";
+        String photon = nm > 0 ? String.format(I18n.locale(), " (%.0f nm, %.2f eV : %s)", nm, ev, lightName(nm)) : "";
         String title = e.getTitle(), detail = e.getDetail();
         String sentence;
         Mood m;
@@ -726,7 +727,7 @@ public final class GenesisMascot {
                 m = Mood.EXCITED;
                 sentence = "Le photon a arraché un électron à l'atome" + photon + ".\n"
                         + "Pourquoi : il apportait plus d'énergie qu'il n'en faut pour retenir cet électron. Le surplus"
-                        + (e.getKineticEv() > 0 ? String.format(Locale.FRANCE, " (%.2f eV)", e.getKineticEv()) : "")
+                        + (e.getKineticEv() > 0 ? String.format(I18n.locale(), " (%.2f eV)", e.getKineticEv()) : "")
                         + " est parti en vitesse pour l'électron.\n"
                         + "Et maintenant : l'atome a un électron de moins que de protons. Il est chargé positivement : c'est un ion.";
             }

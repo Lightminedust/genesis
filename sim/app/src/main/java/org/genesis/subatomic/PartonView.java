@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.fusion.FusionDashboard;
 import org.genesis.common.LabCamera;
 import org.genesis.fusion.ReactorView;
@@ -249,11 +250,11 @@ public final class PartonView {
     }
 
     static String q2Text(double q2) {
-        return String.format(Locale.FRANCE, "Q² = %s GeV²  (Q = %s GeV)", ReactorView.fmt(q2), ReactorView.fmt(Math.sqrt(q2)));
+        return String.format(I18n.locale(), "Q² = %s GeV²  (Q = %s GeV)", ReactorView.fmt(q2), ReactorView.fmt(Math.sqrt(q2)));
     }
 
     static String xText(double x) {
-        return String.format(Locale.FRANCE, "x > %s", x < .01 ? String.format(Locale.FRANCE, "%.1e", x) : ReactorView.fmt(x));
+        return String.format(I18n.locale(), "x > %s", x < .01 ? String.format(I18n.locale(), "%.1e", x) : ReactorView.fmt(x));
     }
 
     private double duration() {
@@ -353,7 +354,7 @@ public final class PartonView {
             g.setFill(LABEL);
             g.setFont(Font.font("Segoe UI", 13));
             g.setTextAlign(TextAlignment.CENTER);
-            g.fillText("En attente du calcul Python…", w / 2, h / 2);
+            I18n.fillText(g, "En attente du calcul Python…", w / 2, h / 2);
             return;
         }
         double stageWidth = w - FusionDashboard.WIDTH - 2 * GAP, stageHeight = h - STRIP - 2 * GAP;
@@ -431,7 +432,7 @@ public final class PartonView {
         drawScale(g, stageWidth, stageHeight);
         drawPdfStrip(g, GAP, h - STRIP - GAP, stageWidth - GAP, STRIP);
         drawBoard(g, w);
-        clock.setText(String.format(Locale.FRANCE, "t = %.3f fm/c · %.2f ys", time, time * 3.3356));
+        clock.setText(String.format(I18n.locale(), "t = %.3f fm/c · %.2f ys", time, time * 3.3356));
     }
 
     /**
@@ -494,14 +495,14 @@ public final class PartonView {
         g.setFont(Font.font("Segoe UI Semibold", 11));
         g.setFill(hue.interpolate(Color.WHITE, .4));
         double ty = stageHeight - 74;                              // les nombres sous la scène, pas sur le nucléon
-        g.fillText("photon virtuel", start, ty);
+        I18n.fillText(g, "photon virtuel", start, ty);
         g.setFont(Font.font("Segoe UI", 10.5));
         g.setFill(LABEL);
-        g.fillText(String.format(Locale.FRANCE, "Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)", ReactorView.fmt(q),
-                lambdaFm < .01 ? String.format(Locale.FRANCE, "%.4f", lambdaFm) : ReactorView.fmt(lambdaFm),
-                String.format(Locale.FRANCE, "%.1e", frequency).replace("e+", "·10^")), start, ty + 16);
+        I18n.fillText(g, String.format(I18n.locale(), "Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)", ReactorView.fmt(q),
+                lambdaFm < .01 ? String.format(I18n.locale(), "%.4f", lambdaFm) : ReactorView.fmt(lambdaFm),
+                String.format(I18n.locale(), "%.1e", frequency).replace("e+", "·10^")), start, ty + 16);
         g.setFill(DIM);
-        g.fillText(drawn < 5 ? "onde trop fine pour être tracée à l'échelle : la tache blanche a le rayon λ (agrandi à 3 px)"
+        I18n.fillText(g, drawn < 5 ? "onde trop fine pour être tracée à l'échelle : la tache blanche a le rayon λ (agrandi à 3 px)"
                 : "largeur du faisceau et période de l'onde : λ, à l'échelle ; la tache : ce qu'il distingue", start, ty + 31);
     }
 
@@ -672,7 +673,7 @@ public final class PartonView {
                 g.setTextAlign(TextAlignment.LEFT);
                 g.setFont(Font.font("Segoe UI Semibold", 10.5));
                 g.setFill(c.deriveColor(0, 1, 1, 1 - f / .75));
-                g.fillText(name(e.getKind()), s[0] + r + 4, s[1] - 2);
+                I18n.fillText(g, name(e.getKind()), s[0] + r + 4, s[1] - 2);
             }
         }
     }
@@ -688,7 +689,7 @@ public final class PartonView {
                 ? "gluon · " + colours[Math.floorMod(p.getColor(), 3)] + " / " + anti[Math.floorMod(p.getAnticolor(), 3)]
                 : (p.getKind().equals("qbar") ? "antiquark " + p.getFlavor() + " · " + anti[Math.floorMod(p.getAnticolor(), 3)]
                 : (p.getValence() ? "quark de valence " : "quark ") + p.getFlavor() + " · " + colours[Math.floorMod(p.getColor(), 3)]);
-        String detail = String.format(Locale.FRANCE, "x = %.4f · né à t = %.3f fm/c", p.getX(), Math.max(0, p.getBornFmc()));
+        String detail = String.format(I18n.locale(), "x = %.4f · né à t = %.3f fm/c", p.getX(), Math.max(0, p.getBornFmc()));
         Font bold = Font.font("Segoe UI Semibold", 11), light = Font.font("Segoe UI", 10);
         double tw = Math.max(ReactorView.width(what, bold), ReactorView.width(detail, light)) + 18;
         double tx = Math.min(scene.getWidth() - FusionDashboard.WIDTH - 40 - tw, mouseX + 14), ty = Math.max(8, mouseY - 48);
@@ -700,10 +701,10 @@ public final class PartonView {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(bold);
         g.setFill(INK);
-        g.fillText(what, tx + 9, ty + 16);
+        I18n.fillText(g, what, tx + 9, ty + 16);
         g.setFont(light);
         g.setFill(LABEL);
-        g.fillText(detail, tx + 9, ty + 30);
+        I18n.fillText(g, detail, tx + 9, ty + 30);
     }
 
     private void drawScale(GraphicsContext g, double stageWidth, double stageHeight) {
@@ -720,11 +721,11 @@ public final class PartonView {
         g.setTextAlign(TextAlignment.CENTER);
         g.setFont(Font.font("Segoe UI Semibold", 11));
         g.setFill(INK);
-        g.fillText(String.format(Locale.FRANCE, fm < 1 ? "%.1f fm" : "%.0f fm", fm), x + px / 2, y - 8);
+        I18n.fillText(g, String.format(I18n.locale(), fm < 1 ? "%.1f fm" : "%.0f fm", fm), x + px / 2, y - 8);
         g.setTextAlign(TextAlignment.RIGHT);
         g.setFont(Font.font("Segoe UI", 9.5));
         g.setFill(DIM);
-        g.fillText("sphère = rayon quadratique moyen du proton, 0,84 fm × √(5/3)", stageWidth - 24, y + 16);
+        I18n.fillText(g, "sphère = rayon quadratique moyen du proton, 0,84 fm × √(5/3)", stageWidth - 24, y + 16);
     }
 
     // ================================================================== les courbes x·f(x)
@@ -755,7 +756,7 @@ public final class PartonView {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI Semibold", 9));
         g.setFill(LABEL);
-        g.fillText(FusionDashboard.spaced("x·f(x) À CETTE RÉSOLUTION"), x + 16, y + 21);
+        I18n.fillText(g, FusionDashboard.spaced("x·f(x) À CETTE RÉSOLUTION"), x + 16, y + 21);
         double left = x + 16, top = y + 32, pw = w - 32, ph = h - 32 - 28;
         // L'axe suit les quarks de valence ; la mer et les gluons, qui divergent à petit x, sont écrêtés en haut (la lecture au survol
         // donne leurs vraies valeurs).
@@ -777,9 +778,9 @@ public final class PartonView {
         g.setFont(Font.font("Segoe UI", 9));
         g.setFill(AMBER);
         g.setTextAlign(TextAlignment.LEFT);
-        if (cut - left > 70) g.fillText("non résolu", left + 5, top + 11);
+        if (cut - left > 70) I18n.fillText(g, "non résolu", left + 5, top + 11);
         g.setTextAlign(TextAlignment.RIGHT);
-        g.fillText("x_min en pointillés · courbes écrêtées en haut", left + pw - 5, top + 11);
+        I18n.fillText(g, "x_min en pointillés · courbes écrêtées en haut", left + pw - 5, top + 11);
         g.setTextAlign(TextAlignment.LEFT);
         double legendX = left + pw;
         g.setTextAlign(TextAlignment.RIGHT);
@@ -795,27 +796,27 @@ public final class PartonView {
             g.setLineWidth(1.7);
             g.strokePolyline(px.stream().mapToDouble(Double::doubleValue).toArray(), py.stream().mapToDouble(Double::doubleValue).toArray(), px.size());
             g.setFill(curveColor(c.getName()));
-            g.fillText(curveLabel(c.getName()), legendX, y + 21);
+            I18n.fillText(g, curveLabel(c.getName()), legendX, y + 21);
             legendX -= ReactorView.width(curveLabel(c.getName()), Font.font("Segoe UI", 10)) + 18;
         }
         g.setFont(Font.font("Segoe UI", 9.5));
         g.setFill(DIM);
         g.setTextAlign(TextAlignment.LEFT);
-        g.fillText("10⁻⁴", left, y + h - 10);
+        I18n.fillText(g, "10⁻⁴", left, y + h - 10);
         g.setTextAlign(TextAlignment.CENTER);
-        g.fillText("fraction d'impulsion x (échelle log)", left + pw / 2, y + h - 10);
+        I18n.fillText(g, "fraction d'impulsion x (échelle log)", left + pw / 2, y + h - 10);
         g.setTextAlign(TextAlignment.RIGHT);
-        g.fillText("1", left + pw, y + h - 10);
+        I18n.fillText(g, "1", left + pw, y + h - 10);
         if (mouseX >= left && mouseX <= left + pw && mouseY >= top && mouseY <= top + ph) {
             double xv = Math.pow(10, lo + (hi - lo) * (mouseX - left) / pw);
             g.setStroke(Color.color(1, 1, 1, .5));
             g.setLineWidth(1);
             g.strokeLine(mouseX, top, mouseX, top + ph);
-            StringBuilder text = new StringBuilder(String.format(Locale.FRANCE, "x = %.4f", xv));
+            StringBuilder text = new StringBuilder(String.format(I18n.locale(), "x = %.4f", xv));
             for (PartonCurve c : state.getCurvesList()) {
                 int best = 0;
                 for (int i = 0; i < c.getXCount(); i++) if (Math.abs(Math.log(c.getX(i) / xv)) < Math.abs(Math.log(c.getX(best) / xv))) best = i;
-                text.append(String.format(Locale.FRANCE, " · %s %.3f", curveLabel(c.getName()).replace(" ÷ 10", "").replace("÷ 10", ""), c.getXf(best)));
+                text.append(String.format(I18n.locale(), " · %s %.3f", curveLabel(c.getName()).replace(" ÷ 10", "").replace("÷ 10", ""), c.getXf(best)));
             }
             Font font = Font.font("Segoe UI Semibold", 10);
             double tw = ReactorView.width(text.toString(), font) + 14, tx = Math.min(left + pw - tw, Math.max(left, mouseX - tw / 2));
@@ -824,7 +825,7 @@ public final class PartonView {
             g.setFont(font);
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(INK);
-            g.fillText(text.toString(), tx + 7, top + 27);
+            I18n.fillText(g, text.toString(), tx + 7, top + 27);
         }
     }
 
@@ -833,18 +834,18 @@ public final class PartonView {
         double x = w - FusionDashboard.WIDTH - GAP, y = GAP;
         int[] n = counts(partons, time);
         double mv = state.getMomentumValence(), ms = state.getMomentumSea(), mg = state.getMomentumGluon();
-        FusionDashboard.Split split = new FusionDashboard.Split("IMPULSION DU NUCLÉON", String.format(Locale.FRANCE, "%.0f %%", 100 * state.getMomentumTotal()),
-                List.of(new FusionDashboard.Part("valence", String.format(Locale.FRANCE, "%.0f %%", 100 * mv), mv, Color.web("#8EA4C8")),
-                        new FusionDashboard.Part("mer", String.format(Locale.FRANCE, "%.0f %%", 100 * ms), ms, TEAL),
-                        new FusionDashboard.Part("gluons", String.format(Locale.FRANCE, "%.0f %%", 100 * mg), mg, AMBER)));
+        FusionDashboard.Split split = new FusionDashboard.Split("IMPULSION DU NUCLÉON", String.format(I18n.locale(), "%.0f %%", 100 * state.getMomentumTotal()),
+                List.of(new FusionDashboard.Part("valence", String.format(I18n.locale(), "%.0f %%", 100 * mv), mv, Color.web("#8EA4C8")),
+                        new FusionDashboard.Part("mer", String.format(I18n.locale(), "%.0f %%", 100 * ms), ms, TEAL),
+                        new FusionDashboard.Part("gluons", String.format(I18n.locale(), "%.0f %%", 100 * mg), mg, AMBER)));
         List<FusionDashboard.Dial> dials = new ArrayList<>();
         dials.add(new FusionDashboard.Dial("g", "Gluons visibles (attendus " + ReactorView.fmt(state.getNGluon()) + ")", "" + n[0], "",
                 Math.min(1, n[0] / Math.max(1, 1.6 * state.getNGluon()))));
         dials.add(new FusionDashboard.Dial("sea", "Quarks et antiquarks de mer (attendus " + ReactorView.fmt(2 * state.getNSeaQuark()) + ")",
                 "" + (n[1] + n[2]), "", Math.min(1, (n[1] + n[2]) / Math.max(1, 2.2 * state.getNSeaQuark()))));
-        dials.add(new FusionDashboard.Dial("as", "Couplage fort α_s(Q²)", String.format(Locale.FRANCE, "%.3f", state.getAlphaS()), "",
+        dials.add(new FusionDashboard.Dial("as", "Couplage fort α_s(Q²)", String.format(I18n.locale(), "%.3f", state.getAlphaS()), "",
                 Math.min(1, state.getAlphaS() / .8)));
-        dials.add(new FusionDashboard.Dial("tau", "Durée d'une fluctuation ħ/Q", String.format(Locale.FRANCE, "%.3f", state.getTauFmc()), "fm/c",
+        dials.add(new FusionDashboard.Dial("tau", "Durée d'une fluctuation ħ/Q", String.format(I18n.locale(), "%.3f", state.getTauFmc()), "fm/c",
                 Math.min(1, state.getTauFmc() / .4)));
         FusionDashboard.Board board = new FusionDashboard.Board(state.getHadron().toUpperCase(Locale.ROOT) + " · RÉSOLUTION", split, dials, List.of(), List.of());
         dashboard.draw(g, x, y, board, lastDt, true);
@@ -857,18 +858,18 @@ public final class PartonView {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI Semibold", 9));
         g.setFill(LABEL);
-        g.fillText(FusionDashboard.spaced("ÉVÉNEMENTS JUSQU'ICI"), x + 16, y + 21);
+        I18n.fillText(g, FusionDashboard.spaced("ÉVÉNEMENTS JUSQU'ICI"), x + 16, y + 21);
         int[] counts = eventCounts(events, time);
         double ry = y + 34;
         for (int i = 0; i < EVENT_KINDS.length; i++) {
             g.setTextAlign(TextAlignment.LEFT);
             g.setFont(Font.font("Segoe UI", 11));
             g.setFill(i < 2 ? TEAL : (i < 4 ? AMBER : INK));
-            g.fillText(EVENT_NAMES[i], x + 16, ry + 12);
+            I18n.fillText(g, EVENT_NAMES[i], x + 16, ry + 12);
             g.setTextAlign(TextAlignment.RIGHT);
             g.setFont(Font.font("Segoe UI Semibold", 11));
             g.setFill(INK);
-            g.fillText("" + counts[i], x + w - 16, ry + 12);
+            I18n.fillText(g, "" + counts[i], x + w - 16, ry + 12);
             ry += row;
         }
         double dx = 0, dq = 0, dc = 0;
@@ -883,8 +884,8 @@ public final class PartonView {
         g.setFont(Font.font("Segoe UI", 10));
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(LABEL);
-        g.fillText(String.format(Locale.FRANCE, "écarts maximaux sur %d événements :", seen), x + 16, ry + 18);
+        I18n.fillText(g, String.format(I18n.locale(), "écarts maximaux sur %d événements :", seen), x + 16, ry + 18);
         g.setFill(INK);
-        g.fillText(String.format(Locale.FRANCE, "Δx %.0e · Δcharge %.0e · Δcouleur %.0e", dx, dq, dc), x + 16, ry + 33);
+        I18n.fillText(g, String.format(I18n.locale(), "Δx %.0e · Δcharge %.0e · Δcouleur %.0e", dx, dq, dc), x + 16, ry + 33);
     }
 }

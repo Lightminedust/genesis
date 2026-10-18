@@ -1,5 +1,6 @@
 package org.genesis.matter;
 
+import org.genesis.app.I18n;
 import org.genesis.atom.SimCanvas;
 import org.genesis.common.Visuals;
 
@@ -451,9 +452,9 @@ public class MatterCanvas {
         gc.setFill(Color.web("#38BDF8"));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("↔", handle[0], handle[1]);
+        I18n.fillText(gc, "↔", handle[0], handle[1]);
         gc.setFont(Font.font(UI, 11));
-        gc.fillText("piston", handle[0], handle[1] + 22);
+        I18n.fillText(gc, "piston", handle[0], handle[1] + 22);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -470,24 +471,24 @@ public class MatterCanvas {
         gc.setFill(Color.web("#38BDF8"));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(state.getSymbol(), 47, 41);
+        I18n.fillText(gc, state.getSymbol(), 47, 41);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.TOP);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
-        gc.fillText("Matière · " + state.getCount() + " atomes de " + state.getName().toLowerCase(), 86, 14);
+        I18n.fillText(gc, "Matière · " + state.getCount() + " atomes de " + state.getName().toLowerCase(), 86, 14);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
-        gc.fillText("sphère = un atome (σ = " + Visuals.fixed(state.getSigmaAngstrom(), 2) + " Å) · boîte "
+        I18n.fillText(gc, "sphère = un atome (σ = " + Visuals.fixed(state.getSigmaAngstrom(), 2) + " Å) · boîte "
                 + Math.round(state.getBoxX()) + " × " + Math.round(state.getBoxY()) + " × "
                 + Math.round(state.getBoxZ()) + " Å", 86, 44);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 20));
         gc.setFill(TEXT);
-        gc.fillText("t = " + Visuals.duration(state.getTimePs() * 1e-12), stageRight() - 18, 14);
+        I18n.fillText(gc, "t = " + Visuals.duration(state.getTimePs() * 1e-12), stageRight() - 18, 14);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(paused ? FORMULA : Color.web("#34D399"));
-        gc.fillText(paused ? "⏸ arrêté · ▶ reprendre" : "▶ en cours", stageRight() - 18, 44);
+        I18n.fillText(gc, paused ? "⏸ arrêté · ▶ reprendre" : "▶ en cours", stageRight() - 18, 44);
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -511,7 +512,7 @@ public class MatterCanvas {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText(colorByPhase ? "COULEUR = ÉTAT MESURÉ (clic : température)"
+        I18n.fillText(gc, colorByPhase ? "COULEUR = ÉTAT MESURÉ (clic : température)"
                 : "COULEUR = AGITATION DE L'ATOME (clic : état)", box[0] + 12, box[1] + 15);
         double left = box[0] + 12;
         double width = box[2] - 24;
@@ -524,7 +525,7 @@ public class MatterCanvas {
                 gc.fillOval(left + k * 88, y + 2, 12, 12);
                 gc.setFill(TEXT);
                 gc.setFont(Font.font(UI, 12));
-                gc.fillText(names[k], left + k * 88 + 18, y + 13);
+                I18n.fillText(gc, names[k], left + k * 88 + 18, y + 13);
             }
             return;
         }
@@ -537,9 +538,9 @@ public class MatterCanvas {
         double top = 3.0 * state.getEpsilonK();
         gc.setFont(Font.font(MONO, 10));
         gc.setFill(MUTED);
-        gc.fillText("0 K", left, y + 25);
+        I18n.fillText(gc, "0 K", left, y + 25);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(Visuals.format(top) + " K", left + width, y + 25);
+        I18n.fillText(gc, Visuals.format(top) + " K", left + width, y + 25);
         gc.setTextAlign(TextAlignment.CENTER);
         for (double[] mark : new double[][]{{state.getMeltingK(), 0}, {state.getBoilingK(), 1}}) {
             if (mark[0] <= 0 || mark[0] > top) {
@@ -551,9 +552,9 @@ public class MatterCanvas {
             gc.strokeLine(x, y - 3, x, y + 13);
             gc.setFill(TEXT);
             if (mark[1] == 0) {
-                gc.fillText("fusion " + Visuals.format(mark[0]) + " K", x, y + 25);
+                I18n.fillText(gc, "fusion " + Visuals.format(mark[0]) + " K", x, y + 25);
             } else {
-                gc.fillText("ébullition " + Visuals.format(mark[0]) + " K", x, y - 6);
+                I18n.fillText(gc, "ébullition " + Visuals.format(mark[0]) + " K", x, y - 6);
             }
         }
     }
@@ -570,7 +571,7 @@ public class MatterCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(title, x + 24, y + 20);
+        I18n.fillText(gc, title, x + 24, y + 20);
         gc.setTextBaseline(VPos.BASELINE);
         return y + 44;
     }
@@ -590,10 +591,10 @@ public class MatterCanvas {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(MUTED);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(row[0], x + 18, y);
+            I18n.fillText(gc, row[0], x + 18, y);
             gc.setFont(Font.font(MONO, FontWeight.BOLD, 13));
             gc.setFill(TEXT);
-            gc.fillText(row[1], x + 112, y);
+            I18n.fillText(gc, row[1], x + 112, y);
             y += 20;
         }
 
@@ -621,7 +622,7 @@ public class MatterCanvas {
             }
             gc.setFill(colors[k]);
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
-            gc.fillText(names[k] + " " + Math.round(parts[k] * 100) + " %", x + 18 + k * 92, y);
+            I18n.fillText(gc, names[k] + " " + Math.round(parts[k] * 100) + " %", x + 18 + k * 92, y);
         }
         y += 12;
         y = wrapped(x + 18, y + 8, PANEL_WIDTH - 36, supercritical
@@ -634,17 +635,17 @@ public class MatterCanvas {
         y += 6;
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
-        gc.fillText(state.getName().toUpperCase() + " RÉEL (1 bar, mesures)", x + 18, y);
+        I18n.fillText(gc, state.getName().toUpperCase() + " RÉEL (1 bar, mesures)", x + 18, y);
         y += 18;
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(TEXT);
         if (state.getMeltingK() > 0) {
-            gc.fillText("fond à " + Visuals.format(state.getMeltingK()) + " K · bout à "
+            I18n.fillText(gc, "fond à " + Visuals.format(state.getMeltingK()) + " K · bout à "
                     + Visuals.format(state.getBoilingK()) + " K", x + 18, y);
             y += 17;
         }
         if (state.getCriticalK() > 0) {
-            gc.fillText("point critique : " + Visuals.format(state.getCriticalK()) + " K (modèle : "
+            I18n.fillText(gc, "point critique : " + Visuals.format(state.getCriticalK()) + " K (modèle : "
                     + Visuals.format(state.getModelCriticalK()) + " K)", x + 18, y);
             y += 17;
         }
@@ -662,7 +663,7 @@ public class MatterCanvas {
         gc.setFont(Font.font(MONO, 11));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(FORMULA);
-        gc.fillText("V(r) = 4ε[(σ/r)¹² − (σ/r)⁶]", x, y);
+        I18n.fillText(gc, "V(r) = 4ε[(σ/r)¹² − (σ/r)⁶]", x, y);
         y += 10;
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
@@ -692,11 +693,11 @@ public class MatterCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, 10));
-        gc.fillText("puits −ε à r = 2^⅙ σ = " + Visuals.fixed(Math.pow(2, 1 / 6.0) * state.getSigmaAngstrom(), 2)
+        I18n.fillText(gc, "puits −ε à r = 2^⅙ σ = " + Visuals.fixed(Math.pow(2, 1 / 6.0) * state.getSigmaAngstrom(), 2)
                 + " Å", wellX + 8, wellY + 4);
-        gc.fillText("répulsion ↑", x + 16, y + 8);
+        I18n.fillText(gc, "répulsion ↑", x + 16, y + 8);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText("attraction faible →", x + w, zeroY - 4);
+        I18n.fillText(gc, "attraction faible →", x + w, zeroY - 4);
     }
 
     private void drawPhaseCard() {
@@ -717,23 +718,23 @@ public class MatterCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(Color.web("#38BDF8", alpha));
-        gc.fillText((lastPhase.getKind().equals("phase") ? "CHANGEMENT D'ÉTAT" : "MATIÈRE") + "   ·   t = "
+        I18n.fillText(gc, (lastPhase.getKind().equals("phase") ? "CHANGEMENT D'ÉTAT" : "MATIÈRE") + "   ·   t = "
                 + Visuals.duration(lastPhase.getTimeS()), x + 16, y + 20);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 15));
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
         List<String> title = SimCanvas.wrap(lastPhase.getTitle(), 44);
-        gc.fillText(title.isEmpty() ? "" : title.get(0), x + 16, y + 40);
+        I18n.fillText(gc, title.isEmpty() ? "" : title.get(0), x + 16, y + 40);
         double line = y + 60;
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(FORMULA.deriveColor(0, 1, 1, alpha));
         for (String text : formula) {
-            gc.fillText(text, x + 16, line);
+            I18n.fillText(gc, text, x + 16, line);
             line += 17;
         }
         gc.setFont(Font.font(UI, 12));
         gc.setFill(SOFT.deriveColor(0, 1, 1, alpha));
         for (int k = 0; k < Math.min(4, detail.size()); k++) {
-            gc.fillText(detail.get(k), x + 16, line);
+            I18n.fillText(gc, detail.get(k), x + 16, line);
             line += 16;
         }
     }
@@ -748,7 +749,7 @@ public class MatterCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome) · poignée ↔ : "
+        I18n.fillText(gc, "Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome) · poignée ↔ : "
                 + "piston · température des parois : en bas", 20, top + FOOTER / 2);
         gc.setTextBaseline(VPos.BASELINE);
     }
@@ -759,7 +760,7 @@ public class MatterCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         List<String> lines = SimCanvas.wrap(text, (int) (width / (size * 0.52)));
         for (int i = 0; i < Math.min(maxLines, lines.size()); i++) {
-            gc.fillText(lines.get(i), x, y);
+            I18n.fillText(gc, lines.get(i), x, y);
             y += size + 5;
         }
         return y;

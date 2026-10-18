@@ -1,5 +1,6 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.DecayChannel;
@@ -136,13 +137,13 @@ public class StabilityChart {
         gc.setTextBaseline(VPos.TOP);
         gc.setTextAlign(TextAlignment.CENTER);
         for (int z = 0; z <= MAX_Z; z += 20) {
-            gc.fillText(Integer.toString(z), x(z, left, right), bottom + 3);
+            I18n.fillText(gc, Integer.toString(z), x(z, left, right), bottom + 3);
         }
-        gc.fillText("Z (protons)", (left + right) / 2, bottom + 11);
+        I18n.fillText(gc, "Z (protons)", (left + right) / 2, bottom + 11);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setTextBaseline(VPos.CENTER);
         for (int n = 0; n <= MAX_N; n += 40) {
-            gc.fillText(Integer.toString(n), left - 3, y(n, top, bottom));
+            I18n.fillText(gc, Integer.toString(n), left - 3, y(n, top, bottom));
         }
         gc.setTextBaseline(VPos.BASELINE);
 
@@ -153,14 +154,14 @@ public class StabilityChart {
         gc.setLineDashes((double[]) null);
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText("N = Z", x(70, left, right), y(62, top, bottom));
+        I18n.fillText(gc, "N = Z", x(70, left, right), y(62, top, bottom));
 
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setFill(Color.web("#34D399"));
-        gc.fillText("■ noyau stable réel", left + 6, top + 10);
+        I18n.fillText(gc, "■ noyau stable réel", left + 6, top + 10);
         gc.setFill(Color.web("#CBD5E1"));
-        gc.fillText("◯ ton noyau", left + 6, top + 22);
+        I18n.fillText(gc, "◯ ton noyau", left + 6, top + 22);
 
         gc.setFill(Color.web("#34D399", 0.75));
         for (int[] nuclide : stableNuclides) {
@@ -275,12 +276,12 @@ public class StabilityChart {
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText("loupe  Z=" + z + "  N=" + n, left + 3, top + size + 10);
+        I18n.fillText(gc, "loupe  Z=" + z + "  N=" + n, left + 3, top + size + 10);
         if (vector != null) {
             // Au-dessus de la loupe : sous elle, il n'y a la place que pour une ligne.
             gc.setFill(Color.web("#FBBF24"));
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.fillText("désintégration → " + mainMode(), left + size, top - 3);
+            I18n.fillText(gc, "désintégration → " + mainMode(), left + size, top - 3);
         }
     }
 }

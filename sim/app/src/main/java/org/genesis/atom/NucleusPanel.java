@@ -1,5 +1,7 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
+
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.DecayChannel;
@@ -129,7 +131,8 @@ public class NucleusPanel {
     private static String percent(double fraction) {
         double value = fraction * 100;
         if (value >= 1) {
-            return String.format(Locale.ROOT, "%.1f %%", value).replace('.', ',');
+            String text = String.format(Locale.ROOT, "%.1f %%", value);
+            return I18n.language() == I18n.Language.FR ? text.replace('.', ',') : text;
         }
         return scientific(value) + " %";
     }

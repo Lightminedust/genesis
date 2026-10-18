@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -59,33 +60,33 @@ public final class FormulaCard {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font("Segoe UI Semibold", 9 * Math.max(.9, scale)));
         gc.setFill(f.accent().deriveColor(0, 1, 1, .8 * alpha));
-        gc.fillText(FusionDashboard.spaced(f.title()), cx, cy - big * .95);
+        I18n.fillText(gc, FusionDashboard.spaced(f.title()), cx, cy - big * .95);
         // Le membre de gauche.
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(main);
         gc.setFill(ink);
-        gc.fillText(f.left() + " ", x, cy + big * .34);
+        I18n.fillText(gc, f.left() + " ", x, cy + big * .34);
         x += leftWidth;
         // La fraction : numérateur, barre, dénominateur.
         gc.setFont(part);
         if (fraction) {
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText(f.numerator(), x + barWidth / 2, cy - small * .22);
-            gc.fillText(f.denominator(), x + barWidth / 2, cy + small * 1.02);
+            I18n.fillText(gc, f.numerator(), x + barWidth / 2, cy - small * .22);
+            I18n.fillText(gc, f.denominator(), x + barWidth / 2, cy + small * 1.02);
             gc.setStroke(ink);
             gc.setLineWidth(Math.max(1.2, 1.6 * scale));
             gc.strokeLine(x + 3, cy + small * .12, x + barWidth - 3, cy + small * .12);
             x += barWidth;
         } else {
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(f.numerator(), x, cy + big * .34);
+            I18n.fillText(gc, f.numerator(), x, cy + big * .34);
             x += numWidth;
         }
         // La valeur.
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(main);
         gc.setFill(f.accent().interpolate(Color.WHITE, .35).deriveColor(0, 1, 1, alpha));
-        gc.fillText("  =  " + f.value(), x, cy + big * .34);
+        I18n.fillText(gc, "  =  " + f.value(), x, cy + big * .34);
         // La formule chiffrée, dessous.
         double bottom = cy + (fraction ? small * 1.3 : big * .34);
         if (detail && !f.substituted().isBlank()) {
@@ -93,7 +94,7 @@ public final class FormulaCard {
             gc.setFont(Font.font("Segoe UI", 10 * Math.max(.9, scale)));
             gc.setFill(Color.web("#9FB4CE", .85 * alpha));
             bottom += 15 * Math.max(.9, scale);
-            gc.fillText(f.substituted(), cx, bottom, total + 120);
+            I18n.fillText(gc, f.substituted(), cx, bottom, total + 120);
         }
         // Les deux pastilles : la cause à gauche, l'effet à droite.
         if (!f.cause().isBlank()) {
@@ -116,7 +117,7 @@ public final class FormulaCard {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(font);
         gc.setFill(accent.interpolate(Color.WHITE, .4).deriveColor(0, 1, 1, alpha));
-        gc.fillText(text, left + w / 2, y + 3.5);
+        I18n.fillText(gc, text, left + w / 2, y + 3.5);
     }
 
     /** Une suite de lignes « grandeur : valeur » en colonnes, pour un tableau compact. */
@@ -130,11 +131,11 @@ public final class FormulaCard {
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFont(Font.font("Segoe UI", 10.5));
             gc.setFill(Color.web("#9FB4CE", alpha));
-            gc.fillText(rows.get(i)[0], x, row + 3, w * .52);
+            I18n.fillText(gc, rows.get(i)[0], x, row + 3, w * .52);
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setFont(Font.font("Segoe UI Semibold", 10.5));
             gc.setFill(Color.web("#E6EEFA", alpha));
-            gc.fillText(rows.get(i)[1], x + w, row + 3, w * .46);
+            I18n.fillText(gc, rows.get(i)[1], x + w, row + 3, w * .46);
             row += 18;
         }
     }

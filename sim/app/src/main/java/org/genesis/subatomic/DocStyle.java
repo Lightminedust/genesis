@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.fusion.ReactorView;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -212,9 +213,9 @@ public final class DocStyle {
         g.setTextAlign(align);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, size));
         g.setFill(Color.color(0, .08, .15, .45 * alpha));
-        g.fillText(caps(text), x + 1, y + 1.5);
+        I18n.fillText(g, caps(text), x + 1, y + 1.5);
         g.setFill(WHITE.deriveColor(0, 1, 1, alpha));
-        g.fillText(caps(text), x, y);
+        I18n.fillText(g, caps(text), x, y);
     }
 
     /** Une légende sans capitales : pour les symboles de particules (e⁻, γ*, ū) dont la casse a un sens. */
@@ -223,9 +224,9 @@ public final class DocStyle {
         g.setTextAlign(align);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, size));
         g.setFill(Color.color(0, .08, .15, .45 * alpha));
-        g.fillText(text, x + 1, y + 1.5);
+        I18n.fillText(g, text, x + 1, y + 1.5);
         g.setFill(WHITE.deriveColor(0, 1, 1, alpha));
-        g.fillText(text, x, y);
+        I18n.fillText(g, text, x, y);
     }
 
     /** Un panneau de verre bleu translucide. */
@@ -243,11 +244,11 @@ public final class DocStyle {
         double a = Math.abs(v);
         if (a >= 1e5 || a < 1e-2) {
             int e = (int) Math.floor(Math.log10(a));
-            return String.format(java.util.Locale.FRANCE, "%.2f·10%s", v / Math.pow(10, e), ReactorView.superscript(e));
+            return String.format(I18n.locale(), "%.2f·10%s", v / Math.pow(10, e), ReactorView.superscript(e));
         }
-        if (a >= 100) return String.format(java.util.Locale.FRANCE, "%.0f", v);
-        if (a >= 10) return String.format(java.util.Locale.FRANCE, "%.1f", v);
-        return String.format(java.util.Locale.FRANCE, "%.2f", v);
+        if (a >= 100) return String.format(I18n.locale(), "%.0f", v);
+        if (a >= 10) return String.format(I18n.locale(), "%.1f", v);
+        return String.format(I18n.locale(), "%.2f", v);
     }
 
     static double niceLength(double target) {

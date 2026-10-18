@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.subatomic.DocStyle;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -162,7 +163,7 @@ public final class FusionDashboard {
         // L'étape : à gauche en capitales fines, un point à droite.
         gc.setFont(Font.font("Segoe UI Semibold", 9));
         gc.setFill(LABEL);
-        gc.fillText(spaced(b.stage()), x + PAD, y + 21);
+        I18n.fillText(gc, spaced(b.stage()), x + PAD, y + 21);
         gc.setFill(TEAL);
         gc.fillOval(x + w - PAD - 5, y + 16, 5, 5);
         rule(gc, x + PAD, y + HEAD - 4, inner);
@@ -225,7 +226,7 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI Semibold", 9));
         gc.setFill(LABEL);
-        gc.fillText(spaced(text), x, y + 17);
+        I18n.fillText(gc, spaced(text), x, y + 17);
     }
 
     /** Une ligne de tableau : un libellé à gauche, sa valeur à droite ; les lignes paires sont à peine teintées. */
@@ -237,12 +238,12 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 10.5));
         gc.setFill(LABEL);
-        gc.fillText(key, x, y + 11.5, value.isEmpty() ? w : w * .56);
+        I18n.fillText(gc, key, x, y + 11.5, value.isEmpty() ? w : w * .56);
         if (!value.isEmpty()) {
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setFont(Font.font("Segoe UI Semibold", 10.5));
             gc.setFill(accent ? AMBER.interpolate(Color.WHITE, .25) : INK);
-            gc.fillText(value, x + w, y + 11.5, w * .5);
+            I18n.fillText(gc, value, x + w, y + 11.5, w * .5);
         }
     }
 
@@ -251,11 +252,11 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI Semibold", 9));
         gc.setFill(LABEL);
-        gc.fillText(spaced(s.label()), x, y + 13);
+        I18n.fillText(gc, spaced(s.label()), x, y + 13);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font("Segoe UI Semibold", 14));
         gc.setFill(INK);
-        gc.fillText(s.total(), x + w, y + 14);
+        I18n.fillText(gc, s.total(), x + w, y + 14);
         double by = y + 22, bh = 7, sum = 0;
         for (Part p : s.parts()) sum += Math.max(0, p.share());
         gc.setFill(Color.color(1, 1, 1, .06));
@@ -279,9 +280,9 @@ public final class FusionDashboard {
             gc.setFill(p.color());
             gc.fillOval(lx, ly - 7, 6, 6);
             gc.setFill(LABEL);
-            gc.fillText(p.name() + "  ", lx + 11, ly);
+            I18n.fillText(gc, p.name() + "  ", lx + 11, ly);
             gc.setFill(INK);
-            gc.fillText(p.value(), lx + 11 + ReactorView.width(p.name() + "  ", Font.font("Segoe UI", 10)), ly);
+            I18n.fillText(gc, p.value(), lx + 11 + ReactorView.width(p.name() + "  ", Font.font("Segoe UI", 10)), ly);
         }
         return 36 + 15 * lines + 6;
     }
@@ -292,15 +293,15 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 10.5));
         gc.setFill(LABEL);
-        gc.fillText(d.label(), x, y + 13);
+        I18n.fillText(gc, d.label(), x, y + 13);
         Font big = Font.font("Segoe UI Semibold", 27);
         gc.setFont(big);
         gc.setFill(INK);
-        gc.fillText(d.value(), x, y + 41, w * .72);
+        I18n.fillText(gc, d.value(), x, y + 41, w * .72);
         if (!d.unit().isBlank()) {
             gc.setFont(Font.font("Segoe UI", 11));
             gc.setFill(LABEL);
-            gc.fillText(d.unit(), x + Math.min(w * .72, ReactorView.width(d.value(), big)) + 6, y + 41);
+            I18n.fillText(gc, d.unit(), x + Math.min(w * .72, ReactorView.width(d.value(), big)) + 6, y + 41);
         }
         gauge(gc, x, y + 50, w, 4, f, true);
     }
@@ -312,11 +313,11 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI", 10.5));
         gc.setFill(LABEL);
-        gc.fillText(label, x, y + 11, w * .6);
+        I18n.fillText(gc, label, x, y + 11, w * .6);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font("Segoe UI Semibold", 11.5));
         gc.setFill(INK);
-        gc.fillText(value, x + w, y + 11, w * .5);
+        I18n.fillText(gc, value, x + w, y + 11, w * .5);
         gauge(gc, x, y + 17, w, 2.5, f, false);
         if (mark >= 0 && mark <= 1) {
             double mx = x + w * mark;
@@ -326,7 +327,7 @@ public final class FusionDashboard {
                 gc.setFont(Font.font("Segoe UI", 8.5));
                 gc.setTextAlign(TextAlignment.CENTER);
                 gc.setFill(DIM);
-                gc.fillText(markLabel, Math.max(x + 6, Math.min(x + w - 6, mx)), y + 28);
+                I18n.fillText(gc, markLabel, Math.max(x + 6, Math.min(x + w - 6, mx)), y + 28);
             }
         }
     }
@@ -361,11 +362,11 @@ public final class FusionDashboard {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font("Segoe UI Semibold", 9));
         gc.setFill(LABEL);
-        gc.fillText(spaced(p.title()), x, y + 11);
+        I18n.fillText(gc, spaced(p.title()), x, y + 11);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setFill(DIM);
-        gc.fillText("survol : lire la valeur", right, y + 11);
+        I18n.fillText(gc, "survol : lire la valeur", right, y + 11);
         gc.setFill(Color.color(1, 1, 1, .03));
         gc.fillRect(left, top, w, height);
         double xr = Math.max(1e-12, p.xmax() - p.xmin()), yr = Math.max(1e-12, p.ymax() - p.ymin());
@@ -387,7 +388,7 @@ public final class FusionDashboard {
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFont(Font.font("Segoe UI Semibold", 9));
             gc.setFill(AMBER);
-            gc.fillText(p.levelLabel(), left + 4, ey - 4);
+            I18n.fillText(gc, p.levelLabel(), left + 4, ey - 4);
         }
         int n = p.xs().length;
         double[] px = new double[n], py = new double[n];
@@ -411,9 +412,9 @@ public final class FusionDashboard {
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setFill(DIM);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.fillText(ReactorView.fmt(p.xmin()) + " " + p.xUnit(), left, top + height + 12);
+        I18n.fillText(gc, ReactorView.fmt(p.xmin()) + " " + p.xUnit(), left, top + height + 12);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(ReactorView.fmt(p.xmax()) + " " + p.xUnit(), right, top + height + 12);
+        I18n.fillText(gc, ReactorView.fmt(p.xmax()) + " " + p.xUnit(), right, top + height + 12);
         if (hoverX >= left && hoverX <= right && hoverY >= top - 6 && hoverY <= top + height + 6) {
             double xv = p.xmin() + xr * (hoverX - left) / w, yv = interpolate(p, xv);
             double hy = top + height * (1 - (Math.max(p.ymin(), Math.min(p.ymax(), yv)) - p.ymin()) / yr);
@@ -432,7 +433,7 @@ public final class FusionDashboard {
             gc.setFont(f);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(INK);
-            gc.fillText(text, tx + 7, top + 15);
+            I18n.fillText(gc, text, tx + 7, top + 15);
         }
     }
 

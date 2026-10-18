@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -162,7 +163,7 @@ public final class ResultView {
         b.getStyleClass().add("glass-button");
         b.setStyle("-fx-padding:2 9;-fx-font-size:10.5px;");
         b.setFocusTraversable(false);
-        b.setTooltip(new Tooltip(tip));
+        b.setTooltip(I18n.tooltip(tip));
         return b;
     }
 
@@ -346,7 +347,7 @@ public final class ResultView {
             g.strokeOval(cx - r, cy - r, 2 * r, 2 * r);
             g.setLineDashes(null);
             g.setFill(Color.color(.62, .76, .92, .6));
-            g.fillText(energy(Math.pow(10, d) * 1000), cx + r * .72 + 3, cy - r * .70 - 2);
+            I18n.fillText(g, energy(Math.pow(10, d) * 1000), cx + r * .72 + 3, cy - r * .70 - 2);
         }
         List<Integer> order = new ArrayList<>();
         for (int i = 0; i < shown.particles().size(); i++) if (shown.particles().get(i) != center) order.add(i);
@@ -411,7 +412,7 @@ public final class ResultView {
                 g.setTextAlign(ux < -.2 ? TextAlignment.RIGHT : ux > .2 ? TextAlignment.LEFT : TextAlignment.CENTER);
                 g.setFill(c.interpolate(Color.WHITE, .35));
                 double lx = x1 + ux * (dot + 7), ly = y1 + uy * (dot + 7) + (Math.abs(ux) <= .2 ? (uy > 0 ? 9 : -3) : 4);
-                g.fillText(p.symbol() + "  " + energy(p.kineticMev() * 1000), lx, ly);
+                I18n.fillText(g, p.symbol() + "  " + energy(p.kineticMev() * 1000), lx, ly);
             }
         }
         if (center != null) {
@@ -426,7 +427,7 @@ public final class ResultView {
             g.setFill(Color.web("#06101C"));
             g.setFont(Font.font("Segoe UI Semibold", center.symbol().length() > 4 ? 10 : 12));
             g.setTextAlign(TextAlignment.CENTER);
-            g.fillText(center.symbol(), cx, cy + 4, 2 * r - 2);
+            I18n.fillText(g, center.symbol(), cx, cy + 4, 2 * r - 2);
             hits.add(new double[]{cx, cy, shown.particles().indexOf(center)});
         } else {
             g.setStroke(Color.color(1, 1, 1, .5));
@@ -436,7 +437,7 @@ public final class ResultView {
             g.setFont(Font.font("Segoe UI", 9));
             g.setFill(Color.color(1, 1, 1, .6));
             g.setTextAlign(TextAlignment.CENTER);
-            g.fillText("centre de masse", cx, cy + 16);
+            I18n.fillText(g, "centre de masse", cx, cy + 16);
         }
     }
 
@@ -695,7 +696,7 @@ public final class ResultView {
     }
 
     private static String ratio(double r) {
-        return r >= 1e5 ? scientificShort(r) : r >= 100 ? String.format(Locale.FRANCE, "%,.0f", r) : fmt(r);
+        return r >= 1e5 ? scientificShort(r) : r >= 100 ? String.format(I18n.locale(), "%,.0f", r) : fmt(r);
     }
 
     /**
@@ -719,7 +720,7 @@ public final class ResultView {
             g.setLineWidth(1);
             g.strokeLine(axis - 4, yy, axis + 4, yy);
             g.setFill(Color.color(.62, .74, .9, .55));
-            g.fillText("10" + ReactorView.superscript(d) + " J", 6, yy + 3);
+            I18n.fillText(g, "10" + ReactorView.superscript(d) + " J", 6, yy + 3);
         }
         // Les repères, à droite : les étiquettes poussées vers le bas pour ne pas se chevaucher.
         List<Reference> refs = new ArrayList<>(REFERENCES);
@@ -735,7 +736,7 @@ public final class ResultView {
             g.setStroke(Color.color(1, 1, 1, .18));
             g.strokeLine(axis + 7, ideal, axis + 16, ly - 3);
             g.setFill(Color.web("#B9C9DF"));
-            g.fillText(r.label(), axis + 20, ly + 1, w - axis - 24);
+            I18n.fillText(g, r.label(), axis + 20, ly + 1, w - axis - 24);
         }
         // Ce que libère la réaction : 1 réaction, 1 g, 1 kg, 1 t.
         prev = -1e9;
@@ -759,7 +760,7 @@ public final class ResultView {
             g.setFont(Font.font(chosen ? "Segoe UI Semibold" : "Segoe UI", chosen ? 10.5 : 9.5));
             g.setTextAlign(TextAlignment.RIGHT);
             g.setFill(chosen ? hotColor : Color.web("#C9A878"));
-            g.fillText(SCALES[i] + " · " + scientificShort(marks[i]) + " J", axis - 10, ly + 3);
+            I18n.fillText(g, SCALES[i] + " · " + scientificShort(marks[i]) + " J", axis - 10, ly + 3);
         }
     }
 
@@ -806,12 +807,12 @@ public final class ResultView {
     static String percent(double beta) {
         if (beta >= .01) return fmt(100 * beta) + " % de c";
         if (beta >= 1e-4) return fmt(1000 * beta) + " ‰ de c";
-        return String.format(Locale.FRANCE, "%,.0f km/s", beta * FusionField.C / 1000);
+        return String.format(I18n.locale(), "%,.0f km/s", beta * FusionField.C / 1000);
     }
 
     static String speed(double beta) {
         double kms = beta * FusionField.C / 1000;
         String share = beta >= .01 ? fmt(100 * beta) + " % de c" : fmt(1000 * beta) + " ‰ de c";
-        return String.format(Locale.FRANCE, "%s · %,.0f km/s", share, kms);
+        return String.format(I18n.locale(), "%s · %,.0f km/s", share, kms);
     }
 }

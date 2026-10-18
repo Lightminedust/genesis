@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.common.LabCamera;
 import org.genesis.atom.NucleusPanel;
 import org.genesis.atom.SimCanvas;
@@ -365,7 +366,7 @@ public class FusionLab {
             tile.setMinSize(21, 21);
             tile.setPrefSize(21, 21);
             tile.setStyle(tileStyle(element.getColor(), false));
-            Tooltip.install(tile, new Tooltip(element.getName() + " (Z = " + element.getZ() + ")"));
+            Tooltip.install(tile, I18n.tooltip(element.getName() + " (Z = " + element.getZ() + ")"));
             tile.setOnAction(event -> {
                 showIsotopes(element, element.getDefaultA());
                 choose(element.getZ() * 1000 + element.getDefaultA());
@@ -436,7 +437,7 @@ public class FusionLab {
         thermalToggle.setMinWidth(Region.USE_PREF_SIZE);
         thermalToggle.setSelected(true);
         thermalToggle.setText("Plasma");
-        thermalToggle.setTooltip(new Tooltip("Plasma : chaque choc a une énergie et une visée tirées au hasard (Maxwell-Boltzmann).\n"
+        thermalToggle.setTooltip(I18n.tooltip("Plasma : chaque choc a une énergie et une visée tirées au hasard (Maxwell-Boltzmann).\n"
                 + "Faisceau : énergie fixe, comme dans un accélérateur."));
         thermalToggle.setStyle("-fx-background-color: #1E293B; -fx-text-fill: #FDBA74; -fx-font-weight: bold;"
                 + " -fx-background-radius: 10; -fx-cursor: hand;");
@@ -466,19 +467,19 @@ public class FusionLab {
         temperature.setStyle("-fx-text-fill: #8B95AD; -fx-font-size: 10.5px;");
         VBox readout = new VBox(0, energyValue, temperature);
         Button fire = action("▶  Lancer", "#1D4ED8", "#EEF2FF");
-        fire.setTooltip(new Tooltip("un seul tir : il passe, ou il rebondit"));
+        fire.setTooltip(I18n.tooltip("un seul tir : il passe, ou il rebondit"));
         fire.setOnAction(event -> {
             closePicker();
             onCollide.accept(0);
         });
         Button insist = action("⚛  Jusqu'à la fusion", "#9A3412", "#FFEDD5");
-        insist.setTooltip(new Tooltip("on recommence jusqu'à ce que ça passe"));
+        insist.setTooltip(I18n.tooltip("on recommence jusqu'à ce que ça passe"));
         insist.setOnAction(event -> {
             closePicker();
             onCollide.accept(1);
         });
         Button replay = action("↺", "#1E293B", "#C7D2FE");
-        replay.setTooltip(new Tooltip("revoir le dernier tir"));
+        replay.setTooltip(I18n.tooltip("revoir le dernier tir"));
         replay.setOnAction(event -> {
             if (state != null && state.getFired()) {
                 startShot();
@@ -1440,7 +1441,7 @@ public class FusionLab {
                     gc.setFont(Font.font(UI, FontWeight.BOLD, 10.5));
                     gc.setTextAlign(TextAlignment.LEFT);
                     gc.setFill(Color.web("#E0F2FE"));
-                    gc.fillText("spin " + nucleus.getSpinParity().replace("+", "").replace("-", ""), top[0] + 8, top[1]);
+                    I18n.fillText(gc, "spin " + nucleus.getSpinParity().replace("+", "").replace("-", ""), top[0] + 8, top[1]);
                 }
             }
         }
@@ -2327,7 +2328,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
-        gc.fillText("MESURES DE RÉSISTANCE (r = " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm)",
+        I18n.fillText(gc, "MESURES DE RÉSISTANCE (r = " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm)",
                 x + 14, y + 20);
         double pressure = compression(r);
         double energy = shotEnergyMev();
@@ -2347,7 +2348,7 @@ public class FusionLab {
                 "chance de traverser le bouclier à chaque tir");
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
-        gc.fillText("FORCES ENTRE LES DEUX NOYAUX", x + 14, row + 2);
+        I18n.fillText(gc, "FORCES ENTRE LES DEUX NOYAUX", x + 14, row + 2);
         row += 20;
         double[] values = {coulombForce(r), strongForce(r), lorentzForce(r, speed), magneticForce(r), gravityForce(r)};
         String[] names = {"Répulsion électrique", "Force forte", "Lorentz q·v×B", "Magnétique spin–spin", "Gravité"};
@@ -2356,11 +2357,11 @@ public class FusionLab {
             gc.setFont(Font.font(UI, FontWeight.BOLD, 11.5));
             gc.setFill(colors[i]);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.fillText(names[i], x + 14, row);
+            I18n.fillText(gc, names[i], x + 14, row);
             gc.setFont(Font.font(MONO, FontWeight.BOLD, 11.5));
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setFill(TEXT);
-            gc.fillText(forceText(values[i]), x + w - 14, row);
+            I18n.fillText(gc, forceText(values[i]), x + w - 14, row);
             double t = values[i] > 0 ? Math.max(0, Math.min(1, (Math.log10(values[i]) + 40) / 44)) : 0;
             gc.setFill(Color.web("#1A2238"));
             gc.fillRoundRect(x + 14, row + 5, w - 28, 5, 3, 3);
@@ -2371,7 +2372,7 @@ public class FusionLab {
                 gc.setTextAlign(TextAlignment.LEFT);
                 gc.setFont(Font.font(UI, 10));
                 gc.setFill(MUTED);
-                gc.fillText(NucleusPanel.scientific(ratio) + " × la répulsion"
+                I18n.fillText(gc, NucleusPanel.scientific(ratio) + " × la répulsion"
                         + (ratio < 1e-3 ? " · négligeable, aucun effet sur la fusion" : ""), x + 14, row + 21);
                 row += 12;
             }
@@ -2380,17 +2381,17 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11.5));
         gc.setFill(Color.web("#67E8F9"));
-        gc.fillText("Précession du spin (Bloch)", x + 14, row + 4);
+        I18n.fillText(gc, "Précession du spin (Bloch)", x + 14, row + 4);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 11.5));
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(TEXT);
         boolean shot = state.getFired() && shotPhase() >= 1;
-        gc.fillText(shot ? NucleusPanel.scientific(state.getPrecessionDeg() * precessionFraction()) + "°" : "—",
+        I18n.fillText(gc, shot ? NucleusPanel.scientific(state.getPrecessionDeg() * precessionFraction()) + "°" : "—",
                 x + w - 14, row + 4);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
-        gc.fillText(shot && state.getLorentzDeflectionFm() > 0
+        I18n.fillText(gc, shot && state.getLorentzDeflectionFm() > 0
                 ? "trajectoire déviée de " + NucleusPanel.scientific(state.getLorentzDeflectionFm()) + " fm par q·v×B"
                 : "le spin de A tourne autour du champ de B", x + 14, row + 19);
     }
@@ -2399,11 +2400,11 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
         gc.setFill(color);
-        gc.fillText(name, x + 14, y);
+        I18n.fillText(gc, name, x + 14, y);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(TEXT);
-        gc.fillText(value, x + w - 14, y);
+        I18n.fillText(gc, value, x + w - 14, y);
         gc.setFill(Color.web("#1A2238"));
         gc.fillRoundRect(x + 14, y + 7, w - 28, 7, 4, 4);
         gc.setFill(color);
@@ -2411,7 +2412,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
-        gc.fillText(note, x + 14, y + 27);
+        I18n.fillText(gc, note, x + 14, y + 27);
         return y + 44;
     }
 
@@ -2457,7 +2458,7 @@ public class FusionLab {
                 double kms = speed * 299792.458;
                 String v = kms >= 1000 ? String.format(java.util.Locale.ROOT, "%,.0f", kms).replace(',', ' ')
                         : Visuals.format(kms);
-                gc.fillText("élan · v = " + v + " km/s",
+                I18n.fillText(gc, "élan · v = " + v + " km/s",
                         pa[0] + sign * ux * (sa + elan * 0.6), pa[1] + sign * uy * (sa + elan * 0.6) - 14);
             }
         }
@@ -2734,7 +2735,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
         gc.setFill(color.deriveColor(0, 1, 1, 0.9));
-        gc.fillText(nucleus.getLabel() + "  +" + nucleus.getZ() + "e", p[0], p[1] - screen * 1.4 - 12);
+        I18n.fillText(gc, nucleus.getLabel() + "  +" + nucleus.getZ() + "e", p[0], p[1] - screen * 1.4 - 12);
         gc.setGlobalAlpha(1);
     }
 
@@ -2786,7 +2787,7 @@ public class FusionLab {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10.5));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#A5F3FC"));
-        gc.fillText("spin " + spinParity.replace("+", "").replace("-", "") + " · précession", x + radius * 1.4,
+        I18n.fillText(gc, "spin " + spinParity.replace("+", "").replace("-", "") + " · précession", x + radius * 1.4,
                 y - length * 0.8);
     }
 
@@ -2812,7 +2813,7 @@ public class FusionLab {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10.5));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.WHITE);
-        gc.fillText("spin " + spinParity.replace("+", "").replace("-", ""), x + radius * 1.4, y - length * 0.7);
+        I18n.fillText(gc, "spin " + spinParity.replace("+", "").replace("-", ""), x + radius * 1.4, y - length * 0.7);
     }
 
     static double spinValue(String spinParity) {
@@ -2868,14 +2869,14 @@ public class FusionLab {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(GOLD);
-        gc.fillText("mouvement " + Visuals.format(100 * (1 - share)) + " %", x, y + 22);
+        I18n.fillText(gc, "mouvement " + Visuals.format(100 * (1 - share)) + " %", x, y + 22);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(tunnelling ? TUNNEL : REPULSION);
-        gc.fillText(tunnelling ? "effet tunnel" : "répulsion " + Visuals.format(100 * share) + " %", x + width, y + 22);
+        I18n.fillText(gc, tunnelling ? "effet tunnel" : "répulsion " + Visuals.format(100 * share) + " %", x + width, y + 22);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font(UI, 9.5));
         gc.setFill(SOFT);
-        gc.fillText((state.getThermal() && state.getFired() ? "énergie de ce choc (tirée au hasard) : "
+        I18n.fillText(gc, (state.getThermal() && state.getFired() ? "énergie de ce choc (tirée au hasard) : "
                 : "énergie du tir : ") + energyText(shotEnergyMev() * 1000), pa[0], y + 33);
     }
 
@@ -2888,30 +2889,30 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font("Cambria Math", FontWeight.BOLD, 30));
         gc.setFill(Color.web("#FFFFFF", 0.12));
-        gc.fillText("F = k · q₁q₂ / r²", x + 2, y + 2);
+        I18n.fillText(gc, "F = k · q₁q₂ / r²", x + 2, y + 2);
         gc.setFill(TEXT);
-        gc.fillText("F = k · q₁q₂ / r²", x, y);
+        I18n.fillText(gc, "F = k · q₁q₂ / r²", x, y);
         if (za * zb == 0) {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
-            gc.fillText("un neutron n'a pas de charge : aucune répulsion, rien ne le freine", x, y + 22);
+            I18n.fillText(gc, "un neutron n'a pas de charge : aucune répulsion, rien ne le freine", x, y + 22);
             return;
         }
         double contact = state.getContactFm();
         double force = state.getForceContactN() * Math.pow(contact / Math.max(r, contact), 2);
         gc.setFont(Font.font(MONO, 13));
         gc.setFill(SOFT);
-        gc.fillText("q₁ = +" + za + "e · q₂ = +" + zb + "e · r = " + Visuals.format(r) + " fm", x, y + 22);
+        I18n.fillText(gc, "q₁ = +" + za + "e · q₂ = +" + zb + "e · r = " + Visuals.format(r) + " fm", x, y + 22);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 15));
         gc.setFill(REPULSION);
-        gc.fillText("répulsion : " + (force >= 0.1 ? Visuals.format(force) : NucleusPanel.scientific(force)) + " N",
+        I18n.fillText(gc, "répulsion : " + (force >= 0.1 ? Visuals.format(force) : NucleusPanel.scientific(force)) + " N",
                 x, y + 42);
         double start = startFm;
         if (r < start * 0.95) {
             double ratio = start / r;
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
             gc.setFill(GOLD);
-            gc.fillText("depuis le départ : r ÷ " + Visuals.format(ratio) + "  →  F × " + Visuals.format(ratio * ratio),
+            I18n.fillText(gc, "depuis le départ : r ÷ " + Visuals.format(ratio) + "  →  F × " + Visuals.format(ratio * ratio),
                     x, y + 62);
         }
     }
@@ -3293,7 +3294,7 @@ public class FusionLab {
                 gc.setTextAlign(TextAlignment.CENTER);
                 gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
                 gc.setFill(product == survivor ? color : SOFT);
-                gc.fillText((count > 1 ? count + " × " : "") + product.getLabel(), p[0], p[1] + scene * p[3] + 18);
+                I18n.fillText(gc, (count > 1 ? count + " × " : "") + product.getLabel(), p[0], p[1] + scene * p[3] + 18);
                 gc.setGlobalAlpha(1);
             }
         }
@@ -3310,7 +3311,7 @@ public class FusionLab {
             if (roll < 1) {
                 shown += state.getQMev() * 0.04 * Math.sin(clock * 97) * (1 - roll);   // les chiffres s'emballent
             }
-            gc.fillText((state.getQMev() > 0 ? "+" : "") + Visuals.fixed(shown, Math.abs(state.getQMev()) < 10 ? 2 : 1)
+            I18n.fillText(gc, (state.getQMev() > 0 ? "+" : "") + Visuals.fixed(shown, Math.abs(state.getQMev()) < 10 ? 2 : 1)
                     + " MeV", width / 2, 156);
             note("E = Δm·c² : la masse disparue (" + Visuals.format(100 * (state.getMassBeforeU() - state.getMassAfterU())
                     / state.getMassBeforeU()) + " %) est devenue cette énergie", GOLD);
@@ -3359,7 +3360,7 @@ public class FusionLab {
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
             gc.setFill(color);
-            gc.fillText(gamma ? "γ" : "e⁺ + ν", p[0], p[1] - 14);
+            I18n.fillText(gc, gamma ? "γ" : "e⁺ + ν", p[0], p[1] - 14);
         }
     }
 
@@ -3516,13 +3517,13 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(quasi ? REPULSION : STRONG);
-        gc.fillText(quasi ? "QUASI-FISSION" : "FUSION", width / 2 - 200, 40);
+        I18n.fillText(gc, quasi ? "QUASI-FISSION" : "FUSION", width / 2 - 200, 40);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 28));
         gc.setFill(TEXT);
-        gc.fillText(verdict.size() > 1 ? verdict.get(1) : "", width / 2 - 200, 74);
+        I18n.fillText(gc, verdict.size() > 1 ? verdict.get(1) : "", width / 2 - 200, 74);
         gc.setFont(Font.font(MONO, 11.5));
         gc.setFill(SOFT);
-        gc.fillText(conservationLine(), width / 2 - 200, 96);
+        I18n.fillText(gc, conservationLine(), width / 2 - 200, 96);
         double w = 420;
         double x = width - w - 20;
         LabProduct survivor = finalProduct();
@@ -3544,7 +3545,7 @@ public class FusionLab {
             double row = y + 50;
             for (String line : SimCanvas.wrap("Aucun noyau de " + (state.getA().getZ() + state.getB().getZ())
                     + " protons ne tient : la répulsion les a séparés, ils repartent tels qu'ils étaient.", 62)) {
-                gc.fillText(line, x + 18, row);
+                I18n.fillText(gc, line, x + 18, row);
                 row += 17;
             }
             return y + h;
@@ -3552,21 +3553,21 @@ public class FusionLab {
         Color color = brighten(survivor.getColor());
         gc.setFont(Font.font(UI, FontWeight.BOLD, 30));
         gc.setFill(color);
-        gc.fillText(survivor.getLabel(), x + 18, y + 66);
+        I18n.fillText(gc, survivor.getLabel(), x + 18, y + 66);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 14));
         gc.setFill(TEXT);
-        gc.fillText(survivor.getElement(), x + 130, y + 50);
+        I18n.fillText(gc, survivor.getElement(), x + 130, y + 50);
         gc.setFont(Font.font(MONO, 11.5));
         gc.setFill(SOFT);
         String spin = survivor.getSpinParity().isEmpty() ? "?" : survivor.getSpinParity();
-        gc.fillText(survivor.getZ() + " p · " + (survivor.getA() - survivor.getZ()) + " n · charge +" + survivor.getZ()
+        I18n.fillText(gc, survivor.getZ() + " p · " + (survivor.getA() - survivor.getZ()) + " n · charge +" + survivor.getZ()
                 + "e · spin " + spin, x + 130, y + 68);
-        gc.fillText(Math.abs(survivor.getMagneticMoment()) > 1e-3
+        I18n.fillText(gc, Math.abs(survivor.getMagneticMoment()) > 1e-3
                 ? "moment magnétique " + Visuals.format(survivor.getMagneticMoment()) + " μN (lignes autour de lui)"
                 : "aucun moment magnétique : champ électrique seul", x + 130, y + 85);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(MUTED);
-        gc.fillText(survivor.getStatus() + " · recule à " + Visuals.format(100 * survivor.getSpeedC()) + " % de c ("
+        I18n.fillText(gc, survivor.getStatus() + " · recule à " + Visuals.format(100 * survivor.getSpeedC()) + " % de c ("
                 + Visuals.format(survivor.getKineticMev()) + " MeV)", x + 18, y + 106);
         return y + h;
     }
@@ -3600,7 +3601,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
-        gc.fillText(title, x + 18, y + 24);
+        I18n.fillText(gc, title, x + 18, y + 24);
     }
 
     /** Ce qui a été éjecté : chaque particule, son énergie, sa vitesse, son spin. */
@@ -3617,7 +3618,7 @@ public class FusionLab {
         if (groups.isEmpty()) {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
-            gc.fillText("rien : le noyau composé est resté entier", x + 18, row + 14);
+            I18n.fillText(gc, "rien : le noyau composé est resté entier", x + 18, row + 14);
             return y + h;
         }
         for (Map.Entry<String, List<LabProduct>> entry : groups.entrySet()) {
@@ -3653,7 +3654,7 @@ public class FusionLab {
             gc.setFont(Font.font(UI, FontWeight.BOLD, 14));
             gc.setFill(TEXT);
             String name = (count > 1 ? count + " × " : "") + product.getLabel() + "  " + product.getName();
-            gc.fillText(name, x + 78, row + 8);
+            I18n.fillText(gc, name, x + 78, row + 8);
             gc.setFont(Font.font(MONO, 11.5));
             gc.setFill(GOLD);
             String detail = light
@@ -3663,11 +3664,11 @@ public class FusionLab {
                     + Visuals.format(100 * product.getSpeedC()) + " % de c ("
                     + String.format(java.util.Locale.ROOT, "%,.0f", product.getSpeedC() * 299792.458).replace(',', ' ')
                     + " km/s)";
-            gc.fillText(detail, x + 78, row + 26);
+            I18n.fillText(gc, detail, x + 78, row + 26);
             if (!light && !product.getSpinParity().isEmpty()) {
                 gc.setFont(Font.font(UI, 10.5));
                 gc.setFill(MUTED);
-                gc.fillText("spin " + product.getSpinParity() + " · charge +" + product.getZ() + "e"
+                I18n.fillText(gc, "spin " + product.getSpinParity() + " · charge +" + product.getZ() + "e"
                         + (product.getStatus().isEmpty() ? "" : " · " + product.getStatus()), x + 78, row + 41);
             }
             row += 54;
@@ -3686,8 +3687,8 @@ public class FusionLab {
         gc.setFont(Font.font(MONO, 11.5));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(SOFT);
-        gc.fillText("masse avant " + Visuals.fixed(before, 6) + " u", left, y + 50);
-        gc.fillText("masse après " + Visuals.fixed(after, 6) + " u", left, y + 74);
+        I18n.fillText(gc, "masse avant " + Visuals.fixed(before, 6) + " u", left, y + 50);
+        I18n.fillText(gc, "masse après " + Visuals.fixed(after, 6) + " u", left, y + 74);
         // Les deux barres, zoomées sur la différence : on voit la masse qui manque.
         double lost = before - after;
         double bx = left + 210;
@@ -3704,15 +3705,15 @@ public class FusionLab {
         if (lost > 0) {
             gc.setFill(GOLD);
             gc.fillRoundRect(bx + wAfter, y + 64, wBefore - wAfter, 12, 6, 6);
-            gc.fillText("disparu : " + Visuals.fixed(lost, 6) + " u", bx + wAfter - 40, y + 92);
+            I18n.fillText(gc, "disparu : " + Visuals.fixed(lost, 6) + " u", bx + wAfter - 40, y + 92);
         } else if (lost < 0) {
             gc.setFill(REPULSION);
             gc.fillRoundRect(bx + wBefore, y + 40, wAfter - wBefore, 12, 6, 6);
-            gc.fillText("gagné : " + Visuals.fixed(-lost, 6) + " u (pris sur l'énergie du choc)", bx + wBefore - 120, y + 92);
+            I18n.fillText(gc, "gagné : " + Visuals.fixed(-lost, 6) + " u (pris sur l'énergie du choc)", bx + wBefore - 120, y + 92);
         }
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 20));
         gc.setFill(GOLD);
-        gc.fillText((state.getQMev() >= 0 ? "E = Δm·c² = +" : "coût : ") + Visuals.format(Math.abs(state.getQMev())) + " MeV",
+        I18n.fillText(gc, (state.getQMev() >= 0 ? "E = Δm·c² = +" : "coût : ") + Visuals.format(Math.abs(state.getQMev())) + " MeV",
                 left, y + 120);
         // Le partage : qui emporte quoi.
         double total = 0;
@@ -3731,14 +3732,14 @@ public class FusionLab {
             if (share > 0.08) {
                 gc.setFill(Color.web("#03050B"));
                 gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
-                gc.fillText(product.getLabel() + " " + Visuals.format(100 * share) + " %", cursor + 4, row + 11);
+                I18n.fillText(gc, product.getLabel() + " " + Visuals.format(100 * share) + " %", cursor + 4, row + 11);
             }
             cursor += barW * share;
             index++;
         }
         gc.setFont(Font.font(UI, 10.5));
         gc.setFill(MUTED);
-        gc.fillText("partage de l'énergie (Q + énergie du choc) entre les produits, selon la quantité de mouvement",
+        I18n.fillText(gc, "partage de l'énergie (Q + énergie du choc) entre les produits, selon la quantité de mouvement",
                 left, row + 32);
         return y + h;
     }
@@ -3759,7 +3760,7 @@ public class FusionLab {
         if (waves.isEmpty()) {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
-            gc.fillText("aucun rayon γ : toute l'énergie part en mouvement des particules", x + 18, y + 50);
+            I18n.fillText(gc, "aucun rayon γ : toute l'énergie part en mouvement des particules", x + 18, y + 50);
             return;
         }
         double row = y + 52;
@@ -3782,7 +3783,7 @@ public class FusionLab {
             }
             gc.setFont(Font.font(MONO, 11.5));
             gc.setFill(color);
-            gc.fillText((gamma ? "photon γ · " : "positon + neutrino · ") + Visuals.format(wave.getKineticMev()) + " MeV"
+            I18n.fillText(gc, (gamma ? "photon γ · " : "positon + neutrino · ") + Visuals.format(wave.getKineticMev()) + " MeV"
                     + (gamma ? " · λ = " + Visuals.format(lambda) + " fm · f = " + NucleusPanel.scientific(frequency) + " Hz"
                     : ""), x + 18, row + 26);
             row += 52;
@@ -3812,11 +3813,11 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 18));
         gc.setFill(TEXT);
-        gc.fillText("Laboratoire de fusion", 22, 34);
+        I18n.fillText(gc, "Laboratoire de fusion", 22, 34);
         gc.setFont(Font.font(UI, 10.5));
         gc.setFill(MUTED);
-        gc.fillText("distances en échelle log · tailles agrandies", 22, 50);
-        gc.fillText("glisser : tourner · molette : zoomer · double-clic : recentrer", 22, 64);
+        I18n.fillText(gc, "distances en échelle log · tailles agrandies", 22, 50);
+        I18n.fillText(gc, "glisser : tourner · molette : zoomer · double-clic : recentrer", 22, 64);
     }
 
     // =====================================================================
@@ -3924,7 +3925,7 @@ public class FusionLab {
         gc.setFill(color);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(text, x, y);
+        I18n.fillText(gc, text, x, y);
         gc.setTextBaseline(VPos.BASELINE);
     }
     // =====================================================================
@@ -3970,7 +3971,7 @@ public class FusionLab {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 13.5));
         gc.setFill(headlineColor);
         for (String line : lines) {
-            gc.fillText(line, x + 16, row);
+            I18n.fillText(gc, line, x + 16, row);
             row += 18;
         }
         if (!headline.isEmpty()) {
@@ -3980,7 +3981,7 @@ public class FusionLab {
         for (Object[] n : notes) {
             gc.setFill(((Color) n[1]).deriveColor(0, 0.7, 1, 0.9));
             for (String line : SimCanvas.wrap((String) n[0], 58)) {
-                gc.fillText(line, x + 16, row);
+                I18n.fillText(gc, line, x + 16, row);
                 row += 16;
             }
         }
@@ -3996,7 +3997,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
-        gc.fillText("L'ESSENTIEL · distance " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm", x + 14, y + 20);
+        I18n.fillText(gc, "L'ESSENTIEL · distance " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm", x + 14, y + 20);
         double pressure = compression(r);
         double speed = speedAt(r, shotEnergyMev());
         double kms = speed * 299792.458;
@@ -4013,6 +4014,6 @@ public class FusionLab {
                 tunnel > 0 ? Math.max(0, 1 + Math.log10(tunnel) / 30) : 0, TUNNEL, "effet tunnel, par choc frontal");
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
-        gc.fillText("Vue avancée : formules, toutes les forces, lignes de champ", x + 14, y + 230);
+        I18n.fillText(gc, "Vue avancée : formules, toutes les forces, lignes de champ", x + 14, y + 230);
     }
 }

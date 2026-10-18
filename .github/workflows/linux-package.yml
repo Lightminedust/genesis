@@ -1,0 +1,59 @@
+name: Linux package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (major.minor.patch)
+        required: true
+        default: '0.2.0'
+
+permissions:
+  contents: read
+
+jobs:
+  linux-x64:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: logic/requirements.txt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Linux packaging and JavaFX libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fakeroot xvfb libgtk-3-0 libasound2 libgl1 libxtst6 libxrender1 libxi6
+
+      - name: Install Python engine dependencies
+        run: |
+          python -m venv logic/venv
+          logic/venv/bin/python -m pip install --upgrade pip
+          logic/venv/bin/python -m pip install -r logic/requirements.txt 'pyinstaller>=6,<7'
+
+      - name: Test Java client
+        working-directory: sim
+        run: xvfb-run -a gradle :app:test --no-daemon
+
+      - name: Build and smoke-test Linux engine and packages
+        env:
+          GENESIS_VERSION: ${{ inputs.version }}
+        run: bash packaging/build-linux.sh "$GENESIS_VERSION"
+
+      - name: Upload Linux release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-linux-x64
+          path: |
+            dist/linux/*.deb
+            dist/linux/*.tar.gz
+          if-no-files-found: error
+          retention-days: 14

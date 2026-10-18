@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.fusion.FusionDashboard;
 
 import com.studio.genesis.grpc.UniverseFrame;
@@ -145,7 +146,7 @@ public final class QuantumLab {
             t.setFocusTraversable(false);
             t.setMaxWidth(Double.MAX_VALUE);
             t.setPrefWidth(84);
-            t.setTooltip(new Tooltip(FACTS[i].replace("\n", " · ")));
+            t.setTooltip(I18n.tooltip(FACTS[i].replace("\n", " · ")));
             t.setOnAction(e -> { t.setSelected(true); projectileChanged(); });
             javafx.scene.layout.GridPane.setHgrow(t, Priority.ALWAYS);
             grid.add(t, i % 3, i / 3);
@@ -166,7 +167,7 @@ public final class QuantumLab {
         again.getStyleClass().add("glass-button");
         again.setFocusTraversable(false);
         again.setMaxWidth(Double.MAX_VALUE);
-        again.setTooltip(new Tooltip("Un nouveau tirage dans le même spectre : le cas peut changer, avec sa probabilité"));
+        again.setTooltip(I18n.tooltip("Un nouveau tirage dans le même spectre : le cas peut changer, avec sa probabilité"));
         again.setOnAction(e -> {
             collision.pending("Le moteur tire un autre événement dans le même spectre…");
             actions.resample();
@@ -175,7 +176,7 @@ public final class QuantumLab {
         physicsAngle.setFocusTraversable(false);
         physicsAngle.setMaxWidth(Double.MAX_VALUE);
         physicsAngle.setSelected(true);
-        physicsAngle.setTooltip(new Tooltip("La physique choisit l'angle selon dσ/dΩ (la plupart des électrons dévient à peine) ; "
+        physicsAngle.setTooltip(I18n.tooltip("La physique choisit l'angle selon dσ/dΩ (la plupart des électrons dévient à peine) ; "
                 + "décoché, c'est le curseur qui le fixe"));
         physicsAngle.setOnAction(e -> {
             angle.setDisable(hadronBeam() || physicsAngle.isSelected());
@@ -232,8 +233,8 @@ public final class QuantumLab {
             bt.getStyleClass().add("glass-button");
             bt.setFocusTraversable(false);
         }
-        previous.setTooltip(new Tooltip("Revenir au début de l'étape (ou à la précédente)"));
-        next.setTooltip(new Tooltip("Passer à l'étape suivante"));
+        previous.setTooltip(I18n.tooltip("Revenir au début de l'étape (ou à la précédente)"));
+        next.setTooltip(I18n.tooltip("Passer à l'étape suivante"));
         previous.setOnAction(e -> collision.jump(-1));
         next.setOnAction(e -> collision.jump(1));
         ToggleGroup speeds = new ToggleGroup();
@@ -270,7 +271,7 @@ public final class QuantumLab {
             presets.getChildren().add(b);
         }
         Button forbidden = button("u u u rouges", false);
-        forbidden.setTooltip(new Tooltip("Trois quarks up de la même couleur : la règle de couleur et le principe de Pauli le refusent"));
+        forbidden.setTooltip(I18n.tooltip("Trois quarks up de la même couleur : la règle de couleur et le principe de Pauli le refusent"));
         forbidden.setOnAction(e -> {
             bench.load("uuu");
             for (int i = 0; i < 3; i++) bench.slots().set(i, new HadronBench.Slot("u", false, 0, i));
@@ -282,7 +283,7 @@ public final class QuantumLab {
         Button neutral = button("couleurs neutres", false);
         neutral.setOnAction(e -> bench.neutralColours());
         Button anti = button("antimatière", false);
-        anti.setTooltip(new Tooltip("Remplace chaque quark par son antiquark (et inversement)"));
+        anti.setTooltip(I18n.tooltip("Remplace chaque quark par son antiquark (et inversement)"));
         anti.setOnAction(e -> bench.conjugate());
         Button decay = button("autre désintégration", false);
         decay.setOnAction(e -> actions.decay());
@@ -409,7 +410,7 @@ public final class QuantumLab {
         }
         for (CollisionScene.ChannelInfo ch : list) {
             Label name = text((ch.chosen() ? "▸ " : "") + ch.name(), 11.5, ch.chosen() ? "#EEF2FF" : "#C7D2FE");
-            Label pct = text(String.format(Locale.FRANCE, "%.1f %%", 100 * ch.probability()), 11.5, "#FCD34D");
+            Label pct = text(String.format(I18n.locale(), "%.1f %%", 100 * ch.probability()), 11.5, "#FCD34D");
             pct.setStyle(pct.getStyle() + "-fx-font-family:Consolas;-fx-font-weight:bold;");
             Region gap = new Region();
             HBox.setHgrow(gap, Priority.ALWAYS);
@@ -430,7 +431,7 @@ public final class QuantumLab {
             if (ch.chosen()) rowButton.setStyle("-fx-border-color:rgba(54,205,242,0.65);");
             rowButton.setFocusTraversable(false);
             rowButton.setDisable(ch.probability() <= 0);
-            rowButton.setTooltip(new Tooltip("Tirer un événement de ce cas (sa probabilité reste affichée)"));
+            rowButton.setTooltip(I18n.tooltip("Tirer un événement de ce cas (sa probabilité reste affichée)"));
             rowButton.setOnAction(e -> {
                 collision.pending("Le moteur tire un événement dans ce cas…");
                 actions.force(ch.index());
@@ -472,7 +473,7 @@ public final class QuantumLab {
         b.getStyleClass().add("glass-button");
         b.setFocusTraversable(false);
         presets.add(b);
-        b.setTooltip(new Tooltip(String.format(Locale.FRANCE, "%s MeV à %.0f°", DocStyle.number(mev), degrees)));
+        b.setTooltip(I18n.tooltip(String.format(I18n.locale(), "%s MeV à %.0f°", DocStyle.number(mev), degrees)));
         b.setOnAction(e -> {
             energy.setValue(Math.log10(mev));
             physicsAngle.setSelected(false);                         // un préréglage fixe l'angle
@@ -485,15 +486,15 @@ public final class QuantumLab {
 
     private String energyText() {
         double mev = Math.pow(10, energy.getValue());
-        if (hadronBeam()) return mev >= 1000 ? String.format(Locale.FRANCE, "p %.2f GeV/c", mev / 1000)
-                : String.format(Locale.FRANCE, "p %.0f MeV/c", mev);
-        return mev >= 1000 ? String.format(Locale.FRANCE, "%.2f GeV", mev / 1000) : String.format(Locale.FRANCE, "%.0f MeV", mev);
+        if (hadronBeam()) return mev >= 1000 ? String.format(I18n.locale(), "p %.2f GeV/c", mev / 1000)
+                : String.format(I18n.locale(), "p %.0f MeV/c", mev);
+        return mev >= 1000 ? String.format(I18n.locale(), "%.2f GeV", mev / 1000) : String.format(I18n.locale(), "%.0f MeV", mev);
     }
 
     private String angleText() {
         if (hadronBeam()) return "tous";
         if (physicsAngle.isSelected()) return "dσ/dΩ";
-        return String.format(Locale.FRANCE, "%.0f°", angle.getValue());
+        return String.format(I18n.locale(), "%.0f°", angle.getValue());
     }
 
     private static HBox labelled(String name, Slider slider, Label value) {
@@ -553,7 +554,7 @@ public final class QuantumLab {
             updating = false;
             play.setSelected(collision.playing());
             play.setText(collision.playing() ? "Ⅱ" : "▶");
-            clock.setText(collision.beatCount() == 0 ? "" : String.format(Locale.FRANCE, "étape %d / %d", collision.beatIndex() + 1,
+            clock.setText(collision.beatCount() == 0 ? "" : String.format(I18n.locale(), "étape %d / %d", collision.beatIndex() + 1,
                     collision.beatCount()));
         }
         if (benchPane.isVisible()) bench.tick(dt);

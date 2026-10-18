@@ -31,6 +31,11 @@ Le client vise `localhost:50051` ; pour un autre moteur :
 `gradle run -PgenesisHost=192.168.1.20 -PgenesisPort=50052`.
 Un conteneur resté sur une ancienne image est détecté (`protocol_version`).
 
+L'application démarre en **anglais** par défaut. La barre supérieure permet de
+choisir **Français** ou **English** dans tous les laboratoires ; le choix est
+mémorisé. Pour démarrer directement en français : `gradle run -PgenesisLang=fr`.
+Cette option ne change que les textes du client.
+
 **Sans Docker** (Windows, connexion lente) : le moteur tourne aussi
 directement, données en mémoire. Tout marche sauf l'échelle Molécule
 (PySCF n'existe que sous Linux).
@@ -53,11 +58,11 @@ cet environnement puis construire le paquet :
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.1.1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.2.0
 ```
 
 Le script teste le moteur autonome, puis produit `dist/windows/Genesis`
-(application portable), `Genesis-0.1.1-portable.zip` et un installateur `.exe`.
+(application portable), `Genesis-0.2.0-portable.zip` et un installateur `.exe`.
 L'installateur place Genesis dans le profil utilisateur et ajoute les raccourcis
 au menu Démarrer et au bureau. Pour une nouvelle version, augmenter `-Version` ;
 le même identifiant d'installation permet la mise à niveau.
@@ -72,6 +77,28 @@ journaux et le cache sont écrits dans `%LOCALAPPDATA%\Genesis\` ; l'application
 portable y écrit aussi. L'échelle Molécule reste masquée dans cette version.
 Le paquet n'est pas signé ; une signature de code et les notices des composants
 tiers sont à préparer avant diffusion publique.
+
+## Paquet Linux x86-64
+
+Sur Ubuntu 22.04 (ou un système de construction compatible), installer JDK 21,
+`gradle`, `fakeroot`, les bibliothèques JavaFX/GTK et un environnement Python
+avec `logic/requirements.txt`, `grpcio-tools` et PyInstaller. Puis lancer :
+
+```bash
+bash packaging/build-linux.sh 0.2.0
+```
+
+Le script gèle le même moteur Python, vérifie son service gRPC et la table des
+118 éléments, construit le client JavaFX, puis produit dans `dist/linux/` un
+installateur `Genesis-0.2.0-linux-x64.deb` et une archive portable
+`Genesis-0.2.0-linux-x64.tar.gz`. Un workflow GitHub Actions
+`.github/workflows/linux-package.yml` réalise cette construction sur Ubuntu.
+
+L'archive s'extrait puis se lance avec `Genesis/bin/Genesis` ; le `.deb` ajoute
+un lanceur au menu des applications. Java et Python sont inclus. Le moteur
+écoute seulement sur `127.0.0.1` et s'arrête avec l'application. Sous Linux,
+son journal est dans `${XDG_STATE_HOME:-~/.local/state}/genesis/logs/engine.log`
+et son cache dans `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
 ## Laboratoire subatomique
 

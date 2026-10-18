@@ -1,5 +1,6 @@
 package org.genesis.atom;
 
+import org.genesis.app.I18n;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.Orbital;
@@ -198,7 +199,7 @@ public class QuantumView {
             gc.setFont(Font.font("Segoe UI", 11));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
-            gc.fillText(emptyMessage, width / 2, height / 2);
+            I18n.fillText(gc, emptyMessage, width / 2, height / 2);
             gc.setTextBaseline(VPos.BASELINE);
             return;
         }
@@ -224,7 +225,7 @@ public class QuantumView {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setFill(Color.web("#64748B"));
-        gc.fillText("clair = densité · points = tirages dans la coupe xz · ↑↓ = spins",
+        I18n.fillText(gc, "clair = densité · points = tirages dans la coupe xz · ↑↓ = spins",
                 width / 2, top + side + 48);
     }
 
@@ -260,13 +261,13 @@ public class QuantumView {
         gc.setTextBaseline(VPos.BASELINE);
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         gc.setFill(Color.web("#F1F5F9"));
-        gc.fillText("orbitale " + title, left + 6, top + 16);
+        I18n.fillText(gc, "orbitale " + title, left + 6, top + 16);
         gc.setFont(Font.font("Consolas", 9));
         gc.setFill(Color.web("#CBD5E1", 0.8));
-        gc.fillText("n=" + orbital.getN() + "  l=" + orbital.getL() + " (" + letters.charAt(Math.min(6, orbital.getL()))
+        I18n.fillText(gc, "n=" + orbital.getN() + "  l=" + orbital.getL() + " (" + letters.charAt(Math.min(6, orbital.getL()))
                 + ")  Z_eff=" + Visuals.fixed(orbital.getZEff(), 2), left + 6, top + 29);
         boolean unresolvedM = orbital.getOrbitalNamesList().contains("m non résolu");
-        gc.fillText(orbital.getRadialNodes() + " nœud(s) radial(aux)"
+        I18n.fillText(gc, orbital.getRadialNodes() + " nœud(s) radial(aux)"
                 + (unresolvedM ? " · mélange des m" : " · Slater (approx.)"), left + 6, top + 41);
 
         // Barre d'échelle en picomètres
@@ -281,11 +282,11 @@ public class QuantumView {
         gc.strokeLine(barRight - pixels, barY, barRight, barY);
         gc.setFill(Color.web("#E2E8F0", 0.8));
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText(Visuals.formatLength(length), barRight, barY - 4);
+        I18n.fillText(gc, Visuals.formatLength(length), barRight, barY - 4);
 
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#94A3B8", 0.8));
-        gc.fillText("coupe xz · |ψ|² en échelle log (4 décades)", left + 6, top + side - 6);
+        I18n.fillText(gc, "coupe xz · |ψ|² en échelle log (4 décades)", left + 6, top + side - 6);
     }
 
     /**
@@ -316,7 +317,7 @@ public class QuantumView {
             gc.setFill(Color.web(outOfSlice ? "#334155" : "#94A3B8"));
             gc.setFont(Font.font("Consolas", 8));
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText(name, x + boxWidth / 2, top + 29);
+            I18n.fillText(gc, name, x + boxWidth / 2, top + 29);
             x += boxWidth + 4;
         }
     }

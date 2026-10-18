@@ -1,5 +1,6 @@
 package org.genesis.matter;
 
+import org.genesis.app.I18n;
 import org.genesis.atom.QuantumView;
 import org.genesis.atom.SimCanvas;
 import org.genesis.common.Visuals;
@@ -303,7 +304,7 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(MONO, 11));
         gc.setFill(Color.web("#CBD5E1"));
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText("1 Å = 100 pm", centerX() + w / 2, barY + 14);
+        I18n.fillText(gc, "1 Å = 100 pm", centerX() + w / 2, barY + 14);
     }
 
     private void drawNuclei() {
@@ -326,12 +327,12 @@ public class MoleculeCanvas {
             gc.setFont(Font.font(UI, FontWeight.BOLD, 15));
             gc.setFill(TEXT);
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText(symbols[k], x, y - 20);
+            I18n.fillText(gc, symbols[k], x, y - 20);
             gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
             double q = charges[k];
             gc.setFill(Math.abs(q) < 0.05 ? SOFT : q > 0 ? LOSS.brighter() : GAIN.brighter());
             // Sous 0,05 e, c'est du bruit numérique (deux atomes identiques ne se volent rien).
-            gc.fillText(Math.abs(q) < 0.05 ? "charge 0" : "δ" + (q > 0 ? "+" : "−") + Visuals.fixed(Math.abs(q), 2),
+            I18n.fillText(gc, Math.abs(q) < 0.05 ? "charge 0" : "δ" + (q > 0 ? "+" : "−") + Visuals.fixed(Math.abs(q), 2),
                     x, y + 30);
         }
         // La distance, entre les deux noyaux.
@@ -346,7 +347,7 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.CENTER);
-        gc.fillText("R = " + Visuals.fixed(shownR, 3) + " Å", centerX(), y + 16);
+        I18n.fillText(gc, "R = " + Visuals.fixed(shownR, 3) + " Å", centerX(), y + 16);
     }
 
     private int nearest(double r) {
@@ -378,17 +379,17 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         if (showDifference) {
-            gc.fillText("OÙ SONT ALLÉS LES ÉLECTRONS : Δρ (clic : densité)", box[0] + 12, box[1] + 18);
+            I18n.fillText(gc, "OÙ SONT ALLÉS LES ÉLECTRONS : Δρ (clic : densité)", box[0] + 12, box[1] + 18);
             gc.setFont(Font.font(UI, 12));
             gc.setFill(GAIN.brighter());
-            gc.fillText("■ électrons gagnés", box[0] + 12, box[1] + 40);
+            I18n.fillText(gc, "■ électrons gagnés", box[0] + 12, box[1] + 40);
             gc.setFill(LOSS.brighter());
-            gc.fillText("■ électrons partis", box[0] + 150, box[1] + 40);
+            I18n.fillText(gc, "■ électrons partis", box[0] + 150, box[1] + 40);
         } else {
-            gc.fillText("DENSITÉ ÉLECTRONIQUE ρ, échelle log (clic : Δρ)", box[0] + 12, box[1] + 18);
+            I18n.fillText(gc, "DENSITÉ ÉLECTRONIQUE ρ, échelle log (clic : Δρ)", box[0] + 12, box[1] + 18);
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
-            gc.fillText("clair = électrons probables · calculée, pas dessinée", box[0] + 12, box[1] + 40);
+            I18n.fillText(gc, "clair = électrons probables · calculée, pas dessinée", box[0] + 12, box[1] + 40);
         }
     }
 
@@ -405,7 +406,7 @@ public class MoleculeCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(title, x + 24, y + 20);
+        I18n.fillText(gc, title, x + 24, y + 20);
         gc.setTextBaseline(VPos.BASELINE);
         return y + 42;
     }
@@ -443,8 +444,8 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.fillText("0", left - 4, py.applyAsDouble(0) + 3);
-        gc.fillText(Visuals.format(eLow) + " eV", left - 4, bottom);
+        I18n.fillText(gc, "0", left - 4, py.applyAsDouble(0) + 3);
+        I18n.fillText(gc, Visuals.format(eLow) + " eV", left - 4, bottom);
 
         gc.setStroke(FORMULA);
         gc.setLineWidth(2);
@@ -475,11 +476,11 @@ public class MoleculeCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(MONO, 11));
         gc.setFill(TEXT);
-        gc.fillText(state.getBound()
+        I18n.fillText(gc, state.getBound()
                 ? "puits De = " + Visuals.fixed(state.getDeEv(), 2) + " eV à Re = " + Visuals.fixed(state.getReAngstrom(), 3) + " Å"
                 : "aucun puits : pas de liaison", x + 18, bottom + 22);
         gc.setFill(state.getHeld() ? SOFT : total < 0 ? Color.web("#34D399") : Color.web("#FB923C"));
-        gc.fillText(state.getHeld() ? "noyaux tenus : lâche-les pour voir"
+        I18n.fillText(gc, state.getHeld() ? "noyaux tenus : lâche-les pour voir"
                 : "énergie totale " + Visuals.signed(total, 2) + " eV : " + (total < 0 ? "liés, ils vibrent" : "libres"),
                 x + 18, bottom + 38);
     }
@@ -563,18 +564,18 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.CENTER);
-        gc.fillText(state.getSymbolA(), columns[0], bottom + 20);
-        gc.fillText(state.getSymbolA() + state.getSymbolB(), columns[1], bottom + 20);
-        gc.fillText(state.getSymbolB(), columns[2], bottom + 20);
+        I18n.fillText(gc, state.getSymbolA(), columns[0], bottom + 20);
+        I18n.fillText(gc, state.getSymbolA() + state.getSymbolB(), columns[1], bottom + 20);
+        I18n.fillText(gc, state.getSymbolB(), columns[2], bottom + 20);
         gc.setFont(Font.font(UI, 11));
         gc.setTextAlign(TextAlignment.LEFT);
         double charge = near.getChargeA();
         gc.setFill(SOFT);
-        gc.fillText("liaison (Mayer) : " + Visuals.fixed(near.getBondOrder(), 2) + "   ·   transfert : "
+        I18n.fillText(gc, "liaison (Mayer) : " + Visuals.fixed(near.getBondOrder(), 2) + "   ·   transfert : "
                 + Visuals.fixed(Math.abs(charge), 2) + " e " + (charge > 0 ? state.getSymbolA() + " → " + state.getSymbolB()
                 : state.getSymbolB() + " → " + state.getSymbolA()), x + 18, bottom + 40);
         gc.setFill(MUTED);
-        gc.fillText("Δχ de Pauling = " + Visuals.fixed(Math.abs(state.getChiA() - state.getChiB()), 2)
+        I18n.fillText(gc, "Δχ de Pauling = " + Visuals.fixed(Math.abs(state.getChiA() - state.getChiB()), 2)
                 + " : la règle de manuel, pour comparer au calcul", x + 18, bottom + 56);
     }
 
@@ -606,7 +607,7 @@ public class MoleculeCanvas {
                 gc.setFont(Font.font(UI, 10));
                 gc.setFill(filled ? SOFT : MUTED);
                 gc.setTextAlign(TextAlignment.LEFT);
-                gc.fillText(level.label() + (filled ? "" : " (vide)"), cx + span / 2 + 6, y + 3);
+                I18n.fillText(gc, level.label() + (filled ? "" : " (vide)"), cx + span / 2 + 6, y + 3);
                 previousLabelY = y;
             }
         }
@@ -630,19 +631,19 @@ public class MoleculeCanvas {
         gc.setTextBaseline(VPos.TOP);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
-        gc.fillText("Molécule · " + state.getNameA() + " + " + state.getNameB(), 22, 14);
+        I18n.fillText(gc, "Molécule · " + state.getNameA() + " + " + state.getNameB(), 22, 14);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
-        gc.fillText(state.getMethod(), 22, 44);
+        I18n.fillText(gc, state.getMethod(), 22, 44);
         if (ready()) {
             gc.setTextAlign(TextAlignment.RIGHT);
             gc.setFont(Font.font(MONO, FontWeight.BOLD, 20));
             gc.setFill(TEXT);
-            gc.fillText("t = " + Visuals.duration(state.getTimeFs() * 1e-15), stageRight() - 18, 14);
+            I18n.fillText(gc, "t = " + Visuals.duration(state.getTimeFs() * 1e-15), stageRight() - 18, 14);
             if (state.getPeriodFs() > 0) {
                 gc.setFont(Font.font(UI, 13));
                 gc.setFill(SOFT);
-                gc.fillText("une vibration = " + Visuals.fixed(state.getPeriodFs(), 1) + " fs, montrée en 3 s",
+                I18n.fillText(gc, "une vibration = " + Visuals.fixed(state.getPeriodFs(), 1) + " fs, montrée en 3 s",
                         stageRight() - 18, 44);
             }
         }
@@ -661,19 +662,19 @@ public class MoleculeCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 16));
         gc.setFill(TEXT);
-        gc.fillText(state.getFailed().isEmpty() ? "Calcul quantique en cours" : "Le calcul n'a pas abouti", x + 22, y + 34);
+        I18n.fillText(gc, state.getFailed().isEmpty() ? "Calcul quantique en cours" : "Le calcul n'a pas abouti", x + 22, y + 34);
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(FORMULA);
-        gc.fillText(state.getStatus(), x + 22, y + 58);
+        I18n.fillText(gc, state.getStatus(), x + 22, y + 58);
         gc.setFill(Color.web("#22304A"));
         gc.fillRoundRect(x + 22, y + 72, w - 44, 8, 4, 4);
         gc.setFill(Color.web("#38BDF8"));
         gc.fillRoundRect(x + 22, y + 72, (w - 44) * state.getProgress(), 8, 4, 4);
         gc.setFont(Font.font(UI, 12));
         gc.setFill(SOFT);
-        gc.fillText("À chaque distance, les équations de Kohn-Sham sont résolues pour tous les électrons.",
+        I18n.fillText(gc, "À chaque distance, les équations de Kohn-Sham sont résolues pour tous les électrons.",
                 x + 22, y + 104);
-        gc.fillText("La première fois, de quelques secondes à une minute ; ensuite, le résultat est gardé.",
+        I18n.fillText(gc, "La première fois, de quelques secondes à une minute ; ensuite, le résultat est gardé.",
                 x + 22, y + 122);
     }
 
@@ -693,11 +694,11 @@ public class MoleculeCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 13));
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
-        gc.fillText(lastEvent.getTitle(), x + 14, y + 20);
+        I18n.fillText(gc, lastEvent.getTitle(), x + 14, y + 20);
         gc.setFont(Font.font(MONO, 11));
         gc.setFill(FORMULA.deriveColor(0, 1, 1, alpha));
         List<String> formula = SimCanvas.wrap(lastEvent.getFormula(), (int) ((width - 28) / 6.6));
-        gc.fillText(formula.isEmpty() ? "" : formula.get(0), x + 14, y + 40);
+        I18n.fillText(gc, formula.isEmpty() ? "" : formula.get(0), x + 14, y + 40);
     }
 
     private void drawFooter(double width, double height) {
@@ -710,7 +711,7 @@ public class MoleculeCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        gc.fillText("Attrape un noyau, rapproche-le ou éloigne-le, puis lâche-le : la vraie force quantique "
+        I18n.fillText(gc, "Attrape un noyau, rapproche-le ou éloigne-le, puis lâche-le : la vraie force quantique "
                 + "décide · D : densité ou Δρ", 20, top + FOOTER / 2);
         gc.setTextBaseline(VPos.BASELINE);
     }

@@ -220,7 +220,7 @@ public class EventJournal {
         Label time = new Label(TimelineBar.compact(event.getTimeS()));
         time.setStyle("-fx-text-fill: #5B6B86; -fx-font-family: Consolas, monospace; -fx-font-size: 10px;");
         time.setMinWidth(Region.USE_PREF_SIZE);
-        time.setTooltip(new Tooltip("temps simulé : " + Visuals.duration(event.getTimeS())));
+        time.setTooltip(I18n.tooltip("temps simulé : " + Visuals.duration(event.getTimeS())));
         Label title = label(event.getTitle(), "-fx-text-fill: " + (info ? "#A9B6CB" : "#E6EDF7") + "; -fx-font-size: "
                 + (info ? "11.5" : "12.5") + "px;" + (info ? "" : " -fx-font-weight: bold;"));
         Region grow = new Region();
@@ -259,7 +259,7 @@ public class EventJournal {
         row.setStyle(base + (event == selected ? " -fx-background-color: #131C30;" : ""));
         if (compact) {
             row.setStyle(row.getStyle() + " -fx-cursor: hand;");
-            Tooltip.install(row, new Tooltip("clic : Genesis explique cet événement"));
+            Tooltip.install(row, I18n.tooltip("clic : Genesis explique cet événement"));
             row.setOnMouseClicked(click -> {
                 selected = event;
                 rebuild();

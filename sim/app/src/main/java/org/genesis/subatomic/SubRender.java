@@ -1,5 +1,6 @@
 package org.genesis.subatomic;
 
+import org.genesis.app.I18n;
 import org.genesis.common.LabCamera;
 import org.genesis.fusion.ReactorView;
 
@@ -168,7 +169,7 @@ public final class SubRender {
             g.setTextAlign(TextAlignment.CENTER);
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, Math.min(14, r * .85)));
             g.setFill(Color.color(.02, .04, .09, .72 * a));
-            g.fillText(label, s[0] + r * .05, s[1] + Math.min(14, r * .85) * .36);
+            I18n.fillText(g, label, s[0] + r * .05, s[1] + Math.min(14, r * .85) * .36);
         }
     }
 
@@ -386,7 +387,7 @@ public final class SubRender {
         g.setFill(Color.WHITE.deriveColor(0, 1, 1, .9 * alpha));
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
         g.setTextAlign(TextAlignment.CENTER);
-        g.fillText(charge < 0 ? "−" : "+", s[0] + glow + 5, s[1] - glow);
+        I18n.fillText(g, charge < 0 ? "−" : "+", s[0] + glow + 5, s[1] - glow);
         if (anti) {
             double ring = glow * 1.9;
             g.setStroke(c.interpolate(Color.WHITE, .4).deriveColor(0, 1, 1, .8 * alpha));
@@ -1452,8 +1453,8 @@ public final class SubRender {
             boolean major = Math.abs(Math.round(v / step)) % 2 == 0;
             if (major) {
                 g.setFill(ink.deriveColor(0, 1, 1, .75 * alpha));
-                String text = Math.abs(v - Math.rint(v)) < 1e-9 ? String.valueOf((long) Math.rint(v)) : String.format(java.util.Locale.FRANCE, "%.1f", v);
-                g.fillText(text.replace('-', '−'), label[0], label[1] + 3.5);
+                String text = Math.abs(v - Math.rint(v)) < 1e-9 ? String.valueOf((long) Math.rint(v)) : String.format(I18n.locale(), "%.1f", v);
+                I18n.fillText(g, text.replace('-', '−'), label[0], label[1] + 3.5);
             }
         }
         double[] mid = from.clone();
@@ -1462,7 +1463,7 @@ public final class SubRender {
         if (title != null) {
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
             g.setFill(ink.deriveColor(0, 1, 1, .85 * alpha));
-            g.fillText(name, title[0], title[1] + 3.5);
+            I18n.fillText(g, name, title[0], title[1] + 3.5);
         }
         // la flèche, au bout des valeurs croissantes
         double[] tip = project(to), before = project(add(to, new double[]{k == 0 ? -step * .5 : 0, k == 1 ? -step * .5 : 0, k == 2 ? -step * .5 : 0}));
@@ -1612,7 +1613,7 @@ public final class SubRender {
             double[] at = project(add(centre, scale(sd, -r * side)));
             if (at != null && k < rings) {
                 g.setFill(c.deriveColor(0, 1, 1, .7 * alpha));
-                g.fillText(log ? decade(k) : (100 - 25 * k) + " %", at[0], at[1] - 3);
+                I18n.fillText(g, log ? decade(k) : (100 - 25 * k) + " %", at[0], at[1] - 3);
             }
         }
         // les rayons tous les 30°, des deux côtés
@@ -1626,7 +1627,7 @@ public final class SubRender {
                     double[] lab = project(add(centre, scale(dir, radiusFm * 1.12)));
                     if (lab != null) {
                         g.setFill(c.deriveColor(0, 1, 1, .75 * alpha));
-                        g.fillText(a + "°", lab[0], lab[1] + 3);
+                        I18n.fillText(g, a + "°", lab[0], lab[1] + 3);
                     }
                 }
             }
@@ -1791,7 +1792,7 @@ public final class SubRender {
             g.setFont(Font.font("Consolas", 10));
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(c.deriveColor(0, 1, 1, .9 * alpha));
-            g.fillText(label, at[0] + 6, at[1] - 6);
+            I18n.fillText(g, label, at[0] + 6, at[1] - 6);
         }
     }
 
@@ -1902,11 +1903,11 @@ public final class SubRender {
             g.setTextAlign(TextAlignment.LEFT);
             g.setFont(bold);
             g.setFill(Color.web("#EEF2FF").deriveColor(0, 1, 1, t.alpha()));
-            g.fillText(t.title(), spot[0] + 11, spot[1] + 16.5);
+            I18n.fillText(g, t.title(), spot[0] + 11, spot[1] + 16.5);
             if (!t.detail().isEmpty()) {
                 g.setFont(light);
                 g.setFill(Color.web("#A5B0C6").deriveColor(0, 1, 1, t.alpha()));
-                g.fillText(t.detail(), spot[0] + 11 + ReactorView.width(t.title(), bold) + 12, spot[1] + 16.5);
+                I18n.fillText(g, t.detail(), spot[0] + 11 + ReactorView.width(t.title(), bold) + 12, spot[1] + 16.5);
             }
         }
     }
@@ -1966,11 +1967,11 @@ public final class SubRender {
             g.setTextAlign(TextAlignment.LEFT);
             g.setFont(bold);
             g.setFill(Color.web("#EEF2FF").deriveColor(0, 1, 1, a));
-            g.fillText(t.title(), spot[0] + 10, spot[1] + 14.5);
+            I18n.fillText(g, t.title(), spot[0] + 10, spot[1] + 14.5);
             if (!t.detail().isEmpty()) {
                 g.setFont(light);
                 g.setFill(Color.web("#A9B8D0").deriveColor(0, 1, 1, a));
-                g.fillText(t.detail(), spot[0] + 10, spot[1] + 28.5);
+                I18n.fillText(g, t.detail(), spot[0] + 10, spot[1] + 28.5);
             }
         }
     }

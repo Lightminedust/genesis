@@ -129,7 +129,7 @@ public class App extends Application {
     private ActionType pendingLabStart;
 
     private final Circle statusDot = new Circle(4.5, Color.web("#64748B"));
-    private final Tooltip statusTip = new Tooltip("Démarrage…");
+    private final Tooltip statusTip = I18n.tooltip("Démarrage…");
     private Button tableButton;
     private final Label elementSymbol = new Label("?");
     private final Label elementName = new Label("Choisir un élément");
@@ -175,7 +175,8 @@ public class App extends Application {
         double height = Math.min(PREFERRED_HEIGHT, screen.getHeight() - 40);
         Scene scene = buildScene(width, height);
 
-        stage.setTitle("Genesis - Simulateur atomique");
+        stage.setTitle(I18n.text("Genesis - Simulateur atomique"));
+        I18n.onChange(() -> stage.setTitle(I18n.text("Genesis - Simulateur atomique")));
         Branding.applyWindowIcons(stage);
         stage.setScene(scene);
         stage.setMinWidth(Math.min(1000, screen.getWidth()));
@@ -199,8 +200,8 @@ public class App extends Application {
                 setStatus("Chargement du moteur Python embarqué…", "#FBBF24");
                 waitForBundledEngine(bundledEngine);
             } catch (IOException error) {
-                simCanvas.setStatusMessage("Moteur Windows impossible à démarrer : " + error.getMessage());
-                setStatus("Moteur Windows impossible à démarrer : " + error.getMessage(), "#F87171");
+                simCanvas.setStatusMessage("Moteur embarqué impossible à démarrer : " + error.getMessage());
+                setStatus("Moteur embarqué impossible à démarrer : " + error.getMessage(), "#F87171");
                 loader.fail("Démarrage impossible", error.getMessage());
             }
         } else {
@@ -339,15 +340,44 @@ public class App extends Application {
         reactorView.getNode().setVisible(false);
         subatomicView.getNode().setVisible(false);
         quantumLab.getNode().setVisible(false);
-        Scene scene = new Scene(new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
-                reactorView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode()),
+        StackPane laboratories = new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
+                reactorView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode());
+        BorderPane localizedShell = new BorderPane(laboratories);
+        localizedShell.setTop(buildLanguageBar());
+        Scene scene = new Scene(localizedShell,
                 width, height);
         scene.setFill(Color.web("#05070E"));
         scene.getStylesheets().add(stylesheet());
         scene.addEventFilter(KeyEvent.KEY_PRESSED, this::onKeyPressed);
 
         tuneLaser(laserNm);
+        I18n.attach(scene);
         return scene;
+    }
+
+    /** Language selection belongs to the client shell, so it stays available in every laboratory. */
+    private Region buildLanguageBar() {
+        MenuButton choice = new MenuButton();
+        choice.setFocusTraversable(false);
+        choice.setStyle("-fx-background-color: #142139; -fx-text-fill: #E6EDF7; "
+                + "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 2 7;");
+        MenuItem french = new MenuItem("Français");
+        MenuItem english = new MenuItem("English");
+        french.setOnAction(event -> I18n.setLanguage(I18n.Language.FR));
+        english.setOnAction(event -> I18n.setLanguage(I18n.Language.EN));
+        choice.getItems().addAll(french, english);
+        Runnable refresh = () -> {
+            choice.setText(I18n.language() == I18n.Language.FR ? "FR" : "EN");
+            french.setDisable(I18n.language() == I18n.Language.FR);
+            english.setDisable(I18n.language() == I18n.Language.EN);
+        };
+        I18n.onChange(refresh);
+        refresh.run();
+        HBox bar = new HBox(choice);
+        bar.setAlignment(Pos.CENTER_RIGHT);
+        bar.setPadding(new Insets(3, 12, 3, 12));
+        bar.setStyle("-fx-background-color: #070D19; -fx-border-color: #1A2941; -fx-border-width: 0 0 1 0;");
+        return bar;
     }
 
     /** Pour les aperçus : une frame du moteur, comme si elle arrivait du réseau. */
@@ -458,7 +488,7 @@ public class App extends Application {
         tableButton.getStyleClass().add("dash-chip");
         tableButton.setFocusTraversable(false);
         tableButton.setDisable(true);
-        tableButton.setTooltip(new Tooltip("changer d'élément : la table périodique · touche T"));
+        tableButton.setTooltip(I18n.tooltip("changer d'élément : la table périodique · touche T"));
         tableButton.setOnAction(event -> openPeriodicTable());
 
         HBox build = new HBox(8,
@@ -488,12 +518,12 @@ public class App extends Application {
         lightButton = new Button();
         lightButton.getStyleClass().add("dash-button");
         lightButton.setFocusTraversable(false);
-        lightButton.setTooltip(new Tooltip("régler la longueur d'onde du laser"));
+        lightButton.setTooltip(I18n.tooltip("régler la longueur d'onde du laser"));
         lightButton.setOnAction(event -> toggleLightPopup());
         Button fire = new Button("✦  Tirer un photon");
         fire.getStyleClass().add("dash-fire");
         fire.setFocusTraversable(false);
-        fire.setTooltip(new Tooltip("un photon de cette longueur d'onde vers l'atome · touche L"));
+        fire.setTooltip(I18n.tooltip("un photon de cette longueur d'onde vers l'atome · touche L"));
         fire.setOnAction(event -> firePhoton());
         HBox light = new HBox(6, lightButton, fire);
         light.setAlignment(Pos.CENTER_LEFT);
@@ -544,7 +574,7 @@ public class App extends Application {
         box.setAlignment(Pos.CENTER_LEFT);
         box.getStyleClass().add("stepper");
         box.setPadding(new Insets(2, 4, 2, 9));
-        Tooltip.install(box, new Tooltip(hint));
+        Tooltip.install(box, I18n.tooltip(hint));
         return box;
     }
 
@@ -568,7 +598,7 @@ public class App extends Application {
             Button flame = new Button("Chauffer dans une flamme");
             flame.getStyleClass().add("dash-button");
             flame.setFocusTraversable(false);
-            flame.setTooltip(new Tooltip("une collision thermique excite l'atome, comme dans une flamme · touche F"));
+            flame.setTooltip(I18n.tooltip("une collision thermique excite l'atome, comme dans une flamme · touche F"));
             flame.setOnAction(event -> send(ActionType.HEAT));
             VBox content = new VBox(10, title, row, hint, flame);
             content.getStyleClass().add("light-popup");
@@ -623,7 +653,7 @@ public class App extends Application {
         autoSpin.getStyleClass().add("view-toggle");
         autoSpin.setSelected(true);
         autoSpin.setFocusTraversable(false);
-        autoSpin.setTooltip(new Tooltip("l'atome tourne lentement sur lui-même"));
+        autoSpin.setTooltip(I18n.tooltip("l'atome tourne lentement sur lui-même"));
         autoSpin.setOnAction(event -> simCanvas.setAutoSpin(autoSpin.isSelected()));
         Button out = viewButton("−", "dézoomer · touche −", () -> simCanvas.nudgeZoom(0.6));
         Button in = viewButton("+", "zoomer · touche + (ou la molette)", () -> simCanvas.nudgeZoom(1.6));
@@ -648,7 +678,7 @@ public class App extends Application {
         button.getStyleClass().add("view-toggle");
         button.setToggleGroup(group);
         button.setFocusTraversable(false);
-        button.setTooltip(new Tooltip(hint));
+        button.setTooltip(I18n.tooltip(hint));
         button.setOnAction(event -> action.run());
         return button;
     }
@@ -657,7 +687,7 @@ public class App extends Application {
         Button button = new Button(text);
         button.getStyleClass().add("view-button");
         button.setFocusTraversable(false);
-        button.setTooltip(new Tooltip(hint));
+        button.setTooltip(I18n.tooltip(hint));
         button.setOnAction(event -> action.run());
         return button;
     }
@@ -671,14 +701,14 @@ public class App extends Application {
         };
         for (javafx.scene.control.Toggle toggle : scaleGroup.getToggles()) {
             ToggleButton button = (ToggleButton) toggle;
-            boolean on = button.getText().equals(current);
+            boolean on = I18n.source(button).equals(current);
             if (button.isSelected() != on) {
                 button.setSelected(on);
             }
         }
         for (javafx.scene.control.Toggle toggle : dragGroup.getToggles()) {
             ToggleButton button = (ToggleButton) toggle;
-            boolean on = button.getText().contains("Déplacer") == simCanvas.isPanMode();
+            boolean on = I18n.source(button).contains("Déplacer") == simCanvas.isPanMode();
             if (button.isSelected() != on) {
                 button.setSelected(on);
             }
@@ -1195,7 +1225,7 @@ public class App extends Application {
         Button button = new Button(text);
         button.setStyle(buttonStyle("#111C33", colorHex));
         button.setFocusTraversable(false);
-        button.setTooltip(new Tooltip(hint));
+        button.setTooltip(I18n.tooltip(hint));
         button.setOnAction(event -> send(action));
         return button;
     }
@@ -1209,7 +1239,7 @@ public class App extends Application {
     private static Button overlayButton(String text, String hint, Runnable action) {
         Button button = new Button(text);
         button.setFocusTraversable(false);
-        button.setTooltip(new Tooltip(hint));
+        button.setTooltip(I18n.tooltip(hint));
         button.setStyle("-fx-background-color: #111C33DD; -fx-text-fill: #CBD5E1; "
                 + "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 6; "
                 + "-fx-min-height: 26; -fx-padding: 3 10 3 10; -fx-cursor: hand;");

@@ -1,6 +1,7 @@
 package org.genesis.subatomic;
 
 import org.genesis.common.LabCamera;
+import org.genesis.app.I18n;
 
 import com.studio.genesis.grpc.CollisionChannel;
 import com.studio.genesis.grpc.CollisionCurve;
@@ -21,15 +22,24 @@ import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class QuantumLabTest {
+    private static I18n.Language previousLanguage;
+
     @BeforeAll static void toolkit() throws Exception {
+        previousLanguage = I18n.language();
+        I18n.setLanguage(I18n.Language.FR);
         CountDownLatch ready = new CountDownLatch(1);
         try { Platform.startup(() -> { Platform.setImplicitExit(false); ready.countDown(); }); }
         catch (IllegalStateException started) { ready.countDown(); }
         assertTrue(ready.await(10, TimeUnit.SECONDS));
+    }
+
+    @AfterAll static void restoreLanguage() {
+        I18n.setLanguage(previousLanguage);
     }
 
     @Test void captionsKeepGreekLettersAndCombiningBars() {
