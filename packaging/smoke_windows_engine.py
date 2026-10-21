@@ -1,6 +1,7 @@
 """Vérifie le vrai exécutable gelé, ses données nucléaires et son service gRPC."""
 
 import os
+import re
 import socket
 import subprocess
 import sys
@@ -15,6 +16,10 @@ if len(sys.argv) > 2:
     sys.path.insert(0, str(Path(sys.argv[2]).resolve()))
 import genesis_pb2 as pb  # noqa: E402
 import genesis_pb2_grpc as rpc  # noqa: E402
+
+# Le numéro du contrat que le moteur doit annoncer : celui des sources, lu sans importer le moteur.
+EXPECTED_PROTOCOL = int(re.search(r"^PROTOCOL_VERSION\s*=\s*(\d+)", (ROOT / "logic" / "engine.py").read_text(encoding="utf-8"),
+                                  re.MULTILINE).group(1))
 
 
 def main():
@@ -40,7 +45,7 @@ def main():
                     raise RuntimeError(f"Le moteur s'est arrêté avec le code {process.returncode}")
                 try:
                     table = stub.GetPeriodicTable(pb.TableRequest(), timeout=3)
-                    if table.protocol_version != 25 or len(table.elements) != 118:
+                    if table.protocol_version != EXPECTED_PROTOCOL or len(table.elements) != 118:
                         raise AssertionError("Table périodique ou protocole incomplet")
                     print(f"Moteur autonome OK : {len(table.elements)} éléments, protocole {table.protocol_version}")
                     return
