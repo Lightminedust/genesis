@@ -1,5 +1,7 @@
 package org.genesis.engine;
 
+import org.genesis.app.I18n;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -37,7 +39,7 @@ public final class BundledEngine implements AutoCloseable {
         IOException lastError = null;
         while (System.nanoTime() < deadline) {
             if (!process.isAlive()) {
-                throw new IOException("Le moteur Python s'est arrêté (code " + process.exitValue()
+                throw new IOException(I18n.text("Le moteur Python s'est arrêté (code ") + process.exitValue()
                         + "). Journal : " + logPath, lastError);
             }
             try (Socket socket = new Socket()) {
@@ -48,7 +50,7 @@ public final class BundledEngine implements AutoCloseable {
             }
             Thread.sleep(250);
         }
-        throw new IOException("Le moteur Python ne répond pas après " + timeoutSeconds
+        throw new IOException(I18n.text("Le moteur Python ne répond pas après ") + timeoutSeconds
                 + " s. Journal : " + logPath, lastError);
     }
 
@@ -63,10 +65,10 @@ public final class BundledEngine implements AutoCloseable {
         String engineName;
         if (os.startsWith("windows")) engineName = "GenesisEngine.exe";
         else if (os.startsWith("linux")) engineName = "GenesisEngine";
-        else throw new IOException("Plateforme non prise en charge pour le moteur embarqué : " + os);
+        else throw new IOException(I18n.text("Plateforme non prise en charge pour le moteur embarqué : ") + os);
         Path executable = jar.getParent().resolve("engine").resolve(engineName);
         if (!Files.isRegularFile(executable)) {
-            throw new IOException("Moteur introuvable : " + executable);
+            throw new IOException(I18n.text("Moteur introuvable : ") + executable);
         }
 
         // Chaque fenêtre obtient son propre port. Le serveur Python ne l'écoute que sur loopback.

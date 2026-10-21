@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '0.1.1',
+    [string]$Version = '0.3.0',
     [string]$Python = '',
     [switch]$SkipInstaller,
     [switch]$SkipPortableZip
@@ -34,7 +34,7 @@ foreach ($target in @($work, $image)) {
 }
 New-Item -ItemType Directory -Force -Path $work, $output | Out-Null
 
-& $Python -c 'import grpc, numpy, scipy, mendeleev, radioactivedecay, pynucastro, chemicals, PyInstaller'
+& $Python -c 'import grpc, numpy, scipy, mendeleev, radioactivedecay, pynucastro, chemicals, periodictable, PyInstaller'
 if ($LASTEXITCODE -ne 0) {
     throw "Dependance Python absente. Installe les dependances du moteur et PyInstaller dans $Python."
 }
@@ -55,7 +55,7 @@ $pySpec = Join-Path $work 'python-spec'
 & $Python -m PyInstaller --noconfirm --clean --onedir --windowed `
     --name GenesisEngine --paths $protoDir --paths (Join-Path $repo 'logic') `
     --collect-submodules numpy.core `
-    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro `
+    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable `
     --distpath $pyDist --workpath $pyWork --specpath $pySpec `
     (Join-Path $PSScriptRoot 'windows_engine.py')
 if ($LASTEXITCODE -ne 0) { throw 'PyInstaller a echoue.' }

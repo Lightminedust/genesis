@@ -24,7 +24,7 @@ public final class CollisionPicker {
     private final ButtonType use=new ButtonType("Utiliser ce noyau",ButtonBar.ButtonData.OK_DONE);
 
     CollisionPicker(List<LabElement> catalog,int z,int a,String side,IntConsumer consumer) {
-        dialog.setTitle("Noyau "+side+" · tableau périodique et isotopes");
+        dialog.setTitle(I18n.text("Noyau ")+side+I18n.text(" · tableau périodique et isotopes"));
         dialog.getDialogPane().getStyleClass().add("fusion-lab");
         var css=CollisionPicker.class.getResource("/genesis.css");
         if(css!=null)dialog.getDialogPane().getStylesheets().add(css.toExternalForm());
@@ -41,7 +41,7 @@ public final class CollisionPicker {
             Button tile=new Button();tile.setGraphic(graphics);tile.setUserData(item);tile.setId("collision-element-"+item.getZ());
             tile.setMinSize(39,36);tile.setPrefSize(39,36);tile.setPadding(Insets.EMPTY);
             tile.setStyle("-fx-background-color:#152235;-fx-background-radius:5;-fx-cursor:hand;");
-            tile.setAccessibleText(item.getName()+", numéro atomique "+item.getZ());
+            tile.setAccessibleText(item.getName()+I18n.text(", numéro atomique ")+item.getZ());
             tile.setTooltip(I18n.tooltip(item.getName()+" · Z = "+item.getZ()+" · "+item.getIsotopesCount()+" isotopes"));
             tile.setOnAction(e->showIsotopes(item,item.getDefaultA()));
             int row=item.getRow();table.add(tile,Math.max(0,item.getCol()-1),Math.max(0,row>=9?row-1:row-1));
@@ -84,7 +84,7 @@ public final class CollisionPicker {
     }
     private void select(LabElement item,LabIsotope data) {
         isotope=data.getA();selected.setText(item.getName()+" · "+item.getSymbol()+"–"+isotope+"     "+item.getZ()+" protons / "+(isotope-item.getZ())+" neutrons");
-        mass.setText(String.format(I18n.locale(),"Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)",data.getMassU(),data.getStable()?"stable":"radioactif",item.getZ()));
+        mass.setText(String.format(I18n.locale(),I18n.text("Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)"),data.getMassU(),data.getStable()?"stable":"radioactif",item.getZ()));
     }
     private static String color(LabElement item){return item.getColor().isBlank()?"#AECDEB":item.getColor();}
     private static String fold(String text){return Normalizer.normalize(text.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","");}

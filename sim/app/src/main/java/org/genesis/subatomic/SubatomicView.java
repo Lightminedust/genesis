@@ -344,10 +344,10 @@ public final class SubatomicView {
         double strong = sample.getStrongMev() + alpha*(next.getStrongMev()-sample.getStrongMev());
         double coulomb = sample.getCoulombMev() + alpha*(next.getCoulombMev()-sample.getCoulombMev());
         double e = sample.getTotalMev() + alpha*(next.getTotalMev()-sample.getTotalMev());
-        kinetic.setText(String.format("Cinétique       %+8.3f MeV", k));
+        kinetic.setText(String.format(I18n.text("Cinétique       %+8.3f MeV"), k));
         potential.setText(String.format("Forte / Coulomb  %+7.3f / %+7.3f MeV",
                 strong, coulomb));
-        total.setText(String.format("Énergie totale  %+8.3f MeV", e));
+        total.setText(String.format(I18n.text("Énergie totale  %+8.3f MeV"), e));
         if (sample.getParticlesCount() == 2) {
             double radial = sample.getRadialForceMevFm() + alpha*
                     (next.getRadialForceMevFm()-sample.getRadialForceMevFm());
@@ -364,7 +364,7 @@ public final class SubatomicView {
             binding.setText(String.format("%s · marge %+6.3f MeV",
                     margin > 0 ? "Paire liée dans ce modèle" : "Diffusion dans ce modèle", margin));
         } else if (sample.getParticlesCount() > 2) {
-            binding.setText(String.format("%d/%d nucléons localement retenus · marge minimale %+6.3f MeV. Diagnostic instantané, pas une preuve de stabilité.",
+            binding.setText(String.format(I18n.text("%d/%d nucléons localement retenus · marge minimale %+6.3f MeV. Diagnostic instantané, pas une preuve de stabilité."),
                     sample.getLocallyBoundCount(), sample.getParticlesCount(), margin));
         } else binding.setText("Pas de seuil de séparation pour une particule seule.");
         plotBinding(margin);
@@ -497,7 +497,7 @@ public final class SubatomicView {
         g.strokeLine(cx-8, cy, cx+8, cy);
         g.strokeLine(cx, cy-8, cx, cy+8);
         g.setFill(INK);
-        I18n.fillText(g, String.format("Coupe |ψ₁ₛ|² ∝ exp(−2r/a) · a = %.3f pm · fenêtre ±%.0f pm",
+        I18n.fillText(g, String.format(I18n.text("Coupe |ψ₁ₛ|² ∝ exp(−2r/a) · a = %.3f pm · fenêtre ±%.0f pm"),
                 state.getElectronRadiusPm(), electronSpanPm), 24, 36);
         I18n.fillText(g, "Noyau au centre : taille sous-pixel à cette échelle. Molette : échelle électronique.", 24, h-44);
         I18n.fillText(g, "Nuage stationnaire 1s : aucune orbite ponctuelle ni force de Pauli électron–proton.", 24, h-22);

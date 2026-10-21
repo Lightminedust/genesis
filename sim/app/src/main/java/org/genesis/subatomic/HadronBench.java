@@ -154,8 +154,8 @@ public final class HadronBench {
                 } else if (pressHit < slots.size()) {
                     Slot s = slots.get(pressHit);
                     if (e.getButton() == MouseButton.SECONDARY) {
-                        if (mode == MESON) say("Dans le moule méson, l'emplacement « + » reçoit la matière, « − » l'antimatière ; le bouton "
-                                + "« antimatière » échange les deux.");
+                        if (mode == MESON) say(I18n.text("Dans le moule méson, l'emplacement « + » reçoit la matière, « − » l'antimatière ; le bouton ")
+                                + I18n.text("« antimatière » échange les deux."));
                         else slots.set(pressHit, new Slot(s.id(), !s.anti(), s.colour(), s.place()));
                     } else if (e.getClickCount() >= 2) {
                         slots.remove(pressHit);
@@ -287,8 +287,8 @@ public final class HadronBench {
         offset = new double[3];
         StringBuilder rest = new StringBuilder();
         for (Slot sl : slots) rest.append(sl.anti() ? sl.id().toUpperCase(Locale.ROOT) : sl.id());
-        tell(String.format(I18n.locale(), "La corde a cassé : σ·ΔL = %.0f MeV paie une paire %s%s̄ (%s MeV). Le quark arraché part avec "
-                + "l'%s dans un %s — on n'isole jamais un quark. Il reste %s : teste-le.", stored, f, f,
+        tell(String.format(I18n.locale(), I18n.text("La corde a cassé : σ·ΔL = %.0f MeV paie une paire %s%s̄ (%s MeV). Le quark arraché part avec ")
+                + I18n.text("l'%s dans un %s — on n'isole jamais un quark. Il reste %s : teste-le."), stored, f, f,
                 f.equals("s") ? "2 × 486" : "2 × 336", s.anti() ? "quark " + f : "antiquark " + f + "̄", name, pretty(rest.toString())));
     }
 
@@ -325,11 +325,11 @@ public final class HadronBench {
     private String refusal(String id) {
         SmParticle p = table.particle(id);
         String symbol = p == null ? id : p.getSymbol();
-        if (id.equals("g")) return "Le gluon porte la couleur, mais c'est lui la colle : il est déjà dans le sac (ce sont les cordes). "
-                + "On ne le pose pas comme un quark.";
-        if (p != null && p.getFamily().equals("lepton")) return symbol + " est un lepton : il n'a pas de charge de couleur. L'interaction "
-                + "forte ne le voit pas — rien ne peut le lier dans un hadron.";
-        return symbol + " n'a pas de charge de couleur : il ne ressent pas l'interaction forte et ne peut pas être un constituant d'un hadron.";
+        if (id.equals("g")) return I18n.text("Le gluon porte la couleur, mais c'est lui la colle : il est déjà dans le sac (ce sont les cordes). ")
+                + I18n.text("On ne le pose pas comme un quark.");
+        if (p != null && p.getFamily().equals("lepton")) return symbol + I18n.text(" est un lepton : il n'a pas de charge de couleur. L'interaction ")
+                + I18n.text("forte ne le voit pas — rien ne peut le lier dans un hadron.");
+        return symbol + I18n.text(" n'a pas de charge de couleur : il ne ressent pas l'interaction forte et ne peut pas être un constituant d'un hadron.");
     }
 
     /** La place libre visée par un dépôt en (x, y) : l'emplacement vide le plus proche à l'écran ; −1 si le moule est plein. */
@@ -559,13 +559,13 @@ public final class HadronBench {
         if (filled < (mode == FREE ? 0 : capacity())) {
             if (mode == MESON) {
                 Slot q = slots.stream().filter(s -> !s.anti()).findFirst().orElse(null);
-                return capital(name) + " : l'antiquark devra porter l'anticouleur — " + (q == null ? "celle du quark" : ANTI_NAMES[q.colour() % 3])
-                        + " — pour faire du blanc.";
+                return capital(name) + I18n.text(" : l'antiquark devra porter l'anticouleur — ") + (q == null ? "celle du quark" : ANTI_NAMES[q.colour() % 3])
+                        + I18n.text(" — pour faire du blanc.");
             }
-            return capital(name) + " : il manque du " + String.join(" et du ", missing) + " — ajoute un quark " + String.join(" ou ", missing) + ".";
+            return capital(name) + I18n.text(" : il manque du ") + String.join(" et du ", missing) + I18n.text(" — ajoute un quark ") + String.join(" ou ", missing) + ".";
         }
-        return capital(name) + " : pas blanc. Trop de " + String.join(" et de ", excess) + ", pas assez de " + String.join(" et de ", missing)
-                + " — clic sur un quark pour changer sa couleur.";
+        return capital(name) + I18n.text(" : pas blanc. Trop de ") + String.join(" et de ", excess) + I18n.text(", pas assez de ") + String.join(" et de ", missing)
+                + I18n.text(" — clic sur un quark pour changer sa couleur.");
     }
 
     private static String capital(String s) {
@@ -784,7 +784,7 @@ public final class HadronBench {
                 double e = stored(stretching);
                 double[] anchor = n == 2 ? at.get(1 - stretching) : junction;
                 render.tag(SubRender.lerp(anchor, at.get(stretching), .5), .1, "corde tendue", String.format(I18n.locale(),
-                        "σ·ΔL = %.0f MeV  ·  une paire u ū coûte %.0f MeV", e, LIGHT_PAIR), DocStyle.GOLD, 1);
+                        I18n.text("σ·ΔL = %.0f MeV  ·  une paire u ū coûte %.0f MeV"), e, LIGHT_PAIR), DocStyle.GOLD, 1);
             }
             drawGluons(at, junction, parent);
         }
@@ -922,7 +922,7 @@ public final class HadronBench {
         Color ca = Color.color(a == 0 ? 1 : 0, a == 1 ? 1 : 0, a == 2 ? 1 : 0), cb = Color.color(b == 0 ? 0 : 1, b == 1 ? 0 : 1, b == 2 ? 0 : 1);
         render.glow(where, .16, ca, .9 * alpha);
         render.glow(SubRender.add(where, new double[]{.05, .05, 0}), .1, cb, .8 * alpha);
-        render.tag(where, .1, "gluon", COLOUR_NAMES[a] + "–anti" + COLOUR_NAMES[b] + " : il échange les couleurs", ca.interpolate(Color.WHITE, .4),
+        render.tag(where, .1, "gluon", COLOUR_NAMES[a] + "–anti" + COLOUR_NAMES[b] + I18n.text(" : il échange les couleurs"), ca.interpolate(Color.WHITE, .4),
                 .55 * alpha * Math.sin(Math.PI * Math.min(1, p)));
     }
 
@@ -1035,7 +1035,7 @@ public final class HadronBench {
         g.setFont(Font.font("Segoe UI", 10.5));
         if (!known) {
             g.setFill(DocStyle.WHITE);
-            I18n.fillText(g, String.format(I18n.locale(), "masses des quarks (Higgs) : Σ m = %s MeV", DocStyle.number(current)), x, y + 18);
+            I18n.fillText(g, String.format(I18n.locale(), I18n.text("masses des quarks (Higgs) : Σ m = %s MeV"), DocStyle.number(current)), x, y + 18);
             g.setFill(DocStyle.DIM);
             I18n.fillText(g, "teste : l'interaction forte donne le reste", x, y + 34);
             return;
@@ -1183,7 +1183,7 @@ public final class HadronBench {
     /** Le nombre baryonique en tiers exacts : un hadron en a un entier (0, ±1…) ; sinon il manque des quarks. */
     static String baryonText(double b) {
         long thirds = Math.round(b * 3);
-        if (thirds % 3 != 0) return (thirds < 0 ? "−" : "") + Math.abs(thirds) + "/3 — pas un entier : il manque des quarks";
+        if (thirds % 3 != 0) return (thirds < 0 ? "−" : "") + Math.abs(thirds) + I18n.text("/3 — pas un entier : il manque des quarks");
         long whole = thirds / 3;
         return whole == 0 ? "0 (méson)" : whole == 1 ? "1 (baryon)" : whole == -1 ? "−1 (antibaryon)" : String.valueOf(whole).replace('-', '−');
     }
@@ -1313,10 +1313,10 @@ public final class HadronBench {
         if (result == null) {
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(DocStyle.PALE);
-            wrap(g, "Choisis un moule (baryon, méson ou libre), glisse des quarks dans ses emplacements, fais du blanc, puis « Tester la "
-                    + "stabilité ». Les règles : la couleur doit être neutre (le mélange de couleurs est blanc : rouge + vert + bleu, ou "
-                    + "couleur + anticouleur), deux quarks identiques ne peuvent pas porter la même couleur (Pauli), et le nombre de quarks "
-                    + "moins celui d'antiquarks doit être un multiple de 3.", cx, cy, inner, 16, Font.font("Segoe UI", 11.5));
+            wrap(g, I18n.text("Choisis un moule (baryon, méson ou libre), glisse des quarks dans ses emplacements, fais du blanc, puis « Tester la ")
+                    + I18n.text("stabilité ». Les règles : la couleur doit être neutre (le mélange de couleurs est blanc : rouge + vert + bleu, ou ")
+                    + I18n.text("couleur + anticouleur), deux quarks identiques ne peuvent pas porter la même couleur (Pauli), et le nombre de quarks ")
+                    + I18n.text("moins celui d'antiquarks doit être un multiple de 3."), cx, cy, inner, 16, Font.font("Segoe UI", 11.5));
             massTop = y + 240;
             return;
         }
@@ -1373,8 +1373,8 @@ public final class HadronBench {
                 g.setFont(Font.font("Segoe UI", 10.5));
                 g.setFill(DocStyle.PALE);
                 I18n.fillText(g, s.getKnownName().isEmpty()
-                        ? String.format(I18n.locale(), "modèle : %s MeV", DocStyle.number(s.getModelMassMev()))
-                        : String.format(I18n.locale(), "modèle %s MeV  ·  mesuré %s MeV  ·  écart %+.0f", DocStyle.number(s.getModelMassMev()),
+                        ? String.format(I18n.locale(), I18n.text("modèle : %s MeV"), DocStyle.number(s.getModelMassMev()))
+                        : String.format(I18n.locale(), I18n.text("modèle %s MeV  ·  mesuré %s MeV  ·  écart %+.0f"), DocStyle.number(s.getModelMassMev()),
                         DocStyle.number(s.getKnownMassMev()), s.getErrorMev()), cx, cy + 28);
                 cy += 38;
             }
@@ -1388,7 +1388,7 @@ public final class HadronBench {
         if (result.getLifetimeS() > 0) {
             g.setFill(DocStyle.WAVE);
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11.5));
-            I18n.fillText(g, "durée de vie τ = " + DocStyle.number(result.getLifetimeS()) + " s", cx, cy + 4);
+            I18n.fillText(g, I18n.text("durée de vie τ = ") + DocStyle.number(result.getLifetimeS()) + " s", cx, cy + 4);
             cy += 20;
         }
         if (result.getChannelsCount() > 0) {
@@ -1412,7 +1412,7 @@ public final class HadronBench {
             cy += 6;
             g.setFill(DocStyle.WHITE);
             g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
-            cy += wrap(g, "Tirage montré : " + pretty(result.getDecayLabel()), cx, cy + 4, inner, 15, Font.font("Segoe UI", FontWeight.BOLD, 11));
+            cy += wrap(g, I18n.text("Tirage montré : ") + pretty(result.getDecayLabel()), cx, cy + 4, inner, 15, Font.font("Segoe UI", FontWeight.BOLD, 11));
         }
         massTop = cy;
     }

@@ -17,6 +17,7 @@ import queue
 import sys
 import threading
 import time
+import traceback
 from concurrent import futures
 
 import grpc
@@ -35,7 +36,7 @@ from common.units import format_duration
 # Incrémenté à chaque changement incompatible du contrat. Le client refuse de
 # dessiner une frame qui ne porte pas ce numéro : mieux vaut un message clair
 # qu'un affichage silencieusement faux.
-PROTOCOL_VERSION = 25
+PROTOCOL_VERSION = 27
 
 TICK_S = 0.05
 HEARTBEAT_S = 0.25
@@ -166,7 +167,8 @@ def build_frame(tick, evaluation, source, last_action=""):
             density=orbital["grid"], size=orbital["size"], extent_pm=orbital["extent_pm"],
             label=orbital["label"], n=orbital["n"], l=orbital["l"], z_eff=orbital["z_eff"],
             radial_nodes=orbital["radial_nodes"], orbital_names=orbital["orbital_names"],
-            occupation=orbital["occupation"],
+            occupation=orbital["occupation"], phase=orbital.get("phase", []),
+            phase_name=orbital.get("phase_name", ""),
         ))
 
     for step in ev.calculations:
@@ -1175,22 +1177,32 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
                 try:
                     events += self._apply(session, action)
                 except Exception as error:  # la session doit survivre a toute action
-                    import traceback
                     traceback.print_exc()
                     target = session.reactor
                     if target is not None and hasattr(target, 'error'):
                         target.error = f'Erreur interne pendant {Action.ActionType.Name(action.type)} : {error}'
                 last_action = Action.ActionType.Name(action.type)
-            events += session.advance(now - previous)
+            try:
+                events += session.advance(now - previous)
+            except Exception:
+                traceback.print_exc()
             previous = now
 
             new_key = (session.atom.protons, session.atom.neutrons, session.atom.electrons,
                        session.electron_state, bool(session.excited), session.isomer)
             structure_changed = new_key != key
             if structure_changed:
-                evaluation = session.evaluate(last_action or None)
-                base = build_frame(0, evaluation, self.repository.source)
-                key = new_key
+                try:
+                    evaluation = session.evaluate(last_action or None)
+                    base = build_frame(0, evaluation, self.repository.source)
+                    key = new_key
+                except Exception:
+                    # Un atome que le calcul ne sait pas décrire ne doit pas couper la connexion :
+                    # on garde la dernière description valide, et on réessaiera au prochain changement.
+                    traceback.print_exc()
+                    structure_changed = False
+                    if evaluation is None:
+                        continue
 
             flowing = not session.paused and (session.electron_rate() > 0 or session.nuclear_rate() > 0
                                               or session.photons_in_flight)
@@ -1202,10 +1214,15 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             # La molécule aussi : ses noyaux bougent, ou son calcul avance.
             due = due or (session.molecule is not None and (not session.paused or not session.molecule.pair.ready))
             if pending or events or structure_changed or due:
+                try:
+                    frame = session_frame(tick + 1, session, evaluation, self.repository.source, events,
+                                          last_action, structure_changed, base, sent_table)
+                except Exception:
+                    traceback.print_exc()
+                    continue
                 tick += 1
                 last_sent = now
-                yield session_frame(tick, session, evaluation, self.repository.source, events,
-                                    last_action, structure_changed, base, sent_table)
+                yield frame
                 for event in events:
                     print(f"  t={format_duration(event['time_s'])} [{event['kind']}] {event['title']}")
 
@@ -1233,6 +1250,8 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             return session.load_element(action.value)
         if kind == Action.FIRE_PHOTON:
             return session.fire_photon(action.amount)
+        if kind == Action.FIRE_NEUTRON:
+            return session.fire_neutron()
         if kind == Action.SET_SPEED:
             return session.set_speed(action.value)
         if kind == Action.SET_STEP_MODE:

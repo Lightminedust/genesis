@@ -704,62 +704,62 @@ public final class GenesisMascot {
         switch (e.getKind()) {
             case "emitted" -> {
                 m = Mood.HAPPY;
-                sentence = "L'atome vient d'émettre de la lumière" + photon + ".\n"
-                        + "Pourquoi : son électron était perché sur un niveau d'énergie trop haut pour y rester. En redescendant, "
-                        + "il a rendu la différence d'énergie sous la forme d'un grain de lumière, un photon.\n"
-                        + "À retenir : chaque élément rend toujours les mêmes couleurs. C'est sa signature.";
+                sentence = I18n.text("L'atome vient d'émettre de la lumière") + photon + ".\n"
+                        + I18n.text("Pourquoi : son électron était perché sur un niveau d'énergie trop haut pour y rester. En redescendant, ")
+                        + I18n.text("il a rendu la différence d'énergie sous la forme d'un grain de lumière, un photon.\n")
+                        + I18n.text("À retenir : chaque élément rend toujours les mêmes couleurs. C'est sa signature.");
             }
             case "absorbed" -> {
                 m = Mood.EXCITED;
-                sentence = "L'atome a avalé ton photon" + photon + ".\n"
-                        + "Pourquoi : un électron ne peut prendre que des quantités d'énergie bien précises. Celle de ce photon "
-                        + "valait exactement l'écart entre deux de ses niveaux.\n"
-                        + "Et maintenant : l'électron est monté d'un étage. Il n'y restera pas : il va redescendre en rendant cette lumière.";
+                sentence = I18n.text("L'atome a avalé ton photon") + photon + ".\n"
+                        + I18n.text("Pourquoi : un électron ne peut prendre que des quantités d'énergie bien précises. Celle de ce photon ")
+                        + I18n.text("valait exactement l'écart entre deux de ses niveaux.\n")
+                        + I18n.text("Et maintenant : l'électron est monté d'un étage. Il n'y restera pas : il va redescendre en rendant cette lumière.");
             }
             case "passed" -> {
                 m = Mood.CURIOUS;
-                sentence = "Le photon a traversé l'atome sans rien lui faire" + photon + ".\n"
-                        + "Pourquoi : son énergie ne correspond à aucun saut possible pour l'électron. L'atome ne peut pas en prendre "
-                        + "seulement un morceau : c'est tout ou rien.\n"
-                        + "Essaie : dans l'onglet Lumière, clique une raie marquée ▲. Ce sont les énergies que cet atome accepte.";
+                sentence = I18n.text("Le photon a traversé l'atome sans rien lui faire") + photon + ".\n"
+                        + I18n.text("Pourquoi : son énergie ne correspond à aucun saut possible pour l'électron. L'atome ne peut pas en prendre ")
+                        + I18n.text("seulement un morceau : c'est tout ou rien.\n")
+                        + I18n.text("Essaie : dans l'onglet Lumière, clique une raie marquée ▲. Ce sont les énergies que cet atome accepte.");
             }
             case "photo_ionized" -> {
                 m = Mood.EXCITED;
-                sentence = "Le photon a arraché un électron à l'atome" + photon + ".\n"
-                        + "Pourquoi : il apportait plus d'énergie qu'il n'en faut pour retenir cet électron. Le surplus"
+                sentence = I18n.text("Le photon a arraché un électron à l'atome") + photon + ".\n"
+                        + I18n.text("Pourquoi : il apportait plus d'énergie qu'il n'en faut pour retenir cet électron. Le surplus")
                         + (e.getKineticEv() > 0 ? String.format(I18n.locale(), " (%.2f eV)", e.getKineticEv()) : "")
-                        + " est parti en vitesse pour l'électron.\n"
-                        + "Et maintenant : l'atome a un électron de moins que de protons. Il est chargé positivement : c'est un ion.";
+                        + I18n.text(" est parti en vitesse pour l'électron.\n")
+                        + I18n.text("Et maintenant : l'atome a un électron de moins que de protons. Il est chargé positivement : c'est un ion.");
             }
             case "ionized" -> {
                 m = Mood.CURIOUS;
-                sentence = "Tu as retiré un électron à l'atome.\n"
-                        + "En clair : il a maintenant plus de protons (+) que d'électrons (−). C'est un ion positif, et les électrons "
-                        + "qui restent sont tenus un peu plus fort.";
+                sentence = I18n.text("Tu as retiré un électron à l'atome.\n")
+                        + I18n.text("En clair : il a maintenant plus de protons (+) que d'électrons (−). C'est un ion positif, et les électrons ")
+                        + I18n.text("qui restent sont tenus un peu plus fort.");
             }
             case "excited" -> {
                 m = Mood.EXCITED;
-                sentence = "Un choc a donné de l'énergie à l'atome : son électron est monté sur un niveau plus haut.\n"
-                        + "Pourquoi : dans une flamme, les atomes se cognent sans cesse, et un choc assez fort suffit.\n"
-                        + "Et maintenant : l'électron va redescendre en émettant de la lumière. C'est ce qui colore les flammes.";
+                sentence = I18n.text("Un choc a donné de l'énergie à l'atome : son électron est monté sur un niveau plus haut.\n")
+                        + I18n.text("Pourquoi : dans une flamme, les atomes se cognent sans cesse, et un choc assez fort suffit.\n")
+                        + I18n.text("Et maintenant : l'électron va redescendre en émettant de la lumière. C'est ce qui colore les flammes.");
             }
             case "captured" -> {
                 m = Mood.HAPPY;
-                sentence = "L'atome a capturé un électron.\n"
-                        + "Pourquoi : son noyau, chargé positivement, attire les électrons, et il restait une place libre sur ses couches.\n"
-                        + "Et maintenant : en s'installant, l'électron perd de l'énergie, qui repart sous forme de lumière.";
+                sentence = I18n.text("L'atome a capturé un électron.\n")
+                        + I18n.text("Pourquoi : son noyau, chargé positivement, attire les électrons, et il restait une place libre sur ses couches.\n")
+                        + I18n.text("Et maintenant : en s'installant, l'électron perd de l'énergie, qui repart sous forme de lumière.");
             }
             case "rejected" -> {
                 m = Mood.CURIOUS;
-                sentence = "L'atome n'a pas gardé cet électron.\n"
-                        + "Pourquoi : " + (detail.isEmpty() ? "son noyau ne peut pas retenir un électron de plus. Les électrons déjà là le repoussent "
-                        + "plus fort que le noyau ne l'attire." : detail);
+                sentence = I18n.text("L'atome n'a pas gardé cet électron.\n")
+                        + "Pourquoi : " + (detail.isEmpty() ? I18n.text("son noyau ne peut pas retenir un électron de plus. Les électrons déjà là le repoussent ")
+                        + I18n.text("plus fort que le noyau ne l'attire.") : detail);
             }
             case "decay" -> {
                 m = Mood.EXCITED;
                 String what = switch (e.getDecayMode()) {
                     case "alpha" -> "Il a éjecté un petit paquet de 2 protons et 2 neutrons (une particule α). Avec 2 protons de moins, "
-                            + "ce n'est plus le même élément.";
+                            + I18n.text("ce n'est plus le même élément.");
                     case "beta-" -> "Un de ses neutrons s'est changé en proton, en éjectant un électron. Un proton de plus : c'est l'élément suivant du tableau.";
                     case "beta+" -> "Un de ses protons s'est changé en neutron, en éjectant un positon. Un proton de moins : c'est l'élément précédent du tableau.";
                     case "CE" -> "Un de ses protons a avalé un électron du cortège et s'est changé en neutron. Un proton de moins : c'est l'élément précédent.";
@@ -767,16 +767,16 @@ public final class GenesisMascot {
                     case "SF" -> "Il s'est cassé en deux noyaux plus petits : c'est une fission.";
                     default -> "Il a éjecté une particule pour se rapprocher d'un équilibre.";
                 };
-                sentence = "Le noyau vient de se transformer : " + title + ".\n"
-                        + "Pourquoi : ce noyau n'est pas stable. Il finit toujours par changer, à un moment que seul le hasard décide ; "
-                        + "la demi-vie dit juste combien de temps il faut attendre en moyenne.\n"
+                sentence = I18n.text("Le noyau vient de se transformer : ") + title + ".\n"
+                        + I18n.text("Pourquoi : ce noyau n'est pas stable. Il finit toujours par changer, à un moment que seul le hasard décide ; ")
+                        + I18n.text("la demi-vie dit juste combien de temps il faut attendre en moyenne.\n")
                         + "En clair : " + what;
             }
             case "nucleon" -> {
                 m = Mood.HAPPY;
-                sentence = "Tu as changé le noyau : " + title + ".\n"
-                        + "À retenir : le nombre de protons décide de l'élément. Le nombre de neutrons décide de l'isotope, "
-                        + "et si le noyau tiendra ou finira par se désintégrer (regarde la timeline en bas).";
+                sentence = I18n.text("Tu as changé le noyau : ") + title + ".\n"
+                        + I18n.text("À retenir : le nombre de protons décide de l'élément. Le nombre de neutrons décide de l'isotope, ")
+                        + I18n.text("et si le noyau tiendra ou finira par se désintégrer (regarde la timeline en bas).");
             }
             case "structure" -> {
                 m = Mood.HAPPY;
@@ -785,12 +785,12 @@ public final class GenesisMascot {
             default -> {
                 m = Mood.CURIOUS;
                 if (title.startsWith("Saut dans le temps")) {
-                    sentence = "J'ai fait avancer le temps jusqu'au prochain événement (" + title.replace("Saut dans le temps : ", "") + ").\n"
-                            + "Pourquoi : rien ne se passait avant. L'attente est tirée au hasard, d'après les durées de vie.";
+                    sentence = I18n.text("J'ai fait avancer le temps jusqu'au prochain événement (") + title.replace("Saut dans le temps : ", "") + ").\n"
+                            + I18n.text("Pourquoi : rien ne se passait avant. L'attente est tirée au hasard, d'après les durées de vie.");
                 } else if (title.startsWith("Rien ne peut arriver")) {
-                    sentence = "Rien ne peut arriver à cet atome tout seul.\n"
-                            + "Pourquoi : son électron est déjà au plus bas, et son noyau est stable. Il restera tel quel pour toujours, "
-                            + "sauf si tu l'éclaires ou si tu le modifies.";
+                    sentence = I18n.text("Rien ne peut arriver à cet atome tout seul.\n")
+                            + I18n.text("Pourquoi : son électron est déjà au plus bas, et son noyau est stable. Il restera tel quel pour toujours, ")
+                            + I18n.text("sauf si tu l'éclaires ou si tu le modifies.");
                 } else {
                     sentence = title + "." + (detail.isEmpty() ? "" : "\nEn clair : " + detail);
                 }

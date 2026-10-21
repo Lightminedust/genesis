@@ -8,6 +8,7 @@ import com.studio.genesis.grpc.NuclearStatus;
 import com.studio.genesis.grpc.NuclearTerm;
 import com.studio.genesis.grpc.Nucleon;
 import com.studio.genesis.grpc.ParticleInfo;
+import com.studio.genesis.grpc.Shell;
 import com.studio.genesis.grpc.SimEvent;
 import com.studio.genesis.grpc.Subshell;
 import com.studio.genesis.grpc.UniverseFrame;
@@ -170,6 +171,24 @@ public class SimCanvas {
     private Boolean panelWanted;        // panneau ouvert ou replié (null : selon la largeur)
     private boolean shellsExpanded;     // toutes les sous-couches pleines dans la carte
     private double[] panelChip;         // le bouton du panneau replié
+    private boolean valenceOnly;        // sous-couches pleines masquées
+    /** La vue « Bohr » : l'image historique des anneaux, à la place du nuage (le nombre d'électrons vient du moteur). */
+    private final BohrModel bohr = new BohrModel();
+    private boolean bohrMode;
+    private String bohrHint;            // la couche ou le cœur survolé, en vue de Bohr
+    private double bohrSize;            // rayon du cercle externe de la vue de Bohr (px)
+    private final java.util.Set<String> tagged = new java.util.HashSet<>();   // étiquettes déjà posées dans cette image
+    /** Un électron vient d'être refusé : la case suivante clignote en rouge dans la carte des couches. */
+    private double refusedAge = Double.MAX_VALUE;
+    private String refusedReason = "";
+    /** Frames dont la particule entrante est déjà partie (announce) : à l'application, seul l'impact reste à montrer. */
+    private final java.util.Set<UniverseFrame> announced =
+            java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
+    private boolean arrivedEarly;
+    /** Durée du vol d'un nucléon, puis d'un électron capturé, jusqu'à l'atome (s, temps réel). */
+    public static final double NUCLEON_FLIGHT_S = 0.85;
+    public static final double ELECTRON_FLIGHT_S = 1.0;
+    private int hiddenCore;             // électrons des sous-couches masquées
     private double[] panelClose;        // le bouton qui replie le panneau
     private double[] shellsToggle;      // la ligne « sous-couches pleines »
 
@@ -198,6 +217,7 @@ public class SimCanvas {
     /** Un objet animé, en pixels relatifs au noyau. */
     private static final class Anim {
         String kind;               // photon, particle, electron, ring
+        String hint;               // le détail complet, montré au survol (la scène ne garde qu'une étiquette courte)
         String key = "";           // fiche de particule associée
         double age;
         double delay;
@@ -322,6 +342,26 @@ public class SimCanvas {
         return photons3d.getNode();
     }
 
+    /** Pour les aperçus : ouvrir le panneau de droite et survoler la sous-couche `shell`, ou la pastille « i » si `shell` vaut "i". */
+    public void previewPanel(String shell) {
+        panelWanted = true;
+        mouseX = mouseY = -1;
+        if (shell == null) {
+            return;
+        }
+        if (shell.equals("i")) {
+            mouseX = stageRight() - 28;
+            mouseY = 26;
+            return;
+        }
+        for (Hit hit : hits) {
+            if (hit.key().isEmpty() && hit.hint().startsWith(shell + " :")) {
+                mouseX = hit.x();
+                mouseY = hit.y();
+            }
+        }
+    }
+
     public void setStatusMessage(String message) {
         statusMessage = message;
     }
@@ -380,7 +420,55 @@ public class SimCanvas {
     // =================================================================
     // Frames et événements
     // =================================================================
+    /** Une particule entrante (proton, neutron, électron capturé) : faut-il le dire de l'événement ? */
+    private static boolean incomingNucleon(SimEvent event) {
+        return event.getKind().equals("nucleon") && !event.getTitle().contains("quitte")
+                && (event.getParticle().equals("proton") || event.getParticle().equals("neutron"));
+    }
+
+    /**
+     * Une frame vient d'arriver : si elle annonce une particule qui entre dans l'atome, la particule part maintenant, et
+     * la frame (nouvel élément, nouveaux compteurs) ne s'appliquera qu'à l'impact. Rend la durée du vol, 0 s'il n'y en a pas.
+     */
+    public double announce(UniverseFrame incoming) {
+        if (frame == null) {
+            return 0;
+        }
+        double flight = 0;
+        // Du bord visible de la scène : on doit voir la particule pendant tout son vol.
+        double reach = Math.min(stageRight(), canvas.getHeight() - FOOTER) * 0.48;
+        for (SimEvent event : incoming.getEventsList()) {
+            double angle = random.nextDouble() * 2 * Math.PI;
+            if (incomingNucleon(event)) {
+                boolean proton = event.getParticle().equals("proton");
+                Anim anim = new Anim();
+                anim.kind = "particle";
+                anim.key = proton ? "proton" : "neutron";
+                anim.color = proton ? Visuals.PROTON : Visuals.NEUTRON;
+                anim.size = 6;
+                anim.duration = NUCLEON_FLIGHT_S;
+                anim.label = proton ? "p⁺" : "n";
+                anim.fromX = reach * Math.cos(angle);
+                anim.fromY = reach * Math.sin(angle);
+                anim.toX = 0;
+                anim.toY = 0;
+                anims.add(anim);
+                flight = Math.max(flight, NUCLEON_FLIGHT_S);
+            } else if (event.getKind().equals("captured")) {
+                double[] target = electronOffset();
+                anims.add(electron(reach * Math.cos(angle), reach * Math.sin(angle), target[0], target[1],
+                        ELECTRON_FLIGHT_S, 0, "e⁻", -1));
+                flight = Math.max(flight, ELECTRON_FLIGHT_S);
+            }
+        }
+        if (flight > 0) {
+            announced.add(incoming);
+        }
+        return flight;
+    }
+
     public void applyFrame(UniverseFrame incoming) {
+        arrivedEarly = announced.remove(incoming);
         boolean first = frame == null;
         frame = incoming;
         statusMessage = null;
@@ -409,17 +497,19 @@ public class SimCanvas {
             // Z change : l'attraction sur tout le cortège change, le nuage se réajuste (rayons de Slater).
             transmutationDetail = (protons != lastProtons && lastProtons >= 0
                     ? "Z : " + lastProtons + " → " + protons + (protons < lastProtons
-                    ? " · moins d'attraction, le nuage gonfle" : " · plus d'attraction, le nuage se resserre")
-                    : "même élément, autre isotope");
+                    ? I18n.text(" · moins d'attraction, le nuage gonfle") : I18n.text(" · plus d'attraction, le nuage se resserre"))
+                    : I18n.text("même élément, autre isotope"));
         }
         lastElement = elementName;
         lastProtons = protons;
         drop.sync(incoming.getNucleonsList(), nuclearRadiusFm());
         String action = incoming.getLastAction();
-        if (first || (incoming.getStructureChanged()
-                && (action.equals("LOAD_ELEMENT") || action.equals("RESET")))) {
+        boolean reload = first || (incoming.getStructureChanged()
+                && (action.equals("LOAD_ELEMENT") || action.equals("RESET")));
+        if (reload) {
             jumpTo(Scale.ATOME);
         }
+        bohr.sync(bohrCounts(), reload);
         if (Double.isNaN(shownRadiusPm)) {
             shownRadiusPm = electronRadiusPm();
         }
@@ -503,7 +593,7 @@ public class SimCanvas {
                 double angle = -Math.PI / 2 + (random.nextDouble() - 0.5) * 2.2;
                 track(photon(origin[0], origin[1], origin[0] + reach * Math.cos(angle),
                         origin[1] + reach * Math.sin(angle), event.getWavelengthNm(), 5.0, delay,
-                        "photon émis · " + wavelengthText(event.getWavelengthNm())), "le photon émis");
+                        I18n.text("photon émis · ") + wavelengthText(event.getWavelengthNm())), "le photon émis");
                 for (float extra : event.getExtraWavelengthsNmList()) {
                     double other = angle + Math.PI * 0.8;
                     anims.add(photon(origin[0], origin[1], origin[0] + reach * Math.cos(other),
@@ -522,15 +612,39 @@ public class SimCanvas {
                 cloud.pulseActor(0.7);
             }
             case "captured" -> {
-                double angle = random.nextDouble() * 2 * Math.PI;
                 double[] target = electronOffset();
-                track(electron(reach * Math.cos(angle), reach * Math.sin(angle), target[0], target[1],
-                        2.4, delay, "e⁻ capturé", -1), "l'électron capturé");
+                if (arrivedEarly) {
+                    flash(target, ELECTRON, 0.5);        // il est déjà arrivé : seul l'accrochage reste à montrer
+                } else {
+                    double angle = random.nextDouble() * 2 * Math.PI;
+                    track(electron(reach * Math.cos(angle), reach * Math.sin(angle), target[0], target[1],
+                            2.4, delay, "e⁻ capturé", -1), "l'électron capturé");
+                }
             }
             case "rejected" -> {
                 double angle = random.nextDouble() * 2 * Math.PI;
-                double outer = Math.max(36, outerRadiusPx() * 1.2);
+                if (event.getParticle().equals("proton")) {
+                    // Un proton refusé (au-delà de Z = 118) : il vient, rebondit, repart.
+                    Anim bounce = new Anim();
+                    bounce.kind = "particle";
+                    bounce.key = "proton";
+                    bounce.color = Visuals.PROTON;
+                    bounce.size = 6;
+                    bounce.duration = 2.2;
+                    bounce.bounceAt = 0.5;
+                    bounce.label = "p⁺ refusé";
+                    bounce.fromX = reach * Math.cos(angle);
+                    bounce.fromY = reach * Math.sin(angle);
+                    anims.add(bounce);
+                    break;
+                }
+                double outer = bohrMode && bohrSize > 0 ? bohrSize * 1.08 : Math.max(36, outerRadiusPx() * 1.2);
                 int count = Math.max(1, event.getCount());
+                if (event.getParticle().equals("electron") && !event.getTitle().contains("s'échappe")
+                        && !event.getTitle().contains("s'échappent")) {
+                    refusedAge = 0;                                  // un électron qu'on voulait ajouter : refusé
+                    refusedReason = event.getTitle();
+                }
                 for (int k = 0; k < count; k++) {
                     double a = angle + k * 0.6;
                     Anim pushed = electron(reach * Math.cos(a), reach * Math.sin(a), outer * Math.cos(a),
@@ -545,6 +659,13 @@ public class SimCanvas {
             case "nucleon" -> {
                 boolean proton = event.getParticle().equals("proton");
                 boolean leaving = event.getTitle().contains("quitte");
+                if (!leaving && arrivedEarly) {
+                    // La particule vient de toucher le noyau : l'impact, et c'est maintenant que l'élément change.
+                    nucleusFlash = 1.0;
+                    nucleusFlashLabel = proton ? "un proton de plus : l'élément change" : "un neutron de plus : un autre isotope";
+                    shockwave(proton ? "alpha" : "impact");
+                    break;
+                }
                 double angle = random.nextDouble() * 2 * Math.PI;
                 Anim anim = new Anim();
                 anim.kind = "particle";
@@ -718,7 +839,7 @@ public class SimCanvas {
         kickY = -Math.sin(angle) * push;
         kickAge = 0;
         transmutationDetail = (transmutationDetail.isEmpty() ? "" : transmutationDetail + " · ")
-                + "recul du noyau : " + Visuals.format(velocity) + " km/s (p = " + Visuals.format(momentum) + " MeV/c)";
+                + I18n.text("recul du noyau : ") + Visuals.format(velocity) + " km/s (p = " + Visuals.format(momentum) + " MeV/c)";
     }
 
     /** L'onde de la désintégration : trois fronts qui s'éloignent du noyau, avec rémanence (visibles à toute vitesse). */
@@ -750,6 +871,10 @@ public class SimCanvas {
             case "alpha" -> "2 protons + 2 neutrons éjectés";
             case "IT" -> "le noyau se désexcite";
             case "SF" -> "le noyau se scinde";
+            case "n_capture" -> "le neutron reste : γ émis";
+            case "n_fission" -> "le neutron fait éclater le noyau";
+            case "n_alpha" -> "neutron absorbé, α éjectée";
+            case "n_proton" -> "neutron absorbé, proton éjecté";
             default -> "un nucléon s'échappe";
         };
         double reach = Math.max(canvas.getWidth(), canvas.getHeight()) * 0.8;
@@ -787,6 +912,13 @@ public class SimCanvas {
                 anim.dashed = true;
                 anim.duration = 4.0;
                 anim.label = anti ? "ν̄ antineutrino : ne touche rien" : "ν neutrino : ne touche rien";
+            } else if (particle.startsWith("fragment")) {
+                // Le fragment léger d'une fission : un noyau entier, lourd et lent, qui part en face du lourd.
+                anim.key = "";
+                anim.color = Color.web("#F59E0B");
+                anim.size = 11;
+                anim.duration = 8.0;
+                anim.label = particle;
             } else if (particle.startsWith("neutron")) {
                 anim.key = "neutron";
                 anim.color = Visuals.NEUTRON;
@@ -975,6 +1107,55 @@ public class SimCanvas {
         return panMode;
     }
 
+    /**
+     * Valence seule : les sous-couches pleines sont masquées. Pleines, elles sont sphériques (théorème d'Unsöld) et
+     * recouvrent la valence ; sans elles, la forme de la sous-couche ouverte (trèfle d, lobes f) se voit en 3D.
+     */
+    public void setValenceOnly(boolean on) {
+        valenceOnly = on;
+        if (frame != null) {
+            cloud.update(cloudShells(), false);
+        }
+    }
+
+    public boolean isValenceOnly() {
+        return valenceOnly;
+    }
+
+    /** Le modèle de Bohr (anneaux, électrons qui tournent) à la place du nuage |ψ|². */
+    public void setBohrMode(boolean on) {
+        bohrMode = on;
+        actor = null;
+    }
+
+    public boolean isBohrMode() {
+        return bohrMode;
+    }
+
+    /** Électrons par couche (K, L, M…) tels que le moteur les décrit, excitation comprise : ce que la vue de Bohr montre. */
+    private int[] bohrCounts() {
+        if (isOneElectron()) {
+            int n = Math.max(1, Math.min(7, principal(frame.getElectronState())));
+            int[] counts = new int[n];
+            counts[n - 1] = 1;
+            return counts;
+        }
+        int size = 0;
+        for (Shell shell : frame.getShellsList()) {
+            if (shell.getElectrons() > 0) size = Math.max(size, shell.getIndex());
+        }
+        int excited = frame.getExcitationLevel();
+        int[] counts = new int[Math.min(7, Math.max(size, excited))];
+        for (Shell shell : frame.getShellsList()) {
+            if (shell.getIndex() >= 1 && shell.getIndex() <= counts.length) counts[shell.getIndex() - 1] = shell.getElectrons();
+        }
+        if (excited > 0 && excited <= counts.length && size > 0 && counts[size - 1] > 0) {
+            counts[size - 1]--;                         // l'électron de valence est monté d'un cran
+            counts[excited - 1]++;
+        }
+        return counts;
+    }
+
     /** La rotation lente de l'atome sur lui-même. */
     public void setAutoSpin(boolean on) {
         idleSpin = on ? IDLE_SPIN : 0;
@@ -1092,6 +1273,8 @@ public class SimCanvas {
             pitchVelocity -= pitchVelocity * relax;
         }
         camera.update();
+        bohr.tick(delta);
+        refusedAge += delta;
         kickAge += delta;
         transmutationAge += delta;
         cloud.tick(delta);
@@ -1189,6 +1372,8 @@ public class SimCanvas {
         Scale scale = scale();
         if (logView) {
             drawGulf(c);
+        } else if (scale == Scale.ATOME && bohrMode) {
+            drawBohr(c);
         } else if (scale == Scale.ATOME) {
             drawElectrons(c);
             drawNucleusPoint(c);
@@ -1248,8 +1433,62 @@ public class SimCanvas {
         // En plongée, la caméra entre dans le nuage : on ne voit plus que la tranche autour du noyau.
         double slab = 1.5 * stageSpan() * mpp() / Visuals.PICOMETRE;
         cloud.draw(gc, camera, c[0], c[1], map, 0, 0, stageRight(), canvas.getHeight() - FOOTER, slab);
-        drawCloudLegend();
         drawCloudLabels(c, map);
+        drawCloudLegend();      // après les étiquettes : la légende ouverte passe devant
+    }
+
+    /** L'atome de Bohr : anneaux 3D, électrons qui tournent, noyau agrandi ; et ce qu'il faut dire de cette image. */
+    private void drawBohr(double[] c) {
+        double size = Math.min(stageRight(), canvas.getHeight() - FOOTER - HEADER) * 0.43;
+        bohrSize = size;
+        // Le vrai noyau (la goutte et ses nucléons, placés par le moteur), agrandi : rien n'est à l'échelle ici.
+        double nucleusPx = Math.max(size * 0.06, Math.min(size * 0.13, size * 0.10 * Math.cbrt(Math.max(1, frame.getAtom().getMassNumber()) / 100.0)));
+        double fit = nuclearRadiusFm() * Visuals.FEMTOMETRE / nucleusPx;
+        BohrModel.Result result = bohr.draw(gc, camera, c[0], c[1], size, nucleusPx, nucleusFlash, valenceOnly,
+                dragging ? -1 : mouseX, mouseY, () -> drawNucleus(c[0], c[1], fmMap(fit), false, true));
+        actor = bohr.actor(size, valenceOnly);
+
+        // La légende, sous l'atome, hors de la scène : une couche par entrée, rien qui flotte sur les électrons.
+        List<String[]> parts = new ArrayList<>();
+        if (result.core() >= 0) {
+            parts.add(new String[]{BohrModel.nobleSymbol(result.core()) + " " + BohrModel.nobleElectrons(result.core()), "#A5B4FC"});
+        }
+        for (BohrModel.Entry entry : result.legend()) {
+            parts.add(new String[]{BohrModel.LETTERS.charAt(entry.shell()) + " " + entry.electrons()
+                    + (entry.condensed() ? " ◌" : ""), Visuals.hex(entry.color())});
+        }
+        gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
+        gc.setTextBaseline(VPos.CENTER);
+        gc.setTextAlign(TextAlignment.LEFT);
+        double width = 0;
+        for (String[] part : parts) width += part[0].length() * 7.4 + 18;
+        double x = c[0] - width / 2;
+        double y = Math.min(canvas.getHeight() - FOOTER - 70, c[1] + size * Math.cos(0.55) + 34);
+        for (String[] part : parts) {
+            gc.setFill(Color.web(part[1]));
+            gc.fillText(part[0], x, y);
+            x += part[0].length() * 7.4 + 18;
+        }
+        gc.setFont(Font.font(UI, 10.5));
+        gc.setFill(MUTED);
+        gc.setTextAlign(TextAlignment.CENTER);
+        if (result.legend().stream().anyMatch(BohrModel.Entry::condensed)) {
+            I18n.fillText(gc, "◌ couche pleine montrée en anneau : survoler pour voir ses électrons", c[0], y + 16);
+        }
+        gc.setTextBaseline(VPos.BASELINE);
+
+        if (result.hovered() == -2) {
+            bohrHint = I18n.text("cœur ") + BohrModel.nobleSymbol(result.core()) + " : " + BohrModel.nobleShells(result.core())
+                    + I18n.text(" · couches pleines, condensées");
+        } else if (result.hovered() >= 0) {
+            int n = result.hovered() + 1;
+            int count = bohr.electrons(result.hovered());
+            bohrHint = I18n.text("couche ") + BohrModel.LETTERS.charAt(result.hovered()) + " (n = " + n + ") : " + count
+                    + I18n.text(count == 1 ? " électron, " : " électrons, ") + 2 * n * n + I18n.text(" au plus (2n²)");
+        } else {
+            bohrHint = null;
+        }
+        drawCloudLegend();
     }
 
     /** Les sous-couches occupées, telles que le moteur les envoie, prêtes pour le nuage 3D. */
@@ -1268,8 +1507,23 @@ public class SimCanvas {
                     n > 1 ? EXCITED : ELECTRON, n + "spdfghi".substring(l, l + 1)));
             return shells;
         }
+        hiddenCore = 0;
+        Subshell last = null;
+        boolean anyOpen = false;
+        for (Subshell subshell : frame.getSubshellsList()) {
+            if (subshell.getElectrons() > 0) {
+                last = subshell;
+                anyOpen |= subshell.getElectrons() < subshell.getCapacity();
+            }
+        }
         for (Subshell subshell : frame.getSubshellsList()) {
             if (subshell.getElectrons() <= 0) {
+                continue;
+            }
+            // Valence seule : on garde les sous-couches ouvertes (ou la dernière, pour un gaz noble).
+            boolean full = subshell.getElectrons() >= subshell.getCapacity();
+            if (valenceOnly && (anyOpen ? full : subshell != last)) {
+                hiddenCore += subshell.getElectrons();
                 continue;
             }
             int[] occupation = subshell.getOccupationList().stream().mapToInt(Integer::intValue).toArray();
@@ -1280,7 +1534,7 @@ public class SimCanvas {
         if (frame.getExcitationLevel() > 0 && frame.getExcitedRadiusPm() > 0) {
             int n = frame.getExcitationLevel();
             shells.add(new OrbitalCloud.Shell(n, 0, 1, frame.getExcitedRadiusPm(), 1, new int[]{1}, false, EXCITED,
-                    n + "s (excité)"));
+                    n + I18n.text("s (excité)")));
         }
         return shells;
     }
@@ -1328,7 +1582,7 @@ public class SimCanvas {
         }
         if (coreElectrons > 0) {
             hits.add(new Hit(c[0], c[1], Math.max(9, coreRadius + 4), "electron", coreElectrons
-                    + " électrons des couches internes : leur nuage serré fait le cœur lumineux (zoome)"));
+                    + I18n.text(" électrons des couches internes : leur nuage serré fait le cœur lumineux (zoome)")));
         }
         int acting = cloud.actorIndex();
         if (acting >= 0) {
@@ -1404,7 +1658,7 @@ public class SimCanvas {
             return shell.label() + " · spin " + (frame.getElectronSpin().startsWith("+") ? "↑" : "↓");
         }
         if (isExcitedLayer(layer)) {
-            return "électron excité · " + shell.label().replace(" (excité)", "");
+            return I18n.text("électron excité · ") + shell.label().replace(" (excité)", "");
         }
         int capacity = 2 * (2 * shell.l() + 1);
         StringBuilder text = new StringBuilder(shell.label() + " · " + shell.electrons() + "/" + capacity);
@@ -1423,14 +1677,14 @@ public class SimCanvas {
         OrbitalCloud.Shell shell = layer.shell;
         int nodes = shell.n() - shell.l() - 1;
         String radial = nodes == 0 ? "aucun nœud radial"
-                : nodes == 1 ? "1 nœud radial (une coquille vide)" : nodes + " nœuds radiaux (coquilles vides)";
+                : nodes == 1 ? "1 nœud radial (une coquille vide)" : nodes + I18n.text(" nœuds radiaux (coquilles vides)");
         if (shell.exact()) {
-            return "électron " + shell.label() + " : |ψ|² exact (Z = " + frame.getAtom().getProtons()
-                    + ") ; m non mesuré, donc toutes les orientations à la fois · " + radial;
+            return I18n.text("électron ") + shell.label() + " : |ψ|² exact (Z = " + frame.getAtom().getProtons()
+                    + I18n.text(") ; m non mesuré, donc toutes les orientations à la fois · ") + radial;
         }
         if (isExcitedLayer(layer)) {
-            return "électron excité (" + shell.label().replace(" (excité)", "")
-                    + ") : il retombera en émettant un photon · " + radial;
+            return I18n.text("électron excité (") + shell.label().replace(" (excité)", "")
+                    + I18n.text(") : il retombera en émettant un photon · ") + radial;
         }
         int capacity = 2 * (2 * shell.l() + 1);
         StringBuilder text = new StringBuilder("nuage " + shell.label() + " · " + shell.electrons() + " e⁻ · ");
@@ -1454,6 +1708,16 @@ public class SimCanvas {
     private void drawCloudLegend() {
         double x = stageRight() - 28;
         double y = 26;
+        gc.setFont(Font.font(UI, 11));
+        gc.setFill(MUTED);
+        gc.setTextAlign(TextAlignment.RIGHT);
+        gc.setTextBaseline(VPos.CENTER);
+        if (bohrMode) {
+            I18n.fillText(gc, "modèle de Bohr (1913) · image historique", x - 20, y + 1);
+            I18n.fillText(gc, "en réalité, pas de trajectoire : le nuage", x - 20, y + 16);
+        } else if (valenceOnly && hiddenCore > 0) {
+            I18n.fillText(gc, I18n.text("valence seule · ") + hiddenCore + I18n.text(" e⁻ de cœur masqués"), x - 20, y + 1);
+        }
         boolean over = Math.hypot(mouseX - x, mouseY - y) < 13;
         gc.setFill(Color.web("#121A2B", over ? 1 : 0.85));
         gc.fillOval(x - 12, y - 12, 24, 24);
@@ -1466,23 +1730,45 @@ public class SimCanvas {
         gc.setTextBaseline(VPos.CENTER);
         I18n.fillText(gc, "i", x, y + 1);
         if (over) {
-            String[] lines = {
+            String[] shown = {
                     "Brouillard : |ψ|², la probabilité de présence des électrons, intégrée le long du regard.",
                     "Une couleur par sous-couche (s bleu, p vert, d orange, f rose), chacune à sa propre échelle.",
                     "Points brefs : positions possibles d'un électron si on le mesurait (tirées selon |ψ|²).",
                     "Glisser : tourner · clic droit ou Maj : déplacer · double-clic : centrer et approcher."};
-            double w = 560;
+            // Ce que le modèle ne sait pas faire, dit franchement.
+            String[] limits = {
+                    "Nuage : orbitales hydrogénoïdes avec la charge effective de Slater. Exact pour un électron seul, "
+                            + "approché au-delà : ni Hartree–Fock, ni effets relativistes (or, mercure, éléments lourds).",
+                    "Énergies d'ionisation et raies : mesurées (NIST) quand elles existent, sinon estimées par Slater.",
+                    "Noyau : masses et désintégrations mesurées (AME2020, NUBASE, ICRP-107) ; formule de Weizsäcker "
+                            + "pour les noyaux jamais observés. La place des nucléons est une image, pas un calcul en couches.",
+                    "Chaque événement est tiré au hasard selon ces probabilités : deux essais ne racontent pas la même histoire."};
+            List<String[]> rows = new ArrayList<>();      // {texte, rôle}
+            for (int i = 0; i < shown.length; i++) {
+                for (String line : wrap(shown[i], 96)) rows.add(new String[]{line, i == 3 ? "muted" : "soft"});
+            }
+            rows.add(new String[]{I18n.text("LIMITES DU MODÈLE"), "title"});
+            for (String limit : limits) {
+                List<String> wrapped = wrap(limit, 92);
+                for (int k = 0; k < wrapped.size(); k++) rows.add(new String[]{(k == 0 ? "· " : "  ") + wrapped.get(k), "soft"});
+            }
+            double w = 590;
             double bx = x - w + 14;
             double by = y + 18;
+            double h = 18 + rows.size() * 17 + 6;
             gc.setFill(Color.web("#0E1524", 0.97));
-            gc.fillRoundRect(bx, by, w, 18 + lines.length * 18, 10, 10);
+            gc.fillRoundRect(bx, by, w, h, 10, 10);
             gc.setStroke(CARD_BORDER);
-            gc.strokeRoundRect(bx, by, w, 18 + lines.length * 18, 10, 10);
-            gc.setFont(Font.font(UI, 11.5));
+            gc.strokeRoundRect(bx, by, w, h, 10, 10);
             gc.setTextAlign(TextAlignment.LEFT);
-            for (int i = 0; i < lines.length; i++) {
-                gc.setFill(i == 3 ? MUTED : SOFT);
-                I18n.fillText(gc, lines[i], bx + 12, by + 18 + i * 18);
+            double row = by + 18;
+            for (String[] line : rows) {
+                boolean title = line[1].equals("title");
+                if (title) row += 6;
+                gc.setFont(title ? Font.font(UI, FontWeight.BOLD, 10.5) : Font.font(UI, 11.5));
+                gc.setFill(title ? FORMULA : line[1].equals("muted") ? MUTED : SOFT);
+                gc.fillText(line[0], bx + 12, row);
+                row += 17;
             }
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -1533,8 +1819,8 @@ public class SimCanvas {
         }
         gc.setFill(unstable() ? Color.web("#FB7185") : Color.web("#FCA5A5"));
         gc.fillOval(c[0] - 2.5, c[1] - 2.5, 5, 5);
-        hits.add(new Hit(c[0], c[1], 6, "", "noyau " + frame.getNucleus().getNuclide()
-                + " : 100 000 fois plus petit que l'atome (voir la loupe)"));
+        hits.add(new Hit(c[0], c[1], 6, "", I18n.text("noyau ") + frame.getNucleus().getNuclide()
+                + I18n.text(" : 100 000 fois plus petit que l'atome (voir la loupe)")));
     }
 
     private boolean unstable() {
@@ -1816,7 +2102,7 @@ public class SimCanvas {
                 smallLabel(px + r + 4, py - r - 2, exchange.name() + "  " + exchange.quarks(), colour);
             }
             hits.add(new Hit(px, py, Math.max(8, r * 1.6), "", exchange.name() + " (" + exchange.quarks()
-                    + ") virtuel : portée ħ/m_π·c = 1,41 fm, durée ≈ 4,7·10⁻²⁴ s"
+                    + I18n.text(") virtuel : portée ħ/m_π·c = 1,41 fm, durée ≈ 4,7·10⁻²⁴ s")
                     + (exchange.charge != 0 ? " · il change l'identité des deux nucléons (p ↔ n)" : "")));
         }
     }
@@ -1960,11 +2246,11 @@ public class SimCanvas {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
         gc.setFill(TEXT);
-        I18n.fillText(gc, "noyau " + frame.getNucleus().getNuclide(), left, c[1] - LOUPE_RADIUS - 10);
+        I18n.fillText(gc, I18n.text("noyau ") + frame.getNucleus().getNuclide(), left, c[1] - LOUPE_RADIUS - 10);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(SOFT);
         I18n.fillText(gc, "grossi " + String.format(Locale.ROOT, "%,d", Math.round(magnification)).replace(',', ' ')
-                + " fois", left, c[1] + LOUPE_RADIUS + 16);
+                + I18n.text(" fois"), left, c[1] + LOUPE_RADIUS + 16);
         gc.setFill(MUTED);
         I18n.fillText(gc, "clic : entrer dans le noyau", left, c[1] + LOUPE_RADIUS + 30);
         if (nucleusFlash > 0 && !nucleusFlashLabel.isEmpty()) {
@@ -1976,6 +2262,7 @@ public class SimCanvas {
 
     // --- Objets animés ------------------------------------------------------
     private void drawAnims(double[] c) {
+        tagged.clear();
         for (Anim anim : anims) {
             if (anim.delay > 0) {
                 continue;
@@ -2039,7 +2326,7 @@ public class SimCanvas {
                 }
             }
             if (!anim.key.isEmpty()) {
-                hits.add(new Hit(x, y, 12, anim.key, anim.label));
+                hits.add(new Hit(x, y, 12, anim.key, anim.hint != null ? anim.hint : anim.label));
             }
         }
     }
@@ -2069,7 +2356,8 @@ public class SimCanvas {
                 text += " · ionisant";
             }
         }
-        tag(x, y + look.amplitude() + 34, text, anim.color, fade);   // sous le paquet : les rubans restent visibles
+        anim.hint = text;                                              // le détail, au survol
+        tag(x, y + look.amplitude() + 34, anim.label, anim.color, fade);
     }
 
     /** L'éclair : une onde lumineuse qui s'étend depuis la région la plus probable de l'orbitale. */
@@ -2133,8 +2421,17 @@ public class SimCanvas {
     }
 
     /** Étiquette d'une particule en mouvement. */
+    /**
+     * L'étiquette d'une particule : courte (ce qui précède le premier « · »), et une seule par sorte à la fois. Le
+     * calcul (énergie, λ, facteur d'échelle) est au survol et dans le journal : la scène reste lisible.
+     */
     private void tag(double x, double y, String text, Color color, double alpha) {
         if (text == null || text.isEmpty() || alpha <= 0.05) {
+            return;
+        }
+        int cut = text.indexOf(" · ");
+        text = cut > 0 ? text.substring(0, cut) : text;
+        if (!tagged.add(text)) {
             return;
         }
         gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 12));
@@ -2199,7 +2496,7 @@ public class SimCanvas {
         I18n.fillText(gc, frame.getAtom().getProtons() + " p⁺   " + frame.getAtom().getNeutrons() + " n   "
                 + frame.getAtom().getElectrons() + " e⁻   ·   " + chargeText
                 + (unstable() ? "   ·   radioactif" : "")
-                + (spin.isEmpty() ? "" : "   ·   spin du noyau " + spin), x, 44);
+                + (spin.isEmpty() ? "" : I18n.text("   ·   spin du noyau ") + spin), x, 44);
 
         gc.setTextBaseline(VPos.BASELINE);
     }
@@ -2227,8 +2524,8 @@ public class SimCanvas {
             I18n.fillText(gc, "⏳ " + hint, 20, top + FOOTER / 2);
         } else {
             gc.setFill(SOFT);
-            I18n.fillText(gc, "Construis un atome, éclaire-le, accélère le temps : les règles décident de ce qui arrive. "
-                    + "Glisser : tourner en 3D · clic droit glissé : déplacer · G : le gouffre des échelles.",
+            I18n.fillText(gc, I18n.text("Construis un atome, éclaire-le, accélère le temps : les règles décident de ce qui arrive. ")
+                    + I18n.text("Glisser : tourner en 3D · clic droit glissé : déplacer · G : le gouffre des échelles."),
                     20, top + FOOTER / 2);
         }
         gc.setTextBaseline(VPos.BASELINE);
@@ -2240,13 +2537,13 @@ public class SimCanvas {
             return "";
         }
         if (frame.getElectronLifetimeS() > 0) {
-            String who = isOneElectron() ? "électron excité (" + frame.getElectronState() + ")" : "atome excité";
-            return who + " · durée de vie " + Visuals.duration(frame.getElectronLifetimeS()) + " → "
+            String who = isOneElectron() ? I18n.text("électron excité (") + frame.getElectronState() + ")" : "atome excité";
+            return who + I18n.text(" · durée de vie ") + Visuals.duration(frame.getElectronLifetimeS()) + " → "
                     + realWait(frame.getElectronLifetimeS() / speed, frame.getPaused());
         }
         NuclearStatus nucleus = frame.getNucleus();
         if (nucleus.getUnstable() && nucleus.getDecayRate() > 0) {
-            return "noyau radioactif · demi-vie " + nucleus.getHalfLife() + " → "
+            return I18n.text("noyau radioactif · demi-vie ") + nucleus.getHalfLife() + " → "
                     + realWait(1 / nucleus.getDecayRate() / speed, frame.getPaused());
         }
         return "";
@@ -2260,9 +2557,9 @@ public class SimCanvas {
             return "imminent à cette vitesse";
         }
         if (realSeconds < 120) {
-            return "≈ " + Visuals.duration(realSeconds) + " d'attente à cette vitesse";
+            return "≈ " + Visuals.duration(realSeconds) + I18n.text(" d'attente à cette vitesse");
         }
-        return "≈ " + Visuals.duration(realSeconds) + " d'attente : accélère le temps ou ⏭";
+        return "≈ " + Visuals.duration(realSeconds) + I18n.text(" d'attente : accélère le temps ou ⏭");
     }
 
     private void drawScaleBar(double height) {
@@ -2343,7 +2640,7 @@ public class SimCanvas {
         drawNucleus(c[0], c[1], fm, false, true);
         double nucleusPx = fm.px(nuclearRadiusFm());
         smallLabel(c[0] + nucleusPx * 0.75 + 6, c[1] + nucleusPx * 0.75 + 14,
-                "noyau " + frame.getNucleus().getNuclide() + " · R = " + Visuals.fixed(nuclearRadiusFm(), 2) + " fm", SOFT);
+                I18n.text("noyau ") + frame.getNucleus().getNuclide() + " · R = " + Visuals.fixed(nuclearRadiusFm(), 2) + " fm", SOFT);
         drawCloudLabels(c, pm);
         if (cloud.layerCount() > 0) {
             // Entre la surface du noyau et le cœur électronique : presque rien. Combien, au juste ?
@@ -2358,8 +2655,8 @@ public class SimCanvas {
             gc.setFont(Font.font(UI, 11));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(FORMULA.deriveColor(0, 1, 1, 0.9));
-            I18n.fillText(gc, "presque vide : " + sci(inside) + " électron, en moyenne,", c[0], c[1] + middle + 4);
-            I18n.fillText(gc, "entre " + Visuals.formatLength(fromPm * Visuals.PICOMETRE) + " et "
+            I18n.fillText(gc, "presque vide : " + sci(inside) + I18n.text(" électron, en moyenne,"), c[0], c[1] + middle + 4);
+            I18n.fillText(gc, I18n.text("entre ") + Visuals.formatLength(fromPm * Visuals.PICOMETRE) + I18n.text(" et ")
                     + Visuals.formatLength(edgePm * Visuals.PICOMETRE), c[0], c[1] + middle + 18);
         }
         drawGulfCard();
@@ -2373,11 +2670,11 @@ public class SimCanvas {
         double top = card(x, y, w, h, "LE GOUFFRE DES ÉCHELLES · vue logarithmique", FORMULA);
         double outerPm = Math.max(1, outerRadiusPm());
         double ratio = outerPm * 1000 / nuclearRadiusFm();
-        wrapped(x + 18, top - 4, w - 36, "Chaque anneau est 10 fois plus loin du noyau que le précédent. "
-                + "En vrai, le nuage (≈ " + Visuals.formatLength(outerPm * Visuals.PICOMETRE) + ") est "
-                + Visuals.significant(ratio) + " fois plus grand que le noyau (" + Visuals.fixed(nuclearRadiusFm(), 1)
-                + " fm) : si le noyau était une bille de 1 cm, le nuage s'étendrait sur " + everyday(ratio * 0.01)
-                + ". Touche G : retour à la vraie échelle.", 11.5, SOFT, 6);
+        wrapped(x + 18, top - 4, w - 36, I18n.text("Chaque anneau est 10 fois plus loin du noyau que le précédent. ")
+                + I18n.text("En vrai, le nuage (≈ ") + Visuals.formatLength(outerPm * Visuals.PICOMETRE) + I18n.text(") est ")
+                + Visuals.significant(ratio) + I18n.text(" fois plus grand que le noyau (") + Visuals.fixed(nuclearRadiusFm(), 1)
+                + I18n.text(" fm) : si le noyau était une bille de 1 cm, le nuage s'étendrait sur ") + everyday(ratio * 0.01)
+                + I18n.text(". Touche G : retour à la vraie échelle."), 11.5, SOFT, 6);
     }
 
     /** Une longueur de tous les jours : cm, m ou km. */
@@ -2435,8 +2732,8 @@ public class SimCanvas {
         }
         double field = stageSpan() * mpp();
         double inside = cloud.electronsWithin(field / 2 / Visuals.PICOMETRE);
-        String text = "plongée · champ de vision " + Visuals.formatLength(field) + " · électrons à moins de "
-                + Visuals.formatLength(field / 2) + " du noyau : " + sci(inside);
+        String text = I18n.text("plongée · champ de vision ") + Visuals.formatLength(field) + I18n.text(" · électrons à moins de ")
+                + Visuals.formatLength(field / 2) + I18n.text(" du noyau : ") + sci(inside);
         gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 12.5));
         double width = text.length() * 6.7 + 28;
         double x = stageCenterX() - width / 2;
@@ -2540,8 +2837,8 @@ public class SimCanvas {
             case ATOME -> {
                 if (frame.getAtom().getElectrons() == 0) {
                     double y = card(x, top, PANEL_WIDTH, 100, "ÉLECTRONS", ELECTRON);
-                    wrapped(x + 18, y, PANEL_WIDTH - 36, "Aucun électron. Ajoute-en un : il sera capturé "
-                            + "si l'ion qui en résulte existe, repoussé sinon.", 12, SOFT, 4);
+                    wrapped(x + 18, y, PANEL_WIDTH - 36, I18n.text("Aucun électron. Ajoute-en un : il sera capturé ")
+                            + I18n.text("si l'ion qui en résulte existe, repoussé sinon."), 12, SOFT, 4);
                 } else if (isOneElectron()) {
                     drawQuantumStateCard(x, top);
                 } else {
@@ -2577,8 +2874,8 @@ public class SimCanvas {
         String spin = frame.getElectronSpin();
         double y = card(x, top, PANEL_WIDTH, 300, "ÉTAT QUANTIQUE DE L'ÉLECTRON", ELECTRON);
         String[][] rows = {
-                {"n = " + n, "couche " + "KLMNOPQ".charAt(Math.min(6, n - 1)) + " : énergie et taille"},
-                {"l = " + l, "orbitale " + letter + " : forme du nuage"},
+                {"n = " + n, "couche " + "KLMNOPQ".charAt(Math.min(6, n - 1)) + I18n.text(" : énergie et taille")},
+                {"l = " + l, I18n.text("orbitale ") + letter + I18n.text(" : forme du nuage")},
                 {"s = 1/2", "spin : l'électron est un fermion"},
                 {"m_s = " + spin, spin.startsWith("+") ? "orientation du spin : ↑" : "orientation du spin : ↓"},
         };
@@ -2610,11 +2907,11 @@ public class SimCanvas {
         y += 18;
         int nodes = n - l - 1;
         y = wrapped(x + 18, y, PANEL_WIDTH - 36, "nuage : |ψ|² exact, " + (nodes == 0 ? "aucun nœud radial"
-                : nodes == 1 ? "1 nœud radial" : nodes + " nœuds radiaux")
-                + " ; m non mesuré : les 2l + 1 orientations à la fois, d'où un nuage sphérique.", 11, SOFT, 3) + 6;
+                : nodes == 1 ? "1 nœud radial" : nodes + I18n.text(" nœuds radiaux"))
+                + I18n.text(" ; m non mesuré : les 2l + 1 orientations à la fois, d'où un nuage sphérique."), 11, SOFT, 3) + 6;
         wrapped(x + 18, y, PANEL_WIDTH - 36, frame.getElectronLifetimeS() > 0
-                ? "Durée de vie de " + state + " : " + Visuals.duration(frame.getElectronLifetimeS())
-                + ". En retombant, il émet un photon (spin 1) : l change de ±1, son spin reste " + spin + "."
+                ? I18n.text("Durée de vie de ") + state + " : " + Visuals.duration(frame.getElectronLifetimeS())
+                + I18n.text(". En retombant, il émet un photon (spin 1) : l change de ±1, son spin reste ") + spin + "."
                 : "État fondamental : il ne peut plus descendre. Seul un photon de la bonne énergie le fera monter.",
                 12, SOFT, 4);
     }
@@ -2656,35 +2953,16 @@ public class SimCanvas {
         }
         List<int[]> shown = rows.subList(hidden, rows.size());
         int lines = shown.size() + (foldable ? 1 : 0);
-        double footer = 100;
+        double footer = 128;
         double available = bottom - top - 44 - footer;
         double rowHeight = clamp(available / Math.max(1, lines), 11, 21);
         double height = 44 + lines * rowHeight + footer;
         double y = card(x, top, PANEL_WIDTH, height, "COUCHES · ORDRE DE REMPLISSAGE · SPINS", ELECTRON);
         double box = Math.min(18, rowHeight - 3);
-        if (foldable) {
-            String text;
-            if (hidden > 0) {
-                int electrons = 0;
-                for (int k = 0; k < hidden; k++) {
-                    electrons += present.get(rows.get(k)[0] + "," + rows.get(k)[1]).getElectrons();
-                }
-                text = "▸ " + label(rows.get(0)) + " → " + label(rows.get(hidden - 1)) + " : " + hidden
-                        + " sous-couches pleines, " + electrons + " e⁻";
-            } else {
-                text = "▾ replier les sous-couches pleines";
-            }
-            boolean over = inside(new double[]{x + 10, y - 2, PANEL_WIDTH - 20, rowHeight}, mouseX, mouseY);
-            gc.setFont(Font.font(UI, Math.min(11, rowHeight - 2)));
-            gc.setFill(over ? TEXT : MUTED);
-            gc.setTextAlign(TextAlignment.LEFT);
-            gc.setTextBaseline(VPos.CENTER);
-            I18n.fillText(gc, text, x + 18, y + box / 2);
-            gc.setTextBaseline(VPos.BASELINE);
-            shellsToggle = new double[]{x + 10, y - 2, PANEL_WIDTH - 20, rowHeight};
-            y += rowHeight;
-        }
-        for (int[] nl : shown) {
+        // Diagramme d'énergie : 1s, la plus basse, en bas ; chaque sous-couche suivante (Klechkowski) au-dessus.
+        List<int[]> upward = new ArrayList<>(shown);
+        java.util.Collections.reverse(upward);
+        for (int[] nl : upward) {
             Subshell subshell = present.get(nl[0] + "," + nl[1]);
             boolean isNext = next != null && nl[0] == next[0] && nl[1] == next[1];
             Color color = Visuals.subshellColor(nl[1]);
@@ -2697,7 +2975,10 @@ public class SimCanvas {
             for (int k = 0; k < orbitals; k++) {
                 double bx = x + 52 + k * (box + 3);
                 int count = subshell != null && k < subshell.getOccupationCount() ? subshell.getOccupation(k) : 0;
-                gc.setStroke(isNext ? FORMULA.deriveColor(0, 1, 1, 0.8) : color.deriveColor(0, 1, 1, 0.45));
+                boolean refused = isNext && refusedAge < 3.5;
+                double blink = refused ? 0.55 + 0.45 * Math.cos(refusedAge * 9) : 0;
+                gc.setStroke(refused ? Color.web("#F87171", 0.5 + 0.5 * blink)
+                        : isNext ? FORMULA.deriveColor(0, 1, 1, 0.8) : color.deriveColor(0, 1, 1, 0.45));
                 gc.setLineWidth(1);
                 gc.strokeRect(bx, y, box, box);
                 gc.setStroke(color);
@@ -2713,14 +2994,68 @@ public class SimCanvas {
             gc.setFill(isNext ? FORMULA : MUTED);
             gc.setTextAlign(TextAlignment.RIGHT);
             String count = subshell == null ? "0/" + 2 * orbitals : subshell.getElectrons() + "/" + subshell.getCapacity();
-            I18n.fillText(gc, isNext ? "prochain e⁻ · " + count : count, x + PANEL_WIDTH - 16, y + box / 2);
+            boolean refusedHere = isNext && refusedAge < 3.5;
+            gc.setFill(refusedHere ? Color.web("#F87171") : isNext ? FORMULA : MUTED);
+            I18n.fillText(gc, refusedHere ? "refusé · " + count : isNext ? "prochain e⁻ · " + count : count,
+                    x + PANEL_WIDTH - 16, y + box / 2);
             gc.setTextBaseline(VPos.BASELINE);
+            hits.add(new Hit(x + 30, y + box / 2, Math.max(9, rowHeight * 0.7), "", klechkowskiHint(nl)));
             y += rowHeight;
         }
+        // Les sous-couches pleines repliées sont les plus profondes : leur ligne va tout en bas.
+        if (foldable) {
+            String text;
+            if (hidden > 0) {
+                int electrons = 0;
+                for (int k = 0; k < hidden; k++) {
+                    electrons += present.get(rows.get(k)[0] + "," + rows.get(k)[1]).getElectrons();
+                }
+                text = "▸ " + label(rows.get(0)) + " → " + label(rows.get(hidden - 1)) + " : " + hidden
+                        + I18n.text(" sous-couches pleines, ") + electrons + " e⁻";
+            } else {
+                text = "▾ replier les sous-couches pleines";
+            }
+            boolean over = inside(new double[]{x + 10, y - 2, PANEL_WIDTH - 20, rowHeight}, mouseX, mouseY);
+            gc.setFont(Font.font(UI, Math.min(11, rowHeight - 2)));
+            gc.setFill(over ? TEXT : MUTED);
+            gc.setTextAlign(TextAlignment.LEFT);
+            gc.setTextBaseline(VPos.CENTER);
+            I18n.fillText(gc, text, x + 18, y + box / 2);
+            gc.setTextBaseline(VPos.BASELINE);
+            shellsToggle = new double[]{x + 10, y - 2, PANEL_WIDTH - 20, rowHeight};
+            y += rowHeight;
+        }
+        if (refusedAge < 3.5) {
+            // La raison du refus, mesurée (affinité électronique) : la couche suivante n'accueille pas cet électron.
+            gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 11));
+            gc.setFill(Color.web("#F87171", Math.min(1, 3.5 - refusedAge)));
+            gc.setTextAlign(TextAlignment.LEFT);
+            I18n.fillText(gc, refusedReason, x + 18, y + 4);
+            y += 14;
+        }
         wrapped(x + 18, y + 14, PANEL_WIDTH - 36,
-                "Flèches = spin de chaque électron : ↑ +½ (jaune), ↓ −½ (rose).  "
-                        + "Pauli : 2 électrons au plus par case, de spins opposés ↑↓.  Hund : une case chacun "
-                        + "d'abord, spins parallèles.  Klechkowski : ordre n + l croissant.", 11, SOFT, 6);
+                I18n.text("Plus haut = plus d'énergie. Aufbau : chaque électron prend la case libre la plus basse ; ")
+                        + I18n.text("Klechkowski donne l'ordre, n + l croissant (4s avant 3d). Pauli : 2 électrons au plus ")
+                        + I18n.text("par case, spins opposés ↑↓. Hund : une case chacun d'abord, spins parallèles. ")
+                        + I18n.text("Survoler une sous-couche : pourquoi elle vient là."), 11, SOFT, 7);
+    }
+
+    /** Pourquoi cette sous-couche se remplit à ce rang : la règle de Klechkowski appliquée à elle. */
+    private static String klechkowskiHint(int[] nl) {
+        int index = 0;
+        while (index < KLECHKOWSKI.length && (KLECHKOWSKI[index][0] != nl[0] || KLECHKOWSKI[index][1] != nl[1])) {
+            index++;
+        }
+        String hint = label(nl) + " : n = " + nl[0] + ", l = " + nl[1] + ", n + l = " + (nl[0] + nl[1]) + ". "
+                + I18n.text("Les sous-couches se remplissent par n + l croissant ; à n + l égal, la plus petite n d'abord.");
+        if (index > 0) {
+            hint += I18n.text(" Elle suit ") + label(KLECHKOWSKI[index - 1]);
+            hint += index + 1 < KLECHKOWSKI.length ? I18n.text(" et précède ") + label(KLECHKOWSKI[index + 1]) + "." : ".";
+        }
+        if (nl[1] >= 2) {
+            hint += I18n.text(" La règle a des exceptions mesurées (Cr, Cu, Pd, La, Gd…) : un ou deux électrons y changent de sous-couche (4s → 3d pour Cr et Cu) ; Genesis les applique.");
+        }
+        return hint;
     }
 
     private static String label(int[] nl) {
@@ -2774,8 +3109,8 @@ public class SimCanvas {
         }
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 12));
         gc.setFill(FORMULA);
-        I18n.fillText(gc, "B = " + Visuals.format(total) + " MeV (modèle) · "
-                + Visuals.fixed(total / Math.max(1, frame.getAtom().getMassNumber()), 2) + " MeV/nucléon", x + 18, y + 6);
+        I18n.fillText(gc, "B = " + Visuals.format(total) + I18n.text(" MeV (modèle) · ")
+                + Visuals.fixed(total / Math.max(1, frame.getAtom().getMassNumber()), 2) + I18n.text(" MeV/nucléon"), x + 18, y + 6);
         return top + height;
     }
 
@@ -2791,9 +3126,9 @@ public class SimCanvas {
         double period = quadrupole.periodSeconds();
         String[] lines = {
                 "ħω₂ = ħ√(C₂/B₂) = " + Visuals.fixed(quadrupole.hbarOmegaMev(), 1) + " MeV",
-                "période " + sci(period) + " s",
-                "à l'écran : ralenti ×" + sci(NuclearDrop.QUADRUPOLE_SHOWN_S / period),
-                "β₂ point zéro = " + Visuals.fixed(Math.min(9.99, quadrupole.betaRms()), 2)
+                I18n.text("période ") + sci(period) + " s",
+                I18n.text("à l'écran : ralenti ×") + sci(NuclearDrop.QUADRUPOLE_SHOWN_S / period),
+                I18n.text("β₂ point zéro = ") + Visuals.fixed(Math.min(9.99, quadrupole.betaRms()), 2)
                         + (light ? " (vu " + Visuals.fixed(NuclearDrop.SHOWN_BETA_MAX, 2) + ")" : ""),
                 "pions : " + drop.chargedExchanges() + " p↔n, " + drop.neutralExchanges() + " π⁰",
         };
@@ -2804,8 +3139,8 @@ public class SimCanvas {
             I18n.fillText(gc, line, x + 18, y + 4);
             y += 19;
         }
-        String note = "Les nucléons ne sont pas figés : la surface vibre (Bohr–Mottelson), et chaque pion "
-                + "virtuel (portée 1,41 fm) qui passe d'un proton à un neutron les échange. La charge reste "
+        String note = I18n.text("Les nucléons ne sont pas figés : la surface vibre (Bohr–Mottelson), et chaque pion ")
+                + I18n.text("virtuel (portée 1,41 fm) qui passe d'un proton à un neutron les échange. La charge reste ")
                 + frame.getAtom().getProtons() + ".";
         if (light) {
             note += " Ici la goutte (écoulement irrotationnel) prédit β > 0,3 : hors de son domaine, amplitude bornée.";
@@ -2826,8 +3161,8 @@ public class SimCanvas {
         int n = frame.getAtom().getNeutrons();
         String[] lines = {
                 z + " × m(¹H)  +  " + n + " × m(n)",
-                "  = " + Visuals.fixed(nucleus.getNucleonsMassU(), 6) + " u  (séparés)",
-                "masse mesurée : " + Visuals.fixed(nucleus.getAtomicMassU(), 6) + " u",
+                "  = " + Visuals.fixed(nucleus.getNucleonsMassU(), 6) + I18n.text(" u  (séparés)"),
+                I18n.text("masse mesurée : ") + Visuals.fixed(nucleus.getAtomicMassU(), 6) + " u",
                 "Δm = " + Visuals.fixed(nucleus.getNucleonsMassU() - nucleus.getAtomicMassU(), 6) + " u",
                 "B = Δm × 931,494 = " + Visuals.format(nucleus.getBindingMeasuredMev()) + " MeV",
         };
@@ -2838,7 +3173,7 @@ public class SimCanvas {
             I18n.fillText(gc, lines[i], x + 18, y + 4);
             y += 19;
         }
-        wrapped(x + 18, y + 4, PANEL_WIDTH - 36, "Cette masse disparue est l'énergie qui tient le noyau "
+        wrapped(x + 18, y + 4, PANEL_WIDTH - 36, I18n.text("Cette masse disparue est l'énergie qui tient le noyau ")
                 + "(masses AME2020).", 11, SOFT, 2);
     }
 
@@ -2868,9 +3203,9 @@ public class SimCanvas {
             I18n.fillText(gc, (proton ? "proton" : "neutron") + " = " + Visuals.format(self.getMassMev()) + " MeV", x + 18, y + 6);
             y += 28;
         }
-        wrapped(x + 18, y, PANEL_WIDTH - 36, "99 % de la masse vient de l'énergie des gluons qui lient "
-                + "les quarks (E = mc²). Les gluons échangent sans cesse la couleur : aucun quark n'est "
-                + "jamais isolé.", 11, SOFT, 5);
+        wrapped(x + 18, y, PANEL_WIDTH - 36, I18n.text("99 % de la masse vient de l'énergie des gluons qui lient ")
+                + I18n.text("les quarks (E = mc²). Les gluons échangent sans cesse la couleur : aucun quark n'est ")
+                + I18n.text("jamais isolé."), 11, SOFT, 5);
     }
 
     private double wrapped(double x, double y, double width, String text, double size, Color color, int maxLines) {
@@ -2917,7 +3252,7 @@ public class SimCanvas {
         }
         if (isOneElectron() || frame.getExcitationLevel() > 0) {
             double[] e = electronOffset();
-            calloutTarget = isOneElectron() ? "l'électron (" + frame.getElectronState() + ")" : "l'électron excité";
+            calloutTarget = isOneElectron() ? I18n.text("l'électron (") + frame.getElectronState() + ")" : "l'électron excité";
             return new double[]{c[0] + e[0], c[1] + e[1], 16};
         }
         if (valenceActor != null) {
@@ -2925,9 +3260,9 @@ public class SimCanvas {
                 case "captured" -> "l'électron capturé (" + valenceLabel + ")";
                 case "emitted" -> callout.getTitle().startsWith("Photon d'attachement")
                         || callout.getTitle().startsWith("Rayonnement")
-                        ? "l'électron qui vient de se lier (" + valenceLabel + ")"
-                        : "l'électron retombé (" + valenceLabel + ")";
-                default -> "un électron de valence (" + valenceLabel + ")";
+                        ? I18n.text("l'électron qui vient de se lier (") + valenceLabel + ")"
+                        : I18n.text("l'électron retombé (") + valenceLabel + ")";
+                default -> I18n.text("un électron de valence (") + valenceLabel + ")";
             };
             return new double[]{valenceActor[0], valenceActor[1], 16};
         }
@@ -3075,7 +3410,7 @@ public class SimCanvas {
             case "captured" -> "CAPTURE D'UN ÉLECTRON";
             case "rejected" -> "ÉLECTRON REPOUSSÉ";
             case "excited" -> "EXCITATION";
-            case "decay" -> "DÉSINTÉGRATION";
+            case "decay" -> event.getDecayMode().startsWith("n_") ? "RÉACTION NUCLÉAIRE" : "DÉSINTÉGRATION";
             case "nucleon" -> "NOYAU MODIFIÉ";
             case "structure" -> "ATOME";
             default -> "INFORMATION";
@@ -3117,7 +3452,7 @@ public class SimCanvas {
         wrapped(box[0] + 18, y + 4, box[2] - 36, info.getNote(), 11, SOFT, 3);
         gc.setFont(Font.font(UI, 9));
         gc.setFill(MUTED);
-        I18n.fillText(gc, "source : " + info.getSource() + " · clic pour fermer", box[0] + 18, box[1] + box[3] - 10);
+        I18n.fillText(gc, "source : " + info.getSource() + I18n.text(" · clic pour fermer"), box[0] + 18, box[1] + box[3] - 10);
     }
 
     // --- Survol ------------------------------------------------------------
@@ -3141,35 +3476,46 @@ public class SimCanvas {
         String text = null;
         if (loupeHit(mouseX, mouseY)) {
             NuclearStatus nucleus = frame.getNucleus();
-            text = "Noyau " + nucleus.getNuclide() + (nucleus.getUnstable() ? " · demi-vie " + nucleus.getHalfLife() : " · stable")
-                    + " · cliquer pour y entrer";
+            text = I18n.text("Noyau ") + nucleus.getNuclide() + (nucleus.getUnstable() ? " · demi-vie " + nucleus.getHalfLife() : " · stable")
+                    + I18n.text(" · cliquer pour y entrer");
         } else {
             Hit hit = hitAt(mouseX, mouseY);
             if (hit != null) {
                 text = hit.hint() + (hit.key().isEmpty() ? "" : "  ·  clic : fiche");
-            } else if (scale() == Scale.ATOME && mouseX < stageRight()) {
+            } else if (bohrMode && bohrHint != null && scale() == Scale.ATOME) {
+                text = bohrHint;
+            } else if (scale() == Scale.ATOME && !bohrMode && mouseX < stageRight()) {
                 int owner = cloud.ownerAt(mouseX, mouseY);
                 if (owner >= 0 && owner < cloud.layerCount()) {
-                    text = "ici, surtout : " + cloudHint(owner);
+                    text = I18n.text("ici, surtout : ") + cloudHint(owner);
                 }
             }
         }
         if (text == null || text.isEmpty()) {
             return;
         }
+        // Mesurée sur le texte affiché (traduit), coupée en lignes : une explication longue reste lisible.
+        List<String> lines = wrap(text, 70);
+        int longest = 0;
+        for (String line : lines) {
+            longest = Math.max(longest, line.length());
+        }
         gc.setFont(Font.font(UI, 12));
-        double width = text.length() * 6.3 + 20;
-        double x = Math.min(mouseX + 16, canvas.getWidth() - width - 8);
-        double y = Math.min(mouseY + 18, canvas.getHeight() - FOOTER - 30);
+        double width = longest * 6.3 + 20;
+        double height = 8 + 16 * lines.size();
+        double x = Math.max(8, Math.min(mouseX + 16, canvas.getWidth() - width - 8));
+        double y = Math.min(mouseY + 18, canvas.getHeight() - FOOTER - height - 6);
         gc.setFill(Color.web("#0F172A", 0.96));
-        gc.fillRoundRect(x, y, width, 24, 10, 10);
+        gc.fillRoundRect(x, y, width, height, 10, 10);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, width, 24, 10, 10);
+        gc.strokeRoundRect(x, y, width, height, 10, 10);
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        I18n.fillText(gc, text, x + 10, y + 12);
+        for (int i = 0; i < lines.size(); i++) {
+            gc.fillText(lines.get(i), x + 10, y + 12 + 16 * i);
+        }
         gc.setTextBaseline(VPos.BASELINE);
     }
 
@@ -3189,7 +3535,8 @@ public class SimCanvas {
     public static List<String> wrap(String text, int width) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        for (String word : text.split(" ")) {
+        // Traduire la phrase entière avant de la couper : une ligne coupée ne se traduit plus.
+        for (String word : I18n.text(text).split(" ")) {
             if (word.isEmpty()) {
                 continue;
             }

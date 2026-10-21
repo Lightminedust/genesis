@@ -421,7 +421,7 @@ public class MoleculeCanvas {
 
     /** E(R) : le puits (ou son absence), où sont les noyaux, et leur énergie totale. */
     private void drawCurve(double x, double y, double w, double h) {
-        double top = card(x, y, w, h, "ÉNERGIE E(R) · calculée à " + points.size() + " distances", FORMULA);
+        double top = card(x, y, w, h, I18n.text("ÉNERGIE E(R) · calculée à ") + points.size() + " distances", FORMULA);
         double left = x + 44;
         double right = x + w - 16;
         double bottom = y + h - 54;
@@ -477,11 +477,11 @@ public class MoleculeCanvas {
         gc.setFont(Font.font(MONO, 11));
         gc.setFill(TEXT);
         I18n.fillText(gc, state.getBound()
-                ? "puits De = " + Visuals.fixed(state.getDeEv(), 2) + " eV à Re = " + Visuals.fixed(state.getReAngstrom(), 3) + " Å"
+                ? "puits De = " + Visuals.fixed(state.getDeEv(), 2) + I18n.text(" eV à Re = ") + Visuals.fixed(state.getReAngstrom(), 3) + " Å"
                 : "aucun puits : pas de liaison", x + 18, bottom + 22);
         gc.setFill(state.getHeld() ? SOFT : total < 0 ? Color.web("#34D399") : Color.web("#FB923C"));
         I18n.fillText(gc, state.getHeld() ? "noyaux tenus : lâche-les pour voir"
-                : "énergie totale " + Visuals.signed(total, 2) + " eV : " + (total < 0 ? "liés, ils vibrent" : "libres"),
+                : I18n.text("énergie totale ") + Visuals.signed(total, 2) + " eV : " + (total < 0 ? "liés, ils vibrent" : "libres"),
                 x + 18, bottom + 38);
     }
 
@@ -576,7 +576,7 @@ public class MoleculeCanvas {
                 : state.getSymbolB() + " → " + state.getSymbolA()), x + 18, bottom + 40);
         gc.setFill(MUTED);
         I18n.fillText(gc, "Δχ de Pauling = " + Visuals.fixed(Math.abs(state.getChiA() - state.getChiB()), 2)
-                + " : la règle de manuel, pour comparer au calcul", x + 18, bottom + 56);
+                + I18n.text(" : la règle de manuel, pour comparer au calcul"), x + 18, bottom + 56);
     }
 
     private void drawLevels(List<Level> levels, double cx, double span, java.util.function.DoubleUnaryOperator py,
@@ -631,7 +631,7 @@ public class MoleculeCanvas {
         gc.setTextBaseline(VPos.TOP);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
-        I18n.fillText(gc, "Molécule · " + state.getNameA() + " + " + state.getNameB(), 22, 14);
+        I18n.fillText(gc, I18n.text("Molécule · ") + state.getNameA() + " + " + state.getNameB(), 22, 14);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
         I18n.fillText(gc, state.getMethod(), 22, 44);
@@ -643,7 +643,7 @@ public class MoleculeCanvas {
             if (state.getPeriodFs() > 0) {
                 gc.setFont(Font.font(UI, 13));
                 gc.setFill(SOFT);
-                I18n.fillText(gc, "une vibration = " + Visuals.fixed(state.getPeriodFs(), 1) + " fs, montrée en 3 s",
+                I18n.fillText(gc, I18n.text("une vibration = ") + Visuals.fixed(state.getPeriodFs(), 1) + I18n.text(" fs, montrée en 3 s"),
                         stageRight() - 18, 44);
             }
         }
@@ -711,8 +711,8 @@ public class MoleculeCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        I18n.fillText(gc, "Attrape un noyau, rapproche-le ou éloigne-le, puis lâche-le : la vraie force quantique "
-                + "décide · D : densité ou Δρ", 20, top + FOOTER / 2);
+        I18n.fillText(gc, I18n.text("Attrape un noyau, rapproche-le ou éloigne-le, puis lâche-le : la vraie force quantique ")
+                + I18n.text("décide · D : densité ou Δρ"), 20, top + FOOTER / 2);
         gc.setTextBaseline(VPos.BASELINE);
     }
 }

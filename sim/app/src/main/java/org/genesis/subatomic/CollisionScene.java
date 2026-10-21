@@ -310,65 +310,65 @@ public final class CollisionScene {
                     "", 4.0, filmEnd(), filmEnd(), 0, stepsMatching("bilan")));
             return;
         }
-        String lens = main.warp ? "Toute énergie courbe l'espace : chacun déforme le fond autour de lui (lentille d'Einstein, θ_E² ∝ E, "
-                + "amplifiée " + lensGain() + " fois — sinon invisible)." : "";
+        String lens = main.warp ? I18n.text("Toute énergie courbe l'espace : chacun déforme le fond autour de lui (lentille d'Einstein, θ_E² ∝ E, ")
+                + I18n.text("amplifiée ") + lensGain() + I18n.text(" fois — sinon invisible).") : "";
         // l'angle : tiré par la physique, ou choisi au curseur — on le dit
         String why = collision.getAngleSampled()
-                ? String.format(I18n.locale(), "Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°, "
+                ? String.format(I18n.locale(), I18n.text("Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°, ")
                         + "%.1f %% de plus de 30°. ", collision.getAngleMedianDeg(), 100 * collision.getAngleBeyond30())
-                : String.format(I18n.locale(), "Angle de %.0f° fixé au curseur : on regarde ce qui arrive aux tirs qui dévient là. ",
+                : String.format(I18n.locale(), I18n.text("Angle de %.0f° fixé au curseur : on regarde ce qui arrive aux tirs qui dévient là. "),
                         collision.getAngleDeg());
         if (weak()) {
             beats.add(new Beat("approach", capital(beamName()) + " arrive",
-                    capital(beamName()) + " de " + e + " MeV file vers le " + target + ". Sans charge, rien ne le dévie ; il n'avait que "
-                            + DocStyle.number(collision.getInteractionProbability()) + " chance d'interagir en traversant le " + target
-                            + " — voici ce cas rare. " + lens,
+                    capital(beamName()) + " de " + e + I18n.text(" MeV file vers le ") + target + I18n.text(". Sans charge, rien ne le dévie ; il n'avait que ")
+                            + DocStyle.number(collision.getInteractionProbability()) + I18n.text(" chance d'interagir en traversant le ") + target
+                            + I18n.text(" — voici ce cas rare. ") + lens,
                     "Le W a une portée de ħc/M_W = 0,0025 fm : pour interagir, il doit passer sur un quark. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm).", 3.4, -pre * .6, 0, 0,
                     stepsMatching("faisceau")));
-            beats.add(new Beat("photon", "Il échange un " + collision.getBoson() + " virtuel",
-                    "En émettant un " + collision.getBoson() + ", " + beamName() + " devient un " + outLabel() + " et cède ν = "
-                            + DocStyle.number(collision.getNuMev()) + " MeV et q = " + DocStyle.number(collision.getQMev())
-                            + " MeV/c : ce recul le dévie de " + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg())
-                            + ". Le " + outLabel() + " repart avec " + ep + " MeV.",
-                    why + "Le " + collision.getBoson() + " emporte une charge : il change la saveur du quark qu'il touche.", 3.6, 0, 0, 0,
+            beats.add(new Beat("photon", I18n.text("Il échange un ") + collision.getBoson() + " virtuel",
+                    I18n.text("En émettant un ") + collision.getBoson() + ", " + beamName() + I18n.text(" devient un ") + outLabel() + I18n.text(" et cède ν = ")
+                            + DocStyle.number(collision.getNuMev()) + I18n.text(" MeV et q = ") + DocStyle.number(collision.getQMev())
+                            + I18n.text(" MeV/c : ce recul le dévie de ") + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg())
+                            + I18n.text(". Le ") + outLabel() + I18n.text(" repart avec ") + ep + " MeV.",
+                    why + I18n.text("Le ") + collision.getBoson() + I18n.text(" emporte une charge : il change la saveur du quark qu'il touche."), 3.6, 0, 0, 0,
                     stepsMatching("boson", "peut voir", "cas possibles")));
         } else {
             String pull = collision.getProjectileCharge() > 0 ? "le repousse" : "l'attire";
             beats.add(new Beat("approach", capital(beamName()) + " arrive",
-                    capital(beamName()) + " (" + beamLabel() + ") de " + e + " MeV fonce vers le " + target + ". " + lens + " Le champ du "
-                            + target + " " + pull + " à peine : " + String.format(I18n.locale(), "%.2f°", collision.getCoulombDeflectionDeg()) + ".",
-                    "Le champ de Coulomb seul ne peut pas le dévier de plus de " + String.format(I18n.locale(), "%.2f°", collision.getCoulombMaxDeg())
-                            + " : les grands angles viennent du photon. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm).", 3.4, -pre * .6, 0, 0, stepsMatching("faisceau")));
+                    capital(beamName()) + " (" + beamLabel() + ") de " + e + I18n.text(" MeV fonce vers le ") + target + ". " + lens + I18n.text(" Le champ du ")
+                            + target + " " + pull + I18n.text(" à peine : ") + String.format(I18n.locale(), "%.2f°", collision.getCoulombDeflectionDeg()) + ".",
+                    I18n.text("Le champ de Coulomb seul ne peut pas le dévier de plus de ") + String.format(I18n.locale(), "%.2f°", collision.getCoulombMaxDeg())
+                            + I18n.text(" : les grands angles viennent du photon. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm)."), 3.4, -pre * .6, 0, 0, stepsMatching("faisceau")));
             beats.add(new Beat("photon", "Il échange un photon virtuel",
-                    "En émettant un photon virtuel, " + beamName() + " lui cède ν = " + DocStyle.number(collision.getNuMev()) + " MeV et q = "
-                            + DocStyle.number(collision.getQMev()) + " MeV/c : c'est ce recul qui le dévie de "
-                            + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()) + " (action-réaction). Il repart avec " + ep + " MeV.",
-                    why + "Le champ du " + target + " est fait de tels photons : de loin, seulement des photons mous (" + String.format(I18n.locale(),
-                            "%.2f°", collision.getCoulombDeflectionDeg()) + ") ; un grand angle demande un photon dur, de longueur d'onde λ = ħc/Q = "
+                    I18n.text("En émettant un photon virtuel, ") + beamName() + I18n.text(" lui cède ν = ") + DocStyle.number(collision.getNuMev()) + I18n.text(" MeV et q = ")
+                            + DocStyle.number(collision.getQMev()) + I18n.text(" MeV/c : c'est ce recul qui le dévie de ")
+                            + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()) + I18n.text(" (action-réaction). Il repart avec ") + ep + " MeV.",
+                    why + I18n.text("Le champ du ") + target + I18n.text(" est fait de tels photons : de loin, seulement des photons mous (") + String.format(I18n.locale(),
+                            "%.2f°", collision.getCoulombDeflectionDeg()) + I18n.text(") ; un grand angle demande un photon dur, de longueur d'onde λ = ħc/Q = ")
                             + lam + " fm.", 3.6, 0, 0, 0,
                     stepsMatching("photon virtuel", "peut voir", "cas possibles")));
         }
         double end = filmEnd();
         switch (storyCase()) {
             case "elastic" -> {
-                beats.add(new Beat("whole", "Le " + target + " absorbe le photon d'un bloc",
-                        "λ = " + lam + " fm, plus grand que les écarts entre quarks : le photon enveloppe le " + target + " entier.",
+                beats.add(new Beat("whole", I18n.text("Le ") + target + I18n.text(" absorbe le photon d'un bloc"),
+                        "λ = " + lam + I18n.text(" fm, plus grand que les écarts entre quarks : le photon enveloppe le ") + target + " entier.",
                         "Rien ne casse : c'est une diffusion élastique (les facteurs de forme G_E, G_M fixent la probabilité).",
                         2.8, 0, .4, 0, stepsMatching("reste lui-même")));
                 beats.add(new Beat("recoil", "Il recule, intact",
                         "Le sac garde sa forme et ses trois quarks leur état ; il part avec l'impulsion du photon.",
-                        "Énergie de recul T = Q²/2M = " + DocStyle.number(collision.getNuMev()) + " MeV.", 3.8, .4, Math.min(end, 16), 0,
+                        I18n.text("Énergie de recul T = Q²/2M = ") + DocStyle.number(collision.getNuMev()) + " MeV.", 3.8, .4, Math.min(end, 16), 0,
                         stepsMatching("recul")));
             }
             case "qe" -> {
                 String fin = collision.getTarget().equals("neutron") ? "proton" : "neutron";
-                beats.add(new Beat("convert", "Le " + target + " devient un " + fin,
-                        "Le " + collision.getBoson() + " change un quark " + (collision.getProjectile().equals("nu") ? "d en u" : "u en d")
-                                + " sans rien casser : le " + target + " change d'identité d'un bloc.",
+                beats.add(new Beat("convert", I18n.text("Le ") + target + I18n.text(" devient un ") + fin,
+                        I18n.text("Le ") + collision.getBoson() + I18n.text(" change un quark ") + (collision.getProjectile().equals("nu") ? "d en u" : "u en d")
+                                + I18n.text(" sans rien casser : le ") + target + I18n.text(" change d'identité d'un bloc."),
                         "Quasi-élastique (Llewellyn Smith) : facteurs de forme vectoriels et axial g_A = −1,27.", 2.8, 0, .4, 0,
                         stepsMatching("quasi-élastique")));
                 beats.add(new Beat("recoil", "Il recule, intact",
-                        "Le " + fin + " part avec l'impulsion du W ; le " + outLabel() + " file de son côté.", "", 3.8, .4,
+                        I18n.text("Le ") + fin + I18n.text(" part avec l'impulsion du W ; le ") + outLabel() + I18n.text(" file de son côté."), "", 3.8, .4,
                         Math.min(end, 16), 0, stepsMatching("recul")));
             }
             case "delta" -> {
@@ -376,19 +376,19 @@ public final class CollisionScene {
                 double flipEnd = Math.min(.3, tDecay * .2);
                 beats.add(new Beat("flip", weak() ? "Le W change un quark et son spin" : "Un quark retourne son spin",
                         (weak() ? "Le W change la saveur d'un quark et retourne son spin" : "Le photon retourne le spin d'un quark")
-                                + " : les trois spins s'alignent, le sac se met à palpiter.",
-                        "Le " + target + " devient un Δ(1232) : spin 3/2, " + DocStyle.number(collision.getWMev() - mass())
-                                + " MeV d'excitation.", 2.8, 0, flipEnd, 0, stepsMatching("excite")));
+                                + I18n.text(" : les trois spins s'alignent, le sac se met à palpiter."),
+                        I18n.text("Le ") + target + I18n.text(" devient un Δ(1232) : spin 3/2, ") + DocStyle.number(collision.getWMev() - mass())
+                                + I18n.text(" MeV d'excitation."), 2.8, 0, flipEnd, 0, stepsMatching("excite")));
                 beats.add(new Beat("live", "Le Δ ne vit qu'un instant",
                         "L'état excité est instable : la membrane vibre, prête à se scinder.",
                         "Durée de vie τ = ħ/Γ ≈ 1,7 fm/c, soit 5·10⁻²⁴ s.", 2.2, flipEnd, tDecay, 0, List.of()));
                 if (!breaks.isEmpty()) {
                     NucleonBreak b = breaks.get(0);
                     beats.add(new Beat("break0", "Le Δ se divise",
-                            "Une paire " + pair(b.getFlavor()) + " naît dans la corde : le sac s'étrangle et se scinde en deux.",
-                            "Il en sort " + hadrons(b) + ".", 3.0, tDecay, Math.min(end, tDecay + 1.6), 1.2, stepsMatching("se désintègre")));
+                            I18n.text("Une paire ") + pair(b.getFlavor()) + I18n.text(" naît dans la corde : le sac s'étrangle et se scinde en deux."),
+                            I18n.text("Il en sort ") + hadrons(b) + ".", 3.0, tDecay, Math.min(end, tDecay + 1.6), 1.2, stepsMatching("se désintègre")));
                     beats.add(new Beat("away", "Ils s'éloignent",
-                            hadrons(b) + " s'écartent, chacun avec l'impulsion de la cinématique à deux corps.", "", 3.4,
+                            hadrons(b) + I18n.text(" s'écartent, chacun avec l'impulsion de la cinématique à deux corps."), "", 3.4,
                             Math.min(end, tDecay + 1.6), Math.min(end, tDecay + 16), 0, List.of()));
                 }
             }
@@ -397,11 +397,11 @@ public final class CollisionScene {
                 double first = breaks.isEmpty() ? end : breaks.get(0).getTimeFmc();
                 double kickEnd = Math.min(.25, first * .3);
                 String changed = weak() ? (flavour.equals("d") ? " et le change en u" : " et le change en d") : "";
-                beats.add(new Beat("strike", "Le " + bosonWord() + " frappe un quark " + flavour + changed,
-                        "λ = " + lam + " fm, plus petit que le " + target + " : le " + bosonWord() + " ne touche qu'un quark et lui cède "
+                beats.add(new Beat("strike", I18n.text("Le ") + bosonWord() + I18n.text(" frappe un quark ") + flavour + changed,
+                        "λ = " + lam + I18n.text(" fm, plus petit que le ") + target + I18n.text(" : le ") + bosonWord() + I18n.text(" ne touche qu'un quark et lui cède ")
                                 + DocStyle.number(collision.getQMev()) + " MeV/c.",
-                        weak() ? "Le " + collision.getBoson() + " ne voit que les quarks dont il peut changer la charge."
-                                : "Choisi selon sa charge au carré (u : 4/9, d : 1/9) et sa part d'impulsion x = " + DocStyle.number(collision.getX()) + ".",
+                        weak() ? I18n.text("Le ") + collision.getBoson() + I18n.text(" ne voit que les quarks dont il peut changer la charge.")
+                                : I18n.text("Choisi selon sa charge au carré (u : 4/9, d : 1/9) et sa part d'impulsion x = ") + DocStyle.number(collision.getX()) + ".",
                         2.8, 0, kickEnd, 0, stepsMatching("frappe un quark", "masse invariante")));
                 beats.add(new Beat("stretch", "La corde s'étire, le sac s'allonge",
                         "Le quark arraché tire la corde de gluons ; le sac s'étire en tube autour d'elle.",
@@ -412,9 +412,9 @@ public final class CollisionScene {
                     NucleonBreak b = breaks.get(i);
                     double next = i + 1 < breaks.size() ? breaks.get(i + 1).getTimeFmc() - .05 : Math.min(end, b.getTimeFmc() + 3);
                     beats.add(new Beat("break" + i, i == 0 ? "La corde casse : le sac se divise" : "Elle casse encore",
-                            "L'énergie de la corde devient une paire " + pair(b.getFlavor()) + " ; le tube s'étrangle et se sépare en deux sacs.",
-                            "Il en sort " + hadrons(b) + ". Ce que la corde n'a pas mis en masse, Q = M − m₁ − m₂, les pousse dos à dos le long "
-                                    + "d'elle (plus un petit p_T, effet tunnel) ; les autres hadrons n'en sont pas affectés.", 3.0, b.getTimeFmc(),
+                            I18n.text("L'énergie de la corde devient une paire ") + pair(b.getFlavor()) + I18n.text(" ; le tube s'étrangle et se sépare en deux sacs."),
+                            I18n.text("Il en sort ") + hadrons(b) + I18n.text(". Ce que la corde n'a pas mis en masse, Q = M − m₁ − m₂, les pousse dos à dos le long ")
+                                    + I18n.text("d'elle (plus un petit p_T, effet tunnel) ; les autres hadrons n'en sont pas affectés."), 3.0, b.getTimeFmc(),
                             Math.max(b.getTimeFmc(), next), 1.2,
                             i < breakSteps.size() ? List.of(breakSteps.get(i)) : List.of()));
                 }
@@ -436,27 +436,27 @@ public final class CollisionScene {
         double sqrtS = collision.getSqrtSMev(), m1 = collision.getElectronMassMev(), m2 = mass();
         double pStar = Math.sqrt(Math.max(0, (sqrtS * sqrtS - (m1 + m2) * (m1 + m2)) * (sqrtS * sqrtS - (m1 - m2) * (m1 - m2)))) / (2 * sqrtS);
         beats.add(new Beat("approach", capital(beamName()) + " arrive",
-                "Vus de leur centre de masse, " + beamName() + " (p = " + p + " MeV/c dans le laboratoire) et le " + target
-                        + " foncent l'un vers l'autre à p* = " + DocStyle.number(pStar) + " MeV/c : deux sacs de quarks, chacun ralenti par "
-                        + "la dilatation du temps.",
-                "√s = " + roots + " MeV : l'énergie disponible, Σ p = 0. Dans le laboratoire, tout filerait vers l'avant à presque c et "
-                        + "l'on ne verrait pas les morceaux se séparer.", 3.6, -pre, 0, 0, stepsMatching("faisceau", "cas possibles")));
+                I18n.text("Vus de leur centre de masse, ") + beamName() + " (p = " + p + I18n.text(" MeV/c dans le laboratoire) et le ") + target
+                        + I18n.text(" foncent l'un vers l'autre à p* = ") + DocStyle.number(pStar) + I18n.text(" MeV/c : deux sacs de quarks, chacun ralenti par ")
+                        + I18n.text("la dilatation du temps."),
+                "√s = " + roots + I18n.text(" MeV : l'énergie disponible, Σ p = 0. Dans le laboratoire, tout filerait vers l'avant à presque c et ")
+                        + I18n.text("l'on ne verrait pas les morceaux se séparer."), 3.6, -pre, 0, 0, stepsMatching("faisceau", "cas possibles")));
         switch (channel()) {
             case "elastic_h" -> {
                 beats.add(new Beat("contact", "Ils se frôlent : diffraction",
-                        "Aucune couleur n'est échangée : les deux sacs échangent seulement de l'impulsion (−t = "
+                        I18n.text("Aucune couleur n'est échangée : les deux sacs échangent seulement de l'impulsion (−t = ")
                                 + DocStyle.number(collision.getQ2Gev2()) + " GeV²).",
                         "Le pic de diffraction e^(Bt) et le théorème optique fixent la probabilité.", 2.8, 0, .4, 0, stepsMatching("diffraction")));
                 beats.add(new Beat("recoil", "Chacun repart intact",
-                        "Ils repartent dos à dos, chacun avec p* ; dans le laboratoire, " + beamName() + " serait dévié de "
-                                + String.format(I18n.locale(), "%.1f°", collision.getAngleDeg()) + ". Personne ne casse.", "", 3.8, .4,
+                        I18n.text("Ils repartent dos à dos, chacun avec p* ; dans le laboratoire, ") + beamName() + I18n.text(" serait dévié de ")
+                                + String.format(I18n.locale(), "%.1f°", collision.getAngleDeg()) + I18n.text(". Personne ne casse."), "", 3.8, .4,
                         Math.min(end, 16), 0, stepsMatching("recul")));
             }
             case "formation" -> {
                 double tDecay = breaks.isEmpty() ? end : breaks.get(0).getTimeFmc();
                 double meetEnd = Math.min(.3, tDecay * .2);
                 beats.add(new Beat("annihilate", "Annihilation : un Δ se forme",
-                        "L'antiquark du pion et un quark de même saveur du " + target + " s'annihilent ; les trois quarks restants forment un Δ "
+                        I18n.text("L'antiquark du pion et un quark de même saveur du ") + target + I18n.text(" s'annihilent ; les trois quarks restants forment un Δ ")
                                 + "de masse √s = " + roots + " MeV.", "Formation en Breit–Wigner : le pic est à 190 mb pour π⁺p.", 3.2, 0, meetEnd,
                         0, stepsMatching("annihilation")));
                 beats.add(new Beat("live", "Le Δ ne vit qu'un instant", "L'état excité palpite, prêt à se scinder.",
@@ -464,9 +464,9 @@ public final class CollisionScene {
                 if (!breaks.isEmpty()) {
                     NucleonBreak b = breaks.get(0);
                     beats.add(new Beat("break0", "Le Δ se divise",
-                            "Une paire " + pair(b.getFlavor()) + " naît dans la corde : le sac s'étrangle et se scinde en deux.",
-                            "Il en sort " + hadrons(b) + ".", 3.0, tDecay, Math.min(end, tDecay + 1.6), 1.2, stepsMatching("se désintègre")));
-                    beats.add(new Beat("away", "Ils s'éloignent", hadrons(b) + " s'écartent.", "", 3.4, Math.min(end, tDecay + 1.6),
+                            I18n.text("Une paire ") + pair(b.getFlavor()) + I18n.text(" naît dans la corde : le sac s'étrangle et se scinde en deux."),
+                            I18n.text("Il en sort ") + hadrons(b) + ".", 3.0, tDecay, Math.min(end, tDecay + 1.6), 1.2, stepsMatching("se désintègre")));
+                    beats.add(new Beat("away", "Ils s'éloignent", hadrons(b) + I18n.text(" s'écartent."), "", 3.4, Math.min(end, tDecay + 1.6),
                             Math.min(end, tDecay + 16), 0, List.of()));
                 }
             }
@@ -484,9 +484,9 @@ public final class CollisionScene {
                     NucleonBreak b = breaks.get(i);
                     double next = i + 1 < breaks.size() ? breaks.get(i + 1).getTimeFmc() - .05 : Math.min(end, b.getTimeFmc() + 3);
                     beats.add(new Beat("break" + i, i == 0 ? "Une corde casse" : "Elle casse encore",
-                            "L'énergie de la corde devient une paire " + pair(b.getFlavor()) + " ; le tube s'étrangle et se sépare.",
-                            "Il en sort " + hadrons(b) + ". Ce que la corde n'a pas mis en masse, Q = M − m₁ − m₂, les pousse dos à dos le long "
-                                    + "d'elle (plus un petit p_T, effet tunnel) ; les autres hadrons n'en sont pas affectés.", 3.0, b.getTimeFmc(),
+                            I18n.text("L'énergie de la corde devient une paire ") + pair(b.getFlavor()) + I18n.text(" ; le tube s'étrangle et se sépare."),
+                            I18n.text("Il en sort ") + hadrons(b) + I18n.text(". Ce que la corde n'a pas mis en masse, Q = M − m₁ − m₂, les pousse dos à dos le long ")
+                                    + I18n.text("d'elle (plus un petit p_T, effet tunnel) ; les autres hadrons n'en sont pas affectés."), 3.0, b.getTimeFmc(),
                             Math.max(b.getTimeFmc(), next), 1.2,
                             i < breakSteps.size() ? List.of(breakSteps.get(i)) : List.of()));
                 }
@@ -1130,9 +1130,9 @@ public final class CollisionScene {
             double alpha = decay ? (beat.startsWith("break") ? 1 : .75) : early ? 1 : .7;
             render.polarFloor(foot, flat, angles, density, lb.getLogScale(), lb.getSpanDecades(), radius, lb.getChosenDeg(), sign, c, alpha);
             String law = decay ? lb.getLabel().replace("désintégration du Δ : le pion sort selon ", "").replace(" (repos du Δ)", "")
-                    : lb.getLogScale() ? "échelle log, " + String.format(I18n.locale(), "%.0f", lb.getSpanDecades()) + " décades" : "échelle linéaire";
+                    : lb.getLogScale() ? I18n.text("échelle log, ") + String.format(I18n.locale(), "%.0f", lb.getSpanDecades()) + I18n.text(" décades") : "échelle linéaire";
             render.tag(SubRender.add(foot, SubRender.scale(flat, -radius * .2)), .1, decay ? "Δ → N π (au sol)" : hadronic() ? "dσ/dΩ* (au sol)" : "dσ/dΩ (au sol)",
-                    law + " · cet événement " + String.format(I18n.locale(), "%.0f°", lb.getChosenDeg()), c, alpha);
+                    law + I18n.text(" · cet événement ") + String.format(I18n.locale(), "%.0f°", lb.getChosenDeg()), c, alpha);
         }
     }
 
@@ -1372,8 +1372,8 @@ public final class CollisionScene {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(Color.web("#9FB0C8"));
         String dt = DocStyle.number(dotStep);
-        I18n.fillText(g, "● un point toutes les " + dt + " fm/c : leur écart est la vitesse   ·   au sol : lois angulaires, fronts à c   ·   "
-                + "comète : ce qui bouge, sa traînée derrière lui", x, h - 32);
+        I18n.fillText(g, I18n.text("● un point toutes les ") + dt + I18n.text(" fm/c : leur écart est la vitesse   ·   au sol : lois angulaires, fronts à c   ·   ")
+                + I18n.text("comète : ce qui bouge, sa traînée derrière lui"), x, h - 32);
         I18n.fillText(g, "après le dernier instant calculé, chaque hadron libre file en ligne droite   ·   molette : zoom   ·   glisser : tourner",
                 x, h - 14);
     }
@@ -1447,7 +1447,7 @@ public final class CollisionScene {
         if (nucleonName().equals("proton")) render.fieldHalo(origin, r, e, hadronColour("proton"), alpha);
         double[] edge = SubRender.add(origin, new double[]{0, -1.6, 0});
         // un neutrino n'a pas de charge : le champ du proton existe, mais il ne le sent pas (sa trajectoire reste droite)
-        render.tag(edge, .1, "puits de Coulomb", weak() ? "sans effet sur le " + beamLabel() + " : charge 0, trajectoire droite"
+        render.tag(edge, .1, "puits de Coulomb", weak() ? I18n.text("sans effet sur le ") + beamLabel() + " : charge 0, trajectoire droite"
                 : "U(0) = " + DocStyle.number(bag.getWellDepthMev()) + " MeV · champ e·E max " + DocStyle.number(max(e)) + " MeV/fm",
                 Color.web("#8E9CFF"), alpha);
     }
@@ -1591,7 +1591,7 @@ public final class CollisionScene {
                 if (closeUp) render.dotted(shown, in, 1);
                 render.lepton(path.get(head), in, seen, collision.getEnergyMev(), 0, antiBeam());
                 render.helicity(path.get(head), new double[]{0, 0, 1}, antiBeam(), seen);
-                render.tag(path.get(head), .1, beamLabel(), DocStyle.number(collision.getEnergyMev()) + " MeV · invisible : charge 0 · hélicité "
+                render.tag(path.get(head), .1, beamLabel(), DocStyle.number(collision.getEnergyMev()) + I18n.text(" MeV · invisible : charge 0 · hélicité ")
                         + (antiBeam() ? "droite" : "gauche"), in, seen);
                 return;
             }
@@ -1644,8 +1644,8 @@ public final class CollisionScene {
             render.glow(v, weak() ? .14 : .22, Color.WHITE, flash);
             render.glow(v, weak() ? .3 : .6, outColour.interpolate(Color.WHITE, .3), Math.max(flash, kick * .7));
             if (now[1] < .3)
-                render.tag(v, .1, "−" + DocStyle.number(collision.getNuMev()) + " MeV", "cédés au " + bosonWord() + " · q = "
-                        + DocStyle.number(collision.getQMev()) + " MeV/c · " + (weak() ? outLabel() + " créé à " : beamLabel() + " dévié de ")
+                render.tag(v, .1, "−" + DocStyle.number(collision.getNuMev()) + " MeV", I18n.text("cédés au ") + bosonWord() + " · q = "
+                        + DocStyle.number(collision.getQMev()) + " MeV/c · " + (weak() ? outLabel() + I18n.text(" créé à ") : beamLabel() + I18n.text(" dévié de "))
                         + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()), outColour, 1 - now[1] / .3);
         }
         double[] head = leaving.get(leaving.size() - 1);
@@ -1678,7 +1678,7 @@ public final class CollisionScene {
             double spark = Math.exp(-now[1] / .04), ember = .3 * Math.exp(-now[1] / .2);
             render.glow(target, .1, Color.WHITE, spark);
             render.glow(target, .28, W_COLOUR, Math.max(spark, ember));
-            render.tag(target, .1, collision.getBoson() + " virtuel", "M_W 80,4 GeV · portée 0,0025 fm · Q² "
+            render.tag(target, .1, collision.getBoson() + " virtuel", I18n.text("M_W 80,4 GeV · portée 0,0025 fm · Q² ")
                     + DocStyle.number(collision.getQ2Gev2()) + " GeV² · ν " + DocStyle.number(nu) + " MeV", W_COLOUR, Math.max(.25, 1 - now[1] * 1.5));
             return;
         }
@@ -1849,7 +1849,7 @@ public final class CollisionScene {
                         List<double[]> wake = new ArrayList<>();
                         for (int k = 0; k <= 16; k++) wake.add(position(i, Math.max(0, now[0]) * k / 16.0));
                         render.trail(wake, Color.web("#FFC24A"), .9, 2.5);
-                        render.tag(here, quarkRadius(q), q.getFlavor() + " frappé", SmTable.charge(q.getCharge()) + " e · reçoit "
+                        render.tag(here, quarkRadius(q), q.getFlavor() + I18n.text(" frappé"), SmTable.charge(q.getCharge()) + I18n.text(" e · reçoit ")
                                 + DocStyle.number(collision.getQMev()) + " MeV/c", Color.web("#FFC24A"), 1);
                     }));
                 }
@@ -2038,7 +2038,7 @@ public final class CollisionScene {
     private static List<String> wrap(String text, Font font, double width) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
-        for (String word : text.split(" ")) {
+        for (String word : I18n.text(text).split(" ")) {
             String trial = line.length() == 0 ? word : line + " " + word;
             if (ReactorView.width(trial, font) > width && line.length() > 0) {
                 lines.add(line.toString());
@@ -2062,7 +2062,7 @@ public final class CollisionScene {
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
         g.setFill(Color.web("#36CDF2"));
-        I18n.fillText(g, FusionDashboard.spaced(("étape " + (beatIndex() + 1) + "/" + beats.size() + " · " + b.title()).toUpperCase(I18n.locale())), x, y);
+        I18n.fillText(g, FusionDashboard.spaced((I18n.text("étape ") + (beatIndex() + 1) + "/" + beats.size() + " · " + b.title()).toUpperCase(I18n.locale())), x, y);
         g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 21));
         g.setFill(Color.web("#EEF2FF"));
         I18n.fillText(g, reactionTitle(), x, y + 30);
@@ -2079,7 +2079,7 @@ public final class CollisionScene {
             g.strokeLine(x + px, sy - 5, x + px, sy + 5);
             g.setFont(Font.font("Segoe UI", 10.5));
             g.setFill(Color.web("#E8F0FF"));
-            I18n.fillText(g, (fm < 1 ? String.format(I18n.locale(), "%.1f", fm) : String.format(I18n.locale(), "%.0f", fm)) + " fm · échelle réelle", x, sy - 9);
+            I18n.fillText(g, (fm < 1 ? String.format(I18n.locale(), "%.1f", fm) : String.format(I18n.locale(), "%.0f", fm)) + I18n.text(" fm · échelle réelle"), x, sy - 9);
         }
         // le temps physique et le ralenti
         double seconds = now[0] * 3.33564095e-24;

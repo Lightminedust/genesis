@@ -143,12 +143,12 @@ public final class PartonView {
         reset.setFocusTraversable(false);
         reset.setOnAction(e -> actions.reset());
 
-        Label legend = label("Gros disques : quarks de valence (le proton en a toujours trois). Étincelles colorées : quarks de mer, "
-                + "et leurs antiquarks en anticouleur ; étincelles dorées : gluons — des fluctuations brèves (durée ħ/Q), plus nombreuses "
-                + "quand Q² monte. Un éclair doré relie un gluon au quark qu'il touche (l'échange), ses coudes espacés de ħc/E. Taille ∝ x^⅓. "
-                + "La membrane est bosselée par ce qui la heurte (∝ x) et tremble là où un événement a lieu. Positions illustratives.", 10.5, "#8896AB");
-        Label gluon = label("Un gluon n'a pas de masse, son spin vaut 1 et il porte une couleur et une anticouleur (huit "
-                + "combinaisons) : c'est le vecteur de l'interaction forte, et parce qu'il est coloré il se scinde lui-même (g → g g).", 10.5, "#8896AB");
+        Label legend = label(I18n.text("Gros disques : quarks de valence (le proton en a toujours trois). Étincelles colorées : quarks de mer, ")
+                + I18n.text("et leurs antiquarks en anticouleur ; étincelles dorées : gluons — des fluctuations brèves (durée ħ/Q), plus nombreuses ")
+                + I18n.text("quand Q² monte. Un éclair doré relie un gluon au quark qu'il touche (l'échange), ses coudes espacés de ħc/E. Taille ∝ x^⅓. ")
+                + I18n.text("La membrane est bosselée par ce qui la heurte (∝ x) et tremble là où un événement a lieu. Positions illustratives."), 10.5, "#8896AB");
+        Label gluon = label(I18n.text("Un gluon n'a pas de masse, son spin vaut 1 et il porte une couleur et une anticouleur (huit ")
+                + I18n.text("combinaisons) : c'est le vecteur de l'interaction forte, et parce qu'il est coloré il se scinde lui-même (g → g g)."), 10.5, "#8896AB");
         Label note = label("", 10.5, "#8896AB");
         note.setId("parton-note");
 
@@ -498,7 +498,7 @@ public final class PartonView {
         I18n.fillText(g, "photon virtuel", start, ty);
         g.setFont(Font.font("Segoe UI", 10.5));
         g.setFill(LABEL);
-        I18n.fillText(g, String.format(I18n.locale(), "Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)", ReactorView.fmt(q),
+        I18n.fillText(g, String.format(I18n.locale(), I18n.text("Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)"), ReactorView.fmt(q),
                 lambdaFm < .01 ? String.format(I18n.locale(), "%.4f", lambdaFm) : ReactorView.fmt(lambdaFm),
                 String.format(I18n.locale(), "%.1e", frequency).replace("e+", "·10^")), start, ty + 16);
         g.setFill(DIM);
@@ -689,7 +689,7 @@ public final class PartonView {
                 ? "gluon · " + colours[Math.floorMod(p.getColor(), 3)] + " / " + anti[Math.floorMod(p.getAnticolor(), 3)]
                 : (p.getKind().equals("qbar") ? "antiquark " + p.getFlavor() + " · " + anti[Math.floorMod(p.getAnticolor(), 3)]
                 : (p.getValence() ? "quark de valence " : "quark ") + p.getFlavor() + " · " + colours[Math.floorMod(p.getColor(), 3)]);
-        String detail = String.format(I18n.locale(), "x = %.4f · né à t = %.3f fm/c", p.getX(), Math.max(0, p.getBornFmc()));
+        String detail = String.format(I18n.locale(), I18n.text("x = %.4f · né à t = %.3f fm/c"), p.getX(), Math.max(0, p.getBornFmc()));
         Font bold = Font.font("Segoe UI Semibold", 11), light = Font.font("Segoe UI", 10);
         double tw = Math.max(ReactorView.width(what, bold), ReactorView.width(detail, light)) + 18;
         double tx = Math.min(scene.getWidth() - FusionDashboard.WIDTH - 40 - tw, mouseX + 14), ty = Math.max(8, mouseY - 48);
@@ -841,13 +841,13 @@ public final class PartonView {
         List<FusionDashboard.Dial> dials = new ArrayList<>();
         dials.add(new FusionDashboard.Dial("g", "Gluons visibles (attendus " + ReactorView.fmt(state.getNGluon()) + ")", "" + n[0], "",
                 Math.min(1, n[0] / Math.max(1, 1.6 * state.getNGluon()))));
-        dials.add(new FusionDashboard.Dial("sea", "Quarks et antiquarks de mer (attendus " + ReactorView.fmt(2 * state.getNSeaQuark()) + ")",
+        dials.add(new FusionDashboard.Dial("sea", I18n.text("Quarks et antiquarks de mer (attendus ") + ReactorView.fmt(2 * state.getNSeaQuark()) + ")",
                 "" + (n[1] + n[2]), "", Math.min(1, (n[1] + n[2]) / Math.max(1, 2.2 * state.getNSeaQuark()))));
         dials.add(new FusionDashboard.Dial("as", "Couplage fort α_s(Q²)", String.format(I18n.locale(), "%.3f", state.getAlphaS()), "",
                 Math.min(1, state.getAlphaS() / .8)));
         dials.add(new FusionDashboard.Dial("tau", "Durée d'une fluctuation ħ/Q", String.format(I18n.locale(), "%.3f", state.getTauFmc()), "fm/c",
                 Math.min(1, state.getTauFmc() / .4)));
-        FusionDashboard.Board board = new FusionDashboard.Board(state.getHadron().toUpperCase(Locale.ROOT) + " · RÉSOLUTION", split, dials, List.of(), List.of());
+        FusionDashboard.Board board = new FusionDashboard.Board(state.getHadron().toUpperCase(Locale.ROOT) + I18n.text(" · RÉSOLUTION"), split, dials, List.of(), List.of());
         dashboard.draw(g, x, y, board, lastDt, true);
         drawEvents(g, x, y + FusionDashboard.height(board, true) + 12);
     }
@@ -884,7 +884,7 @@ public final class PartonView {
         g.setFont(Font.font("Segoe UI", 10));
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(LABEL);
-        I18n.fillText(g, String.format(I18n.locale(), "écarts maximaux sur %d événements :", seen), x + 16, ry + 18);
+        I18n.fillText(g, String.format(I18n.locale(), I18n.text("écarts maximaux sur %d événements :"), seen), x + 16, ry + 18);
         g.setFill(INK);
         I18n.fillText(g, String.format(I18n.locale(), "Δx %.0e · Δcharge %.0e · Δcouleur %.0e", dx, dq, dc), x + 16, ry + 33);
     }

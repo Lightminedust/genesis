@@ -263,8 +263,13 @@ public final class TimelineBar {
             return "";
         }
         String label = frame.getSpeedLabels(frame.getSpeedIndex());
+        boolean english = I18n.language() == I18n.Language.EN;
         if (label.equals("temps réel")) {
-            return "1 s réelle = 1 s simulée";
+            return english ? "1 real s = 1 simulated s" : "1 s réelle = 1 s simulée";
+        }
+        // L'accord de « simulé » n'existe qu'en français : la phrase anglaise est construite à part.
+        if (english) {
+            return "1 real s = " + I18n.text(label).replace(" / s", "") + " simulated";
         }
         String span = label.replace(" / s", "");
         boolean feminine = span.contains("seconde") || span.contains("heure") || span.contains("année");
@@ -339,7 +344,7 @@ public final class TimelineBar {
             double x = left + i * spacing;
             node(g, x, y, 11, past.nuclide(), Color.web("#334155"), Color.web("#94A3B8"));
             text(g, x, y + 27, past.nuclide(), MUTED, 10.5, true);
-            text(g, x, y + 41, "vécu " + compact(past.lived()), MUTED, 10, true);
+            text(g, x, y + 41, I18n.text("vécu ") + compact(past.lived()), MUTED, 10, true);
             text(g, x + spacing / 2, y - 9, past.mode(), MUTED, 11, true);
         }
 
@@ -406,12 +411,12 @@ public final class TimelineBar {
                 ChainLink from = chain.get(k - 1);
                 hover = from.getNuclide() + " → " + link.getNuclide() + " : " + modeName(from.getMode())
                         + ", demi-vie " + compact(from.getHalfLifeS())
-                        + (from.getFraction() < 0.999 ? String.format(I18n.locale(), " (voie suivie dans %.1f %% des cas)",
+                        + (from.getFraction() < 0.999 ? String.format(I18n.locale(), I18n.text(" (voie suivie dans %.1f %% des cas)"),
                         100 * from.getFraction()) : "");
             }
             if (hovered) {
-                hover = "Clic : avancer le temps jusqu'à " + link.getNuclide() + " (" + link.getElement()
-                        + ") · en moyenne dans " + compact(cumulative) + " · les désintégrations restent tirées au hasard";
+                hover = I18n.text("Clic : avancer le temps jusqu'à ") + link.getNuclide() + " (" + link.getElement()
+                        + I18n.text(") · en moyenne dans ") + compact(cumulative) + I18n.text(" · les désintégrations restent tirées au hasard");
             }
         }
         if (elided) {
@@ -424,11 +429,11 @@ public final class TimelineBar {
     /** La phrase du bas : la prochaine étape, quand, et combien de secondes réelles à cette vitesse. */
     private String summary(List<ChainLink> chain, double elapsed) {
         ChainLink now = chain.get(0);
-        String head = target != null ? "En route vers " + target + " · " : "";
+        String head = target != null ? I18n.text("En route vers ") + target + " · " : "";
         if (now.getStable()) {
-            String text = now.getNuclide() + " est stable : son noyau ne changera plus.";
+            String text = now.getNuclide() + I18n.text(" est stable : son noyau ne changera plus.");
             if (frame.getElectronLifetimeS() > 0) {
-                text += "  L'électron excité retombera en ≈ " + compact(frame.getElectronLifetimeS())
+                text += I18n.text("  L'électron excité retombera en ≈ ") + compact(frame.getElectronLifetimeS())
                         + (frame.getSpeed() > 0 ? realWait(frame.getElectronLifetimeS()) : "") + ".";
             }
             return head + text;
@@ -457,10 +462,10 @@ public final class TimelineBar {
             return " (moins d'1 s réelle à cette vitesse)";
         }
         if (seconds < 120) {
-            return String.format(I18n.locale(), " (≈ %.0f s réelles à cette vitesse)", seconds);
+            return String.format(I18n.locale(), I18n.text(" (≈ %.0f s réelles à cette vitesse)"), seconds);
         }
         if (seconds < 7200) {
-            return String.format(I18n.locale(), " (≈ %.0f min réelles à cette vitesse)", seconds / 60);
+            return String.format(I18n.locale(), I18n.text(" (≈ %.0f min réelles à cette vitesse)"), seconds / 60);
         }
         return " (trop long à cette vitesse : accélère)";
     }
@@ -515,6 +520,10 @@ public final class TimelineBar {
             case "CE", "EC" -> "CE";
             case "IT" -> "γ (IT)";
             case "SF" -> "fission";
+            case "n_capture" -> "(n,γ)";
+            case "n_fission" -> "fission (n)";
+            case "n_alpha" -> "(n,α)";
+            case "n_proton" -> "(n,p)";
             case "n" -> "n";
             case "p" -> "p";
             default -> mode;
@@ -543,7 +552,8 @@ public final class TimelineBar {
         double[][] units = {{1e-9, 1e-12}, {1e-6, 1e-9}, {1e-3, 1e-6}, {1, 1e-3}, {120, 1}, {7200, 60},
                 {2 * 86400, 3600}, {2 * YEAR_S, 86400}, {2e3 * YEAR_S, YEAR_S}, {2e6 * YEAR_S, 1e3 * YEAR_S},
                 {2e9 * YEAR_S, 1e6 * YEAR_S}};
-        String[] names = {"ps", "ns", "µs", "ms", "s", "min", "h", "j", "ans", "ka", "Ma"};
+        boolean english = I18n.language() == I18n.Language.EN;
+        String[] names = {"ps", "ns", "µs", "ms", "s", "min", "h", english ? "d" : "j", english ? "y" : "ans", "ka", "Ma"};
         for (int i = 0; i < units.length; i++) {
             if (seconds < units[i][0]) {
                 return Visuals.format(seconds / units[i][1]) + " " + names[i];

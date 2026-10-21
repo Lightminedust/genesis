@@ -65,3 +65,12 @@ def longest_lived_isotope(z):
             if best is None or data["half_life_s"] > best[1]:
                 best = (a, data["half_life_s"])
     return best[0] if best else None
+
+def natural_isotope(z):
+    """L'isotope qu'on trouve dans la nature : le plus abondant (Fe-56, Cl-35, U-238),
+    sinon, quand aucune abondance n'est tabulée, celui qui vit le plus longtemps (Tc-98, Ra-226, Pu-244)."""
+    rows = nuclear_data._DB.execute("select mass_number, abundance from isotopes where atomic_number=? "
+                                    "and abundance > 0", (z,)).fetchall()
+    if rows:
+        return max(rows, key=lambda row: row[1])[0]
+    return longest_lived_isotope(z)

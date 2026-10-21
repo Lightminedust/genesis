@@ -79,9 +79,9 @@ public class NucleusPanel {
         } else {
             status.setText("Radioactif · demi-vie " + nucleus.getHalfLife() + " (" + nucleus.getSource() + ")");
             double perSecond = nucleus.getDecayRate();
-            rate.setText("probabilité par seconde λ = ln 2 / t½ = " + scientific(perSecond) + " s⁻¹\n"
-                    + "à la vitesse actuelle : " + scientific(perSecond * frame.getSpeed())
-                    + " chance par seconde réelle");
+            rate.setText(I18n.text("probabilité par seconde λ = ln 2 / t½ = ") + scientific(perSecond) + " s⁻¹\n"
+                    + I18n.text("à la vitesse actuelle : ") + scientific(perSecond * frame.getSpeed())
+                    + I18n.text(" chance par seconde réelle"));
             StringBuilder text = new StringBuilder("Voies mesurées :");
             for (DecayChannel channel : nucleus.getChannelsList()) {
                 text.append("\n  ").append(modeName(channel.getMode())).append(" → ")
@@ -94,9 +94,9 @@ public class NucleusPanel {
         for (NuclearTerm term : frame.getNuclearTermsList()) {
             total += term.getMev();
         }
-        binding.setText(frame.getNuclearTermsCount() == 0 ? "" : "énergie de liaison (Weizsäcker) : "
+        binding.setText(frame.getNuclearTermsCount() == 0 ? "" : I18n.text("énergie de liaison (Weizsäcker) : ")
                 + Visuals.format(total) + " MeV, soit " + Visuals.fixed(total / Math.max(1, frame.getAtom()
-                .getMassNumber()), 2) + " MeV par nucléon");
+                .getMassNumber()), 2) + I18n.text(" MeV par nucléon"));
     }
 
     public static String modeName(String mode) {

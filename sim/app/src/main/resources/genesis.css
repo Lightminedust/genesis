@@ -493,3 +493,47 @@
 }
 .log-chip:hover { -fx-border-color: #34507A; -fx-text-fill: #D7E0EE; }
 .log-chip:selected { -fx-background-color: #1B2B48; -fx-border-color: #4C6A9A; -fx-text-fill: #E6EDF7; }
+
+/* Mise à jour et soutien : discrets, pour ne pas fatiguer. */
+.update-card {
+    -fx-background-color: rgba(14, 21, 36, 0.96);
+    -fx-background-radius: 14;
+    -fx-border-color: #26344F;
+    -fx-border-radius: 14;
+    -fx-padding: 14 16 12 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 24, 0.15, 0, 8);
+}
+.update-primary {
+    -fx-background-color: #1D3A5C;
+    -fx-background-radius: 8;
+    -fx-border-color: #2E5888;
+    -fx-border-radius: 8;
+    -fx-text-fill: #DCEBFF;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+}
+.update-primary:hover { -fx-background-color: #24476F; -fx-border-color: #3B6DA6; }
+.update-primary:disabled { -fx-opacity: 0.55; }
+.update-quiet {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5B6B86;
+    -fx-font-size: 10.5px;
+    -fx-padding: 0 2;
+    -fx-cursor: hand;
+}
+.update-quiet:hover { -fx-text-fill: #8B9BB8; -fx-underline: true; }
+.update-progress .bar { -fx-background-color: #3B82C4; -fx-background-radius: 3; -fx-background-insets: 0; -fx-padding: 2; }
+.update-progress .track { -fx-background-color: #16203A; -fx-background-radius: 3; }
+.support-link {
+    -fx-background-color: transparent;
+    -fx-background-radius: 12;
+    -fx-border-color: #24324D;
+    -fx-border-radius: 12;
+    -fx-text-fill: #A9B8D0;
+    -fx-font-size: 11px;
+    -fx-padding: 3 10;
+    -fx-cursor: hand;
+}
+.support-link:hover { -fx-border-color: #3B5B8C; -fx-text-fill: #E6EDF7; -fx-background-color: rgba(59,91,140,0.12); }

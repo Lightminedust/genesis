@@ -269,6 +269,57 @@ class SessionTest(unittest.TestCase):
         self.assertEqual(kinds(events), ["info"])
         self.assertEqual(self.session.time_s, 0.0)
 
+    def test_element_loads_its_natural_isotope(self):
+        """Clic dans la table : l'isotope qu'on trouve dans la nature, pas le plus léger."""
+        for z, a in ((26, 56), (29, 63), (82, 208), (92, 238), (43, 98)):
+            self.session.load_element(z)
+            self.assertEqual((self.session.atom.protons, self.session.atom.protons + self.session.atom.neutrons), (z, a))
+            self.assertEqual(self.session.atom.electrons, z)
+
+    def test_no_proton_beyond_oganesson(self):
+        self.session.load_element(118)
+        events = self.session.add_proton()
+        self.assertEqual(kinds(events), ["rejected"])
+        self.assertEqual(self.session.atom.protons, 118)
+        self.session.add_electron()                  # l'électron de trop ne doit pas faire tomber le calcul
+        self.session.evaluate()
+
+    def test_many_neutrons_then_back(self):
+        """Des centaines de neutrons ajoutés puis retirés : la session reste calculable à chaque pas."""
+        self.session.load_element(92)
+        for _ in range(150):
+            self.session.add_neutron()
+        self.session.evaluate()
+        for _ in range(300):
+            self.session.remove_neutron()
+        self.assertEqual(self.session.atom.neutrons, 0)
+        self.session.evaluate()
+
+
+class SharedDatabaseTest(unittest.TestCase):
+    def test_threads_read_the_elements_base_together(self):
+        """La base de mendeleev est lue par la session, le chargement des étoiles et d'autres clients à la fois."""
+        import threading
+        from common import elements_db
+
+        errors = []
+
+        def read():
+            try:
+                for z in range(1, 119):
+                    row = elements_db.DB.execute("select symbol from elements where atomic_number=?", (z,)).fetchone()
+                    if row is None or not row[0]:
+                        errors.append(z)
+            except Exception as error:
+                errors.append(error)
+
+        threads = [threading.Thread(target=read) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+        self.assertEqual(errors, [])
+
 
 if __name__ == "__main__":
     unittest.main()

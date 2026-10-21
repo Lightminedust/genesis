@@ -19,13 +19,9 @@ seules qu'un atome au repos peut ABSORBER. Durée de vie du niveau haut (ns)
 quand elle est mesurée.
 """
 
-import os
-import sqlite3
+from common import elements_db
 
-import mendeleev
-
-_DB = sqlite3.connect(os.path.join(os.path.dirname(mendeleev.__file__), "elements.db"),
-                      check_same_thread=False)
+_DB = elements_db.DB   # verrouillée : plusieurs threads la lisent
 
 # Affinités électroniques mesurées (NIST, via mendeleev). Négative : l'anion
 # n'est pas lié (N : -1,4 eV ; He : -19,7 eV). Absente : non mesurée.

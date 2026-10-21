@@ -55,8 +55,9 @@ public final class PhotonPacket {
         double spacing = toScale ? lambdaPx : clamp(14 + 22 * Math.log10(nm), 7, 110);
         double energy = HC_EV_NM / nm;
         double ionising = ionizationEv > 0 && energy > ionizationEv ? (energy - ionizationEv) / ionizationEv : 0;
-        return new Look(nm, spacing, toScale, lambdaPx / spacing, clamp(6 * spacing, 110, 360),
-                clamp(0.22 * spacing, 5, 13), colour(nm), ionising);
+        // Un paquet de taille raisonnable : il doit se lire comme un photon, pas barrer l'écran.
+        return new Look(nm, spacing, toScale, lambdaPx / spacing, clamp(5 * spacing, 80, 220),
+                clamp(0.2 * spacing, 5, 11), colour(nm), ionising);
     }
 
     /** Couleur de rendu : vraie dans le visible, conventionnelle (et annoncée) ailleurs. */
@@ -84,8 +85,8 @@ public final class PhotonPacket {
         if (look.toScale()) {
             return "λ à l'échelle";
         }
-        return look.compression() > 1 ? "λ dessinée ÷" + SimCanvas.sci(look.compression())
-                : "λ dessinée ×" + SimCanvas.sci(1 / look.compression());
+        return look.compression() > 1 ? I18n.text("λ dessinée ÷") + SimCanvas.sci(look.compression())
+                : I18n.text("λ dessinée ×") + SimCanvas.sci(1 / look.compression());
     }
 
     /**

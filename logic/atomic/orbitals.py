@@ -121,6 +121,38 @@ def _density_grid(n, l, occupation, z_eff_rounded):
     return tuple(grid), half
 
 
+def phase_index(l, occupation):
+    """L'orbitale dont on montre la phase : celle qui a reçu le dernier électron (Hund), ou à défaut la dernière
+    orbitale occupée visible dans la coupe xz. None si aucune n'est visible."""
+    shapes = _ORBITALS[min(l, 3)]
+    electrons = sum(occupation)
+    if electrons == 0:
+        return None
+    last = (electrons - 1) % len(occupation)
+    for index in [last] + list(range(len(occupation) - 1, -1, -1)):
+        if occupation[index] and shapes[index][1](0.8, 0.6, 0.8) != 0.0:
+            return index
+    return None
+
+
+@lru_cache(maxsize=256)
+def _phase_grid(n, l, index, z_eff_rounded):
+    """psi_nlm = R_nl · Y_lm dans la coupe xz, avec son signe, normalisé à max |psi| = 1."""
+    z_eff = z_eff_rounded
+    half = extent_pm(n, l, z_eff)
+    shape = _ORBITALS[min(l, 3)][index][1]
+    values = []
+    for row in range(GRID):
+        z = half * (1.0 - 2.0 * (row + 0.5) / GRID)
+        for column in range(GRID):
+            x = half * (2.0 * (column + 0.5) / GRID - 1.0)
+            r = math.hypot(x, z)
+            xr, zr = (0.0, 1.0) if r < 1e-9 else (x / r, z / r)
+            values.append(radial(n, l, z_eff, r) * shape(zr, xr, zr))
+    peak = max(abs(v) for v in values) or 1.0
+    return tuple(round(v / peak, 5) for v in values)
+
+
 def valence_subshell(subshells):
     """Dernière sous-couche occupée dans l'ordre de remplissage : c'est
     elle qui porte les électrons de plus haute énergie (3d pour le fer)."""
@@ -143,6 +175,7 @@ def valence_orbital(z, subshells):
     grid, half = _density_grid(n, l, tuple(occupation), round(z_eff, 3))
 
     shapes = _ORBITALS[min(l, 3)]
+    index = phase_index(l, occupation)
     return {
         "grid": list(grid),
         "size": GRID,
@@ -154,6 +187,8 @@ def valence_orbital(z, subshells):
         "radial_nodes": n - l - 1,
         "orbital_names": [name for name, _ in shapes],
         "occupation": occupation,
+        "phase": list(_phase_grid(n, l, index, round(z_eff, 3))) if index is not None else [],
+        "phase_name": shapes[index][0] if index is not None else "",
     }
 
 
@@ -182,7 +217,10 @@ def hydrogenic_orbital(z, state, reduced_mass=1.0):
         raise ValueError("État hydrogénoïde invalide")
     charge = z * reduced_mass
     grid, half = _hydrogenic_grid(n, l, charge)
+    # m n'est pas suivi : la phase n'est définie que pour s (signe de R, qui change à chaque nœud radial).
+    phase = list(_phase_grid(n, 0, 0, charge)) if l == 0 else []
     return {"grid": list(grid), "size": GRID, "extent_pm": half,
             "label": f"{n}{'spdfghi'[l]}1", "n": n, "l": l,
             "z_eff": charge, "radial_nodes": n - l - 1,
-            "orbital_names": ["m non résolu"], "occupation": [1]}
+            "orbital_names": ["m non résolu"], "occupation": [1],
+            "phase": phase, "phase_name": "s" if l == 0 else ""}

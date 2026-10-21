@@ -422,7 +422,7 @@ public class LightPanel {
         if (ionization > 0) {
             gc.setFill(Color.web("#38BDF8"));
             gc.setTextAlign(TextAlignment.RIGHT);
-            I18n.fillText(gc, "◀ λ < " + Visuals.format(HC_EV_NM / ionization) + " nm arrache l'électron",
+            I18n.fillText(gc, "◀ λ < " + Visuals.format(HC_EV_NM / ionization) + I18n.text(" nm arrache l'électron"),
                     width - 12, top + height + 24);
         }
         gc.setTextBaseline(VPos.BASELINE);

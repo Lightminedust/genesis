@@ -177,7 +177,7 @@ public final class QuantumLab {
         physicsAngle.setMaxWidth(Double.MAX_VALUE);
         physicsAngle.setSelected(true);
         physicsAngle.setTooltip(I18n.tooltip("La physique choisit l'angle selon dσ/dΩ (la plupart des électrons dévient à peine) ; "
-                + "décoché, c'est le curseur qui le fixe"));
+                + I18n.text("décoché, c'est le curseur qui le fixe")));
         physicsAngle.setOnAction(e -> {
             angle.setDisable(hadronBeam() || physicsAngle.isSelected());
             angleLabel.setText(angleText());
@@ -473,7 +473,7 @@ public final class QuantumLab {
         b.getStyleClass().add("glass-button");
         b.setFocusTraversable(false);
         presets.add(b);
-        b.setTooltip(I18n.tooltip(String.format(I18n.locale(), "%s MeV à %.0f°", DocStyle.number(mev), degrees)));
+        b.setTooltip(I18n.tooltip(String.format(I18n.locale(), I18n.text("%s MeV à %.0f°"), DocStyle.number(mev), degrees)));
         b.setOnAction(e -> {
             energy.setValue(Math.log10(mev));
             physicsAngle.setSelected(false);                         // un préréglage fixe l'angle
@@ -554,7 +554,7 @@ public final class QuantumLab {
             updating = false;
             play.setSelected(collision.playing());
             play.setText(collision.playing() ? "Ⅱ" : "▶");
-            clock.setText(collision.beatCount() == 0 ? "" : String.format(I18n.locale(), "étape %d / %d", collision.beatIndex() + 1,
+            clock.setText(collision.beatCount() == 0 ? "" : String.format(I18n.locale(), I18n.text("étape %d / %d"), collision.beatIndex() + 1,
                     collision.beatCount()));
         }
         if (benchPane.isVisible()) bench.tick(dt);

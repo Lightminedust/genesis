@@ -29,15 +29,14 @@ l'énergie de liaison.
 import math
 import os
 import pickle
-import sqlite3
 import threading
 
-import mendeleev
 import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.linalg import block_diag
 
 from atomic.electron_config import configuration
+from common import elements_db
 
 try:
     from pyscf import dft, gto, lib, symm
@@ -57,7 +56,7 @@ CACHE = os.environ.get("GENESIS_CHEM_CACHE", os.path.join(os.path.dirname(__file
 # 1 eV / (Å · u) en Å / fs²
 ACCELERATION = 1.602176634e-19 / (1e-10 * 1.66053906660e-27) * 1e-20
 
-_DB = sqlite3.connect(os.path.join(os.path.dirname(mendeleev.__file__), "elements.db"), check_same_thread=False)
+_DB = elements_db.DB   # verrouillée : plusieurs threads la lisent
 
 
 def element_row(z):

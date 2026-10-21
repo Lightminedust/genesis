@@ -16,7 +16,7 @@ Avec Docker : `docker compose up --build` à la racine du dépôt (voir `Dockerf
 
 | Fichier | Rôle |
 |---|---|
-| `engine.py` | Le point d'entrée : le serveur gRPC. Il lit les actions du client, avance la session, remplit les frames. |
+| `engine.py` | Le point d'entrée : le serveur gRPC. Il lit les actions du client, avance la session, remplit les frames. Une erreur de calcul est journalisée et la frame sautée : elle ne coupe plus la connexion. |
 | `genesis_pb2.py`, `genesis_pb2_grpc.py` | Générés depuis `../core/genesis.proto`. Ne pas les modifier à la main. |
 | `requirements.txt`, `requirements-chemistry.txt` | Les dépendances (la chimie quantique, plus lourde, est à part). |
 | `Dockerfile`, `entrypoint.sh` | L'image du moteur ; l'entrypoint régénère les fichiers gRPC au démarrage. |

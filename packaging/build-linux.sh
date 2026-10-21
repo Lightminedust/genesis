@@ -7,7 +7,7 @@ if [[ "$(uname -s)" != Linux ]]; then
     exit 1
 fi
 
-version="${1:-0.2.0}"
+version="${1:-0.3.0}"
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo 'Version must be major.minor.patch.' >&2
     exit 1
@@ -34,7 +34,7 @@ for target in "$work" "$image"; do
 done
 mkdir -p "$work/proto"
 
-"$python" -c 'import grpc, numpy, scipy, mendeleev, radioactivedecay, pynucastro, chemicals, PyInstaller'
+"$python" -c 'import grpc, numpy, scipy, mendeleev, radioactivedecay, pynucastro, chemicals, periodictable, PyInstaller'
 "$python" -m grpc_tools.protoc -I"$repo/core" \
     --python_out="$work/proto" --grpc_python_out="$work/proto" \
     "$repo/core/genesis.proto"
@@ -42,7 +42,7 @@ mkdir -p "$work/proto"
 "$python" -m PyInstaller --noconfirm --clean --onedir \
     --name GenesisEngine --paths "$work/proto" --paths "$repo/logic" \
     --collect-submodules numpy.core \
-    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro \
+    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable \
     --distpath "$work/python-dist" --workpath "$work/python-work" \
     --specpath "$work/python-spec" "$repo/packaging/linux_engine.py"
 

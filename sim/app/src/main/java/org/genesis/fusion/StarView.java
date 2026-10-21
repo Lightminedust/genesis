@@ -651,7 +651,7 @@ public class StarView {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
         String name = state.getPresetsCount() > state.getPreset() ? state.getPresets(state.getPreset()) : "";
-        I18n.fillText(gc, "Cœur d'étoile · " + name, 22, 12);
+        I18n.fillText(gc, I18n.text("Cœur d'étoile · ") + name, 22, 12);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
         I18n.fillText(gc, state.getAbout(), 22, 42);
@@ -663,7 +663,7 @@ public class StarView {
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(SOFT);
         String speed = state.getSpeedLabelsCount() > state.getSpeedIndex() ? state.getSpeedLabels(state.getSpeedIndex()) : "";
-        I18n.fillText(gc, (state.getPaused() ? "⏸ en pause · " : "▶ " + speed + " · ") + "âge " + Visuals.duration(state.getAgeS()),
+        I18n.fillText(gc, (state.getPaused() ? "⏸ en pause · " : "▶ " + speed + " · ") + I18n.text("âge ") + Visuals.duration(state.getAgeS()),
                 right, 38);
         gc.setTextBaseline(VPos.BASELINE);
     }
@@ -939,8 +939,8 @@ public class StarView {
         gc.setFill(Color.web("#0B0E15", 0.8));
         gc.fillRoundRect(x - 8, y - 32, 380, 40, 8, 8);
         gc.setFill(SOFT);
-        I18n.fillText(gc, "hauteur de la fenêtre : " + Visuals.formatLength(side)
-                + " · " + state.getParticlesCount() + " noyaux (agrandis)", x, y - 16);
+        I18n.fillText(gc, I18n.text("hauteur de la fenêtre : ") + Visuals.formatLength(side)
+                + " · " + state.getParticlesCount() + I18n.text(" noyaux (agrandis)"), x, y - 16);
         double atom = HYDROGEN_ATOM_M * perMetre;
         if (atom < winH * 0.9 && atom > 6) {
             double cx = winX + winW - atom / 2 - 18;
@@ -960,14 +960,14 @@ public class StarView {
             gc.setFill(ELECTRON);
             I18n.fillText(gc, "un atome d'H (106 pm) ne tiendrait pas dans la fenêtre", x, y);
         } else {
-            I18n.fillText(gc, "un atome d'H (106 pm) : " + Visuals.format(atom) + " px, invisible à cette échelle", x, y);
+            I18n.fillText(gc, I18n.text("un atome d'H (106 pm) : ") + Visuals.format(atom) + I18n.text(" px, invisible à cette échelle"), x, y);
         }
     }
 
     private void drawWindowNote() {
         String text;
         if (state.getWindowRate() > 0.05) {
-            text = "≈ " + NucleusPanel.scientific(state.getWindowRate()) + " fusions par seconde dans cette fenêtre"
+            text = "≈ " + NucleusPanel.scientific(state.getWindowRate()) + I18n.text(" fusions par seconde dans cette fenêtre")
                     + (state.getWindowRate() > 2 ? " · on en montre une par seconde environ" : "");
         } else if (state.getTemperatureK() < 1e6) {
             text = "trop froid : aucune fusion";
@@ -1102,7 +1102,7 @@ public class StarView {
         double total = state.getEnergyJKg();
         double nu = state.getNeutrinoWKg();
         String share = power + nu > 0 ? " · neutrinos " + Visuals.format(100 * nu / (power + nu)) + " % (perdus)" : "";
-        I18n.fillText(gc, "depuis le début : " + NucleusPanel.scientific(total) + " J/kg" + share, x + 16, y + h - 14);
+        I18n.fillText(gc, I18n.text("depuis le début : ") + NucleusPanel.scientific(total) + " J/kg" + share, x + 16, y + h - 14);
         return y + h;
     }
 
@@ -1116,7 +1116,7 @@ public class StarView {
         I18n.fillText(gc, NucleusPanel.scientific(total) + " Pa", x + 16, y + 52);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(SOFT);
-        I18n.fillText(gc, "= " + NucleusPanel.scientific(total / 101325) + " atmosphères", x + 190, y + 52);
+        I18n.fillText(gc, "= " + NucleusPanel.scientific(total / 101325) + I18n.text(" atmosphères"), x + 190, y + 52);
         double left = x + 16;
         double width = w - 32;
         double bar = y + 62;
@@ -1150,7 +1150,7 @@ public class StarView {
         if (state.getIonizedFraction() < 0.01) {
             badges.add("atomes neutres");
         } else if (state.getIonizedFraction() < 0.99) {
-            badges.add(Visuals.format(100 * state.getIonizedFraction()) + " % ionisé");
+            badges.add(Visuals.format(100 * state.getIonizedFraction()) + I18n.text(" % ionisé"));
         } else {
             badges.add("100 % ionisé");
         }

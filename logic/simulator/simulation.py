@@ -26,12 +26,14 @@ from atomic import atomic_data
 from atomic import hydrogen
 from atomic import light_interaction as light
 from nuclear import nuclear_data
+from nuclear import neutrons
 from atomic import spectra
 from atomic.atom import AtomicState
 from atomic.electron_config import configuration
 from nuclear.halflife import UNBOUND_HALF_LIFE_S, half_life
 from nuclear.nucleus import _DECAYS, fission_fragment, resolve_decay
 from atomic.orbitals import hydrogenic_orbital
+from atomic.periodic_table import MAX_Z
 from atomic.slater import removal_energy_ev
 from common.units import format_duration
 
@@ -57,6 +59,11 @@ PHOTON_FLIGHT_REAL_S = 2.0
 
 # Garde-fou : nombre d'événements traités par pas (chaînes très rapides).
 MAX_EVENTS_PER_STEP = 16
+
+
+def _number(value, digits):
+    """Un nombre à la française (virgule décimale), avec `digits` chiffres significatifs."""
+    return f"{value:.{digits}g}".replace(".", ",")
 
 
 def _event(kind, time_s, title, formula="", detail="", **extra):
@@ -696,6 +703,11 @@ class Session:
         return [_event("info", self.time_s, "Temps suspendu" if self.paused else "Le temps reprend")]
 
     def add_proton(self):
+        if self.atom.protons >= MAX_Z:
+            # Au-delà de l'oganesson, aucun noyau n'a été observé : ni masse, ni configuration à calculer.
+            return [_event("rejected", self.time_s, "Le proton n'est pas ajouté",
+                           f"Z = {MAX_Z} est le dernier élément connu (oganesson)",
+                           "Aucun noyau à plus de 118 protons n'a jamais été produit.", particle="proton")]
         self.atom.protons += 1
         return self._after_structure(_event(
             "nucleon", self.time_s, "Un proton rejoint le noyau",
@@ -730,9 +742,18 @@ class Session:
         self.isomer = ""
         self._ground()
         decay = self.nuclear_decay()
-        isotope = (f"isotope le plus durable, {self.nuclide_label()} (t½ = "
-                   f"{format_duration(decay['half_life_s'])}) : aucun n'est stable" if decay
-                   else f"isotope stable le plus léger, {self.nuclide_label()}")
+        abundance = nuclear_data.abundance(z, self.atom.protons + self.atom.neutrons)
+        percent = f"{abundance:.4g}".replace(".", ",") if abundance else ""
+        if abundance and decay:
+            isotope = (f"isotope naturel le plus abondant, {self.nuclide_label()} ({percent} %), "
+                       f"radioactif (t½ = {format_duration(decay['half_life_s'])})")
+        elif abundance:
+            isotope = f"isotope naturel le plus abondant, {self.nuclide_label()} ({percent} %)"
+        elif decay:
+            isotope = (f"aucune abondance naturelle tabulée : isotope le plus durable, {self.nuclide_label()} (t½ = "
+                       f"{format_duration(decay['half_life_s'])})")
+        else:
+            isotope = f"isotope {self.nuclide_label()}"
         return [_event("structure", self.time_s, f"{element['name']} chargé",
                        f"{isotope} ; atome neutre : Z = E = {z}")]
 
@@ -862,6 +883,80 @@ class Session:
                        f"E = h·c / λ = 1239,84 / {wavelength_nm:.2f} = {energy:.3f} eV",
                        detail=f"Photon monochromatique · faisceau gaussien de rayon {light.beam_waist_m(wavelength_nm) * 1e6:.3g} µm · atome immobile au centre",
                        wavelength_nm=wavelength_nm, energy_ev=energy)]
+
+    def fire_neutron(self):
+        """Un neutron thermique (0,0253 eV) touche le noyau : diffusion, capture, fission, (n,α) ou (n,p),
+        tirés au prorata des sections efficaces mesurées."""
+        z, a = self.atom.protons, self.atom.protons + self.atom.neutrons
+        if a == 0:
+            return [_event("info", self.time_s, "Aucun noyau à frapper",
+                           "Ajouter des protons ou choisir un élément dans la table.")]
+        target = self.nuclide_label()
+        result = neutrons.outcome(self.rng, z, a) if z > 0 else None
+        if result is None:
+            return [_event("info", self.time_s, f"Pas de section efficace mesurée pour {target}",
+                           "Genesis ne devine pas ce que ferait le neutron.",
+                           "La table de Sears (1992) couvre les isotopes naturels et quelques actinides "
+                           "(U-233, U-235, U-238, Pu-239…), pas la plupart des noyaux radioactifs.")]
+        sigma, total = result["sigma"], result["total"]
+        names = {"scattering": "diffusion", "capture": "capture (n,γ)", "fission": "fission",
+                 "alpha": "(n,α)", "proton": "(n,p)"}
+        shares = " · ".join(f"{names[key]} {_number(sigma[key], 3)} b ({_number(100 * sigma[key] / total, 3)} %)"
+                            for key in names if sigma[key] > 0)
+        incoming = _event("nucleon", self.time_s, f"Un neutron lent arrive sur {target}",
+                          f"E = {_number(neutrons.THERMAL_EV, 3)} eV (v = 2 200 m/s) : sans charge, aucune "
+                          "barrière ne l'arrête",
+                          f"Sections efficaces thermiques ({neutrons.SOURCE}, ENDF/B-VIII.0) : {shares}. "
+                          "Un neutron lent traverse presque toujours un atome seul sans rien toucher : "
+                          "on montre le cas où il interagit.", particle="neutron")
+        chance = f"Voie suivie par {_number(100 * result['probability'], 3)} % des neutrons qui interagissent"
+        channel = result["channel"]
+        if channel == "scattering":
+            return [incoming, _event("nucleon", self.time_s, "Le neutron rebondit et quitte le noyau",
+                                     f"diffusion élastique : σ = {_number(sigma['scattering'], 3)} b (noyau seul)",
+                                     f"{target} reste {target}. {chance}.", particle="neutron")]
+
+        q = result["q_mev"]
+        q_text = (f"Q = {_number(q, 4)} MeV (masses mesurées, AME2020)" if q is not None
+                  else "Q inconnu : une masse n'a jamais été mesurée")
+        residual, emitted = result["residual"], result["emitted"]
+        new = nuclear_data.format_name(*residual, "")
+        if channel == "capture":
+            mode, particles = "n_capture", ["photon γ"]
+            title = f"{target} + n → {new} : capture radiative (n,γ)"
+            formula = (f"Q = S_n = [m({target}) + m_n − m({new})]·c² = {_number(q, 4)} MeV, emportés par des photons γ"
+                       if q is not None else q_text)
+            detail = f"Le neutron reste : même élément, un neutron de plus. {chance}."
+            if channel == "capture" and z in (92, 94) and sigma["fission"] == 0:
+                detail += " Ce noyau ne fissionne pas avec un neutron lent (barrière de fission trop haute)."
+            elif sigma["fission"] == 0 and (z, a) not in neutrons.OTHER_CHANNELS:
+                detail += " Les voies (n,p) et (n,α), quand elles existent ici, pèsent quelques pour cent au plus : comptées comme capture."
+        elif channel == "fission":
+            nu = result["nu"]
+            light = nuclear_data.format_name(*emitted, "")
+            mode, particles = "n_fission", [f"fragment {light}"] + ["neutron"] * nu
+            title = f"{target} + n → {new} + {light} + {nu} n : fission"
+            formula = q_text
+            detail = (f"Le noyau composé {nuclear_data.format_name(z, a + 1, '')} se scinde. "
+                      f"ν̄ = {_number(neutrons.NU_BAR.get((z, a), 2.5), 3)} neutrons en moyenne (ENDF/B-VIII.0) ; "
+                      f"fragment lourd tiré autour de A ≈ 140, charge au prorata de la masse. Le fragment lourd reste "
+                      f"ici, le léger s'éloigne. {chance}.")
+        else:
+            particle = nuclear_data.format_name(*emitted, "")
+            mode = "n_alpha" if channel == "alpha" else "n_proton"
+            particles = ["particule α"] if channel == "alpha" else ["proton"]
+            title = f"{target} + n → {new} + {'α' if channel == 'alpha' else 'p'} : réaction {names[channel]}"
+            formula = q_text
+            detail = f"Le neutron est absorbé et le noyau éjecte un {particle}. {chance}."
+        self.atom.protons, self.atom.neutrons = residual[0], residual[1] - residual[0]
+        self.isomer = ""
+        self._ground()
+        event = _event("decay", self.time_s, title, formula, detail, decay_mode=mode, particles=particles,
+                       q_mev=q or 0.0, from_state=target, to_state=self.nuclide_label())
+        if channel == "alpha" and q is not None and q > 0:
+            # Le neutron lent n'apporte presque pas d'élan : α et noyau résiduel se partagent Q à impulsions opposées.
+            event["kinetic_ev"] = q * residual[1] / (residual[1] + 4) * 1e6
+        return [incoming, event] + self._enforce_binding()
 
     def next_event(self):
         """Avance le temps jusqu'au prochain événement que les règles prévoient."""

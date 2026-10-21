@@ -179,7 +179,7 @@ public class EventJournal {
         for (SimEvent event : events) {
             count.merge(category(event), 1, Integer::sum);
         }
-        all.setText("Tout " + events.size());
+        all.setText(I18n.text("Tout ") + events.size());
         for (Category category : Category.values()) {
             String name = category.label.charAt(0) + category.label.substring(1).toLowerCase();
             chips.get(category).setText(name + " " + count.getOrDefault(category, 0));

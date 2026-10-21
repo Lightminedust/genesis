@@ -281,7 +281,7 @@ public class StabilityChart {
             // Au-dessus de la loupe : sous elle, il n'y a la place que pour une ligne.
             gc.setFill(Color.web("#FBBF24"));
             gc.setTextAlign(TextAlignment.RIGHT);
-            I18n.fillText(gc, "désintégration → " + mainMode(), left + size, top - 3);
+            I18n.fillText(gc, I18n.text("désintégration → ") + mainMode(), left + size, top - 3);
         }
     }
 }

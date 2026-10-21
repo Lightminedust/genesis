@@ -284,7 +284,7 @@ public final class FusionReadouts {
         formulas.add("κ(r) = √(2μ(V(r) − E))/ħ");
         if (t > 0) formulas.add("T = exp(−2∫κ dr) = " + scientificShort(t));
         double turn = KE * z1 * z2 / Math.max(e, 1e-9);
-        formulas.add(e < barrier ? "le mur : de r = " + fmt(contact) + " à " + fmt(turn) + " fm (là où V = E)" : "E > B : l'onde passe au-dessus du mur");
+        formulas.add(e < barrier ? I18n.text("le mur : de r = ") + fmt(contact) + I18n.text(" à ") + fmt(turn) + I18n.text(" fm (là où V = E)") : "E > B : l'onde passe au-dessus du mur");
         return new FusionDashboard.Board("EFFET TUNNEL", null, dials, bars, formulas);
     }
 
@@ -329,7 +329,7 @@ public final class FusionReadouts {
                 new FusionDashboard.Dial("p", "pression", scientificShort(p), "Pa", (Math.log10(Math.max(p, 1)) - 28) / 6));
         List<String> formulas = List.of("E* = E + Q = " + fmt(eStar0) + " MeV",
                 "forme interpolée : cette étape n'est pas tracée",
-                "chaleur de la soudure calculée : " + fmt(r.heat) + " MeV");
+                I18n.text("chaleur de la soudure calculée : ") + fmt(r.heat) + " MeV");
         return new FusionDashboard.Board("FONTE", null, dials, List.of(), formulas);
     }
 
@@ -358,14 +358,14 @@ public final class FusionReadouts {
                 emitted++;
             }
             double available = Math.max(1e-9, run.getQMev() + run.getEnergyKev() / 1000);
-            bars.add(new FusionDashboard.Bar("carried", "emporté par " + emitted + " émission" + (emitted > 1 ? "s" : ""), energy(carried * 1000),
+            bars.add(new FusionDashboard.Bar("carried", I18n.text("emporté par ") + emitted + I18n.text(" émission") + (emitted > 1 ? "s" : ""), energy(carried * 1000),
                     carried / available, -1, ""));
         }
         List<String> formulas = new ArrayList<>();
         formulas.add("T = √(8E*/A) = " + fmt(t) + " MeV = " + scientificShort(t * MEV_K) + " K");
-        formulas.add("soit " + times(t * MEV_K / SUN_CORE_K) + " la température du cœur solaire");
+        formulas.add("soit " + times(t * MEV_K / SUN_CORE_K) + I18n.text(" la température du cœur solaire"));
         formulas.add("P = ⅔·E*/V = " + scientificShort(p) + " Pa");
-        formulas.add("soit " + times(p / SUN_CORE_PA) + " la pression du cœur solaire");
+        formulas.add("soit " + times(p / SUN_CORE_PA) + I18n.text(" la pression du cœur solaire"));
         if (r.stage.equals("evaporation")) formulas.add("Γₓ ∝ (2sₓ+1)·μₓ·ε·σ(ε)·ρ(E* − Bₓ − ε)");
         else formulas.add("J = j₁ + j₂ + ℓ");
         return new FusionDashboard.Board(r.stage.equals("evaporation") ? "DÉSEXCITATION" : "NOYAU COMPOSÉ", null, dials, bars, formulas);
@@ -397,14 +397,14 @@ public final class FusionReadouts {
                 new FusionDashboard.Dial("fast", "le plus rapide", speed[0], speed[1], Math.sqrt(Math.min(1, fastest / .3))),
                 new FusionDashboard.Dial("gamma", "lumière γ", fmt(gamma), "MeV", total > 0 ? gamma / total : 0));
         List<String> formulas = new ArrayList<>();
-        formulas.add("Q = (Σm avant − Σm après)·c² = " + fmt(q) + " MeV");
-        formulas.add("1 réaction = " + scientificShort(Math.abs(q) * MEV_J) + " J");
+        formulas.add(I18n.text("Q = (Σm avant − Σm après)·c² = ") + fmt(q) + " MeV");
+        formulas.add(I18n.text("1 réaction = ") + scientificShort(Math.abs(q) * MEV_J) + " J");
         List<CollisionBody> massive = new ArrayList<>();
         for (CollisionBody b : last.getBodiesList()) if (b.getMassMev() > 0 && b.getA() > 0) massive.add(b);
         if (massive.size() == 2 && last.getBodiesCount() == 2 && massive.get(1).getKineticMev() > 0) {
             CollisionBody one = massive.get(0), two = massive.get(1);
             formulas.add("K(" + particle(one) + ")/K(" + particle(two) + ") = m(" + particle(two) + ")/m(" + particle(one) + ") = "
-                    + fmt(one.getKineticMev() / two.getKineticMev()) + "  (impulsions opposées)");
+                    + fmt(one.getKineticMev() / two.getKineticMev()) + I18n.text("  (impulsions opposées)"));
         }
         return new FusionDashboard.Board("PRODUITS", new FusionDashboard.Split("ÉNERGIE EMPORTÉE", energy(total * 1000), parts), dials, List.of(), formulas);
     }
@@ -424,7 +424,7 @@ public final class FusionReadouts {
             case "approach", "scattered" -> {
                 double force = KE * z1 * z2 / (sep * sep) * MEV_FM_N;
                 return new FormulaCard.Formula("RÉPULSION DE COULOMB", "F = k", "|q₁ q₂|", "r²", force(force),
-                        "k · " + z1 + "e × " + z2 + "e / (" + fmt(sep) + " fm)²  ·  " + s1 + " et " + s2,
+                        "k · " + z1 + "e × " + z2 + "e / (" + fmt(sep) + " fm)²  ·  " + s1 + I18n.text(" et ") + s2,
                         "r → 2r", "F → F/4", ROSE);
             }
             case "tunnel" -> {
@@ -433,7 +433,7 @@ public final class FusionReadouts {
                 double now = Math.exp(-2 * Math.PI * sommerfeld(z1, z2, e, mu));
                 double hotter = Math.exp(-2 * Math.PI * sommerfeld(z1, z2, e * 1.2, mu));
                 return new FormulaCard.Formula("PASSAGE PAR EFFET TUNNEL", "T = exp", "−2∫κ dr", "", scientificShort(run.getWkbTransmission()),
-                        "κ = √(2μ(V − E))/ħ  ·  E = " + energy(run.getEnergyKev()) + " sous un mur de " + energy(run.getBarrierMev() * 1000),
+                        "κ = √(2μ(V − E))/ħ  ·  E = " + energy(run.getEnergyKev()) + I18n.text(" sous un mur de ") + energy(run.getBarrierMev() * 1000),
                         "E → 1,2 E", "T × " + number(hotter / Math.max(now, 1e-300)), SKY);
             }
             case "merge" -> {
@@ -456,7 +456,7 @@ public final class FusionReadouts {
                         "E* → 4 E*", "T → 2 T", GOLD);
             }
             case "evaporation" -> {
-                return new FormulaCard.Formula("ÉVAPORATION DE WEISSKOPF", "Γₓ ∝ ", "(2sₓ+1) μₓ ε σ(ε) ρ(E*−Bₓ−ε)", "", fmt(eStar0) + " MeV à dissiper",
+                return new FormulaCard.Formula("ÉVAPORATION DE WEISSKOPF", "Γₓ ∝ ", "(2sₓ+1) μₓ ε σ(ε) ρ(E*−Bₓ−ε)", "", fmt(eStar0) + I18n.text(" MeV à dissiper"),
                         "chaque émission emporte son énergie et laisse un noyau plus froid", "E* ↓", "émissions ↓", GOLD);
             }
             case "products" -> {
@@ -467,7 +467,7 @@ public final class FusionReadouts {
             }
             case "contact" -> {
                 return new FormulaCard.Formula(run.getOutcome().equals("elastic") ? "CONTACT SANS ÉTAT LIÉ" : "SYSTÈME DINUCLÉAIRE",
-                        "Z₁ + Z₂ = ", (z1 + z2) + "", "", energy(e * 1000) + " rendus",
+                        "Z₁ + Z₂ = ", (z1 + z2) + "", "", energy(e * 1000) + I18n.text(" rendus"),
                         run.getOutcome().equals("elastic") ? "la vitesse radiale change de signe, l'énergie et l'impulsion sont conservées"
                                 : "au-delà de Z = 118, aucun noyau composé ne tient",
                         "", "", ROSE);
@@ -483,7 +483,7 @@ public final class FusionReadouts {
         if (a == null || b == null || barrierKev <= 0) return null;
         double contact = 1.2 * (Math.cbrt(Math.max(1, a.getA())) + Math.cbrt(Math.max(1, b.getA())));
         return new FormulaCard.Formula("LE MUR À FRANCHIR", "B = k", "Z₁ Z₂ e²", "R₁ + R₂", energy(barrierKev),
-                "au contact, R₁ + R₂ ≈ " + fmt(contact) + " fm  ·  le tir est réglé à " + energy(energyKev),
+                "au contact, R₁ + R₂ ≈ " + fmt(contact) + I18n.text(" fm  ·  le tir est réglé à ") + energy(energyKev),
                 "E = " + energy(energyKev), energyKev >= barrierKev ? "au-dessus du mur" : "sous le mur : effet tunnel", ROSE);
     }
 
@@ -494,7 +494,7 @@ public final class FusionReadouts {
         double e = run.getEnergyKev() / 1000, sep = Math.max(r.separation, 1e-3);
         return switch (r.stage) {
             case "scattered" -> touched
-                    ? "Séparation après contact : K = " + energy(Math.max(0, r.kinetic) * 1000)
+                    ? I18n.text("Séparation après contact : K = ") + energy(Math.max(0, r.kinetic) * 1000)
                     + "     V = " + energy(r.potential * 1000) + "     K + V = " + energy(e * 1000)
                     + "     r = " + fmt(sep) + " fm"
                     : "F = kZ₁Z₂e²/r² = " + force(KE * z1 * z2 / (sep * sep) * MEV_FM_N) + "     V = kZ₁Z₂e²/r = "
@@ -504,14 +504,14 @@ public final class FusionReadouts {
             case "tunnel" -> "T = exp(−2∫κ dr) = " + scientificShort(run.getWkbTransmission()) + "     κ = √(2μ(V − E))/ħ     P(ce tir) = "
                     + probability(run.getProbability());
             case "merge" -> time.computedMerge() ? "μr̈ = −dV/dr − γ(r)·ṙ     γ = K·(dV_N/dr)²     ∫γṙ² dt = " + fmt(r.heat) + " MeV     r = " + fmt(sep) + " fm"
-                    : "E* = E + Q = " + fmt(eStar0) + " MeV     soudure ≈ 10⁻²² s (mise en scène)";
+                    : "E* = E + Q = " + fmt(eStar0) + I18n.text(" MeV     soudure ≈ 10⁻²² s (mise en scène)");
             case "relax" -> "E* = E + Q = " + fmt(eStar0) + " MeV     forme interpolée (non tracée)";
             case "compound" -> "E* = E + Q = " + fmt(eStar0) + " MeV     T = √(8E*/A) = " + fmt(temperature(eStar0, run.getCompoundA())) + " MeV     J = j₁ + j₂ + ℓ";
             case "evaporation" -> "Γₓ ∝ (2sₓ+1)·μₓ·ε·σ(ε)·ρ(E* − Bₓ − ε)     (Weisskopf" + (run.getOutcome().equals("fission") ? ", Bohr–Wheeler" : "") + ")";
             case "products" -> "Q = (Σm avant − Σm après)·c² = " + fmt(run.getQMev()) + " MeV     Σp⃗ = 0     E = " + energy(e * 1000) + " + Q";
             case "contact" -> run.getOutcome().equals("elastic")
-                    ? "Contact sans capture : pᵣ sortant = −pᵣ entrant     K + V = " + energy(e * 1000)
-                    : "Z₁ + Z₂ = " + (z1 + z2) + "     système dinucléaire : il tourne ≈ " + duration(Math.max(run.getCompoundDurationS(), 1e-21)) + " puis se sépare";
+                    ? I18n.text("Contact sans capture : pᵣ sortant = −pᵣ entrant     K + V = ") + energy(e * 1000)
+                    : "Z₁ + Z₂ = " + (z1 + z2) + I18n.text("     système dinucléaire : il tourne ≈ ") + duration(Math.max(run.getCompoundDurationS(), 1e-21)) + I18n.text(" puis se sépare");
             default -> "";
         };
     }
@@ -594,24 +594,24 @@ public final class FusionReadouts {
                 lines.add("E(" + n1 + ") = " + scientificShort(en[p1]) + " V/m · E(" + n2 + ") = " + scientificShort(en[p2]) + " V/m · angle "
                         + fmt(Math.toDegrees(Math.acos(Math.max(-1, Math.min(1, cos))))) + "°");
                 lines.add("ε₀E₁·E₂ = " + scientificShort(EPS0 * dot) + " J/m³" + (dot < 0 ? " (négatif : ils s'opposent)" : ""));
-                if (r.potentialTop > 0) lines.add("col au contact : " + energy(r.potentialTop * 1000) + " · ici " + fmt(100 * potential / r.potentialTop) + " %");
-                lines.add("un proton posé ici : F = eE = " + force(ELEMENTARY * total));
-                return new Card("ZONE DU COL", "Entre les deux noyaux, le potentiel combiné : l'énergie qu'aurait une charge +e posée ici. Leurs "
-                        + "champs s'y opposent ; la couleur (bleu → blanc) suit U, les lignes sont des isopotentielles.", lines,
+                if (r.potentialTop > 0) lines.add("col au contact : " + energy(r.potentialTop * 1000) + I18n.text(" · ici ") + fmt(100 * potential / r.potentialTop) + " %");
+                lines.add(I18n.text("un proton posé ici : F = eE = ") + force(ELEMENTARY * total));
+                return new Card("ZONE DU COL", I18n.text("Entre les deux noyaux, le potentiel combiné : l'énergie qu'aurait une charge +e posée ici. Leurs ")
+                        + I18n.text("champs s'y opposent ; la couleur (bleu → blanc) suit U, les lignes sont des isopotentielles."), lines,
                         FusionRenderer.heatColor(heat), vectors);
             }
         }
         boolean far = level[first] < .06;
-        lines.add("r = " + fmt(dist[first]) + " fm du centre de " + name);
+        lines.add("r = " + fmt(dist[first]) + I18n.text(" fm du centre de ") + name);
         lines.add(screening(r.debyeFm, dist[first]));
         lines.add("E = kZe/r² = " + scientificShort(en[first]) + " V/m" + (n > 1 ? " · total " + scientificShort(total) + " V/m" : ""));
         lines.add("u = ε₀E²/2 = " + scientificShort(u) + " J/m³");
-        lines.add("= " + times(u / SUN_CORE_PA) + " la pression au cœur du Soleil");
-        lines.add("φ = Σ kZe/r = " + volts(phi) + " · U = eφ = " + energy(phi / 1e3) + " (un proton posé ici)");
-        lines.add("un proton posé ici : F = eE = " + force(ELEMENTARY * total));
+        lines.add("= " + times(u / SUN_CORE_PA) + I18n.text(" la pression au cœur du Soleil"));
+        lines.add("φ = Σ kZe/r = " + volts(phi) + " · U = eφ = " + energy(phi / 1e3) + I18n.text(" (un proton posé ici)"));
+        lines.add(I18n.text("un proton posé ici : F = eE = ") + force(ELEMENTARY * total));
         return new Card(far ? "LOIN DES NOYAUX" : "HALO DE " + name, far ? "Le champ s'y affaiblit en 1/r² ; l'énergie qu'il porte, en 1/r⁴, y est déjà infime."
-                : "Le champ électrique de ce noyau (charge +" + q.get(first).body().z() + "e). Son énergie ε₀E²/2 décroît en 1/r⁴ : le halo "
-                + "s'éteint à quelques rayons.", lines, accent, vectors);
+                : I18n.text("Le champ électrique de ce noyau (charge +") + q.get(first).body().z() + I18n.text("e). Son énergie ε₀E²/2 décroît en 1/r⁴ : le halo ")
+                + I18n.text("s'éteint à quelques rayons."), lines, accent, vectors);
     }
 
     /**
@@ -629,8 +629,8 @@ public final class FusionReadouts {
                 best = t;
             }
         }
-        if (best == null) return new Card("CARTE", "Distances comprimées (échelle logarithmique) : la sonde ne mesure ici que les corps. "
-                + "Pour sonder le champ, éteignez la carte (bouton « Carte »).", List.of(), Color.web("#FFC46B"), List.of());
+        if (best == null) return new Card("CARTE", I18n.text("Distances comprimées (échelle logarithmique) : la sonde ne mesure ici que les corps. ")
+                + I18n.text("Pour sonder le champ, éteignez la carte (bouton « Carte »)."), List.of(), Color.web("#FFC46B"), List.of());
         Body b = best.body();
         double beta = Math.min(.999999, b.velocity().norm() / C), distance = best.offset().norm();
         double mass = best.look() != null && best.look().mass() > 0 ? best.look().mass() : Math.max(1, b.a()) * 931.494;
@@ -640,15 +640,15 @@ public final class FusionReadouts {
         lines.add(distance < 1e-9 ? "le centre de la carte : l'élément créé" : "distance vraie au centre : " + lengthText(distance * 1e-15)
                 + " (" + scientificShort(distance) + " fm)");
         lines.add("vitesse : " + (massless ? "c" : ResultView.percent(beta)));
-        if (!massless && kinetic > 0) lines.add("énergie cinétique K = (γ − 1)mc² = " + energy(kinetic * 1000));
+        if (!massless && kinetic > 0) lines.add(I18n.text("énergie cinétique K = (γ − 1)mc² = ") + energy(kinetic * 1000));
         if (distance > 1e-9) {
             V u = best.offset().unit();
             lines.add("direction de vol : (" + fmt(u.x()) + " ; " + fmt(u.y()) + " ; " + fmt(u.z()) + ")");
         }
         if (r.mapCompression > 1.05 && distance > 1e-9)
-            lines.add("affiché comprimé : le plus éloigné est à " + scientificShort(r.mapCompression) + " × sa place");
-        return new Card(name(b).toUpperCase(Locale.ROOT), "Sur la carte, ce qui reste exact : la direction, la vitesse, l'énergie et "
-                + "la distance vraie. Les distances affichées sont comprimées.", lines, FusionRenderer.bodyColor(b.z(), b.a()), List.of());
+            lines.add(I18n.text("affiché comprimé : le plus éloigné est à ") + scientificShort(r.mapCompression) + I18n.text(" × sa place"));
+        return new Card(name(b).toUpperCase(Locale.ROOT), I18n.text("Sur la carte, ce qui reste exact : la direction, la vitesse, l'énergie et ")
+                + I18n.text("la distance vraie. Les distances affichées sont comprimées."), lines, FusionRenderer.bodyColor(b.z(), b.a()), List.of());
     }
 
     private Card nucleusCard(FusionRenderer.Report r, List<FusionRenderer.Source> q, int k, double d, double field, double phi, List<double[]> vectors) {
@@ -657,25 +657,25 @@ public final class FusionReadouts {
         double radius = s.radius();
         String name = name(s.body());
         List<String> lines = new ArrayList<>();
-        lines.add("Z = " + z + " · R = " + fmt(radius) + " fm · ici r = " + fmt(d) + " fm du centre");
+        lines.add("Z = " + z + " · R = " + fmt(radius) + I18n.text(" fm · ici r = ") + fmt(d) + I18n.text(" fm du centre"));
         lines.add("E = kZe·r/R³ = " + scientificShort(field) + " V/m");
         lines.add("en surface : kZe/R² = " + scientificShort(FIELD * z / (radius * radius)) + " V/m");
         lines.add("φ = kZe(3R² − r²)/2R³ + autres = " + volts(phi) + " · U = eφ = " + energy(phi / 1e3));
         if (q.size() == 2) {
             FusionRenderer.Source o = q.get(1 - k);
             double gap = Math.hypot((s.x() - o.x()) * s.fmPerPx(), (s.y() - o.y()) * s.fmPerPx());
-            if (gap > 1e-3) lines.add("répulsion de " + name(o.body()) + " : F = kZ₁Z₂e²/d² = " + force(KE * z * o.body().z() / (gap * gap) * MEV_FM_N)
+            if (gap > 1e-3) lines.add(I18n.text("répulsion de ") + name(o.body()) + " : F = kZ₁Z₂e²/d² = " + force(KE * z * o.body().z() / (gap * gap) * MEV_FM_N)
                     + " (d = " + fmt(gap) + " fm)");
             if (!Double.isNaN(r.eta)) lines.add("η = " + fmt(r.eta) + " · e^(−2πη) = " + scientificShort(Math.exp(-2 * Math.PI * r.eta)));
         }
-        if (Math.abs(s.beta2()) >= 1e-6) lines.add("β₂ = " + deformation(s.beta2()) + " : comprimé le long de l'axe par l'autre");
+        if (Math.abs(s.beta2()) >= 1e-6) lines.add("β₂ = " + deformation(s.beta2()) + I18n.text(" : comprimé le long de l'axe par l'autre"));
         // Le champ externe courbe sa trajectoire : r_L = p/qB (le rayon du cercle de Larmor), bien plus grand que la scène.
         double beta = Math.min(.999999, s.body().velocity().norm() / C);
         if (r.externalFieldT > 0 && beta > 1e-9) {
             double mass = s.look() != null && s.look().mass() > 0 ? s.look().mass() : Math.max(1, s.body().a()) * 931.494;
             double momentum = mass * beta / Math.sqrt(1 - beta * beta);
-            lines.add("dans " + fmt(r.externalFieldT) + " T : r_L = p/qB = " + lengthText(3.33564095e-3 * momentum / (z * r.externalFieldT))
-                    + " (× " + scientificShort(3.33564095e-3 * momentum / (z * r.externalFieldT) / 1e-15 / Math.max(1, 2 * s.radius())) + " ce noyau)");
+            lines.add(I18n.text("dans ") + fmt(r.externalFieldT) + " T : r_L = p/qB = " + lengthText(3.33564095e-3 * momentum / (z * r.externalFieldT))
+                    + " (× " + scientificShort(3.33564095e-3 * momentum / (z * r.externalFieldT) / 1e-15 / Math.max(1, 2 * s.radius())) + I18n.text(" ce noyau)"));
         }
         // Dans un plasma, il arrache des électrons tout au long de sa route : dE/dx ∝ Z²/v².
         if (r.electronDensityM3 > 0 && beta > 1e-9) {
@@ -684,12 +684,12 @@ public final class FusionReadouts {
         }
         double spin = s.look() == null ? 0 : s.look().spin();
         if (spin > 0 && Math.abs(s.body().moment()) > 1e-6)
-            lines.add("spin " + spinText(spin) + " · μ = " + fmt(s.body().moment()) + " μN · B au pôle ≈ "
+            lines.add("spin " + spinText(spin) + " · μ = " + fmt(s.body().moment()) + I18n.text(" μN · B au pôle ≈ ")
                     + scientificShort(1.0102e12 * Math.abs(s.body().moment()) / Math.pow(radius, 3)) + " T");
         double excitation = s.look() == null ? 0 : s.look().excitation();
-        if (excitation > .05) lines.add("excité : E* = " + fmt(excitation) + " MeV · T = " + fmt(temperature(excitation, s.body().a())) + " MeV");
-        return new Card("NOYAU " + name, "La charge +" + z + "e est répartie dans la sphère : dedans, le champ croît avec r (E ∝ r) ; "
-                + "dehors, il décroît en 1/r².", lines, FusionRenderer.bodyColor(z, s.body().a()), vectors);
+        if (excitation > .05) lines.add(I18n.text("excité : E* = ") + fmt(excitation) + " MeV · T = " + fmt(temperature(excitation, s.body().a())) + " MeV");
+        return new Card(I18n.text("NOYAU ") + name, I18n.text("La charge +") + z + I18n.text("e est répartie dans la sphère : dedans, le champ croît avec r (E ∝ r) ; ")
+                + I18n.text("dehors, il décroît en 1/r²."), lines, FusionRenderer.bodyColor(z, s.body().a()), vectors);
     }
 
     /**
@@ -703,7 +703,7 @@ public final class FusionReadouts {
         lines.add("E₁ + E₂ = 0 : aucune force sur une charge test");
         if (Double.isFinite(r.debyeFm)) lines.add(screening(r.debyeFm, q.isEmpty() ? 0
                 : Math.hypot((saddle[0] - q.get(0).x()) * q.get(0).fmPerPx(), (saddle[1] - q.get(0).y()) * q.get(0).fmPerPx())));
-        lines.add("U = eφ = " + energy(saddle[2] * 1000) + " : l'énergie d'un proton posé ici");
+        lines.add("U = eφ = " + energy(saddle[2] * 1000) + I18n.text(" : l'énergie d'un proton posé ici"));
         int i = (int) saddle[3], j = (int) saddle[4];
         if (i >= 0 && j >= 0 && i < q.size() && j < q.size()) {
             FusionRenderer.Source a = q.get(i), b = q.get(j);
@@ -714,13 +714,13 @@ public final class FusionReadouts {
             if (d > 1e-6) {
                 lines.add("charges ponctuelles : U = ke²(√Z₁ + √Z₂)²/d = " + energy(KE * Math.pow(Math.sqrt(a.charge()) + Math.sqrt(b.charge()), 2) / d * 1000)
                         + " (d = " + fmt(d) + " fm)");
-                lines.add("barrière du choc : V(d) = kZ₁Z₂e²/d = " + energy(KE * a.charge() * b.charge() / d * 1000));
+                lines.add(I18n.text("barrière du choc : V(d) = kZ₁Z₂e²/d = ") + energy(KE * a.charge() * b.charge() / d * 1000));
             }
             if (r2 > 1e-6) lines.add("r(" + na + ")/r(" + nb + ") = " + fmt(r1 / r2) + " = √(Z₁/Z₂) = " + fmt(Math.sqrt(a.charge() / Math.max(b.charge(), 1e-12))));
         }
-        if (r.potentialTop > 0) lines.add("surfaces au contact : ce col monterait à " + energy(r.potentialTop * 1000));
-        return new Card("COL DU POTENTIEL", "Point de selle de U = eφ : le long de l'axe, U y est minimal ; en travers, maximal. Les deux "
-                + "champs s'y annulent : c'est le point le plus bas de la crête qui sépare les deux noyaux.", lines, FusionRenderer.heatColor(level), vectors);
+        if (r.potentialTop > 0) lines.add(I18n.text("surfaces au contact : ce col monterait à ") + energy(r.potentialTop * 1000));
+        return new Card("COL DU POTENTIEL", I18n.text("Point de selle de U = eφ : le long de l'axe, U y est minimal ; en travers, maximal. Les deux ")
+                + I18n.text("champs s'y annulent : c'est le point le plus bas de la crête qui sépare les deux noyaux."), lines, FusionRenderer.heatColor(level), vectors);
     }
 
     /** L'écrantage du plasma à la distance r (fm) : e^(−r/λ_D), ou « vide » sans plasma. */

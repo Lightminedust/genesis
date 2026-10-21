@@ -88,6 +88,8 @@ tasks.withType(JavaExec).configureEach {
 
 tasks.named('test') {
     useJUnitPlatform()
+    // Les tests vérifient les textes sources (français) : ils ne dépendent pas de la langue choisie dans l'application.
+    systemProperty 'genesis.lang', 'fr'
 }
 
 

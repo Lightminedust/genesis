@@ -77,8 +77,8 @@ public class PeriodicTableDialog {
         Label title = new Label("TABLE PÉRIODIQUE");
         title.setStyle("-fx-text-fill: #E2E8F0; -fx-font-size: 15px; -fx-font-weight: bold;");
 
-        Label hint = new Label("Clique un élément pour le construire (la table se referme ; Échap pour fermer). "
-                + "Les éléments encadrés en pointillés n'ont aucun isotope stable.");
+        Label hint = new Label(I18n.text("Clique un élément pour le construire (la table se referme ; Échap pour fermer). ")
+                + I18n.text("Les éléments encadrés en pointillés n'ont aucun isotope stable."));
         hint.setStyle("-fx-text-fill: #475569; -fx-font-size: 11px;");
 
         detail.setStyle("-fx-text-fill: #94A3B8; -fx-font-size: 12px;");

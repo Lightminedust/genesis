@@ -35,6 +35,15 @@ public final class DashboardPreview {
                     run(app, 2.5);
                     String name = "dashboard_" + size[0];
                     ImageIO.write(snap(scene), "png", out.resolve(name + ".png").toFile());
+                    app.previewPanel(null);
+                    run(app, 0.4);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_shells.png").toFile());
+                    app.previewPanel("5f");
+                    run(app, 0.2);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_shells_hint.png").toFile());
+                    app.previewPanel("i");
+                    run(app, 0.2);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_limits.png").toFile());
                     app.receive(read(frames, "uranium_decay"));
                     BufferedImage strip = new BufferedImage(size[0] / 2 * 4, size[1] / 2, BufferedImage.TYPE_INT_ARGB);
                     double[] steps = {0.06, 0.25, 0.6, 1.4};
@@ -48,12 +57,75 @@ public final class DashboardPreview {
                     }
                     ImageIO.write(strip, "png", out.resolve(name + "_decay_film.png").toFile());
                     ImageIO.write(snap(scene), "png", out.resolve(name + "_journal.png").toFile());
+                    // Un neutron lent sur l'uranium 235 : la fission, telle que le moteur la calcule.
+                    app.previewPanel(null);
+                    app.receive(read(frames, "uranium235"));
+                    run(app, 0.5);
+                    app.receive(read(frames, "uranium235_fission"));
+                    run(app, 0.9);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_neutron.png").toFile());
+                    run(app, 2.5);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_neutron_after.png").toFile());
+                    // L'yttrium (4d¹) : tout le nuage, puis la valence seule et la phase de ψ (retour d'utilisateur).
+                    for (String element : new String[]{"yttrium", "tungsten"}) {
+                        app.previewOrbitalModes(false, false);
+                        app.receive(read(frames, element));
+                        run(app, 1.2);
+                        ImageIO.write(snap(scene), "png", out.resolve(name + "_" + element + ".png").toFile());
+                        app.previewOrbitalModes(true, true);
+                        run(app, 1.2);
+                        ImageIO.write(snap(scene), "png", out.resolve(name + "_" + element + "_valence.png").toFile());
+                    }
+                    app.previewOrbitalModes(false, false);
+                    // Un proton ajouté au radon : pendant le vol, c'est encore du radon ; à l'impact, du francium.
+                    app.receive(read(frames, "add_proton"));
+                    run(app, 0.6);
+                    app.receive(read(frames, "add_proton_after"));
+                    run(app, 0.45);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_proton_flight.png").toFile());
+                    run(app, 0.6);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_proton_impact.png").toFile());
+                    // La vue de Bohr : l'uranium, sa valence autour du cœur [Rn], une capture d'électron, une désintégration α.
+                    app.previewBohr(true);
+                    app.receive(read(frames, "uranium_now"));
+                    run(app, 1.5);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr.png").toFile());
+                    app.previewOrbitalModes(true, false);
+                    run(app, 0.5);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr_valence.png").toFile());
+                    app.previewOrbitalModes(false, false);
+                    app.receive(read(frames, "uranium_decay"));
+                    run(app, 0.35);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr_decay.png").toFile());
+                    app.receive(read(frames, "add_electron"));
+                    run(app, 1.0);
+                    app.receive(read(frames, "add_electron_after"));
+                    run(app, 0.6);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr_capture.png").toFile());
+                    run(app, 1.2);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr_captured.png").toFile());
+                    for (String heavy : new String[]{"oganesson", "magnesium"}) {
+                        app.receive(read(frames, heavy));
+                        run(app, 1.5);
+                        ImageIO.write(snap(scene), "png", out.resolve(name + "_bohr_" + heavy + ".png").toFile());
+                    }
+                    app.previewBohr(false);
+                    // Un électron sur l'argon : Ar⁻ n'existe pas, il rebondit ; la case suivante clignote en rouge.
+                    app.previewPanel(null);
+                    app.receive(read(frames, "argon_electron"));
+                    run(app, 0.4);
+                    app.receive(read(frames, "argon_electron_after"));
+                    run(app, 1.0);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_argon_refused.png").toFile());
                     app.previewJournal(true);
                     run(app, 9);
                     ImageIO.write(snap(scene), "png", out.resolve(name + "_genesis.png").toFile());
                     app.previewLoader();
                     run(app, 1.2);
                     ImageIO.write(snap(scene), "png", out.resolve(name + "_loader.png").toFile());
+                    app.previewUpdate();
+                    run(app, 1.0);
+                    ImageIO.write(snap(scene), "png", out.resolve(name + "_update.png").toFile());
                 }
             } catch (Throwable e) {
                 e.printStackTrace();

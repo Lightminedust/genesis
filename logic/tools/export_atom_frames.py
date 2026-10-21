@@ -24,6 +24,10 @@ CASES = {
     "iron": (26, None, False),
     "praseodymium": (59, None, False),
     "uranium": (92, None, False),
+    "yttrium": (39, None, False),
+    "tungsten": (74, None, False),
+    "oganesson": (118, None, False),
+    "magnesium": (12, None, False),
     "hydrogen": (1, None, False),
     "hydrogen3d": (1, (3, 2), False),
     "sodium_excited": (11, None, True),
@@ -66,6 +70,39 @@ def main(out):
     with open(os.path.join(out, "uranium_decay.bin"), "wb") as handle:
         handle.write(frame.SerializeToString())
     print("désintégration :", frame.nucleus.nuclide, [e.kind for e in frame.events])
+
+    # Un neutron lent sur l'uranium 235 : la première graine qui donne une fission (sections efficaces mesurées).
+    for seed in range(50):
+        session = Session(repository, seed=seed)
+        session.load_element(92)
+        session.atom.neutrons = 143
+        before = session_frame(1, session, session.evaluate("ADD_NEUTRON"), repository.source, [], "ADD_NEUTRON", True)
+        events = session.fire_neutron()
+        if any(e.get("decay_mode") == "n_fission" for e in events):
+            break
+    frame = session_frame(2, session, session.evaluate("FIRE_NEUTRON"), repository.source, events, "FIRE_NEUTRON", True)
+    for name, message in (("uranium235.bin", before), ("uranium235_fission.bin", frame)):
+        with open(os.path.join(out, name), "wb") as handle:
+            handle.write(message.SerializeToString())
+    print("neutron :", [e.title for e in frame.events])
+
+    # Ajouts pas à pas, pour les animations : un proton sur le radon (il devient francium), un électron sur Na⁺.
+    def pair(name, z, act, before_hook=None):
+        session = Session(repository, seed=5)
+        session.load_element(z)
+        if before_hook:
+            before_hook(session)
+        before = session_frame(1, session, session.evaluate("LOAD_ELEMENT"), repository.source, [], "LOAD_ELEMENT", True)
+        events = act(session)
+        after = session_frame(2, session, session.evaluate(name.upper()), repository.source, events, name.upper(), True)
+        for suffix, message in (("", before), ("_after", after)):
+            with open(os.path.join(out, name + suffix + ".bin"), "wb") as handle:
+                handle.write(message.SerializeToString())
+        print(name, [e.title for e in after.events])
+
+    pair("add_proton", 86, lambda s: s.add_proton())
+    pair("add_electron", 11, lambda s: s.add_electron(), lambda s: s.remove_electron())
+    pair("argon_electron", 18, lambda s: s.add_electron())
 
 
 if __name__ == "__main__":

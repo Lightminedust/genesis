@@ -45,6 +45,16 @@ public class QuantumView {
             Color.web("#FCFFA4"),
     };
 
+    /** Phase de ψ : bleu pour ψ > 0, orange pour ψ < 0 ; la luminosité suit |ψ|² (même échelle log). */
+    private static final Color[] PLUS = {Color.web("#000004"), Color.web("#0B1F4D"), Color.web("#1D4ED8"),
+            Color.web("#60A5FA"), Color.web("#DBEAFE")};
+    private static final Color[] MINUS = {Color.web("#000004"), Color.web("#4A1405"), Color.web("#C2410C"),
+            Color.web("#FB923C"), Color.web("#FFEDD5")};
+
+    /** Orbitales réelles nulles dans le plan xz (elles contiennent y en facteur) : occupées, mais hors de la coupe. */
+    private static final java.util.Set<String> OUT_OF_SLICE = java.util.Set.of(
+            "p_y", "d_yz", "d_xy", "f_yz²", "f_xyz", "f_y(3x²-y²)");
+
     /** Décades affichées par l'échelle log : assez pour voir les lobes externes et les nœuds. */
     static final double LOG_DECADES = 4.0;
 
@@ -57,6 +67,10 @@ public class QuantumView {
 
     private Orbital orbital;
     private WritableImage image;
+    private WritableImage phaseImage;
+    /** Montrer la phase de ψ (une orbitale) au lieu de |ψ|² (toute la sous-couche). */
+    private boolean phaseMode;
+    private double[] phaseChip;
     private WritableImage previousImage;
     private double crossFade = 1.0;
     private double[] cumulative = new double[0];
@@ -68,6 +82,13 @@ public class QuantumView {
     public QuantumView(double width, double height) {
         canvas = new Canvas(width, height);
         gc = canvas.getGraphicsContext2D();
+        canvas.setOnMouseClicked(event -> {
+            double[] chip = phaseChip;
+            if (chip != null && event.getX() >= chip[0] && event.getX() <= chip[0] + chip[2]
+                    && event.getY() >= chip[1] && event.getY() <= chip[1] + chip[3]) {
+                phaseMode = !phaseMode;
+            }
+        });
     }
 
     public Canvas getNode() {
@@ -84,6 +105,7 @@ public class QuantumView {
         previousImage = image;
         orbital = next;
         image = next == null ? null : paint(next);
+        phaseImage = next == null || next.getPhaseCount() != next.getSize() * next.getSize() ? null : paintPhase(next);
         crossFade = previousImage == null ? 1.0 : 0.0;
         cumulative = next == null ? new double[0] : buildCumulative(next);
         measurements.clear();
@@ -95,7 +117,8 @@ public class QuantumView {
         }
         return a.getLabel().equals(b.getLabel())
                 && Math.abs(a.getZEff() - b.getZEff()) < 1e-4
-                && a.getOccupationList().equals(b.getOccupationList());
+                && a.getOccupationList().equals(b.getOccupationList())
+                && a.getPhaseName().equals(b.getPhaseName());
     }
 
     /** Densité -> couleur, en échelle logarithmique sur LOG_DECADES décades. */
@@ -126,6 +149,27 @@ public class QuantumView {
             }
         }
         return result;
+    }
+
+    /** ψ signé d'une orbitale : la teinte dit le signe, la luminosité |ψ|² sur la même échelle log que la densité. */
+    private static WritableImage paintPhase(Orbital orbital) {
+        int size = orbital.getSize();
+        WritableImage result = new WritableImage(size, size);
+        PixelWriter writer = result.getPixelWriter();
+        for (int row = 0; row < size; row++) {
+            for (int column = 0; column < size; column++) {
+                double psi = orbital.getPhase(row * size + column);
+                writer.setColor(column, row, phaseColor(psi));
+            }
+        }
+        return result;
+    }
+
+    static Color phaseColor(double psi) {
+        Color[] ramp = psi >= 0 ? PLUS : MINUS;
+        double t = logScale(psi * psi) * (ramp.length - 1);
+        int index = Math.min(ramp.length - 2, (int) Math.floor(t));
+        return ramp[index].interpolate(ramp[index + 1], Math.min(1, t - index));
     }
 
     /**
@@ -205,28 +249,80 @@ public class QuantumView {
         }
 
         double diagramHeight = 48;
-        double side = Math.min(width - 8, height - diagramHeight - 30);
+        boolean phaseShown = phaseMode && phaseImage != null;
+        double side = Math.min(width - 8, height - diagramHeight - (phaseShown ? 42 : 30));
         double left = (width - side) / 2;
         double top = 18;
 
         gc.setImageSmoothing(true);
-        if (previousImage != null && crossFade < 1) {
+        boolean phase = phaseMode && phaseImage != null;
+        if (!phase && previousImage != null && crossFade < 1) {
             gc.setGlobalAlpha(1 - crossFade);
             gc.drawImage(previousImage, left, top, side, side);
         }
-        gc.setGlobalAlpha(crossFade);
-        gc.drawImage(image, left, top, side, side);
+        gc.setGlobalAlpha(phase ? 1.0 : crossFade);
+        gc.drawImage(phase ? phaseImage : image, left, top, side, side);
         gc.setGlobalAlpha(1.0);
 
-        drawMeasurements(left, top, side);
+        if (!phase) {
+            drawMeasurements(left, top, side);   // les tirages suivent |ψ|² de toute la sous-couche
+        }
         drawOverlay(left, top, side);
+        drawPhaseChip(left, top, side);
         drawHundDiagram(width, top + side + 6);
 
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font("Segoe UI", 9));
         gc.setFill(Color.web("#64748B"));
-        I18n.fillText(gc, "clair = densité · points = tirages dans la coupe xz · ↑↓ = spins",
-                width / 2, top + side + 48);
+        if (phase) {
+            // Deux lignes : la convention des couleurs, puis l'orbitale choisie et pourquoi.
+            I18n.fillText(gc, I18n.text("phase de ψ pour ") + orbital.getPhaseName() + " · " + I18n.text("bleu ψ > 0 · orange ψ < 0"),
+                    width / 2, top + side + 48);
+            gc.setFill(Color.web("#475569"));
+            I18n.fillText(gc, phaseIsLastElectron() ? "l'orbitale du dernier électron placé (Hund)"
+                    : "le dernier électron est hors de la coupe : dernière orbitale occupée visible", width / 2, top + side + 60);
+        } else {
+            I18n.fillText(gc, "clair = densité · points = tirages dans la coupe xz · ↑↓ = spins", width / 2, top + side + 48);
+        }
+    }
+
+    /** La bascule |ψ|² ↔ phase, en haut à droite de la coupe ; absente si la phase n'est pas définie. */
+    private void drawPhaseChip(double left, double top, double side) {
+        if (phaseImage == null) {
+            phaseChip = null;
+            return;
+        }
+        String text = phaseMode ? "|ψ|²" : "phase ±";
+        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+        double w = I18n.text(text).length() * 6.2 + 14;
+        double x = left + side - w - 6;
+        double y = top + 6;
+        gc.setFill(Color.web("#0F172A", 0.85));
+        gc.fillRoundRect(x, y, w, 18, 9, 9);
+        gc.setStroke(Color.web(phaseMode ? "#F59E0B" : "#3B82F6", 0.8));
+        gc.setLineWidth(1);
+        gc.strokeRoundRect(x + 0.5, y + 0.5, w - 1, 17, 9, 9);
+        gc.setFill(Color.web("#E2E8F0"));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextBaseline(VPos.CENTER);
+        I18n.fillText(gc, text, x + w / 2, y + 9);
+        gc.setTextBaseline(VPos.BASELINE);
+        phaseChip = new double[]{x, y, w, 18};
+    }
+
+    /** L'orbitale de la phase est-elle celle du dernier électron placé (Hund) ? Sinon, celui-ci est hors de la coupe. */
+    private boolean phaseIsLastElectron() {
+        int electrons = 0;
+        for (int count : orbital.getOccupationList()) electrons += count;
+        int boxes = orbital.getOrbitalNamesCount();
+        return boxes == 0 || electrons == 0
+                || orbital.getOrbitalNames((electrons - 1) % boxes).equals(orbital.getPhaseName())
+                || orbital.getOrbitalNames(0).equals("m non résolu");
+    }
+
+    /** Pour les aperçus et les tests : afficher la phase. */
+    public void setPhaseMode(boolean on) {
+        phaseMode = on;
     }
 
     private void drawMeasurements(double left, double top, double side) {
@@ -261,13 +357,13 @@ public class QuantumView {
         gc.setTextBaseline(VPos.BASELINE);
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
         gc.setFill(Color.web("#F1F5F9"));
-        I18n.fillText(gc, "orbitale " + title, left + 6, top + 16);
+        I18n.fillText(gc, I18n.text("orbitale ") + title, left + 6, top + 16);
         gc.setFont(Font.font("Consolas", 9));
         gc.setFill(Color.web("#CBD5E1", 0.8));
         I18n.fillText(gc, "n=" + orbital.getN() + "  l=" + orbital.getL() + " (" + letters.charAt(Math.min(6, orbital.getL()))
                 + ")  Z_eff=" + Visuals.fixed(orbital.getZEff(), 2), left + 6, top + 29);
         boolean unresolvedM = orbital.getOrbitalNamesList().contains("m non résolu");
-        I18n.fillText(gc, orbital.getRadialNodes() + " nœud(s) radial(aux)"
+        I18n.fillText(gc, orbital.getRadialNodes() + I18n.text(" nœud(s) radial(aux)")
                 + (unresolvedM ? " · mélange des m" : " · Slater (approx.)"), left + 6, top + 41);
 
         // Barre d'échelle en picomètres
@@ -302,7 +398,7 @@ public class QuantumView {
         for (int k = 0; k < boxes; k++) {
             int occupancy = orbital.getOccupation(k);
             String name = k < orbital.getOrbitalNamesCount() ? orbital.getOrbitalNames(k) : "";
-            boolean outOfSlice = name.contains("y");
+            boolean outOfSlice = OUT_OF_SLICE.contains(name);
             gc.setStroke(Color.web(outOfSlice ? "#334155" : "#64748B"));
             gc.setLineWidth(1);
             gc.strokeRect(x, top, boxWidth, 18);

@@ -129,6 +129,7 @@ message UserAction {
     HADRON_DECAY = 77;        // atelier : nouvelle désintégration de l'objet courant
     HADRON_CLEAR = 78;        // atelier : vider la table
     COLLISION_FORCE = 79;     // un événement du cas choisi sur le spectre : value = indice du canal
+    FIRE_NEUTRON = 80;        // un neutron thermique (0,0253 eV) vers le noyau de l'atome
   }
   ActionType type = 1;
   int32 value = 2;
@@ -641,6 +642,8 @@ message Orbital {
   int32 radial_nodes = 8;
   repeated string orbital_names = 9;
   repeated int32 occupation = 10; // remplissage de Hund, orbitale par orbitale
+  repeated float phase = 11;      // ψ signé de l'orbitale phase_name, même grille, max |ψ| = 1 ; vide si non défini
+  string phase_name = 12;         // "d_z²" : l'orbitale du dernier électron placé (Hund)
 }
 
 message Calculation {

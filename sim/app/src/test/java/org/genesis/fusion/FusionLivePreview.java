@@ -1,5 +1,6 @@
 package org.genesis.fusion;
 
+import org.genesis.app.I18n;
 import org.genesis.engine.EngineClient;
 
 import com.studio.genesis.grpc.*;
@@ -41,10 +42,11 @@ public final class FusionLivePreview {
             forced = Boolean.parseBoolean(args[4]);
             view = new ReactorView(() -> {}, i -> {}, v -> {}, () -> {});
             scene = new Scene(view.getNode(), 1365, 768);
+            I18n.attach(scene);
             scene.getStylesheets().add(getClass().getResource("/genesis.css").toExternalForm());
             view.getNode().applyCss(); view.getNode().resize(1365,768); view.getNode().layout();
             // Garder le bilan disponible sans ouvrir une fenêtre pendant l'enregistrement.
-            new Scene(view.resultNode(),472,568);
+            I18n.attach(new Scene(view.resultNode(),472,568));
             client = new EngineClient("localhost", Integer.parseInt(args[5]),
                     frame -> Platform.runLater(() -> receive(frame)),
                     error -> Platform.runLater(() -> finish(error)),

@@ -1,763 +1,831 @@
-# Genesis — Simulateur atomique
+# Genesis — Atomic Simulator
 
-Un atome qui vit selon les règles de la physique. Le moteur fait tourner le
-temps ; à chaque instant il applique les règles, et ce qui arrive en découle :
-un électron excité redescend en émettant un photon, un photon est absorbé ou
-traverse, un noyau instable se désintègre. Rien n'est scénarisé : chaque
-événement arrive au moment tiré par la loi physique, avec le calcul qui le
-justifie.
+**English** · [Français](README.fr.md)
 
-Licence d'utilisation : [EULA.txt](EULA.txt).
+An atom that lives by the rules of physics. The engine runs time; at every
+instant it applies the rules, and whatever happens follows from them: an
+excited electron falls back and emits a photon, a photon is absorbed or passes
+through, an unstable nucleus decays. Nothing is scripted: each event happens at
+the moment drawn by the physical law, together with the calculation that
+justifies it.
+
+Licence: [EULA.txt](EULA.txt).
 
 ```
-JavaFX (sim/)  --- gRPC bidirectionnel --->  Python (logic/)  ---> MongoDB
-  dessine les événements   genesis.proto v25   horloge + règles     table périodique
-                                               scipy, radioactivedecay, mendeleev
+JavaFX (sim/)  --- bidirectional gRPC --->  Python (logic/)  ---> MongoDB
+  draws the events     genesis.proto v27     clock + rules        periodic table
+                                             scipy, radioactivedecay, mendeleev
 ```
 
-## Lancer
+## Running
 
 ```bash
-# 1. Le moteur et la base (--build est indispensable après une mise à jour)
+# 1. The engine and the database (--build is required after an update)
 docker compose down
 docker compose up --build
 
-# 2. Le client, dans un second terminal
+# 2. The client, in a second terminal
 cd sim
 gradle run
 ```
 
-Le client vise `localhost:50051` ; pour un autre moteur :
+The client connects to `localhost:50051`; for another engine:
 `gradle run -PgenesisHost=192.168.1.20 -PgenesisPort=50052`.
-Un conteneur resté sur une ancienne image est détecté (`protocol_version`).
+A container left on an old image is detected (`protocol_version`).
 
-L'application démarre en **anglais** par défaut. La barre supérieure permet de
-choisir **Français** ou **English** dans tous les laboratoires ; le choix est
-mémorisé. Pour démarrer directement en français : `gradle run -PgenesisLang=fr`.
-Cette option ne change que les textes du client.
+The application starts in **English** by default. The top bar lets you choose
+**English** or **Français** in every laboratory; the choice is remembered. To
+start directly in French: `gradle run -PgenesisLang=fr` (a language forced this
+way is not saved). The engine always writes in French; the client translates
+everything it shows at display time, including the engine's explanations and
+messages (tables in `sim/app/src/main/resources/i18n/`: exact sentences,
+templates where numbers, nuclides and element names are `{0}` slots, and the
+names of the 118 elements).
 
-**Sans Docker** (Windows, connexion lente) : le moteur tourne aussi
-directement, données en mémoire. Tout marche sauf l'échelle Molécule
-(PySCF n'existe que sous Linux).
+**Without Docker** (Windows, slow connection): the engine also runs directly,
+with its data in memory. Everything works except the Molecule scale (PySCF only
+exists on Linux).
 
 ```bash
 cd logic
-python -m venv venv && venv\Scripts\pip install -r requirements.txt   # une seule fois
+python -m venv venv && venv\Scripts\pip install -r requirements.txt   # once
 venv\Scripts\python -m grpc_tools.protoc -I../core --python_out=. --grpc_python_out=. ../core/genesis.proto
 venv\Scripts\python engine.py
 ```
 
-Le build Docker garde les paquets téléchargés dans un cache : seul ce qui
-change est retéléchargé.
+The Docker build keeps downloaded packages in a cache: only what changes is
+downloaded again.
 
-## Paquet Windows
+## Windows package
 
-Sur Windows, avec un JDK 21 (`jpackage`), `gradle` et l'environnement
-`logic/venv` déjà équipé des dépendances du moteur, installer PyInstaller dans
-cet environnement puis construire le paquet :
+On Windows, with JDK 21 (`jpackage`), `gradle` and the `logic/venv` environment
+already holding the engine's dependencies, install PyInstaller in that
+environment and build the package:
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.2.0
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.3.0
 ```
 
-Le script teste le moteur autonome, puis produit `dist/windows/Genesis`
-(application portable), `Genesis-0.2.0-portable.zip` et un installateur `.exe`.
-L'installateur place Genesis dans le profil utilisateur et ajoute les raccourcis
-au menu Démarrer et au bureau. Pour une nouvelle version, augmenter `-Version` ;
-le même identifiant d'installation permet la mise à niveau.
+The script tests the standalone engine, then produces `dist/windows/Genesis`
+(portable application), `Genesis-0.3.0-portable.zip` and an `.exe` installer.
+The installer puts Genesis in the user profile and adds shortcuts to the Start
+menu and the desktop. For a new version, raise `-Version`; the same install
+identifier allows upgrades.
 
-Le paquet embarque le client JavaFX, son runtime Java et le moteur Python.
-Au premier démarrage, un écran de chargement reste visible jusqu'à ce que le
-moteur Python ait ouvert sa connexion locale. En cas d'échec, le journal est
-dans `%LOCALAPPDATA%\Genesis\logs\engine.log`.
-L'utilisateur n'a besoin ni de Gradle, ni de Python, ni de Docker ou MongoDB.
-Le moteur écoute uniquement sur `127.0.0.1` et s'arrête avec Genesis. Les
-journaux et le cache sont écrits dans `%LOCALAPPDATA%\Genesis\` ; l'application
-portable y écrit aussi. L'échelle Molécule reste masquée dans cette version.
-Le paquet n'est pas signé ; une signature de code et les notices des composants
-tiers sont à préparer avant diffusion publique.
+The package bundles the JavaFX client, its Java runtime and the Python engine.
+On first start, a loading screen stays visible until the Python engine has
+opened its local connection. If it fails, the log is in
+`%LOCALAPPDATA%\Genesis\logs\engine.log`.
+The user needs neither Gradle, Python, Docker nor MongoDB.
+The engine listens only on `127.0.0.1` and stops with Genesis. Logs and cache
+are written to `%LOCALAPPDATA%\Genesis\`; the portable application writes there
+too. The Molecule scale stays hidden in this version.
+The package is not signed; code signing and third-party notices must be
+prepared before public distribution.
 
-## Paquet Linux x86-64
+**Updates.** At start-up, the packaged application asks GitHub, in the
+background, for the latest release of
+[genesis-releases](https://github.com/Lightminedust/genesis-releases) and
+compares it with its own version (given by `jpackage`). If a newer one exists,
+a small card appears at the bottom right once loading is over: **Install now**
+(Windows: the installer is downloaded, its SHA-256 is checked against
+`CHECKSUMS-SHA256.txt`, then it runs and Genesis closes), **See the release**,
+**Later** or **Skip this version**. On Linux and macOS, the button opens the
+download page. Offline, or when run from the sources, nothing is shown
+(`-Dgenesis.version=0.1.0` simulates an older version for testing). Each
+release must therefore publish its `CHECKSUMS-SHA256.txt`.
 
-Sur Ubuntu 22.04 (ou un système de construction compatible), installer JDK 21,
-`gradle`, `fakeroot`, les bibliothèques JavaFX/GTK et un environnement Python
-avec `logic/requirements.txt`, `grpcio-tools` et PyInstaller. Puis lancer :
+**Support.** While the engine starts, the loading screen shows a quiet
+"Support Genesis" section: GitHub, the Genesis website, Gemmie
+(gemmi-e.com/contact), r/gemmie and nellawassi@gmail.com.
+
+## Linux x86-64 package
+
+On Ubuntu 22.04 (or a compatible build system), install JDK 21, `gradle`,
+`fakeroot`, the JavaFX/GTK libraries and a Python environment with
+`logic/requirements.txt`, `grpcio-tools` and PyInstaller. Then run:
 
 ```bash
-bash packaging/build-linux.sh 0.2.0
+bash packaging/build-linux.sh 0.3.0
 ```
 
-Le script gèle le même moteur Python, vérifie son service gRPC et la table des
-118 éléments, construit le client JavaFX, puis produit dans `dist/linux/` un
-installateur `Genesis-0.2.0-linux-x64.deb` et une archive portable
-`Genesis-0.2.0-linux-x64.tar.gz`. Un workflow GitHub Actions
-`.github/workflows/linux-package.yml` réalise cette construction sur Ubuntu.
+The script freezes the same Python engine, checks its gRPC service and the
+table of 118 elements, builds the JavaFX client, then produces in `dist/linux/`
+an installer `Genesis-0.3.0-linux-x64.deb` and a portable archive
+`Genesis-0.3.0-linux-x64.tar.gz`. A GitHub Actions workflow
+`.github/workflows/linux-package.yml` runs this build on Ubuntu.
 
-L'archive s'extrait puis se lance avec `Genesis/bin/Genesis` ; le `.deb` ajoute
-un lanceur au menu des applications. Java et Python sont inclus. Le moteur
-écoute seulement sur `127.0.0.1` et s'arrête avec l'application. Sous Linux,
-son journal est dans `${XDG_STATE_HOME:-~/.local/state}/genesis/logs/engine.log`
-et son cache dans `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
+The archive is extracted and started with `Genesis/bin/Genesis`; the `.deb`
+adds a launcher to the applications menu. Java and Python are included. The
+engine listens only on `127.0.0.1` and stops with the application. On Linux,
+its log is in `${XDG_STATE_HOME:-~/.local/state}/genesis/logs/engine.log`
+and its cache in `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
-## Laboratoire subatomique
+## Subatomic laboratory
 
-Depuis l'accueil, ouvrir **◈ Laboratoire subatomique** (touche **S**). Ce mode
-est indépendant de la construction de l'atome. On peut créer jusqu'à 12
-nucléons, ajouter 0 à 2 électrons, régler l'énergie cinétique initiale puis
-lire ou parcourir les 520 échantillons calculés par Python. La vue nucléaire
-montre les positions 3D, les vitesses et la séparation ; les courbes affichent
-les énergies cinétique, forte, coulombienne et totale, la force radiale
-signée pour deux corps et l'erreur de conservation. Un second graphe montre
-le potentiel effectif en fonction de la séparation ; son axe vertical
-compressé garde visibles à la fois le cœur répulsif et le puits attractif.
-La molette zoome et le glissement tourne la caméra.
+> Hidden for now (incomplete): it no longer appears in the **Laboratories**
+> menu and the **S** key no longer opens it. Its code is kept
+> (`SUBATOMIC_SCREEN` in `App.java`); the description below applies when it is re-enabled.
 
-Le calque **Couplages calculés** relie les paires de nucléons : cyan pour une
-force effective attractive, ambre pour une force répulsive ; l'épaisseur suit
-`|F(r)|` transmis par Python à chaque échantillon. Ces segments montrent une
-force centrale entre deux particules, pas des lignes de champ physiques. La
-jauge **Seuil de séparation** indique `−E_rel` pour deux corps : une marge
-positive signifie qu'ils sont liés dans ce modèle conservatif. Pour plusieurs
-corps, elle montre la marge minimale nécessaire pour arracher un nucléon à
-l'amas figé à cet instant : ce diagnostic local ne garantit pas la stabilité
-future. Le tritium de démonstration démarre près d'un minimum obtenu en
-minimisant le même potentiel, puis oscille sans amortissement.
+From the home screen, open **◈ Subatomic laboratory** (key **S**). This mode is
+independent of building the atom. You can create up to 12 nucleons, add 0 to 2
+electrons, set the initial kinetic energy, then play or step through the 520
+samples computed by Python. The nuclear view shows 3D positions, velocities
+and separation; the curves show the kinetic, strong, Coulomb and total
+energies, the signed radial force for two bodies and the conservation error. A
+second graph shows the effective potential as a function of separation; its
+compressed vertical axis keeps both the repulsive core and the attractive well
+visible. The wheel zooms and dragging rotates the camera.
 
-Dans la vue nucléaire, un encart affiche la densité électronique 1s à une
-autre échelle ; l'échelle électronique complète montre aussi un encart grossi
-du noyau. Ses pixels évaluent `exp(−2r/a)` aux coordonnées physiques en pm, avec
-le rayon `a` calculé par Python. **Saisir un nucléon, le tirer et le relâcher**
-envoie une impulsion vectorielle au moteur : celui-ci repart de l'échantillon
-choisi et recalcule 520 nouvelles images et leur bilan d'énergie. Aucun
-déplacement de particule n'est décidé par le Canvas.
-Changer seulement le nombre d'électrons modifie l'occupation de l'orbitale
-sans remettre à zéro la trajectoire nucléaire en cours.
+The **Computed couplings** layer links pairs of nucleons: cyan for an
+attractive effective force, amber for a repulsive one; the thickness follows
+`|F(r)|` sent by Python at each sample. These segments show a central force
+between two particles, not physical field lines. The **Separation threshold**
+gauge shows `−E_rel` for two bodies: a positive margin means they are bound in
+this conservative model. For several bodies, it shows the minimum margin needed
+to pull one nucleon out of the cluster frozen at that instant: this local
+diagnostic does not guarantee future stability. The demonstration tritium
+starts near a minimum found by minimising the same potential, then oscillates
+without damping.
 
-Le premier cas validé est **p + n**. Un potentiel central effectif
-`V(r) = Gᵣ exp(−r/λᵣ)/r − Gₐ exp(−r/λₐ)/r` possède un cœur répulsif et
-un puits attractif. La force est exactement `−dV/dr`, y compris la dérivée
-des exponentielles ; Coulomb s'ajoute entre protons. Un intégrateur
-**velocity-Verlet** transporte positions et vitesses. Le modèle place une
-paire déjà liée à énergie négative : elle oscille sans s'amortir, car aucune
-émission qui emporterait l'énergie n'est simulée. Le canal des nucléons
-identiques reçoit une pression cinétique effective ; le modèle ne déduit
-pas les niveaux, spins, réactions ni sections efficaces nucléaires.
+In the nuclear view, an inset shows the 1s electron density at another scale;
+the full electronic scale also shows a magnified inset of the nucleus. Its
+pixels evaluate `exp(−2r/a)` at physical coordinates in pm, with the radius `a`
+computed by Python. **Grabbing a nucleon, pulling it and releasing it** sends a
+vector impulse to the engine: it restarts from the chosen sample and recomputes
+520 new frames and their energy balance. No particle motion is decided by the
+Canvas. Changing only the number of electrons changes the orbital occupation
+without resetting the running nuclear trajectory.
 
-Les électrons ont une échelle environ 100 000 fois plus grande. Le bouton
-**Échelle électronique** montre une coupe de densité orbitale 1s
-`|ψ|² ∝ exp(−2r/a)` et son énergie de liaison : hydrogénoïdes pour un
-électron, estimation de Slater pour deux. Il n'y a pas de trajectoire
-ponctuelle d'électron ni de répulsion de Pauli entre électron et proton :
-l'exclusion concerne des fermions identiques. Ce laboratoire est un
-modèle *few-body* explicite, pas un calcul QCD ni un simulateur complet des
-réactions subatomiques. Les masses et l'échelle de Bohr viennent de
-[CODATA/NIST](https://physics.nist.gov/cuu/Constants/index.html) ; le
-[deutéron est un état lié quantique](https://www.energy.gov/science/np/articles/quantum-computing-atomic-nucleus)
-et sa liaison mesurée ne doit pas être confondue avec l'énergie de ce puits
-classique. Le [principe de Pauli entre électrons](https://www.nist.gov/pml/atomic-spectroscopy-compendium-basic-ideas-notation-data-and-formulas/atomic-spectroscopy-10)
-ne remplace pas la mécanique quantique de l'orbitale.
+The first validated case is **p + n**. An effective central potential
+`V(r) = Gᵣ exp(−r/λᵣ)/r − Gₐ exp(−r/λₐ)/r` has a repulsive core and an
+attractive well. The force is exactly `−dV/dr`, including the derivative of the
+exponentials; Coulomb is added between protons. A **velocity-Verlet**
+integrator carries positions and velocities. The model places an already bound
+pair at negative energy: it oscillates without damping, because no emission
+that would carry the energy away is simulated. The channel of identical
+nucleons receives an effective kinetic pressure; the model does not derive
+nuclear levels, spins, reactions or cross sections.
 
-## Le monde subatomique
+Electrons live on a scale about 100,000 times larger. The **Electron scale**
+button shows a slice of the 1s orbital density `|ψ|² ∝ exp(−2r/a)` and its
+binding energy: hydrogen-like for one electron, Slater estimate for two. There
+is no point-like electron trajectory and no Pauli repulsion between electron
+and proton: exclusion concerns identical fermions. This laboratory is an
+explicit *few-body* model, not a QCD calculation nor a complete simulator of
+subatomic reactions. Masses and the Bohr scale come from
+[CODATA/NIST](https://physics.nist.gov/cuu/Constants/index.html); the
+[deuteron is a quantum bound state](https://www.energy.gov/science/np/articles/quantum-computing-atomic-nucleus)
+and its measured binding must not be confused with the energy of this
+classical well. The [Pauli principle between electrons](https://www.nist.gov/pml/atomic-spectroscopy-compendium-basic-ideas-notation-data-and-formulas/atomic-spectroscopy-10)
+does not replace the quantum mechanics of the orbital.
 
-**◉ Le monde subatomique** (touche **K**) réunit trois ateliers ; la collision est une figure 3D de toute la zone (boîte ouverte graduée en fm, traces ramifiées avec leurs points du temps et leurs ombres, lois angulaires calculées en lobes, loupe sur les hadrons), dans le style de la chambre de fusion ; ailleurs, style documentaire (bulles de verre, quarks
-lumineux, gluons en ressorts dorés) :
+## The subatomic world
 
-* **Collision** — un projectile frappe un proton ou un neutron : électron, positron, muons (un photon échangé, 0,3 à 10 GeV, 5° à 170°), neutrino et antineutrino muoniques (un W, qui change la saveur d'un quark), proton ou pions (la force forte : diffraction, formation du Δ, échange de couleur et cordes). Le moteur calcule les cas possibles
-  et leur probabilité : diffusion élastique (Rosenbluth, facteurs de forme de Kelly), excitation du Δ(1232) (Breit–Wigner),
-  résonances supérieures (dualité) et inélastique profond (F₂ par DGLAP). Tout est en 3D : le sac du nucléon (rayon tiré
-  du rayon de charge, sac du MIT), le puits de Coulomb en brume, et l'espace courbé par l'énergie de chacun (lentilles
-  d'Einstein, θ_E² ∝ E, amplifiées d'un facteur affiché). Puis il tire un événement et le montre : le photon virtuel en arc
-  électrique (coudes espacés de λ = ħc/Q, couleur et éclat selon ν) qui emporte l'énergie de l'électron, le recul de l'électron, la désintégration du Δ ou la corde qui se rompt. Chaque étape a sa formule et ses
-  nombres, et énergie et impulsion sont conservées exactement.
-* **Atelier de hadrons** — le tableau du Modèle Standard (fiches calculées : largeurs du W et du Z, durées de vie du muon, du
-  top…) ; on y prend des quarks, on choisit leurs couleurs, et le moteur juge : couleur neutre, Pauli, charge, masse
-  (quarks constituants + hyperfin), destin (stable, fort, électromagnétique, faible par le W, top qui meurt avant de former
-  un hadron), avec une désintégration montrée.
-* **Mer de partons** — le nucléon à une résolution Q² donnée : gluons et paires qui se créent et s'annihilent.
+**◉ The subatomic world** (key **K**) brings together three workshops; the collision is a 3D figure of the whole zone (open box graduated in fm, branching tracks with their time dots and shadows, computed angular laws as lobes, a magnifier on the hadrons), in the style of the fusion chamber; elsewhere, a documentary style (glass bubbles, glowing quarks, gluons as golden springs):
 
-Lois, sources et limites : [le monde subatomique](docs/SUBATOMIC_MODEL.md) et [le modèle du nucléon](docs/NUCLEON_MODEL.md).
+* **Collision** — a projectile hits a proton or a neutron: electron, positron, muons (one photon exchanged, 0.3 to 10 GeV, 5° to 170°), muon neutrino and antineutrino (a W, which changes the flavour of a quark), proton or pions (the strong force: diffraction, Δ formation, colour exchange and strings). The engine computes the possible cases
+  and their probability: elastic scattering (Rosenbluth, Kelly form factors), Δ(1232) excitation (Breit–Wigner),
+  higher resonances (duality) and deep inelastic (F₂ from DGLAP). Everything is in 3D: the nucleon bag (radius taken
+  from the charge radius, MIT bag), the Coulomb well as a haze, and space curved by each particle's energy (Einstein
+  lenses, θ_E² ∝ E, amplified by a displayed factor). Then it draws one event and shows it: the virtual photon as an
+  electric arc (bends spaced by λ = ħc/Q, colour and brightness following ν) carrying away the electron's energy, the electron's recoil, the Δ decay or the breaking string. Each step has its formula and its
+  numbers, and energy and momentum are conserved exactly.
+* **Hadron workshop** — the Standard Model table (computed cards: W and Z widths, muon and
+  top lifetimes…); you take quarks from it, choose their colours, and the engine judges: colour neutrality, Pauli, charge, mass
+  (constituent quarks + hyperfine), fate (stable, strong, electromagnetic, weak through the W, a top that dies before forming
+  a hadron), with a decay shown.
+* **Parton sea** — the nucleon at a given resolution Q²: gluons and pairs that are created and annihilate.
 
-## Ce qu'on peut faire
+Laws, sources and limits: [the subatomic world](docs/SUBATOMIC_MODEL.md) and [the nucleon model](docs/NUCLEON_MODEL.md).
 
-Au lancement, le simulateur charge un atome d'uranium 238 et ouvre l'onglet Orbitale (la forme du nuage de valence, avant le spectre). L'écran de l'atome tient en trois bandes :
+## What you can do
 
-- **La barre du haut** :
-  - l'élément (clic : la table périodique, qui se referme dès qu'un élément est choisi, ou avec Échap) ;
-  - trois compteurs − p⁺ + · − n + · − e⁻ + ;
-  - la lumière : la longueur d'onde (clic : un petit réglage, avec la flamme) et « Tirer un photon » ;
-  - à droite, le menu **Laboratoires** (fusion, laboratoire subatomique, monde subatomique), masqué tant qu'on ne l'ouvre pas. Dès qu'on en choisit un, un **écran d'attente** (`LabLoader`) dit ce que le moteur prépare et le temps écoulé. Il s'efface quand la frame confirme le laboratoire, et dit pourquoi si le moteur ne répond pas (obsolète, injoignable). Le retour à l'atome a la même attente ;
-  - un point de couleur qui donne l'état de la connexion au survol.
-- **La scène**, avec sa barre de vue :
-  - l'échelle (Atome · Noyau · Nucléon · Gouffre) ;
-  - ce que fait le glisser (⟳ Tourner · ✥ Déplacer ; clic droit ou Maj déplace toujours) ;
-  - ⌖ Recentrer, et des vues toutes faites (face, dessus, côté, trois-quarts) ;
-  - la rotation propre, le zoom ;
-  - un **double-clic** centre la vue sur le point choisi et s'en approche.
+At launch, the simulator loads a uranium-238 atom and opens the Orbital tab (the shape of the valence cloud, before the spectrum). The atom screen has three bands:
 
-  Le panneau des couches se replie en une pastille, et une pastille ⓘ donne la légende au survol.
-- **La timeline**, en bas : ▶/⏸, « Événement suivant », « Pas à pas », et la **vitesse du temps** en clair (« 1 s réelle = 1 milliard d'années simulées »). Dessous, ce que devient l'atome, comme une ligne de métro :
-  - **Passé** : les noyaux déjà vécus, grisés, avec leur durée réelle.
-  - **Noyau actuel** : son anneau donne la probabilité qu'il se soit déjà désintégré, P = 1 − e^(−t/τ).
-  - **Avenir** : les stations jusqu'au noyau stable, avec leur voie (α, β⁻…), leur demi-vie et le temps moyen pour y arriver (U-238 → Th-234 → … → Pb-206).
-  - **Interactions** : un clic sur une station avance le temps jusqu'à elle, événement par événement (les désintégrations restent tirées au hasard). Le survol d'un rail explique la voie.
-  - **En dessous** : la prochaine étape, et ce qu'elle représente en temps réel à la vitesse choisie.
+- **The top bar**:
+  - the element (click: the periodic table, which closes as soon as an element is chosen, or with Esc). A chosen element comes with its **natural isotope**, the most abundant on Earth (Fe-56, Cu-63, U-238); without a tabulated abundance, the longest-lived isotope (Tc-98, Pu-244);
+  - three counters − p⁺ + · − n + · − e⁻ +;
+  - light: the wavelength (click: a small setting, with the flame) and "Fire a photon";
+  - **☢ Fire at the nucleus**: a **slow neutron** (0.0253 eV), whose outcome is drawn in proportion to the measured cross sections (scattering, (n,γ) capture, fission of U-233/U-235/Pu-239, (n,α) on Li-6 and B-10, (n,p) on He-3 and N-14), with Q computed from measured masses; or a **5 MeV α particle**, which opens the collision chamber with He-4 against the nucleus on screen. Without a measured cross section (Tc-98…), Genesis says so and does not invent the outcome;
+  - on the right, the **Laboratories** menu (fusion · fission · transmutation, subatomic world), hidden until opened. As soon as one is chosen, a **waiting screen** (`LabLoader`) says what the engine is preparing and the elapsed time. It disappears when the frame confirms the laboratory, and says why if the engine does not answer (outdated, unreachable). Going back to the atom has the same wait;
+  - a coloured dot that gives the connection state on hover.
+- **The scene**, with its view bar:
+  - the scale (Atom · Nucleus · Nucleon · Scale gap);
+  - what dragging does (⟳ Rotate · ✥ Pan; right-click or Shift always pans);
+  - ⌖ Recentre, and ready-made views (front, top, side, three-quarter);
+  - the object's own rotation, the zoom;
+  - **Bohr** (key `O`): the Bohr model (1913), the picture everyone knows — concentric circles in a single plane (they never cross), one per shell, electrons going round, and at the centre the real nucleus (the drop of nucleons placed by the engine), enlarged. The number of electrons per shell comes from the engine; the radii are not to scale and the scene says this is a historical picture (in reality the electron has no trajectory). A full shell of more than 8 electrons is drawn as a glowing ring, its electrons appearing on hover; beyond xenon (or with **Valence**), the core condenses into a sphere labelled with its noble gas ([Kr], [Rn]…). The shell counts sit in a legend under the atom (`[Rn] 86 · O 14 · P 10 · Q 8`), not in the scene. Nothing pops: a captured electron flies in, an excited one jumps from circle to circle, a lost one flies away, and a decay shakes the nucleus;
+  - **Valence** (key `V`): only the open subshells are drawn. Full subshells are spherical (Unsöld's theorem) and, piled up in a heavy atom, they hide the shape of the valence; without them, yttrium's 4d¹ shows its d_z² lobes and ring in 3D;
+  - a **double-click** centres the view on the chosen point and moves closer.
 
-La chaîne vient du moteur (`Session.decay_chain`, voie dominante à chaque pas, données ICRP-107 / NUBASE2020 ; contrat v25).
+  The shell panel folds into a chip, and an ⓘ chip shows the legend and the **limits of the model** on hover.
+- **The timeline**, at the bottom: ▶/⏸, "Next event", "Step by step", and the **time speed** in plain words ("1 real s = 1 billion simulated years"). Below, what becomes of the atom, drawn like a metro line:
+  - **Past**: the nuclei already lived, greyed, with their real duration.
+  - **Current nucleus**: its ring gives the probability that it has already decayed, P = 1 − e^(−t/τ).
+  - **Future**: the stations down to the stable nucleus, with their path (α, β⁻…), their half-life and the mean time to get there (U-238 → Th-234 → … → Pb-206).
+  - **Interactions**: clicking a station advances time up to it, event by event (decays are still drawn at random). Hovering a rail explains the path.
+  - **Underneath**: the next step, and what it means in real time at the chosen speed.
 
-| Groupe | Action | Clavier |
+The chain comes from the engine (`Session.decay_chain`, dominant path at each step, ICRP-107 / NUBASE2020 data; contract v27).
+
+| Group | Action | Keys |
 |---|---|---|
-| CONSTRUIRE | ajouter / retirer proton, neutron, électron · table périodique · vider | `P` `N` `E` (Maj : retirer) · `T` · `R` |
-| LUMIÈRE | régler le laser (barre du haut, ou clic sur une raie) · tirer un photon · flamme | `L` · `F` |
-| TEMPS | pause · vitesse · prochain événement · pas à pas · aller jusqu'à une station (clic) | `Espace` · `[` `]` · `→` · `A` |
-| VUE | atome, noyau, nucléon, gouffre · zoom molette · glisser : tourner (ou déplacer) · double-clic : centrer | `1` `2` `3` `G` · `+` `−` |
-| LABORATOIRES | menu Laboratoires : fusion, subatomique, monde subatomique | `U` · `S` · `K` |
+| BUILD | add / remove proton, neutron, electron · periodic table · empty | `P` `N` `E` (Shift: remove) · `T` · `R` |
+| LIGHT | tune the laser (top bar, or click a line) · fire a photon · flame | `L` · `F` |
+| NUCLEUS | fire a slow neutron · fire an α (☢ menu) | `B` |
+| TIME | pause · speed · next event · step by step · go to a station (click) | `Space` · `[` `]` · `→` · `A` |
+| VIEW | atom, nucleus, nucleon, scale gap · wheel zoom · drag: rotate (or pan) · double-click: centre · valence only · Bohr model | `1` `2` `3` `G` · `+` `−` · `V` · `O` |
+| LABORATORIES | Laboratories menu: fusion · fission · transmutation, subatomic world | `U` · `K` |
 
-Les échelles Matière et Molécule sont désactivées dans l'interface
-(`App.ADVANCED_SCALES = false`) ; leur code et leurs tests sont conservés.
+The Matter and Molecule scales are disabled in the interface
+(`App.ADVANCED_SCALES = false`); their code and tests are kept.
 
-**Pas à pas** (activé par défaut) : le temps s'arrête juste après chaque
-événement. On lit le calcul, on regarde, puis ▶ pour reprendre ou ⏭ pour
-aller au suivant.
+**A clean scene.** Particles carry a short label (one per kind); the
+calculation (energy, λ, scale factor) is in the tooltip and in the journal.
+An electron that cannot be added (Ar⁻, Mg⁻ do not exist: measured electron
+affinity ≤ 0) bounces off, and the box it would have taken blinks red in the
+shell card, with the reason.
 
-## Les règles appliquées
+**Particles arriving.** A proton, a neutron or a captured electron flies in
+first; the atom changes (name, counters, journal, timeline) only when it hits,
+with a flash on the nucleus. Several quick clicks fly in parallel and are
+applied in order.
 
-**Le temps.** Chaque processus a une probabilité par seconde (désexcitation :
-coefficient d'Einstein A ; noyau : λ = ln 2 / t½). L'attente avant
-l'événement est tirée selon la loi exponentielle : c'est la loi d'un
-phénomène sans mémoire. À 1 ns/s on voit l'hydrogène émettre ; à 1 000 ans/s,
-le carbone 14 se désintégrer. « Prochain événement » saute directement au
-moment tiré.
+**Step by step** (on by default): time stops right after each event. You read
+the calculation, look, then ▶ to resume or ⏭ to go to the next one.
 
-**La lumière.**
-- Système à un électron (H, He⁺, Li²⁺…) : états (n, l), énergies exactes
-  (Rydberg, masse réduite), règle de sélection Δl = ±1, coefficients A
-  calculés sur les vraies fonctions d'onde (2p : 1,60 ns ; branchement
-  3p → 1s : 88 %). Le 2s, sans transition permise, ne se désexcite qu'en
-  émettant deux photons (0,12 s).
-- Photon monochromatique, atome immobile au centre d'un faisceau gaussien :
-  rayon w = max(1 µm, 2λ dans le vide). En régime de faible couplage,
-  P = σ / (πw²/2). L'absorption suit un profil naturel lorentzien, de largeur
-  (Γ_haut + Γ_bas)/(2π) en Hz, calculée à partir des durées de vie.
-  Les canaux hydrogénoïdes sont pondérés par leurs coefficients d'Einstein
-  et leurs dégénérescences ; aucune fenêtre artificielle de ±0,1 %.
-  Pour le continuum hydrogénoïde 1s, la section efficace coulombienne rend
-  l'ionisation probabiliste (σ au seuil H : 6,30·10⁻²² m²) et
-  E_c = E_photon − E_ionisation. Les autres continuums sont signalés comme
-  non calculés ; connaître le seuil ne suffit pas à prédire une probabilité.
-  Pas encore de Doppler, polarisation, saturation ou émission stimulée.
-  Références : [profils de raies NIST](https://physics.nist.gov/Pubs/AtSpec/node20.html),
-  [continuum hydrogénoïde, Nahar 2021](https://doi.org/10.3390/atoms9040073).
-- Atomes à plusieurs électrons : raies mesurées (NIST) ; absorption sur les
-  raies de résonance avec durée de vie connue, approximation à deux niveaux
-  non polarisés (dégénérescences et forces d'oscillateur non tabulées).
-  Flamme = raie tirée selon son intensité ; excitation collisionnelle simplifiée.
+## The rules applied
 
-**Le spin.** Électron, proton, neutron : spin ½, des fermions. Deux électrons
-au plus par orbitale, de spins opposés (Pauli) ; les orbitales se remplissent
-d'abord une par une, spins parallèles (Hund). Le photon a un spin 1 : en
-partant il emporte une unité de moment cinétique, d'où Δl = ±1, et le spin
-de l'électron ne change pas. Le couplage spin-orbite dédouble les raies des
-alcalins (sodium 589,0 / 589,6 nm : 3p₃/₂ et 3p₁/₂). Le spin de chaque noyau
-est mesuré (C-14 : 0⁺, Na-23 : 3/2⁺).
+**Time.** Each process has a probability per second (de-excitation: Einstein
+A coefficient; nucleus: λ = ln 2 / t½). The wait before the event is drawn
+from the exponential law: the law of a memoryless phenomenon. At 1 ns/s you see
+hydrogen emit; at 1,000 years/s, carbon-14 decay. "Next event" jumps straight
+to the drawn moment.
 
-**Les électrons.** Un électron ajouté est capturé, ou repoussé si l'ion
-n'existe pas : Ne⁻ (affinité électronique ≤ 0), Cl²⁻ (aucun dianion
-atomique). Capturé par un noyau nu, il tombe dans un niveau élevé puis
-descend en cascade. Énergies d'ionisation mesurées pour chaque ion.
+**Light.**
+- One-electron systems (H, He⁺, Li²⁺…): (n, l) states, exact energies
+  (Rydberg, reduced mass), selection rule Δl = ±1, A coefficients computed on
+  the real wave functions (2p: 1.60 ns; 3p → 1s branching: 88 %). The 2s, with
+  no allowed transition, only de-excites by emitting two photons (0.12 s).
+- Monochromatic photon, atom at rest at the centre of a Gaussian beam:
+  radius w = max(1 µm, 2λ in vacuum). In the weak-coupling regime,
+  P = σ / (πw²/2). Absorption follows a natural Lorentzian profile, of width
+  (Γ_upper + Γ_lower)/(2π) in Hz, computed from the lifetimes.
+  Hydrogen-like channels are weighted by their Einstein coefficients and
+  degeneracies; no artificial ±0.1 % window.
+  For the hydrogen-like 1s continuum, the Coulomb cross section makes
+  ionisation probabilistic (σ at the H threshold: 6.30·10⁻²² m²) and
+  E_k = E_photon − E_ionisation. Other continua are flagged as not computed;
+  knowing the threshold is not enough to predict a probability.
+  No Doppler, polarisation, saturation or stimulated emission yet.
+  References: [NIST line profiles](https://physics.nist.gov/Pubs/AtSpec/node20.html),
+  [hydrogen-like continuum, Nahar 2021](https://doi.org/10.3390/atoms9040073).
+- Many-electron atoms: measured lines (NIST); absorption on the resonance lines
+  with a known lifetime, two-level approximation, unpolarised (degeneracies and
+  oscillator strengths not tabulated). Flame = line drawn according to its
+  intensity; simplified collisional excitation.
 
-**Le noyau.** Demi-vies, voies et rapports de branchement mesurés (ICRP-107,
-NUBASE2020), Q calculé à partir des masses mesurées (AME2020). Les chaînes se
-déroulent seules : U-238 → … → Pb-206, en passant par l'isomère Pa-234m. Un
-Be-7 entièrement ionisé ne peut plus capturer d'électron : il devient stable.
-Après une désintégration α, l'atome fils garde deux électrons de trop et les
-perd.
+**Spin.** Electron, proton, neutron: spin ½, fermions. At most two electrons
+per orbital, with opposite spins (Pauli); orbitals first fill one by one, with
+parallel spins (Hund). The photon has spin 1: when it leaves it carries away
+one unit of angular momentum, hence Δl = ±1, and the electron's spin does not
+change. Spin–orbit coupling splits the lines of the alkalis (sodium 589.0 /
+589.6 nm: 3p₃/₂ and 3p₁/₂). The spin of each nucleus is measured (C-14: 0⁺,
+Na-23: 3/2⁺).
 
-**La matière.** En dézoomant au-delà de l'atome (ou bouton « Matière »),
-256 atomes de l'élément sont simulés en dynamique moléculaire 3D. Une seule
-règle entre voisins, le potentiel de Lennard-Jones
-V(r) = 4ε[(σ/r)¹² − (σ/r)⁶] : attraction de van der Waals, répulsion des
-nuages électroniques. Solide, liquide, gaz et fluide supercritique en
-émergent ; l'état de chaque atome est mesuré (garde-t-il ses voisins ? en
-a-t-il ?), pas décidé. La chaleur entre par les parois (parois thermiques),
-la pression est mesurée par les chocs sur les parois, le piston change le
-volume. Pas de gravité : à cette échelle, elle est des milliards de fois
-plus faible que l'agitation thermique. L'argon du modèle fond vers 65-70 K
-et a son point critique à 134 K (réel : 83,8 K et 150,7 K).
+**Electrons.** An added electron is captured, or repelled if the ion does not
+exist: Ne⁻ (electron affinity ≤ 0), Cl²⁻ (no atomic dianion). Captured by a bare
+nucleus, it falls into a high level then cascades down. Measured ionisation
+energies for every ion.
 
-**La molécule.** L'atome courant et un partenaire choisi dans la table.
-Personne ne décide s'ils se lient : pour 21 distances R, la chimie quantique
-(DFT PBE0/def2-SVP, PySCF) résout leurs électrons et donne l'énergie E(R),
-la densité électronique, la différence avec les atomes isolés (où sont allés
-les électrons), les charges (Mulliken), l'indice de liaison (Mayer) et les
-orbitales moléculaires avec leurs spins. À chaque distance, l'état de spin le
-plus bas l'emporte (O₂ triplet près de la liaison). On attrape un noyau, on
-le lâche : la vraie force −dE/dR décide, ils vibrent (liaison) ou
-s'écartent. Vérifié : H₂ 0,76 Å, 4,4 eV, vibration 7,6 fs ; NaCl 2,34 Å,
-0,6 e transférés de Na vers Cl ; O₂ triplet, liaison double ; He₂ ne se lie
-pas. L'électronégativité de Pauling n'est affichée que pour comparer.
-PySCF n'existe que pour Linux et macOS : le moteur Docker l'a ; lancé sous
-Windows hors Docker, cette échelle l'indique. Premier calcul d'une paire :
-de quelques secondes à deux minutes, puis gardé en cache (volume Docker).
+**The nucleus.** Measured half-lives, paths and branching ratios (ICRP-107,
+NUBASE2020), Q computed from measured masses (AME2020). Chains unfold on their
+own: U-238 → … → Pb-206, through the isomer Pa-234m. A fully ionised Be-7 can no
+longer capture an electron: it becomes stable. After an α decay, the daughter
+atom keeps two electrons too many and loses them.
 
-**Le laboratoire de collisions** (touche `U`) permet de choisir indépendamment
-les deux éléments dans le tableau complet, puis leurs isotopes. Le catalogue
-contient 118 éléments et 3 557 isotopes ; leurs masses sont évaluées ou
-estimées selon les données disponibles. Les fiches identifient Z, N, masse,
-rayon, spin et moment magnétique lorsqu'il est connu, avec leur provenance.
-À cette échelle, les participants sont des **noyaux entièrement ionisés** ;
-les collisions chimiques d'atomes neutres ne sont pas modélisées par cet écran.
+**Neutrons.** A slow neutron (0.0253 eV, 2,200 m/s) has no charge: no barrier
+stops it. What it does is drawn in proportion to the measured thermal cross
+sections (Sears 1992, NIST): elastic scattering, radiative capture (n,γ),
+fission (U-233, U-235, Pu-239), (n,α) and (n,p). Q comes from measured masses;
+a fission splits the compound nucleus around the heavy peak A ≈ 140 and frees
+ν̄ neutrons (ENDF/B-VIII.0). Without a measured cross section, no outcome is
+invented.
 
-L'énergie du faisceau et le paramètre d'impact sont réglables directement.
-Le moteur intègre les trajectoires dans le potentiel de Coulomb et un potentiel
-nucléaire effectif, avec la force de Lorentz. Les réactions légères utilisent,
-dans leur domaine, les ajustements expérimentaux de Bosch–Hale ; les
-autres collisions utilisent un modèle de capture, signalé comme estimation dans
-le panneau du tir et dans « Modèle & données ». Chaque couple reçoit ses propres
-charges, masses, rayons, barrière, trajectoire et champs ; cela ne signifie pas
-que toutes ses voies de réaction ont été mesurées. **Calculer la collision**
-tire l'issue selon la probabilité de la branche utilisée (souvent :
-ils se repoussent) ; **Jusqu'à la fusion** montre la fusion et affiche la
-probabilité qu'elle avait à ce tir.
+**Matter.** Zooming out beyond the atom (or the "Matter" button), 256 atoms of
+the element are simulated in 3D molecular dynamics. A single rule between
+neighbours, the Lennard-Jones potential V(r) = 4ε[(σ/r)¹² − (σ/r)⁶]: van der
+Waals attraction, repulsion of the electron clouds. Solid, liquid, gas and
+supercritical fluid emerge from it; the state of each atom is measured (does it
+keep its neighbours? does it have any?), not decided. Heat enters through the
+walls (thermal walls), pressure is measured from the impacts on the walls, the
+piston changes the volume. No gravity: at this scale it is billions of times
+weaker than thermal agitation. The model's argon melts around 65–70 K and has
+its critical point at 134 K (real: 83.8 K and 150.7 K).
 
-La fusion va jusqu'au bout : noyau composé chaud, puis désexcitation
-statistique — évaporation (Weisskopf), γ, ou **fission** (Bohr–Wheeler,
-partage à densité de charge constante, énergie cinétique de Viola) ; les
-fragments évaporent ensuite leurs neutrons. Au-delà de Z = 118, aucun noyau ne
-tient : **quasi-fission** (les deux noyaux tournent un instant ensemble puis se
-séparent). Énergie et quantité de mouvement sont conservées à chaque étape.
-Exemples : C-12 + U-238 → californium 250 excité → fission en deux indium ;
-Fe-56 + Pb-208 → hassium 264 → xénon + tellure ; Pb-208 + Pb-208 →
-quasi-fission.
+**The molecule.** The current atom and a partner chosen in the table. Nobody
+decides whether they bond: for 21 distances R, quantum chemistry
+(DFT PBE0/def2-SVP, PySCF) solves their electrons and gives the energy E(R), the
+electron density, the difference from the isolated atoms (where the electrons
+went), the charges (Mulliken), the bond order (Mayer) and the molecular
+orbitals with their spins. At each distance, the lowest spin state wins (triplet
+O₂ near bonding). You grab a nucleus and let go: the real force −dE/dR decides,
+they vibrate (bond) or move apart. Checked: H₂ 0.76 Å, 4.4 eV, vibration
+7.6 fs; NaCl 2.34 Å, 0.6 e transferred from Na to Cl; triplet O₂, double bond;
+He₂ does not bond. Pauling electronegativity is shown only for comparison.
+PySCF only exists for Linux and macOS: the Docker engine has it; started on
+Windows outside Docker, this scale says so. First calculation of a pair: from a
+few seconds to two minutes, then cached (Docker volume).
 
-Chaque noyau a l'apparence de ce qu'il est, **à l'échelle réelle** (aucun
-grossissement) : nuage de densité Woods–Saxon teinté de la couleur de son
-élément (convention CPK), tous ses nucléons dedans (protons rouges, neutrons
-lavande), paquet d'onde de largeur ħ/p, flèche de spin d'autant plus longue
-que le spin est grand. Le **champ électrique est un halo par noyau** : sa teinte
-conventionnelle reprend l'identité de l'élément et nuance l'isotope, tandis que
-sa forme et son intensité suivent le champ calculé pour sa charge et son rayon.
-**Entre les noyaux, le potentiel combiné** U = eφ = Σ kZᵢe²/rᵢ (l'énergie qu'aurait
-une charge +e posée là) est peint en couleurs de chaleur, du bleu au blanc, là où
-les deux potentiels comptent et où leurs champs s'opposent ; ses isopotentielles
-y sont tracées, et son **col** — le point de selle où E₁ + E₂ = 0 — est trouvé par
-Newton et chiffré (« col U = … MeV ») : il s'échauffe à mesure que les noyaux
-s'approchent. Des repères très fins partent de chaque noyau, suivent le champ
-total, sont déviés par l'autre et sont entraînés par leur charge (le champ se
-déplace avec elle). Au contact, le recouvrement des densités de Woods–Saxon ρ₁·ρ₂
-(là où agit la force forte) luit en or. Le **champ magnétique du tir** se lit sur le fond
-à la convention habituelle (point s'il sort de l'écran, croix s'il y entre) ; le moteur
-l'intègre réellement, et la sonde donne le rayon de Larmor r_L = p/qB de chaque noyau.
-Le **tableau de bord** est un instrument plat : partage de l'énergie, mesure principale sur
-une jauge graduée, mesures secondaires en lignes, et — en lecture complète — la **courbe du
-potentiel V(r)** (survol : la valeur à la distance pointée) et le tableau des lois ; à la fin,
-les **équivalences** de l'énergie libérée (joules, TNT, Hiroshima, par gramme de combustible).
-L'interface propose **deux lectures** : « Essentiel » (la loi de l'instant, le partage
-de l'énergie, trois mesures) et « Complet » (toutes les métriques, les calques, la sonde,
-le milieu). À chaque étape, **la loi est composée en grand sur la scène** — fraction
-barrée, valeur, formule chiffrée, et deux pastilles de réponse (« r → 2r », « F → F/4 ») —
-et reprise en tableau dans le panneau.
-Juste avant la première éjection, la scène passe d'elle-même en **« Carte »** : la vue
-recule d'avance, les mêmes noyaux gardent leurs champs et leurs spins, l'élément créé est
-un centre fixe et les distances sont comprimées (échelle log, facteur affiché) pour que
-tout tienne à l'écran ; chaque étiquette donne la vitesse calculée et la distance vraie.
-Un clic sur un corps zoome dessus sans déplacer le centre ; un clic dans le vide revient.
-À la **rupture**, la lecture passe au ralenti (t ∝ u^3) et la caméra tient le barycentre
-en reculant pour garder les fragments, avant de revenir sur l'élément créé ; dans un
-plasma, chaque corps chargé laisse une **trace d'ionisation** dont l'épaisseur suit son
-pouvoir d'arrêt dE/dx ∝ Z²/v² — le neutron et le photon n'en laissent aucune. **Le choc a lieu dans le plasma** réglé
-dans le panneau Lawson : ses champs et son potentiel sont écrantés (Debye–Hückel,
-e^(−r/λ_D)) — infime à l'échelle des noyaux à 15 keV et 10²⁰ ions/m³ (λ_D ≈ 64 µm),
-sensible aux densités extrêmes — et un médaillon, sous le tableau de bord, montre
-ce plasma **à son échelle propre** : une boîte de quatre longueurs de Debye, avec sa
-grille et sa règle en unités physiques, où ions et électrons s'agitent selon
-Maxwell–Boltzmann (les électrons √(m_i/m_e) fois plus vite, chacun traînant la
-distance qu'il parcourt pendant la pose) ; la couleur de chaque particule suit son
-énergie ½mv² (bleu à 1 keV, blanc à 100 keV), une onde de Langmuir (Bohm–Gross) y
-fait respirer le nuage d'électrons, et des photons de freinage sont émis au taux
-calculé par le moteur. Tout y suit T et n. Le champ magnétique superpose les dipôles de spin,
-le champ des charges en mouvement et le champ externe du tir ; les marqueurs
-mobiles en indiquent le sens. Un noyau chaud est une goutte liquide qui vibre.
-La grille du champ est mise à jour dans un `PixelBuffer` ; la zone du col et ses
-isopotentielles sont calculées sur la même grille. Les équations, le modèle et l'erreur
-d'énergie se consultent dans **Inspecter** : ils ne couvrent plus le bas de
-la scène. Les particules du décor ont été retirées ; les grains qui suivent
-le champ électrique restent présents.
+**The collision laboratory** (key `U`) lets you pick the two elements
+independently in the full table, then their isotopes. The catalogue holds 118
+elements and 3,557 isotopes; their masses are evaluated or estimated depending
+on the available data. The cards identify Z, N, mass, radius, spin and magnetic
+moment when known, with their source. At this scale, the participants are
+**fully ionised nuclei**; chemical collisions of neutral atoms are not modelled
+by this screen.
 
-Les trajectoires reçues sont conservées pendant les mises à jour des réglages ;
-la retransmission d'un même tir ne redémarre pas la lecture. Entre deux
-échantillons d'une même phase, les positions sont interpolées avec les vitesses
-du moteur (Hermite), pour conserver le freinage et le recul. Cette liaison est
-commune à tous les éléments et produits. Les traceurs électriques gardent leurs
-positions dans le monde 3D et interrogent le champ total à chaque sous-pas : ils
-ne sont plus attachés au déplacement du noyau émetteur. Leur vitesse de lecture
-est une convention graphique, indépendante du zoom.
+The beam energy and the impact parameter can be set directly. The engine
+integrates the trajectories in the Coulomb potential and an effective nuclear
+potential, with the Lorentz force. Light reactions use, within their domain,
+the Bosch–Hale experimental fits; other collisions use a capture model, flagged
+as an estimate in the shot panel and in "Model & data". Each pair gets its own
+charges, masses, radii, barrier, trajectory and fields; this does not mean all
+its reaction paths have been measured. **Calculate collision** draws the outcome
+according to the probability of the branch used (often: they repel each other);
+**Until fusion** shows the fusion and displays the probability it had on that
+shot. Beyond iron (Z₁ + Z₂ > 26), welding two nuclei costs energy instead of
+releasing it: the chamber then speaks of **transmutation** ("Until
+transmutation").
 
-**La vue zoome avec eux.** Les noyaux partent de 12 fois la distance de
-rebroussement ; à mesure qu'ils se rapprochent, la vue zoome, puis se fige dans
-la zone de freinage pour qu'on voie le noyau ralentir — des échos à intervalles
-de temps égaux se resserrent derrière lui (la répulsion change son élan en
-énergie du champ, sans frottement) — jusqu'au femtomètre pour le mur de Coulomb,
-l'effet tunnel et la soudure. Chaque noyau est comprimé le long de l'axe par le
-champ de l'autre (polarisation de Coulomb, calculée : invisible pour le tritium,
-forte entre noyaux lourds) ; la valeur β₂ est dans sa fiche. Les fiches donnent leur vitesse à chaque
-instant. La caméra a de l'inertie (on la pousse, elle glisse puis s'arrête) et
-ses changements de cadrage glissent au lieu de sauter ; un long déplacement
-recule d'abord, comme sur une carte qu'on survole. Le champ magnétique pâlit
-quand la tension électrique monte ; de petits repères mobiles suivent son
-vecteur local recalculé à chaque image, sans dessiner d'orbites. Avant une fission, le noyau s'étire en haltère
-(ovales de Cassini) jusqu'à la scission ; avant une émission, sa surface bombe là
-où la particule sort. Les ruptures qui remplacent deux noyaux par deux fragments
-sont également reconnues. À la première rupture et aux fissions, la caméra
-observe le lieu d'émission pendant une seconde de lecture avant d'accompagner
-un fragment : son recul reste visible. Les vitesses des produits sont celles des
-échantillons Python, appliquées dès leur naissance, sans accélération ajoutée
-par le rendu. Il n'y a ni anneau de choc ni traînée dessinés autour des produits.
-Un éclat local n'apparaît que si le moteur a effectivement émis un photon γ ;
-son intensité spatiale suit `I₀/[1+(r/R₀)²]` et sa persistance à l'écran décroît
-exponentiellement. Cette persistance est un temps d'exposition graphique, pas
-la durée physique de l'émission.
+The fusion goes all the way: a hot compound nucleus, then statistical
+de-excitation — evaporation (Weisskopf), γ, or **fission** (Bohr–Wheeler, split
+at constant charge density, Viola kinetic energy); the fragments then evaporate
+their neutrons. Beyond Z = 118, no nucleus holds: **quasi-fission** (the two
+nuclei rotate together for a moment then separate). Energy and momentum are
+conserved at every step. Examples: C-12 + U-238 → excited californium-250 →
+fission into two indium nuclei; Fe-56 + Pb-208 → hassium-264 → xenon +
+tellurium; Pb-208 + Pb-208 → quasi-fission.
 
-**La soudure est calculée** : depuis la sortie du tunnel (là où V(r) = E) ou
-le contact, le moteur intègre le mouvement dans le potentiel Coulomb +
-Woods–Saxon avec la friction nucléaire de Gross–Kalinowski ; les deux noyaux
-tombent l'un dans l'autre, leur élan devient chaleur (affichée), leurs champs
-électriques se fondent en un seul. Pour les noyaux lourds, la répulsion
-arrête ce calcul au contact (système dinucléaire) : la fonte finale des deux
-formes est montrée lentement, signalée comme non tracée. Les produits sont
-montrés tant qu'ils restent sur la carte (le rayon de leur cercle de Lorentz,
-de l'ordre du centimètre, est donné en texte). **Une fois la fusion faite**, la
-vue centrale ne présente plus que l'élément central créé : la caméra glisse sur
-lui (spin, champ électrique, dipôle magnétique) avec sa fiche (liaison par
-nucléon, champs en surface et au pôle, demi-vie, vitesse, cercle de Lorentz) ;
-les autres produits sont projetés sans étiquette. Le **bilan interactif**
-s'ouvre alors à droite (flottant, détachable par « ⧉ Fenêtre ») : onglets *Créé*,
-*Rejeté*, *Lumière* (photons γ : énergie, longueur d'onde, fréquence) et
-*Énergie* (Q en joules et en **équivalent TNT**, par réaction et pour 1 g de
-combustible, ce qu'emporte chaque produit) ; un clic sur un élément ouvre sa
-fiche et amène la vue principale sur lui (un neutron éjecté, par exemple).
-Un tir refusé (énergie trop basse pour le couple, ou au-delà du modèle) est dit
-au centre de l'écran, avec un bouton qui règle l'énergie conseillée et relance. Le champ électrique reprend la teinte conventionnelle de chaque isotope ;
-entre les noyaux, le potentiel combiné et son col sont chiffrés ; le champ magnétique se lit par des repères
-advectés dans B ; le paquet d'onde s'aplatit contre la barrière dans la direction du
-champ total. On peut suspendre, parcourir, rejouer ou lancer de nouveaux tirs.
+Each nucleus looks like what it is, **at true scale** (no magnification): a
+Woods–Saxon density cloud tinted with its element's colour (CPK convention),
+all its nucleons inside (protons red, neutrons lavender), a wave packet of
+width ħ/p, a spin arrow that is longer the larger the spin. The **electric
+field is one halo per nucleus**: its conventional tint follows the element's
+identity and shades the isotope, while its shape and intensity follow the field
+computed for its charge and radius. **Between the nuclei, the combined
+potential** U = eφ = Σ kZᵢe²/rᵢ (the energy a +e charge placed there would have)
+is painted in heat colours, from blue to white, where both potentials matter and
+their fields oppose; its isopotentials are drawn there, and its **saddle** — the
+point where E₁ + E₂ = 0 — is found by Newton's method and given a value ("saddle
+U = … MeV"): it heats up as the nuclei approach. Very fine markers leave each
+nucleus, follow the total field, are deflected by the other and are dragged by
+their charge (the field moves with it). At contact, the overlap of the
+Woods–Saxon densities ρ₁·ρ₂ (where the strong force acts) glows gold. The
+**magnetic field of the shot** reads on the background with the usual
+convention (dot if it comes out of the screen, cross if it goes in); the engine
+really integrates it, and the probe gives each nucleus's Larmor radius
+r_L = p/qB. The **dashboard** is a flat instrument: the energy split, the main
+measurement on a graduated gauge, secondary measurements in rows, and — in the
+full reading — the **potential curve V(r)** (hover: the value at the pointed
+distance) and the table of laws; at the end, the **equivalences** of the
+released energy (joules, TNT, Hiroshima, per gram of fuel). The interface offers
+**two readings**: "Essentials" (the law of the moment, the energy split, three
+measurements) and "Full" (all the metrics, layers, the probe, the medium). At
+each step, **the law is set large on the scene** — a built-up fraction, value,
+formula with numbers, and two answer chips ("r → 2r", "F → F/4") — and repeated
+as a table in the panel.
+Just before the first ejection, the scene switches by itself to **"Map"**: the
+view pulls back in advance, the same nuclei keep their fields and spins, the
+element created is a fixed centre and distances are compressed (log scale,
+factor shown) so everything fits on screen; each label gives the computed speed
+and the true distance. Clicking a body zooms onto it without moving the centre;
+clicking empty space goes back.
+At the **break-up**, playback slows down (t ∝ u³) and the camera holds the
+barycentre while pulling back to keep the fragments, before returning to the
+element created; in a plasma, each charged body leaves an **ionisation track**
+whose thickness follows its stopping power dE/dx ∝ Z²/v² — the neutron and the
+photon leave none. **The impact happens in the plasma** set in the Lawson
+panel: its fields and potential are screened (Debye–Hückel, e^(−r/λ_D)) —
+negligible at the scale of nuclei at 15 keV and 10²⁰ ions/m³ (λ_D ≈ 64 µm),
+noticeable at extreme densities — and a medallion under the dashboard shows this
+plasma **at its own scale**: a box four Debye lengths wide, with its grid and
+its ruler in physical units, where ions and electrons move according to
+Maxwell–Boltzmann (electrons √(m_i/m_e) times faster, each trailing the
+distance it covers during the exposure); each particle's colour follows its
+energy ½mv² (blue at 1 keV, white at 100 keV), a Langmuir wave (Bohm–Gross)
+makes the electron cloud breathe, and bremsstrahlung photons are emitted at the
+rate computed by the engine. Everything there follows T and n. The magnetic
+field superposes the spin dipoles, the field of the moving charges and the
+external field of the shot; the moving markers show its direction. A hot
+nucleus is a vibrating liquid drop. The field grid is updated in a
+`PixelBuffer`; the saddle zone and its isopotentials are computed on the same
+grid. The equations, the model and the energy error can be viewed in
+**Inspect**: they no longer cover the bottom of the scene. The decorative
+particles have been removed; the grains that follow the electric field remain.
 
-Le mode **Plasma** règle T, n et τ (critère de Lawson, courbe nτT) ; chaque
-tir y tire son énergie dans la distribution de Maxwell–Boltzmann.
+The trajectories received are kept while settings are updated; re-sending the
+same shot does not restart playback. Between two samples of the same phase,
+positions are interpolated with the engine's velocities (Hermite), to keep the
+braking and the recoil. This link is shared by all elements and products. The
+electric tracers keep their positions in the 3D world and query the total field
+at each sub-step: they are no longer attached to the motion of the emitting
+nucleus. Their playback speed is a graphical convention, independent of zoom.
 
-Les équations, les modèles approchés et les conventions de représentation
-sont décrits dans [le modèle de collision](docs/FUSION_MODEL.md).
+**The view zooms with them.** The nuclei start at 12 times the turning-point
+distance; as they get closer, the view zooms, then freezes in the braking zone
+so you can see the nucleus slow down — echoes at equal time intervals tighten
+behind it (repulsion turns its momentum into field energy, without friction) —
+down to the femtometre for the Coulomb wall, quantum tunnelling and the weld.
+Each nucleus is squeezed along the axis by the other's field (Coulomb
+polarisation, computed: invisible for tritium, strong between heavy nuclei);
+the β₂ value is on its card. The cards give their speed at every instant. The
+camera has inertia (you push it, it glides then stops) and its framing changes
+glide instead of jumping; a long move first pulls back, like flying over a map.
+The magnetic field fades as the electric tension rises; small moving markers
+follow its local vector, recomputed at every frame, without drawing orbits.
+Before a fission, the nucleus stretches into a dumbbell (Cassini ovals) until
+scission; before an emission, its surface bulges where the particle leaves.
+Break-ups that replace two nuclei by two fragments are also recognised. At the
+first break-up and at fissions, the camera watches the emission point for one
+second of playback before following a fragment: its recoil stays visible. The
+products' velocities are those of the Python samples, applied from their birth,
+with no acceleration added by the rendering. No shock ring or trail is drawn
+around the products. A local flash only appears if the engine actually emitted a
+γ photon; its spatial intensity follows `I₀/[1+(r/R₀)²]` and its persistence on
+screen decays exponentially. This persistence is a graphical exposure time, not
+the physical duration of the emission.
 
-**Le cœur d'étoile** (désactivé dans l'interface, `App.STAR_SCREEN = false` ; code et tests conservés). On choisit
-un lieu réel (cœur du Soleil, Soleil jeune, étoile massive, géante rouge,
-combustion du carbone, réacteur D-T, surface du Soleil) puis on règle la
-température et la densité. Tout se calcule :
-- les réactions viennent du réseau nucléaire REACLIB (`pynucastro`,
-  85 réactions sur 24 noyaux : chaîne p-p, cycle CNO, triple-α, carbone,
-  D-T), avec l'écrantage électronique ; la composition évolue en intégrant
-  dY/dt (solveur raide de `scipy`) ;
-- l'énergie est Q = Δm·c² de chaque réaction, moins ce qu'emportent les
-  neutrinos qui s'échappent (énergies moyennes mesurées, Bahcall) ;
-- l'ionisation suit l'équation de Saha avec l'abaissement du potentiel :
-  au cœur du Soleil les noyaux sont à 18 pm les uns des autres, moins que
-  la taille d'un atome, les électrons ne peuvent plus être liés ;
-- la pression additionne noyaux, électrons (Fermi-Dirac : dégénérés dans
-  une géante rouge) et lumière (seulement si le plasma est opaque) ;
-- une fenêtre de ~220 noyaux, à sa vraie taille (172 pm au cœur du Soleil,
-  avec un atome d'hydrogène en pointillés pour comparer), montre chaque
-  fusion tirée au sort selon les vrais taux : les réactifs se rejoignent,
-  l'éclair, les produits, le neutrino qui s'échappe, le positon qui
-  s'annihile. Le panneau dit ce qui a été créé et détruit, l'énergie, la
-  pression, et ce que cela veut dire.
+**The weld is computed**: from the tunnel exit (where V(r) = E) or the contact,
+the engine integrates the motion in the Coulomb + Woods–Saxon potential with
+Gross–Kalinowski nuclear friction; the two nuclei fall into each other, their
+momentum turns into heat (displayed), their electric fields merge into one. For
+heavy nuclei, repulsion stops this calculation at contact (dinuclear system):
+the final melting of the two shapes is shown slowly, flagged as not traced. The
+products are shown as long as they stay on the map (the radius of their Lorentz
+circle, around a centimetre, is given in text). **Once the fusion is done**, the
+central view only presents the central element created: the camera glides onto
+it (spin, electric field, magnetic dipole) with its card (binding per nucleon,
+fields at the surface and at the pole, half-life, speed, Lorentz circle); the
+other products are projected without labels. The **interactive results** then
+open on the right (floating, detachable with "⧉ Window"): tabs *Created*,
+*Rejected*, *Light* (γ photons: energy, wavelength, frequency) and *Energy* (Q in
+joules and in **TNT equivalent**, per reaction and for 1 g of fuel, what each
+product carries away); clicking an element opens its card and brings the main
+view onto it (an ejected neutron, for example). A refused shot (energy too low
+for the pair, or beyond the model) is stated in the centre of the screen, with a
+button that sets the advised energy and fires again. The electric field takes
+the conventional tint of each isotope; between the nuclei, the combined
+potential and its saddle are given in numbers; the magnetic field reads through
+markers advected in B; the wave packet flattens against the barrier in the
+direction of the total field. You can pause, scrub, replay or fire new shots.
 
-Vérifié : pression centrale du Soleil 2,3·10¹⁶ Pa (modèle standard :
-2,34·10¹⁶), ~1,6 mW/kg (moins qu'un corps humain), hydrogène épuisé en
-~4 milliards d'années ; réacteur D-T : 4 atm ; surface du Soleil : 7 700 Pa,
-atomes neutres.
+The **Plasma** mode sets T, n and τ (Lawson criterion, nτT curve); each shot
+draws its energy from the Maxwell–Boltzmann distribution.
 
-## Genesis, la petite guide
+The equations, approximate models and drawing conventions are described in
+[the collision model](docs/FUSION_MODEL.md).
 
-> **Mise de côté.** Genesis n'est plus affichée : le journal n'a qu'une vue, les logs. Son code est gardé dans `sim/app/.../mascot/` ; pour la retrouver, passer `GENESIS_ENABLED` à `true` dans `sim/app/.../app/App.java`. Ce qui suit décrit ce qu'elle fait quand elle est activée.
+**The stellar core** (disabled in the interface, `App.STAR_SCREEN = false`; code
+and tests kept). You choose a real place (the Sun's core, the young Sun, a
+massive star, a red giant, carbon burning, a D-T reactor, the Sun's surface)
+then set temperature and density. Everything is computed:
+- the reactions come from the REACLIB nuclear network (`pynucastro`,
+  85 reactions on 24 nuclei: p-p chain, CNO cycle, triple-α, carbon, D-T),
+  with electron screening; the composition evolves by integrating dY/dt (stiff
+  solver from `scipy`);
+- the energy is Q = Δm·c² of each reaction, minus what the escaping neutrinos
+  carry away (measured mean energies, Bahcall);
+- ionisation follows the Saha equation with pressure ionisation: in the Sun's
+  core the nuclei are 18 pm apart, less than the size of an atom, electrons can
+  no longer be bound;
+- pressure adds nuclei, electrons (Fermi–Dirac: degenerate in a red giant) and
+  light (only if the plasma is opaque);
+- a window of ~220 nuclei, at their true size (172 pm in the Sun's core, with a
+  dotted hydrogen atom for comparison), shows each fusion drawn according to the
+  real rates: the reactants meet, the flash, the products, the escaping
+  neutrino, the positron that annihilates. The panel says what was created and
+  destroyed, the energy, the pressure, and what it means.
 
-Genesis est une boule de matière noire, pleine d'univers. Elle flotte dans une boule de verre posée sur un socle (quatre câbles, losange doré, le vide du fond qui sert de voyant).
+Checked: central pressure of the Sun 2.3·10¹⁶ Pa (standard model:
+2.34·10¹⁶), ~1.6 mW/kg (less than a human body), hydrogen exhausted in
+~4 billion years; D-T reactor: 4 atm; Sun's surface: 7,700 Pa, neutral atoms.
 
-**Sa forme est solide et simple** (`GenesisBlob.java`) :
-- **Une boule ronde et deux oreilles arrondies**, avec un contour lumineux, bleu puis blanc, et un grand halo autour.
-- **Dedans, de l'espace** : le vide noir, une nébuleuse bleue qui tourne lentement, des étoiles.
-- **Au cœur, une lumière blanche.**
-- **En bas, de l'écume blanche**, percée de trous, avec quelques îlots qui s'en détachent vers le haut.
-- **Autour, des gouttelettes** qui sortent de la boule, flottent, puis y reviennent se fondre.
-- **Trois reflets clairs** en haut à droite, comme sur du verre.
+## Genesis, the little guide
 
-Elle n'a pas de visage. Ses humeurs passent par trois choses :
-- **Son cœur de lumière** : il se tourne vers la souris, bat quand elle parle, baisse quand elle dort.
-- **Ses oreilles**, montées sur ressort : elles traînent quand elle se déplace, se dressent quand elle est curieuse, tombent quand elle dort ; l'une d'elles frémit de temps en temps.
-- **Son corps de gelée** : il s'étire dans le sens où elle va, s'écrase quand on la touche, fait de petits bonds quand elle est contente ; l'écume penche et clapote avec ses mouvements.
+> **Set aside.** Genesis is no longer shown: the journal has a single view, the logs. Its code is kept in `sim/app/.../mascot/`; to bring her back, set `GENESIS_ENABLED` to `true` in `sim/app/.../app/App.java`. What follows describes what she does when enabled.
 
-Elle bouge peu et doucement : elle flotte au milieu, penche vers la souris, se pose au fond pour dormir.
+Genesis is a ball of dark matter, full of universe. She floats in a glass ball set on a base (four cables, a golden diamond, the empty background acting as an indicator).
 
-**Un clic la divise** (`GenesisFlask.java`, 7,8 s) : elle rentre ses oreilles, se sépare en cinq masses qui flottent, se soudent et se séparent comme dans une flasque, puis se rassemble, se reconstitue et rejette des résidus de matière. Elle le fait aussi d'elle-même de temps en temps, au repos.
+**Her shape is solid and simple** (`GenesisBlob.java`):
+- **A round ball and two rounded ears**, with a glowing outline, blue then white, and a large halo around.
+- **Inside, space**: black void, a blue nebula turning slowly, stars.
+- **At the heart, a white light.**
+- **At the bottom, white foam**, full of holes, with a few islands breaking off upwards.
+- **Around, droplets** that leave the ball, float, then come back to melt into it.
+- **Three bright highlights** at the top right, as on glass.
 
-La forme est une surface implicite (la distance à la boule, aux oreilles et aux gouttes, réunies par un minimum lissé) : le contour est lisse et net à toutes les tailles. Aucune bibliothèque n'est ajoutée.
+She has no face. Her moods show through three things:
+- **Her heart of light**: it turns towards the mouse, beats when she speaks, dims when she sleeps.
+- **Her ears**, on springs: they trail when she moves, stand up when she is curious, droop when she sleeps; one of them twitches now and then.
+- **Her jelly body**: it stretches in the direction she goes, squashes when touched, makes small hops when she is happy; the foam tilts and laps with her movements.
 
-**Le journal a deux vues**, avec une bascule en haut à droite (le choix est mémorisé) :
-- **Journal** (sans Genesis) : les logs complets. Chaque ligne porte une étiquette de catégorie (Lumière, Électrons, Noyau, Info), le temps simulé, le titre, le calcul dans un encart et l'explication du moteur. Des filtres avec compteurs ne gardent qu'une catégorie.
-- **Genesis** : elle explique chaque événement en mots simples, en trois temps : ce qui s'est passé, « Pourquoi : », puis « Et maintenant : » (ou « À retenir : », « Essaie : », « En clair : »). Les logs restent dessous, en une ligne chacun ; un clic sur une ligne lui fait expliquer cet événement. Quand plusieurs événements arrivent au même instant, elle commence par le plus important (le noyau, puis la lumière, puis les électrons).
+She moves little and gently: she floats in the middle, leans towards the mouse, settles at the bottom to sleep.
 
-Elle lit le journal : chaque événement devient une phrase dans sa bulle, avec le calcul en doré. Au bout de 80 s sans
-événement, elle s'endort : elle se pose au fond, les oreilles tombées, le cœur en veilleuse. `gradlew mascotPreview` dessine cinq planches : ses états,
-douze instants serrés (0,2 s d'écart, pour juger la continuité), huit instants plus espacés, ses réactions à la souris, et sa
-division après un clic ; `gradlew journalPreview` dessine le journal.
+**A click splits her** (`GenesisFlask.java`, 7.8 s): she pulls in her ears, splits into five masses that float, merge and separate as in a flask, then gathers, rebuilds herself and spits out residues of matter. She also does it on her own from time to time, at rest.
 
-## L'atome en 3D
+The shape is an implicit surface (the distance to the ball, the ears and the drops, joined by a smoothed minimum): the outline is smooth and sharp at all sizes. No library is added.
 
-L'écran de l'atome ne dessine plus d'orbites : tout y est calculé, en 3D, et
-on le fait tourner en le glissant (il tourne aussi, très lentement, de
-lui-même). `python -m tools.export_atom_frames` (dans `logic`) écrit des frames réelles
-du moteur dans `artifacts/frames` ; `gradlew dashboardPreview` rend l'écran entier (barres, scène, timeline) et une désintégration réelle de l'uranium dans `artifacts/dashboard` ; `gradlew atomPreview` les rend dans
-`artifacts/atom3d` (éléments, rotation, plongée, goutte, gouffre, photon absorbé
-par H, photoionisation de Na, écran étroit) et mesure le temps par image
-(1 à 6 ms) ; `-Ponly=photon` ne joue que les photons.
+**The journal has two views**, with a toggle at the top right (the choice is remembered):
+- **Journal** (without Genesis): the full logs. Each line carries a category tag (Light, Electrons, Nucleus, Info), the simulated time, the title, the calculation in an inset and the engine's explanation. Filters with counters keep a single category.
+- **Genesis**: she explains each event in simple words, in three beats: what happened, "Why:", then "And now:" (or "Remember:", "Try:", "In other words:"). The logs stay below, one line each; clicking a line makes her explain that event. When several events happen at the same instant, she starts with the most important (the nucleus, then light, then electrons).
 
-**Le nuage électronique** (`OrbitalCloud`). Chaque sous-couche occupée est la
-densité |ψ_nlm|² = R_nl(r)² · Σ occ_m Y_lm² : fonction radiale hydrogénoïde
-(ses n − l − 1 nœuds), harmoniques sphériques réelles dans l'ordre de
-`orbitals.py`, remplissage de Hund envoyé par le moteur, taille mise à
-l'échelle sur le rayon de Slater du moteur. L'électron unique (H, He⁺…) est
-exact (a₀/Z) ; le moteur ne suivant pas m, son nuage est le mélange isotrope des
-2l + 1 orientations. Rendu volumique exact : chaque pixel reçoit la densité
-intégrée le long du regard. Le long du rayon b⃗ + t·ê, la partie angulaire est
-un polynôme en t ; l'intégrale se ramène à des tables G_j(b) = ∫ g t^j dt,
-calculées une fois par (n, l). Les coefficients du polynôme sont développés
-une fois par image et par orientation : chaque pixel ne coûte que quelques
-multiplications. Les sous-couches sphériques, invariantes par rotation, sont
-gardées d'une image à l'autre. Ce qu'on voit, et ce qui est un choix
-d'affichage :
-- les formes sont exactes : sablier p (bore 2p¹), d_z² avec son anneau
-  (scandium 3d¹), lobes f, nœuds radiaux (anneaux du 4s excité du sodium) ;
-  une sous-couche pleine ou à moitié pleine est sphérique (Unsöld) ;
-- chaque sous-couche a sa couleur et sa propre échelle de luminosité, réglée
-  sur la colonne au rayon le plus probable (courbe en S en dessous,
-  logarithmique au-dessus). Sans cela le cœur 1s éblouirait tout, et l'atome
-  ne serait qu'une boule (sa densité totale est presque sphérique). Les
-  couches pleines internes sont atténuées ; l'avant du nuage est un peu plus
-  lumineux (indice de profondeur, 30 % au rayon le plus probable) ;
-- les **points brefs** sont des positions tirées selon |ψ|² (Monte-Carlo) :
-  ce qu'on trouverait en mesurant un électron. Les tirages changent, la loi
-  ne change pas : l'état est stationnaire ;
-- quand la configuration change (capture, saut d'un électron), le nouveau
-  nuage apparaît en 0,9 s pendant que l'ancien s'efface. Pour l'électron
-  unique, c'est la densité exacte du mélange (les termes croisés s'annulent
-  en moyenne sur m).
+She reads the journal: each event becomes a sentence in her bubble, with the calculation in gold. After 80 s without an
+event, she falls asleep: she settles at the bottom, ears drooping, heart dimmed. `gradlew mascotPreview` draws five sheets: her states,
+twelve close instants (0.2 s apart, to judge continuity), eight more widely spaced instants, her reactions to the mouse, and her
+split after a click; `gradlew journalPreview` draws the journal.
 
-**Le photon** (`PhotonPacket`), construit à partir de λ seule :
-- **Forme** : un paquet d'onde 3D, avec une enveloppe gaussienne (un fuseau qui fond aux bouts) et deux rubans perpendiculaires, E (couleur de λ) et B (pâle). Ils sont en phase, |B| = |E|/c.
-- **Polarisation** : rectiligne, E le long de l'axe z de l'atome. Le paquet arrive un peu en biais, en perspective, et ses rubans suivent la caméra.
-- **Motif** : dans le vide, crêtes et enveloppe avancent ensemble à c, donc le motif est fixe dans le paquet.
-- **Crêtes à l'écran** : la distance entre crêtes est λ, à l'échelle quand elle tient à l'écran (rayons X : ~50 pm). Un photon UV, visible ou IR est des milliers de fois plus grand que l'atome : ses crêtes sont alors resserrées selon log λ, et l'étiquette donne le facteur (« λ dessinée ÷1 128 »). La vraie image est un atome baigné dans un champ presque uniforme qui oscille à ν (approximation dipolaire).
-- **Couleur** : CIE 1931 (ajustement de Wyman, Sloan et Shirley 2013) → sRGB, pour tout le simulateur. Hors du visible, une couleur conventionnelle annoncée.
-- **Photon ionisant** (hν > énergie d'ionisation actuelle) : franges chromatiques et halo qui tremble, ∝ log(1 + (hν − I)/I).
-- **Longueur du paquet** : une raie atomique ou nucléaire dure des nanosecondes, soit ~10⁷ à 10⁸ oscillations ; même un γ est un long paquet, pas un « éclat bref ». Le paquet est donc dessiné long.
+## The atom in 3D
 
-**Le photon en vraie 3D** (`Photon3DLayer`, JavaFX 3D sur la scène, projection parallèle alignée pixel pour pixel) :
-- **Volumes** : un fuseau fin et presque transparent (sphère étirée, matériau Phong, reflet spéculaire), pour que l'œil aille sur l'onde ; deux rubans maillés (TriangleMesh, E et B, auto-éclairés), un axe fin et une lumière ponctuelle embarquée qui éclaire ses volumes. L'orientation suit la caméra de l'atome.
-- **Le canevas garde** le halo du fuseau, les franges du photon ionisant, et la lueur qu'il projette dans le brouillard traversé. Cette lueur est un effet de rendu, pas une diffusion calculée.
+The atom screen no longer draws orbits: everything there is computed, in 3D,
+and you rotate it by dragging (it also rotates very slowly on its own).
+`python -m tools.export_atom_frames` (in `logic`) writes real engine frames to
+`artifacts/frames`; `gradlew dashboardPreview` renders the whole screen (bars, scene, timeline), a real uranium decay, the shell card, the limits legend and a neutron fission of U-235 into `artifacts/dashboard`; `gradlew atomPreview` renders them into
+`artifacts/atom3d` (elements, rotation, dive, drop, scale gap, photon absorbed
+by H, photoionisation of Na, narrow screen) and measures the time per frame
+(1 to 6 ms); `-Ponly=photon` only plays the photons.
 
-**Les particules :**
-- **L'électron libre** est un point très brillant dans un halo qui s'éteint, et non une bille : c'est une particule ponctuelle, sans rayon mesuré.
-- **Les nucléons**, vus de près, sont des bulles : corps translucide, liseré lumineux, et leurs trois quarks de valence qui tournent et échangent leur couleur. Une lueur commune fond leurs bords, et le noyau se lit comme une goutte. Leur teinte glisse quand un pion change leur identité.
+**The electron cloud** (`OrbitalCloud`). Each occupied subshell is the density
+|ψ_nlm|² = R_nl(r)² · Σ occ_m Y_lm²: hydrogen-like radial function (its
+n − l − 1 nodes), real spherical harmonics in the order of `orbitals.py`, Hund
+filling sent by the engine, size scaled to the engine's Slater radius. The
+single electron (H, He⁺…) is exact (a₀/Z); since the engine does not track m,
+its cloud is the isotropic mixture of the 2l + 1 orientations. Exact volume
+rendering: each pixel receives the density integrated along the line of sight.
+Along the ray b⃗ + t·ê, the angular part is a polynomial in t; the integral
+reduces to tables G_j(b) = ∫ g t^j dt, computed once per (n, l). The polynomial
+coefficients are expanded once per frame and per orientation: each pixel costs
+only a few multiplications. Spherical subshells, invariant under rotation, are
+kept from one frame to the next. What you see, and what is a display choice:
+- the shapes are exact: p hourglass (boron 2p¹), d_z² with its ring
+  (scandium 3d¹), f lobes, radial nodes (rings of sodium's excited 4s); a full
+  or half-full subshell is spherical (Unsöld);
+- each subshell has its colour and its own brightness scale, set on the column
+  at the most probable radius (S-curve below, logarithmic above). Without this,
+  the 1s core would dazzle everything, and the atom would be a mere ball (its
+  total density is nearly spherical). Full inner shells are dimmed; the front
+  of the cloud is slightly brighter (depth cue, 30 % at the most probable
+  radius);
+- the **brief dots** are positions drawn from |ψ|² (Monte Carlo): what you would
+  find by measuring an electron. The draws change, the law does not: the state is
+  stationary;
+- when the configuration changes (capture, an electron's jump), the new cloud
+  appears in 0.9 s while the old one fades. For the single electron, this is the
+  exact density of the mixture (cross terms cancel on average over m).
 
-**L'interaction.**
-- **Trajet** : le photon file vers l'orbitale qui agit (électron excité ou unique, sinon la valence), au point où elle est la plus probable (son lobe, au rayon le plus probable), et il la suit si l'atome tourne.
-- **Absorption** : le photon disparaît, un éclair s'étend depuis ce point, la nouvelle orbitale se matérialise en 0,22 s et pulse, et l'ancienne s'efface en 0,9 s.
-- **Photoionisation** : l'électron part en paquet d'onde libre, qui s'étale en avançant comme tout paquet libre. Sa direction est tirée selon cos²θ autour de E, sa vitesse à l'écran ∝ √K (ralentie), et ses crêtes de de Broglie sont à λ = h/p = 1,226 nm/√(K/eV).
-- **Contraction de l'ion** : une sous-couche qui reste avec le même remplissage ne clignote pas. Elle passe de son ancien rayon de Slater au nouveau en 0,35 s (mouvement sec puis freiné). Selon Slater, seules les couches que l'électron parti écrantait se contractent : les couches internes ne bougent pas.
+**The photon** (`PhotonPacket`), built from λ alone:
+- **Shape**: a 3D wave packet, with a Gaussian envelope (a spindle that melts at the ends) and two perpendicular ribbons, E (colour of λ) and B (pale). They are in phase, |B| = |E|/c.
+- **Polarisation**: linear, E along the atom's z axis. The packet arrives slightly at an angle, in perspective, and its ribbons follow the camera.
+- **Pattern**: in vacuum, crests and envelope move together at c, so the pattern is fixed within the packet.
+- **Crests on screen**: the distance between crests is λ, to scale when it fits on screen (X-rays: ~50 pm). A UV, visible or IR photon is thousands of times larger than the atom: its crests are then compressed along log λ, and the label gives the factor ("λ drawn ÷1,128"). The true picture is an atom bathed in a nearly uniform field oscillating at ν (dipole approximation).
+- **Colour**: CIE 1931 (fit by Wyman, Sloan and Shirley 2013) → sRGB, for the whole simulator. Outside the visible, an announced conventional colour.
+- **Ionising photon** (hν > current ionisation energy): chromatic fringes and a trembling halo, ∝ log(1 + (hν − I)/I).
+- **Packet length**: an atomic or nuclear line lasts nanoseconds, i.e. ~10⁷ to 10⁸ oscillations; even a γ is a long packet, not a "brief flash". The packet is therefore drawn long.
 
-**Le panneau** de droite se replie (»). Une pastille le remplace (« COUCHES · SPINS · 5f³ 6d¹ »), et il est replié par défaut sous 1 250 px de large.
+**The photon in true 3D** (`Photon3DLayer`, JavaFX 3D on the scene, parallel projection aligned pixel for pixel):
+- **Volumes**: a thin, almost transparent spindle (stretched sphere, Phong material, specular highlight), so the eye goes to the wave; two meshed ribbons (TriangleMesh, E and B, self-lit), a thin axis and an embedded point light that lights its volumes. The orientation follows the atom's camera.
+- **The canvas keeps** the spindle's halo, the ionising photon's fringes, and the glow it casts in the fog it crosses. This glow is a rendering effect, not a computed scattering.
 
-**La transmutation, visible même à un milliard d'années par seconde** (les effets durent en temps réel) :
-- **Le recul du noyau**, par conservation de l'impulsion. Pour une α : p = √(2 m_α E_α), v = p/M, soit 243 km/s pour U-238 → Th-234. Pour une β, l'antineutrino emporte une part inconnue : la direction est approchée. Le déplacement à l'écran est amorti, et la vitesse est écrite.
-- **Le nuage qui respire** : Z change, l'attraction aussi. Les rayons de Slater recalculés par le moteur sont atteints comme par un ressort amorti : le nuage gonfle après une α et se resserre après une β⁻.
-- **L'onde de la désintégration** : trois fronts avec rémanence, qui s'éloignent du noyau.
-- **Le bandeau** « Uranium → Thorium », avec Z avant/après et le recul.
+**The particles:**
+- **The free electron** is a very bright point in a fading halo, not a marble: it is a point particle, with no measured radius.
+- **The nucleons**, seen up close, are bubbles: a translucent body, a glowing rim, and their three valence quarks that rotate and exchange their colour. A shared glow melts their edges, and the nucleus reads as a drop. Their tint shifts when a pion changes their identity.
 
-Le photon file vers un point d'impact tiré au hasard selon |ψ|² de l'orbitale qui agit (Monte-Carlo) : chaque tir touche ailleurs, là où l'électron a des chances d'être. L'éclair et l'électron libéré partent de ce point. Pour les atomes lourds, la carte des couches résume les sous-couches pleines du début en une ligne (clic : tout voir). Les étiquettes du nuage restent dans la scène, loin de l'en-tête.
+**The interaction.**
+- **Path**: the photon heads for the acting orbital (excited or single electron, otherwise the valence), at the point where it is most probable (its lobe, at the most probable radius), and follows it if the atom rotates.
+- **Absorption**: the photon disappears, a flash spreads from that point, the new orbital materialises in 0.22 s and pulses, and the old one fades in 0.9 s.
+- **Photoionisation**: the electron leaves as a free wave packet, which spreads as it moves like any free packet. Its direction is drawn according to cos²θ around E, its speed on screen ∝ √K (slowed down), and its de Broglie crests are at λ = h/p = 1.226 nm/√(K/eV).
+- **Contraction of the ion**: a subshell that keeps the same filling does not flicker. It goes from its old Slater radius to the new one in 0.35 s (sharp then braked motion). According to Slater, only the shells that the departed electron screened contract: the inner shells do not move.
 
-**La plongée.** Le clic sur la loupe (ou « Noyau ») traverse les décades à
-vitesse constante (≤ 1,5 décade/s), avec le champ de vision et le nombre
-moyen d'électrons à cette distance du noyau (Σ N·P(r' < r)). La caméra entre
-dans le nuage : seule la tranche |t| < 1,5 × la largeur du champ est
-intégrée, avec des tables exactes, tabulées en épaisseur. Le voile 1s reste
-visible longtemps, et c'est réel : sa densité est maximale au noyau. Il
-s'éteint vers 100 fm, et la goutte nucléaire apparaît.
+**The right-hand panel** folds (»). A chip replaces it ("SHELLS · SPINS · 5f³ 6d¹"), and it is folded by default below 1,250 px of width.
 
-**Le gouffre des échelles** (bouton « Gouffre », touche `G`). Noyau et nuage
-ensemble, la distance au noyau comprimée en logarithme dans le plan de
-l'image : ρ = K·log₁₀(1 + r / 1 fm), un anneau par décade de 1 fm à 10 nm. La
-luminosité suit la probabilité par surface de l'image déformée (colonne ×
-b·db / (ρ·dρ)). Les sous-couches deviennent des anneaux à leur décade, et
-le centre, immense dans l'image, est presque vide : l'écran calcule combien
-d'électrons s'y trouvent (2,8·10⁻³ entre 4,5 fm et 0,21 pm pour le fer). Une
-fiche donne la vraie proportion : si le noyau était une bille de 1 cm, le
-nuage s'étendrait sur des centaines de mètres.
+**Transmutation, visible even at a billion years per second** (the effects last in real time):
+- **The nucleus's recoil**, by conservation of momentum. For an α: p = √(2 m_α E_α), v = p/M, i.e. 243 km/s for U-238 → Th-234. For a β, the antineutrino carries an unknown share: the direction is approximate. The motion on screen is damped, and the speed is written.
+- **The breathing cloud**: Z changes, so does the attraction. The Slater radii recomputed by the engine are reached as by a damped spring: the cloud swells after an α and tightens after a β⁻.
+- **The decay wave**: three fronts with afterglow, moving away from the nucleus.
+- **The banner** "Uranium → Thorium", with Z before/after and the recoil.
 
-**Le noyau, goutte de liquide quantique** (`NuclearDrop`). Les nucléons
-placés par le moteur sont tournés en 3D et triés en profondeur, dans une
-membrane : la silhouette calculée de la surface déformée, avec une peau
-diffuse (Woods-Saxon, a = 0,55 fm). La surface vibre selon Bohr et Mottelson :
-R(θ, φ) = R₀ (1 + Σ α_λμ Y_λμ), modes λ = 2 et 3. Raideur C_λ (tension de
-surface a_s contre répulsion des protons a_c, ceux de `nucleus.py`),
-inertie d'écoulement irrotationnel B_λ = 3 A m_N R₀² / (4πλ), ħω_λ = ħ √(C_λ/B_λ),
-amplitude de point zéro β² = (2λ+1) ħ / (2 B ω). Les nucléons suivent le champ
-de déplacement ∝ r^(λ−1) Y_λμ. La période réelle (~10⁻²¹ s) est montrée en
-3,6 s, avec le vrai rapport de fréquences λ = 3 / λ = 2. Le modèle est
-grossier : s'il prédit β > 0,3 (noyaux légers, fer…), la fiche le dit et
-l'amplitude affichée est bornée à 0,12. Les nucléons échangent des **pions
-virtuels**, chacun dessiné comme un tube de flux qu'une perle parcourt :
-portée ħ/(m_π c) = 1,41 fm, durée ħ/(m_π c²) = 4,7·10⁻²⁴ s (ralenti à 1,7 s), voisin
-choisi selon Yukawa e^(−r/1,41 fm)/r. Entre un proton et un neutron, deux
-échanges sur trois sont chargés (couplage √2 pour π±). Le proton qui émet un
-π⁺ (u d̄) devient neutron, le neutron qui l'absorbe devient proton : les
-couleurs changent, la charge totale jamais (testé à chaque pas). La fiche
-« Goutte quantique » donne ħω₂, la période, β₂ et le compte des échanges.
+The photon heads for an impact point drawn at random from |ψ|² of the acting orbital (Monte Carlo): each shot hits somewhere else, where the electron is likely to be. The flash and the freed electron leave from that point. For heavy atoms, the shell map summarises the full subshells at the bottom in one line (click: see all). The cloud labels stay within the scene, away from the header.
 
-## Ce que montre l'écran
+**The dive.** Clicking the magnifier (or "Nucleus") crosses the decades at
+constant speed (≤ 1.5 decades/s), with the field of view and the mean number of
+electrons at that distance from the nucleus (Σ N·P(r' < r)). The camera enters
+the cloud: only the slab |t| < 1.5 × the width of the field is integrated, with
+exact tables, tabulated in thickness. The 1s veil stays visible for a long
+time, and that is real: its density is highest at the nucleus. It fades around
+100 fm, and the nuclear drop appears.
 
-- **La carte** : l'atome en 3D à sa vraie échelle (voir « L'atome en 3D ») :
-  un brouillard de probabilité |ψ|² par sous-couche, nommée avec son
-  remplissage et ses spins ; les photons (colorés selon λ, en pointillé si
-  invisibles), les électrons capturés ou repoussés, les particules qui sortent
-  du noyau. Une **loupe** montre en permanence le noyau, cent mille fois plus
-  petit (clic : on y plonge, lentement, à travers le vide). Survol : la
-  sous-couche qui domine sous la souris, le noyau, l'électron, le pion.
-- **La bulle** : le dernier événement et son calcul, reliée à l'électron ou
-  au noyau qui l'a produit ; elle reste jusqu'au suivant.
-- **Les panneaux** selon l'échelle : couches et spins dans l'ordre de
-  Klechkowski (atome) ; forces de Weizsäcker et bilan de masse mesuré
-  E = Δm·c² (noyau) ; quarks, couleurs, spins (nucléon).
-- **Les fiches** : clic sur une particule (électron, nucléon, photon, quark,
-  α, neutrino…) : masse, charge, spin, moment magnétique, durée de vie
-  (CODATA, PDG).
-- **Le bas de l'écran** : ce qui peut arriver ensuite (« demi-vie 5 700 ans
-  → ≈ 8 s d'attente à cette vitesse »).
-- **Lumière** : niveaux d'énergie avec l'électron et ses sauts ; spectre avec
-  les raies absorbables maintenant (▲), le seuil d'ionisation et le laser.
-- **Orbitale** : pour un système à un électron, densité de l'état (n,l)
-  réellement occupé, masse réduite comprise. Le moteur ne suit pas m :
-  mélange équiprobable des orientations, donc densité isotrope, même en p.
-  Les points sont des tirages conditionnés à la coupe xz, pas une projection
-  de mesures 3D. Pour les atomes à plusieurs électrons : valence approchée
-  par Slater ; la densité excitée non calculée est indiquée comme absente.
-  La carte montre toutes les sous-couches en 3D (voir « L'atome en 3D »).
-- **Noyau** : vallée de stabilité, demi-vie, probabilité par seconde, voies.
-- **Matière** : la boîte en 3D (glisser pour la tourner), les atomes colorés
-  selon leur agitation ou leur état, les traînées des atomes de gaz, les
-  chocs sur les parois ; les mesures (température, pression, densité, part
-  de chaque état), les valeurs réelles pour comparer, la courbe V(r).
-- **Journal** : tous les événements, du plus récent au plus ancien.
+**The scale gap** ("Scale gap" button, key `G`). Nucleus and cloud together,
+the distance to the nucleus compressed logarithmically in the image plane:
+ρ = K·log₁₀(1 + r / 1 fm), one ring per decade from 1 fm to 10 nm. Brightness
+follows the probability per area of the deformed image (column ×
+b·db / (ρ·dρ)). Subshells become rings at their decade, and the centre, huge in
+the image, is nearly empty: the screen computes how many electrons are there
+(2.8·10⁻³ between 4.5 fm and 0.21 pm for iron). A card gives the true
+proportion: if the nucleus were a 1 cm marble, the cloud would extend over
+hundreds of metres.
 
-## D'où viennent les chiffres
+**The nucleus, a drop of quantum liquid** (`NuclearDrop`). The nucleons placed
+by the engine are rotated in 3D and depth-sorted, inside a membrane: the
+computed silhouette of the deformed surface, with a diffuse skin (Woods–Saxon,
+a = 0.55 fm). The surface vibrates according to Bohr and Mottelson:
+R(θ, φ) = R₀ (1 + Σ α_λμ Y_λμ), modes λ = 2 and 3. Stiffness C_λ (surface
+tension a_s against proton repulsion a_c, those of `nucleus.py`), irrotational
+flow inertia B_λ = 3 A m_N R₀² / (4πλ), ħω_λ = ħ √(C_λ/B_λ), zero-point
+amplitude β² = (2λ+1) ħ / (2 B ω). The nucleons follow the displacement field
+∝ r^(λ−1) Y_λμ. The real period (~10⁻²¹ s) is shown in 3.6 s, with the true
+frequency ratio λ = 3 / λ = 2. The model is coarse: if it predicts β > 0.3
+(light nuclei, iron…), the card says so and the displayed amplitude is capped
+at 0.12. The nucleons exchange **virtual pions**, each drawn as a flux tube a
+bead runs through: range ħ/(m_π c) = 1.41 fm, duration ħ/(m_π c²) =
+4.7·10⁻²⁴ s (slowed to 1.7 s), neighbour chosen according to Yukawa
+e^(−r/1.41 fm)/r. Between a proton and a neutron, two exchanges out of three are
+charged (√2 coupling for π±). The proton that emits a π⁺ (u d̄) becomes a
+neutron, the neutron that absorbs it becomes a proton: the colours change, the
+total charge never does (tested at every step). The "Quantum drop" card gives
+ħω₂, the period, β₂ and the count of exchanges.
 
-| Grandeur | Source |
+## What the screen shows
+
+- **The map**: the atom in 3D at its true scale (see "The atom in 3D"): a
+  probability fog |ψ|² per subshell, named with its filling and spins; the
+  photons (coloured by λ, dotted if invisible), captured or repelled electrons,
+  the particles leaving the nucleus. A **magnifier** permanently shows the
+  nucleus, a hundred thousand times smaller (click: you dive into it, slowly,
+  through the void). Hover: the subshell that dominates under the mouse, the
+  nucleus, the electron, the pion.
+- **The bubble**: the last event and its calculation, linked to the electron or
+  nucleus that produced it; it stays until the next one.
+- **The panels** depending on the scale: shells and spins as an energy diagram,
+  1s at the bottom and each following subshell (Klechkowski) above; hovering a
+  subshell explains its rank (n + l, neighbours, measured exceptions) (atom);
+  Weizsäcker forces and measured mass balance E = Δm·c² (nucleus); quarks,
+  colours, spins (nucleon).
+- **The cards**: click a particle (electron, nucleon, photon, quark, α,
+  neutrino…): mass, charge, spin, magnetic moment, lifetime (CODATA, PDG).
+- **The bottom of the screen**: what may happen next ("half-life 5,700 years
+  → ≈ 8 s of waiting at this speed").
+- **Light**: energy levels with the electron and its jumps; spectrum with the
+  lines absorbable right now (▲), the ionisation threshold and the laser.
+- **Orbital**: for a one-electron system, the density of the (n,l) state
+  actually occupied, reduced mass included. The engine does not track m:
+  equiprobable mixture of the orientations, hence an isotropic density, even in
+  p. The dots are draws conditioned on the xz slice, not a projection of 3D
+  measurements. For many-electron atoms: valence approximated by Slater; an
+  excited density that is not computed is marked as missing. The map shows all
+  subshells in 3D (see "The atom in 3D"). The **phase ±** chip shows the sign of
+  ψ = R_nl·Y_lm for one orbital — the one that received the last electron (Hund),
+  or the last visible occupied one if that electron lies outside the xz slice —
+  blue for ψ > 0, orange for ψ < 0, brightness following |ψ|². The panel's
+  drawing shrinks with the space left by the journal instead of being cut.
+- **Nucleus**: valley of stability, half-life, probability per second, paths.
+- **Matter**: the box in 3D (drag to rotate), atoms coloured by agitation or
+  state, trails of gas atoms, impacts on the walls; the measurements
+  (temperature, pressure, density, share of each state), the real values for
+  comparison, the V(r) curve.
+- **Journal**: all events, from newest to oldest.
+
+## Limits of the model
+
+They are also shown in the application (the atom's ⓘ chip).
+
+- **Electron cloud**: hydrogen-like orbitals with Slater's effective charge.
+  Exact for a single electron, approximate beyond: no Hartree–Fock, no
+  relativistic effects (gold, mercury, heavy elements).
+- **Energies and lines**: measured (NIST) when they exist, otherwise estimated
+  with Slater's rules.
+- **Nucleus**: measured masses and decays (AME2020, NUBASE, ICRP-107);
+  Weizsäcker for nuclei never observed. The arrangement of the nucleons is a
+  picture, not a shell-model calculation.
+- **Chance**: each event is drawn from the measured probabilities; two runs do
+  not tell the same story.
+- **Neutrons**: only thermal neutrons (0.0253 eV), and only on nuclei whose
+  cross sections are tabulated (natural isotopes and a few actinides).
+- **Beyond oganesson** (Z = 118): no proton is added.
+- **Beyond iron** (Z₁ + Z₂ > 26): the collision chamber speaks of
+  transmutation, not fusion, because welding two nuclei there costs energy.
+
+## Where the numbers come from
+
+| Quantity | Source |
 |---|---|
-| Constantes physiques, masses et spins des particules | CODATA, via `scipy.constants` ; PDG (quarks, neutrinos) |
-| Spin et parité des noyaux | NUBASE, base de `mendeleev` |
-| Paramètres de Lennard-Jones ε, σ | Magalhães et al. 2013, Poling et al. 2001, via `chemicals` ; sinon Bird-Stewart-Lightfoot |
-| Fusion, ébullition, point critique réels | base de `mendeleev` |
-| Voisins, listes de paires | `scipy.spatial.cKDTree` |
-| Liaisons, densités, orbitales moléculaires | DFT PBE0/def2-SVP, `pyscf` |
-| Électronégativité de Pauling (comparaison) | base de `mendeleev` |
-| Barrière de Coulomb, effet tunnel | rayon nucléaire R = 1,2·A^⅓ fm, facteur de Gamow |
-| Voies de sortie des fusions | réactions mesurées (D+T, D+D, D+He-3, p+Li-7, D+Li-6, p+B-11, p+D) |
-| Portée de la force forte | ħ/(m_π c), m_π± = 139,570 MeV (PDG) |
-| Taux des réactions stellaires, écrantage | REACLIB, via `pynucastro` (screen5) |
-| Énergie des neutrinos solaires | Bahcall, *Neutrino Astrophysics* (1989) ; sinon spectre β calculé |
-| Ionisation du plasma | équation de Saha + abaissement du potentiel (sphère ionique) |
-| Pression des électrons | statistique de Fermi-Dirac relativiste (`scipy.integrate`) |
-| Lieux stellaires | modèle solaire standard ; ITER pour le réacteur |
-| Fonctions d'onde, intégrales | `scipy.special` (Laguerre), `scipy.integrate` |
-| Demi-vies, modes, branchements, filiations | ICRP-107 / NUBASE2020, via `radioactivedecay` |
-| Masses atomiques (Q), noyaux très éphémères | AME2020 / NUBASE, base de `mendeleev` |
-| Énergies d'ionisation de chaque ion, affinités | NIST, base de `mendeleev` |
-| Raies d'émission, durées de vie des raies de résonance | NIST ASD (table embarquée) |
-| Configuration électronique | Klechkowski + 20 exceptions réelles |
-| Charge effective, rayons | règles de Slater |
-| Bilan de liaison du noyau (termes) | Weizsäcker |
-| Noyau jamais observé | estimations dites comme telles (Viola-Seaborg, espace de phase de Fermi) |
+| Physical constants, particle masses and spins | CODATA, via `scipy.constants`; PDG (quarks, neutrinos) |
+| Spin and parity of nuclei | NUBASE, `mendeleev` database |
+| Lennard-Jones parameters ε, σ | Magalhães et al. 2013, Poling et al. 2001, via `chemicals`; otherwise Bird–Stewart–Lightfoot |
+| Real melting, boiling and critical points | `mendeleev` database |
+| Neighbours, pair lists | `scipy.spatial.cKDTree` |
+| Bonds, densities, molecular orbitals | DFT PBE0/def2-SVP, `pyscf` |
+| Pauling electronegativity (comparison) | `mendeleev` database |
+| Coulomb barrier, quantum tunnelling | nuclear radius R = 1.2·A^⅓ fm, Gamow factor |
+| Exit channels of fusions | measured reactions (D+T, D+D, D+He-3, p+Li-7, D+Li-6, p+B-11, p+D) |
+| Range of the strong force | ħ/(m_π c), m_π± = 139.570 MeV (PDG) |
+| Stellar reaction rates, screening | REACLIB, via `pynucastro` (screen5) |
+| Solar neutrino energies | Bahcall, *Neutrino Astrophysics* (1989); otherwise computed β spectrum |
+| Plasma ionisation | Saha equation + potential lowering (ion sphere) |
+| Electron pressure | relativistic Fermi–Dirac statistics (`scipy.integrate`) |
+| Stellar places | standard solar model; ITER for the reactor |
+| Wave functions, integrals | `scipy.special` (Laguerre), `scipy.integrate` |
+| Half-lives, modes, branchings, daughters | ICRP-107 / NUBASE2020, via `radioactivedecay` |
+| Thermal neutron cross sections (scattering, absorption) | Sears, *Neutron News* 3 (1992) 26, NIST table via `periodictable` |
+| Share of fission, (n,α), (n,p) in absorption; neutrons per fission ν̄ | ENDF/B-VIII.0 thermal evaluations (Mughabghab) |
+| Atomic masses (Q), very short-lived nuclei | AME2020 / NUBASE, `mendeleev` database |
+| Ionisation energies of each ion, affinities | NIST, `mendeleev` database |
+| Emission lines, lifetimes of resonance lines | NIST ASD (embedded table) |
+| Electron configuration | Klechkowski + 20 real exceptions |
+| Effective charge, radii | Slater's rules |
+| Nuclear binding balance (terms) | Weizsäcker |
+| Nucleus never observed | estimates stated as such (Viola–Seaborg, Fermi phase space) |
 
 ## Tests
 
 ```bash
-cd logic && python -m unittest discover -s tests -t .     # tout le moteur (une dizaine de minutes)
-cd logic && python -m unittest tests.test_fusion          # un seul fichier de tests
-cd sim   && gradle test                                   # contrat et rendu
+cd logic && python -m unittest discover -s tests -t .     # the whole engine (about ten minutes)
+cd logic && python -m unittest tests.test_fusion          # a single test file
+cd sim   && gradle test                                   # contract and rendering
 ```
 
 ## Structure
 
-Le dépôt a cinq dossiers ; chacun a son README, qui dit ce qu'il contient et comment s'en servir.
+The repository has five folders; each has its README, which says what it holds and how to use it (written in French).
 
-| Dossier | Contenu |
+| Folder | Contents |
 |---|---|
-| [`core/`](core/README.md) | Le contrat gRPC partagé entre le moteur et le client (`genesis.proto`) |
-| [`logic/`](logic/README.md) | Le moteur Python : la physique, rangée par domaine |
-| [`sim/`](sim/README.md) | Le client JavaFX : les écrans, rangés par laboratoire |
-| [`docs/`](docs/README.md) | Les modèles physiques, expliqués en détail |
-| [`artifacts/`](artifacts/README.md) | Les images et les frames d'aperçu |
+| [`core/`](core/README.md) | The gRPC contract shared by the engine and the client (`genesis.proto`) |
+| [`logic/`](logic/README.md) | The Python engine: the physics, organised by domain |
+| [`sim/`](sim/README.md) | The JavaFX client: the screens, organised by laboratory |
+| [`docs/`](docs/README.md) | The physical models, explained in detail |
+| [`artifacts/`](artifacts/README.md) | Preview images and frames |
 
-Le moteur et le client sont rangés de la même façon, par domaine :
+The engine and the client are organised the same way, by domain:
 
-| Domaine | Moteur (`logic/`) | Client (`sim/app/src/main/java/org/genesis/`) |
+| Domain | Engine (`logic/`) | Client (`sim/app/src/main/java/org/genesis/`) |
 |---|---|---|
-| Point d'entrée | `engine.py` | `app/` (l'application, le journal, la timeline) |
-| Liaison gRPC | `genesis_pb2*.py` (générés) | `engine/` |
-| Session, données | `simulator/` | — |
-| Outils partagés | `common/` | `common/` |
-| L'atome et sa lumière | `atomic/` | `atom/` |
-| Le noyau | `nuclear/` | `atom/` (panneaux du noyau) |
-| Molécule et matière | `molecular/` | `matter/` |
-| Fusion, réacteur, étoile | `fusionlab/` | `fusion/` |
-| Monde subatomique | `quantumlab/` | `subatomic/` |
-| Genesis (mise de côté, non affichée) | — | `mascot/` |
-| Outils et tests | `tools/`, `tests/` | `sim/app/src/test/java/org/genesis/` (mêmes paquets) |
+| Entry point | `engine.py` | `app/` (the application, the journal, the timeline) |
+| gRPC binding | `genesis_pb2*.py` (generated) | `engine/` |
+| Session, data | `simulator/` | — |
+| Shared tools | `common/` | `common/` |
+| The atom and its light | `atomic/` | `atom/` |
+| The nucleus | `nuclear/` | `atom/` (nucleus panels) |
+| Molecule and matter | `molecular/` | `matter/` |
+| Fusion, reactor, star | `fusionlab/` | `fusion/` |
+| Subatomic world | `quantumlab/` | `subatomic/` |
+| Genesis (set aside, not shown) | — | `mascot/` |
+| Tools and tests | `tools/`, `tests/` | `sim/app/src/test/java/org/genesis/` (same packages) |
 
-Fichier par fichier :
+File by file:
 
-| Chemin | Rôle |
+| Path | Role |
 |---|---|
-| `core/genesis.proto` | Le contrat partagé (v25), longueurs d'onde absorbables en double précision |
-| `logic/atomic/light_interaction.py` | Profils naturels, faisceau gaussien et continuum hydrogénoïde 1s |
-| `logic/simulator/simulation.py` | L'horloge et les règles : la session qui vit |
-| `logic/engine.py` | Serveur gRPC : lit les actions, avance le temps, envoie les événements |
-| `logic/atomic/hydrogen.py` | Coefficients d'Einstein, durées de vie, absorption (un électron) |
-| `logic/nuclear/nuclear_data.py` | Accès aux bases nucléaires (radioactivedecay, mendeleev) |
-| `logic/atomic/atomic_data.py` | Ionisations, affinités, raies de résonance, doublets de spin |
-| `logic/common/particles.py` | Le zoo de particules : masse, charge, spin… |
-| `logic/molecular/matter.py` | Dynamique moléculaire : Lennard-Jones, parois thermiques, états mesurés |
-| `logic/molecular/chemistry.py` | Deux atomes en chimie quantique : E(R), densité, orbitales, dynamique |
-| `logic/fusionlab/fusion.py` | Le laboratoire : potentiel, WKB, trajectoire, cascade d'évaporation, fission, nuages |ψ|², interprétations |
-| `logic/fusionlab/collider.py` | Réactions mesurées, étiquettes, cinématique à deux corps |
-| `logic/fusionlab/fusion_dynamics.py` | Collisions intégrées, soudure calculée (friction), issues probabilistes et cinématique des produits ; données nucléaires dans `reactor.py` |
-| `logic/fusionlab/lawson.py` | Le plasma : ⟨σv⟩ maxwellien, bremsstrahlung, critère de Lawson, tirage de l'énergie d'un choc |
-| `sim/app/.../fusion/ReactorView.java` | Laboratoire de fusion : la carte, les réglages, le bilan ; champs dans `FusionField`, rendu (carte ou au plus près) dans `FusionRenderer` |
-| `sim/app/.../fusion/ResultView.java` | Le bilan interactif : flottant ou fenêtre détachée ; un élément choisi y amène la vue |
-| `sim/app/.../fusion/CollisionTimeline.java` | Les étapes de lecture (temps physique, tunnel, soudure, produits sur la carte) |
-| `sim/app/.../fusion/FusionLab.java` | L'ancien laboratoire 3D (plus relié à l'interface) |
-| `sim/app/.../common/LabCamera.java` | La caméra à inertie et la projection en perspective |
-| `logic/fusionlab/star.py` | Le cœur d'étoile : réseau REACLIB, Saha, Fermi-Dirac, énergie, fenêtre de fusions |
-| `sim/app/.../fusion/StarView.java` | L'écran du cœur d'étoile |
-| `sim/app/.../matter/MoleculeCanvas.java` | La molécule : densité, Δρ, E(R), diagramme d'orbitales |
-| `sim/app/.../matter/MatterCanvas.java` | La boîte d'atomes en 3D, piston, mesures |
-| `logic/atomic/atom.py` | Évaluation de l'atome : couches, niveaux, orbitale, noyau |
-| `logic/nuclear/halflife.py` | Estimations pour les noyaux jamais observés |
-| `sim/app/.../atom/SimCanvas.java` | La carte : échelles, événements, loupe, plongée, gouffre, bandeau |
-| `sim/app/.../atom/OrbitalCloud.java` | Le nuage 3D : |ψ|² projeté exactement, tranches de plongée, mesures fugaces |
-| `sim/app/.../atom/NuclearDrop.java` | Le noyau goutte : vibrations de Bohr–Mottelson, échanges de pions p ↔ n |
-| `sim/app/.../atom/Camera3D.java` | La caméra des vues 3D de l'atome et du noyau |
-| `sim/app/.../app/LabLoader.java` | L'écran d'attente quand on ouvre ou quitte un laboratoire |
-| `sim/app/.../atom/Photon3DLayer.java` | Le photon en JavaFX 3D (fuseau, rubans E/B maillés, lumière), posé sur la scène |
-| `sim/app/.../app/TimelineBar.java` | La timeline : chaîne de désintégration en ligne de métro, vitesse du temps en clair |
-| `sim/app/.../atom/PhotonPacket.java` | Le photon : paquet d'onde 3D (E, B, enveloppe) construit à partir de λ |
-| `sim/app/.../atom/LightPanel.java` | Niveaux d'énergie et spectre (réglage du laser) |
-| `sim/app/.../atom/NucleusPanel.java` | Vallée de stabilité et données du noyau |
-| `sim/app/.../app/EventJournal.java` | Le journal : logs par catégorie, filtres, vue compacte sous Genesis |
+| `core/genesis.proto` | The shared contract (v27), absorbable wavelengths in double precision |
+| `logic/atomic/light_interaction.py` | Natural profiles, Gaussian beam and hydrogen-like 1s continuum |
+| `logic/simulator/simulation.py` | The clock and the rules: the living session |
+| `logic/engine.py` | gRPC server: reads the actions, advances time, sends the events |
+| `logic/atomic/hydrogen.py` | Einstein coefficients, lifetimes, absorption (one electron) |
+| `logic/nuclear/nuclear_data.py` | Access to the nuclear databases (radioactivedecay, mendeleev) |
+| `logic/nuclear/neutrons.py` | A slow neutron on a nucleus: measured thermal cross sections, drawn outcome, Q from measured masses |
+| `logic/atomic/atomic_data.py` | Ionisations, affinities, resonance lines, spin doublets |
+| `logic/common/particles.py` | The particle zoo: mass, charge, spin… |
+| `logic/common/elements_db.py` | The `mendeleev` SQLite base behind one locked connection, shared by every thread |
+| `logic/molecular/matter.py` | Molecular dynamics: Lennard-Jones, thermal walls, measured states |
+| `logic/molecular/chemistry.py` | Two atoms in quantum chemistry: E(R), density, orbitals, dynamics |
+| `logic/fusionlab/fusion.py` | The laboratory: potential, WKB, trajectory, evaporation cascade, fission, |ψ|² clouds, interpretations |
+| `logic/fusionlab/collider.py` | Measured reactions, labels, two-body kinematics |
+| `logic/fusionlab/fusion_dynamics.py` | Integrated collisions, computed weld (friction), probabilistic outcomes and product kinematics; nuclear data in `reactor.py` |
+| `logic/fusionlab/lawson.py` | The plasma: Maxwellian ⟨σv⟩, bremsstrahlung, Lawson criterion, drawing the energy of a shot |
+| `sim/app/.../fusion/ReactorView.java` | Fusion laboratory: the map, the settings, the results; fields in `FusionField`, rendering (map or close-up) in `FusionRenderer` |
+| `sim/app/.../fusion/ResultView.java` | The interactive results: floating or detached window; a chosen element brings the view to it |
+| `sim/app/.../fusion/CollisionTimeline.java` | The playback steps (physical time, tunnel, weld, products on the map) |
+| `sim/app/.../fusion/FusionLab.java` | The old 3D laboratory (no longer linked to the interface) |
+| `sim/app/.../common/LabCamera.java` | The camera with inertia and the perspective projection |
+| `logic/fusionlab/star.py` | The stellar core: REACLIB network, Saha, Fermi–Dirac, energy, fusion window |
+| `sim/app/.../fusion/StarView.java` | The stellar core screen |
+| `sim/app/.../matter/MoleculeCanvas.java` | The molecule: density, Δρ, E(R), orbital diagram |
+| `sim/app/.../matter/MatterCanvas.java` | The box of atoms in 3D, piston, measurements |
+| `logic/atomic/atom.py` | Evaluation of the atom: shells, levels, orbital, nucleus |
+| `logic/nuclear/halflife.py` | Estimates for nuclei never observed |
+| `sim/app/.../atom/BohrModel.java` | The Bohr view: tilted rings, electrons that arrive, jump and leave, noble-gas core |
+| `sim/app/.../atom/SimCanvas.java` | The map: scales, events, magnifier, dive, scale gap, banner |
+| `sim/app/.../atom/OrbitalCloud.java` | The 3D cloud: |ψ|² projected exactly, dive slices, fleeting measurements |
+| `sim/app/.../atom/NuclearDrop.java` | The drop nucleus: Bohr–Mottelson vibrations, p ↔ n pion exchanges |
+| `sim/app/.../atom/Camera3D.java` | The camera of the 3D views of the atom and the nucleus |
+| `sim/app/.../app/LabLoader.java` | The waiting screen when opening or leaving a laboratory; at start-up, the "Support Genesis" section |
+| `sim/app/.../app/UpdateChecker.java` | The latest GitHub release, version comparison, verified download (SHA-256) |
+| `sim/app/.../app/UpdateCard.java` | The "new version available" card |
+| `sim/app/.../app/I18n.java` | Display-time translation (French source → English): reviewed labels, exact sentences, `{0}` templates, segments |
+| `sim/app/.../atom/Photon3DLayer.java` | The photon in JavaFX 3D (spindle, meshed E/B ribbons, light), set on the scene |
+| `sim/app/.../app/TimelineBar.java` | The timeline: decay chain as a metro line, time speed in plain words |
+| `sim/app/.../atom/PhotonPacket.java` | The photon: 3D wave packet (E, B, envelope) built from λ |
+| `sim/app/.../atom/LightPanel.java` | Energy levels and spectrum (laser setting) |
+| `sim/app/.../atom/NucleusPanel.java` | Valley of stability and nucleus data |
+| `sim/app/.../app/EventJournal.java` | The journal: logs by category, filters, compact view under Genesis |

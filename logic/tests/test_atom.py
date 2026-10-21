@@ -286,6 +286,32 @@ class OrbitalShapeTest(unittest.TestCase):
     def test_empty_atom_has_no_orbital(self):
         self.assertIsNone(AtomicState(0, 0, 0).evaluate(self.repo).orbital)
 
+    @classmethod
+    def phase_at(cls, orbital, fx, fz):
+        return cls.at({"size": orbital["size"], "grid": orbital["phase"]}, fx, fz)
+
+    def test_phase_of_dz2_is_the_same_up_and_down_and_opposite_on_the_side(self):
+        # Yttrium, 4d1 : le seul électron d est en d_z². ψ(z) = ψ(−z) (l pair) ;
+        # près du noyau, l'axe z (3z² − r² > 0) et le plan équatorial ont des signes opposés.
+        yttrium = self.orbital(39)
+        self.assertEqual(yttrium["phase_name"], "d_z²")
+        up, down = self.phase_at(yttrium, 0.0, 0.08), self.phase_at(yttrium, 0.0, -0.08)
+        side = self.phase_at(yttrium, 0.08, 0.0)
+        self.assertAlmostEqual(up, down, delta=1e-6)
+        self.assertLess(up * side, 0)
+
+    def test_phase_of_2s_changes_sign_across_its_radial_node(self):
+        lithium = self.orbital(3)                                    # 2s1 : un nœud radial
+        inner, outer = self.phase_at(lithium, 0.0, 0.02), self.phase_at(lithium, 0.0, 0.5)
+        self.assertLess(inner * outer, 0)
+
+    def test_phase_falls_back_to_a_visible_orbital(self):
+        # Tungstène, 5d4 : le 4e électron va en d_yz, nul dans la coupe xz : on montre la dernière orbitale visible.
+        tungsten = self.orbital(74)
+        self.assertEqual(tungsten["occupation"], [1, 1, 1, 1, 0])
+        self.assertEqual(tungsten["phase_name"], "d_x²-y²")
+        self.assertEqual(len(tungsten["phase"]), tungsten["size"] ** 2)
+
 
 class SlaterTest(unittest.TestCase):
 

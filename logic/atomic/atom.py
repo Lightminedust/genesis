@@ -30,7 +30,7 @@ from nuclear.nucleus import (
     target_ratio,
 )
 from nuclear.nuclides import lookup as lookup_nuclide
-from nuclear.nuclides import longest_lived_isotope, particle_bound
+from nuclear.nuclides import natural_isotope, particle_bound
 from atomic.orbitals import SUBSHELL_LETTERS, hund_occupation, valence_orbital
 from atomic.slater import (
     BOHR_RADIUS_PM,
@@ -173,22 +173,24 @@ class AtomicState:
         self._structural()
 
     def load_element(self, element):
-        """Charge l'isotope stable le plus léger d'un élément, atome neutre.
+        """Charge l'isotope naturel d'un élément, atome neutre.
 
-        Les éléments sans isotope stable (technétium, prométhium, tout au-delà
-        du plomb) reçoivent l'isotope le plus proche de la vallée de stabilité,
-        pour que l'atome soit affichable même s'il est radioactif.
+        C'est le plus abondant sur Terre (Fe-56, et non Fe-54 ; U-238). Un élément sans
+        abondance naturelle tabulée (technétium, prométhium, radium, transuraniens) reçoit
+        l'isotope qui vit le plus longtemps, celui qu'on sait produire et garder.
         """
         z = element["z"]
-        self.protons = z
+        # Tout est calculé avant de toucher à l'atome : si une recherche échoue, il reste tel quel
+        # (et non avec Z protons sans neutrons, qui éjecterait aussitôt un proton).
         isotopes = element.get("stable_isotopes")
-        if isotopes:
-            self.neutrons = max(0, min(isotopes) - z)
-        elif longest_lived_isotope(z):
-            self.neutrons = longest_lived_isotope(z) - z
+        natural = natural_isotope(z)
+        if natural:
+            neutrons = natural - z
+        elif isotopes:
+            neutrons = max(0, min(isotopes) - z)
         else:
-            self.neutrons = max(0, round(z * target_ratio(z)))
-        self.electrons = z
+            neutrons = max(0, round(z * target_ratio(z)))
+        self.protons, self.neutrons, self.electrons = z, neutrons, z
         self._structural()
 
     # ------------------------------------------------------------------

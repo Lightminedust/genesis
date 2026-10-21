@@ -55,7 +55,7 @@ public final class ReactorView {
     private final Slider temperature = new Slider(Math.log10(.5), Math.log10(5000), Math.log10(15));
     private final Slider density = new Slider(16, 33, 20), confinement = new Slider(-6, 10, Math.log10(3));
     private final TextField beamInput = new TextField("64");
-    private final Label impactLabel = text("0 fm", 12, "#E4EEFF"), fieldLabel = text("5,30 T", 12, "#E4EEFF");
+    private final Label impactLabel = text("0 fm", 12, "#E4EEFF"), fieldLabel = text(fmt(5.3) + " T", 12, "#E4EEFF");
     private final Label temperatureLabel = text("", 12, "#E4EEFF"), densityLabel = text("", 12, "#E4EEFF"), confinementLabel = text("", 12, "#E4EEFF");
     private final Label barrier = text("Barrière : —", 11, "#8196B4");
     private final Label evidence = text("", 11, "#A8C1D8");
@@ -157,7 +157,7 @@ public final class ReactorView {
         inspect.setFocusTraversable(false);
         inspect.getStyleClass().add("glass-toggle");
         inspect.setTooltip(I18n.tooltip("Un clic dans la scène : la zone touchée (halo, zone du col, col du potentiel ou noyau) "
-                + "et les équations qui s'y appliquent, avec leurs valeurs"));
+                + I18n.text("et les équations qui s'y appliquent, avec leurs valeurs")));
         inspect.setOnAction(e -> {
             probe = null;
             holder.setCursor(inspect.isSelected() ? Cursor.CROSSHAIR : Cursor.OPEN_HAND);
@@ -181,8 +181,8 @@ public final class ReactorView {
         mapMode.setFocusTraversable(false);
         mapMode.getStyleClass().add("glass-toggle");
         mapMode.setTooltip(I18n.tooltip("La carte : à l'éjection, la vue recule d'elle-même pour montrer tous les corps autour "
-                + "de l'élément créé (fixe) — leur direction de vol calculée, leur distance comprimée, leur vitesse. "
-                + "Un clic en approche un ; un clic dans le vide revient."));
+                + I18n.text("de l'élément créé (fixe) — leur direction de vol calculée, leur distance comprimée, leur vitesse. ")
+                + I18n.text("Un clic en approche un ; un clic dans le vide revient.")));
         mapMode.setOnAction(e -> {
             renderer.focusZ = renderer.focusA = renderer.mapFocusZ = renderer.mapFocusA = -1;
             holder.setCursor(Cursor.OPEN_HAND);
@@ -353,7 +353,7 @@ public final class ReactorView {
 
     // ================================================================== le panneau
     private void card(Button button, Label title, Label data, String side) {
-        Label eyebrow = text(FusionDashboard.spaced("NOYAU " + side), 9, "#7F97B6"), pick = text("CHOISIR  ↗", 9, "#8FE6FF");
+        Label eyebrow = text(FusionDashboard.spaced(I18n.text("NOYAU ") + side), 9, "#7F97B6"), pick = text("CHOISIR  ↗", 9, "#8FE6FF");
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
         HBox top = new HBox(6, eyebrow, gap, pick);
@@ -673,6 +673,11 @@ public final class ReactorView {
             updateCard(selectedA, aTitle, aData, chooseA);
             updateCard(selectedB, bTitle, bData, chooseB);
             portrait = portrait();
+            force.setText(I18n.text(beyondIron() ? "⚛  Jusqu'à la transmutation" : "⚛  Jusqu'à la fusion"));
+            force.setTooltip(I18n.tooltip(beyondIron()
+                    ? "Au-delà du fer (Z = 26), souder deux noyaux coûte de l'énergie au lieu d'en libérer : le noyau formé est une "
+                    + "transmutation, qui fissionne souvent. La capture est retenue, sa vraie probabilité reste affichée"
+                    : "Montre une fusion : la capture est retenue, sa vraie probabilité reste affichée"));
         }
         if (s.hasCollision())
             for (CollisionSample sample : s.getCollision().getSamplesList())
@@ -696,7 +701,7 @@ public final class ReactorView {
         updating = false;
         refreshPlasmaLabels();
         suggested = s.getSuggestedEnergyKev() > 0 ? s.getSuggestedEnergyKev() : 64;
-        barrier.setText("Barrière de Coulomb : " + energy(s.getBarrierKev()));
+        barrier.setText(I18n.text("Barrière de Coulomb : ") + energy(s.getBarrierKev()));
         barrierKev = s.getBarrierKev();
         if (s.getRequestedEnergyKev() > 0) requestedKev = s.getRequestedEnergyKev();
         if (!s.getError().isBlank()) {
@@ -726,7 +731,7 @@ public final class ReactorView {
             errorBanner.setVisible(false);
             quietlyHideResults();
             status.setText(energy(run.getEnergyKev()) + " · b = " + fmt(run.getImpactFm()) + " fm · P = " + probability(run.getProbability())
-                    + (run.getThermalKev() > 0 ? " · tiré dans le plasma : 1 choc sur 10" + superscript((int) Math.round(-run.getRarityLog10())) + " est aussi énergique" : ""));
+                    + (run.getThermalKev() > 0 ? I18n.text(" · tiré dans le plasma : 1 choc sur 10") + superscript((int) Math.round(-run.getRarityLog10())) + I18n.text(" est aussi énergique") : ""));
         } else if (s.getReactantsCount() >= 2 || selectionChanged) {
             // fill_collision laisse fired=false sur les messages de réglage/statut suivants.
             // Seuls les réactifs d'une chambre prête (shot=None) ou une nouvelle sélection effacent le tir.
@@ -753,10 +758,10 @@ public final class ReactorView {
         boolean high = e.contains("hors modele");
         errorTitle.setText(low ? "Tir refusé : énergie trop basse pour ce couple" : high ? "Tir refusé : énergie trop haute pour le modèle"
                 : "Collision non calculée");
-        errorBody.setText(error + (low || high ? "\nÉnergie conseillée pour ce couple : " + energy(suggested) + " (au-dessus du mur de Coulomb)." : ""));
+        errorBody.setText(error + (low || high ? I18n.text("\nÉnergie conseillée pour ce couple : ") + energy(suggested) + I18n.text(" (au-dessus du mur de Coulomb).") : ""));
         errorFix.setVisible(low || high);
         errorFix.setManaged(low || high);
-        errorFix.setText((plasma ? "Passer en faisceau à " : "Régler à ") + energy(suggested) + " et relancer");
+        errorFix.setText((plasma ? "Passer en faisceau à " : "Régler à ") + energy(suggested) + I18n.text(" et relancer"));
         errorFix.setOnAction(ev -> {
             errorBanner.setVisible(false);
             if (plasmaMode.isSelected()) {
@@ -777,15 +782,15 @@ public final class ReactorView {
     private void refreshLawson() {
         LawsonState l = lawson;
         double gain = l.getGain();
-        lawsonText.setText("⟨σv⟩ = " + scientificShort(l.getReactivityM3S()) + " m³/s · Q = " + fmt(l.getQMev()) + " MeV par réaction\n"
-                + "fusion " + power(l.getFusionWM3()) + " · dont chaleur gardée " + power(l.getDepositedWM3()) + "\n"
+        lawsonText.setText("⟨σv⟩ = " + scientificShort(l.getReactivityM3S()) + " m³/s · Q = " + fmt(l.getQMev()) + I18n.text(" MeV par réaction\n")
+                + "fusion " + power(l.getFusionWM3()) + I18n.text(" · dont chaleur gardée ") + power(l.getDepositedWM3()) + "\n"
                 + "pertes : freinage " + power(l.getBremsstrahlungWM3()) + " · fuite W/τ " + power(l.getConductionWM3()) + "\n"
                 + "gain Q = " + (l.getIgnited() ? "∞ (ignition)" : gain > 0 ? fmt(gain) : "0") + " · nτT = " + scientificShort(l.getTripleProduct()) + " keV·s/m³"
-                + (l.getWaitS() > 0 ? "\nun noyau fusionne en moyenne après " + duration(l.getWaitS()) : ""));
+                + (l.getWaitS() > 0 ? I18n.text("\nun noyau fusionne en moyenne après ") + duration(l.getWaitS()) : ""));
         verdict.setText(l.getVerdict());
         verdict.setStyle("-fx-text-fill:" + (l.getIgnited() ? "#7FE3B0" : "#FFC98A") + ";-fx-font-size:11.5px;");
-        plasmaShot.setText("Le choc est tiré dans ce plasma (kT = " + energy(l.getTemperatureKev()) + ") : « Calculer » prend un choc au hasard"
-                + " (flux maxwellien), « Jusqu'à la fusion » un choc parmi ceux qui fusionnent (pic de Gamow).");
+        plasmaShot.setText(I18n.text("Le choc est tiré dans ce plasma (kT = ") + energy(l.getTemperatureKev()) + I18n.text(") : « Calculer » prend un choc au hasard")
+                + I18n.text(" (flux maxwellien), « Jusqu'à la fusion » un choc parmi ceux qui fusionnent (pic de Gamow)."));
         drawLawson();
     }
 
@@ -856,7 +861,7 @@ public final class ReactorView {
         card.getTooltip().setText(nuclide(n.getZ(), n.getA(), n.getSymbol()) + "\nMasse : " + fmt(n.getMassU()) + " u · "
                 + (n.getMassSource().isBlank() ? "source non renseignée" : n.getMassSource())
                 + "\nRayon : " + fmt(n.getRadiusFm()) + " fm · " + (n.getRadiusMeasured() ? "valeur mesurée" : "estimation du modèle")
-                + "\nMoment magnétique : " + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : "valeur non connue"));
+                + I18n.text("\nMoment magnétique : ") + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : "valeur non connue"));
     }
 
     private static String hex(Color c) {
@@ -1161,12 +1166,21 @@ public final class ReactorView {
         return stageName(stage);
     }
 
-    private static String stageName(String stage) {
+    /**
+     * Au-delà du fer (Z = 26), souder deux noyaux coûte de l'énergie au lieu d'en libérer : le noyau formé est une
+     * transmutation (qui fissionne souvent), pas une fusion qui alimente une étoile.
+     */
+    private boolean beyondIron() {
+        return selectedA != null && selectedB != null && selectedA.getZ() + selectedB.getZ() > 26;
+    }
+
+    private String stageName(String stage) {
+        String weld = beyondIron() ? "TRANSMUTATION" : "FUSION";
         return switch (stage) {
             case "approach" -> "APPROCHE · L'ÉLAN DEVIENT RÉPULSION";
             case "tunnel" -> "EFFET TUNNEL · L'ONDE TRAVERSE LE MUR";
-            case "merge" -> "FUSION · LA FORCE FORTE SOUDE LES DEUX NOYAUX";
-            case "relax" -> "FUSION · LES DEUX FORMES SE FONDENT EN UNE";
+            case "merge" -> weld + " · LA FORCE FORTE SOUDE LES DEUX NOYAUX";
+            case "relax" -> weld + " · LES DEUX FORMES SE FONDENT EN UNE";
             case "compound" -> "NOYAU COMPOSÉ · EXCITÉ";
             case "evaporation" -> "DÉSEXCITATION · ÉMISSIONS CALCULÉES";
             case "products" -> "RÉSULTAT · L'ÉLÉMENT CRÉÉ";
@@ -1200,7 +1214,7 @@ public final class ReactorView {
                     gc.setFont(Font.font("Segoe UI", 10.5));
                     gc.setFill(Color.web("#8FA7C4"));
                     gc.setTextAlign(TextAlignment.LEFT);
-                    I18n.fillText(gc, symbolOf(body) + " → hors du cadre", 20, 150 + outside++ * 14);
+                    I18n.fillText(gc, symbolOf(body) + I18n.text(" → hors du cadre"), 20, 150 + outside++ * 14);
                 }
                 continue;
             }
@@ -1263,7 +1277,7 @@ public final class ReactorView {
     private static String flight(FusionRenderer.Tag t) {
         Body b = t.body();
         double d = t.offset().norm();
-        String where = d < 1e-9 ? "au centre (créé)" : "à " + lengthText(d * 1e-15);
+        String where = d < 1e-9 ? "au centre (créé)" : I18n.text("à ") + lengthText(d * 1e-15);
         boolean massless = b.a() == 0 && (t.look() == null || !"positron".equals(t.look().kind()));
         double beta = Math.min(.999999, b.velocity().norm() / C);
         return "v " + (massless ? "= c" : ResultView.percent(beta)) + " · " + where;
@@ -1381,8 +1395,8 @@ public final class ReactorView {
         else {
             List<String> theory = new ArrayList<>(SimCanvas.wrap(sceneEquation(r), 55));
             if (run != null) {
-                theory.addAll(SimCanvas.wrap("Modèle : " + run.getModel(), 55));
-                theory.add("Erreur relative d'énergie : " + String.format(Locale.ROOT, "%.1e", run.getEnergyError()));
+                theory.addAll(SimCanvas.wrap(I18n.text("Modèle : ") + run.getModel(), 55));
+                theory.add(I18n.text("Erreur relative d'énergie : ") + String.format(Locale.ROOT, "%.1e", run.getEnergyError()));
             }
             c = new FusionReadouts.Card("PHYSIQUE DE L'INSTANT", captionText(r), theory, Color.web("#36CDF2"), List.of());
         }
@@ -1486,45 +1500,45 @@ public final class ReactorView {
 
     private String captionText(FusionRenderer.Report r) {
         if (run == null) {
-            return selectedA == null ? "" : "Deux noyaux nus, à la même échelle. Autour de chacun, son champ électrique : un halo à sa couleur "
-                    + "(selon son isotope), parcouru de repères mobiles suivant E total ; le champ des spins et des charges en mouvement "
-                    + "est représenté par des points advectés dans B total. Règle le choc ou le plasma, puis lance ; un clic sonde le champ.";
+            return selectedA == null ? "" : I18n.text("Deux noyaux nus, à la même échelle. Autour de chacun, son champ électrique : un halo à sa couleur ")
+                    + I18n.text("(selon son isotope), parcouru de repères mobiles suivant E total ; le champ des spins et des charges en mouvement ")
+                    + I18n.text("est représenté par des points advectés dans B total. Règle le choc ou le plasma, puis lance ; un clic sonde le champ.");
         }
         String a = identity(selectedA, "A");
         return switch (r.stage) {
             case "approach" -> "Approche : chaque noyau baigne dans son champ (à sa couleur). La répulsion — " + force(r.coulomb) + " à "
-                    + fmt(r.separation) + " fm — change l'élan K en tension V (le tableau de bord suit ce partage) : ils freinent. Entre "
-                    + "eux, le potentiel combiné U = eφ s'échauffe (bleu → blanc) à mesure qu'ils s'approchent ; au col, là où E = 0, sa "
-                    + "valeur est chiffrée.";
+                    + fmt(r.separation) + I18n.text(" fm — change l'élan K en tension V (le tableau de bord suit ce partage) : ils freinent. Entre ")
+                    + I18n.text("eux, le potentiel combiné U = eφ s'échauffe (bleu → blanc) à mesure qu'ils s'approchent ; au col, là où E = 0, sa ")
+                    + I18n.text("valeur est chiffrée.");
             case "tunnel" -> run.getEnergyKev() / 1000 < run.getBarrierMev() * .98
-                    ? "Le mur de Coulomb : il faudrait " + energy(run.getBarrierMev() * 1000) + ", ils n'ont que " + energy(run.getEnergyKev())
-                    + ". L'onde de " + a + " s'enfonce dans le mur et s'y éteint presque — pas tout à fait : elle se matérialise de l'autre côté"
-                    + (run.getProbability() < .5 ? " (probabilité de ce tir : " + probability(run.getProbability()) + ")." : ".")
-                    : "Au sommet du mur de Coulomb (" + energy(run.getBarrierMev() * 1000) + ") : l'élan est épuisé à quelques femtomètres du contact ; "
-                    + "l'onde de " + a + " finit le trajet (probabilité de ce tir : " + probability(run.getProbability()) + ").";
+                    ? I18n.text("Le mur de Coulomb : il faudrait ") + energy(run.getBarrierMev() * 1000) + I18n.text(", ils n'ont que ") + energy(run.getEnergyKev())
+                    + I18n.text(". L'onde de ") + a + I18n.text(" s'enfonce dans le mur et s'y éteint presque — pas tout à fait : elle se matérialise de l'autre côté")
+                    + (run.getProbability() < .5 ? I18n.text(" (probabilité de ce tir : ") + probability(run.getProbability()) + ")." : ".")
+                    : I18n.text("Au sommet du mur de Coulomb (") + energy(run.getBarrierMev() * 1000) + I18n.text(") : l'élan est épuisé à quelques femtomètres du contact ; ")
+                    + I18n.text("l'onde de ") + a + I18n.text(" finit le trajet (probabilité de ce tir : ") + probability(run.getProbability()) + ").";
             case "merge" -> timeMap != null && timeMap.computedMerge()
-                    ? "Soudure calculée : la force forte (" + force(r.strong) + ") tire les deux noyaux l'un dans l'autre ; la friction nucléaire "
-                    + "change leur élan en chaleur (" + fmt(r.heat) + " MeV). Leurs champs électriques se fondent en un seul, de charge +"
+                    ? I18n.text("Soudure calculée : la force forte (") + force(r.strong) + I18n.text(") tire les deux noyaux l'un dans l'autre ; la friction nucléaire ")
+                    + I18n.text("change leur élan en chaleur (") + fmt(r.heat) + I18n.text(" MeV). Leurs champs électriques se fondent en un seul, de charge +")
                     + run.getCompoundZ() + "e."
-                    : "Contact : la force forte (" + force(r.strong) + ") l'emporte sur la répulsion et soude les "
-                    + (selectedA == null ? "" : (selectedA.getA() + selectedB.getA()) + " ") + "nucléons ; un champ de charge +"
-                    + run.getCompoundZ() + "e remplace les deux.";
+                    : I18n.text("Contact : la force forte (") + force(r.strong) + I18n.text(") l'emporte sur la répulsion et soude les ")
+                    + (selectedA == null ? "" : (selectedA.getA() + selectedB.getA()) + " ") + I18n.text("nucléons ; un champ de charge +")
+                    + run.getCompoundZ() + I18n.text("e remplace les deux.");
             case "relax" -> "Noyaux lourds : à l'intérieur, la répulsion des " + run.getCompoundZ() + " protons arrête la soudure calculée au contact "
-                    + "(système dinucléaire, chauffé de " + fmt(r.heat) + " MeV). Les deux formes finissent de fondre en une — étape lente, non tracée.";
+                    + I18n.text("(système dinucléaire, chauffé de ") + fmt(r.heat) + I18n.text(" MeV). Les deux formes finissent de fondre en une — étape lente, non tracée.");
             case "compound" -> "Noyau composé : excité de " + fmt(run.getExcitationMev()) + " MeV. Les spins s'additionnent (J = j₁ + j₂ + ℓ). "
-                    + "Il va se refroidir en émettant des particules.";
+                    + I18n.text("Il va se refroidir en émettant des particules.");
             case "evaporation" -> "Il se refroidit par des émissions calculées (évaporation de Weisskopf"
-                    + (run.getOutcome().equals("fission") ? ", fission de Bohr-Wheeler" : "") + "), avec recul et conservation de l'énergie.";
+                    + (run.getOutcome().equals("fission") ? ", fission de Bohr-Wheeler" : "") + I18n.text("), avec recul et conservation de l'énergie.");
             case "products" -> "Résultat : " + centralName() + " au centre, avec son spin et ses champs électrique et magnétique calculés. "
-                    + "Les autres produits sont projetés (" + productSpeeds() + ")" + (results.isShowing() ? " — le bilan complet est à droite ; un clic sur un élément y amène la vue." : ".");
+                    + I18n.text("Les autres produits sont projetés (") + productSpeeds() + ")" + (results.isShowing() ? " — le bilan complet est à droite ; un clic sur un élément y amène la vue." : ".");
             case "scattered" -> "Renvoyés : la répulsion rend l'élan. " + (run.getEnergyKev() / 1000 < run.getBarrierMev()
-                    ? "L'onde s'était enfoncée dans le mur, mais ce coup-ci elle n'est pas passée (probabilité " + probability(run.getProbability()) + ")."
+                    ? I18n.text("L'onde s'était enfoncée dans le mur, mais ce coup-ci elle n'est pas passée (probabilité ") + probability(run.getProbability()) + ")."
                     : "Ils ont frôlé le contact sans être capturés.");
             case "contact" -> run.getOutcome().equals("elastic")
                     ? "Contact sans état lié : le système se sépare en reprenant les vitesses sortantes calculées, avec conservation de l'énergie et de la quantité de mouvement."
                     : run.getCompoundZ() > 118
-                    ? "Les deux noyaux se touchent et tournent ensemble quelques 10⁻²¹ s : au-delà de Z = 118, aucun noyau composé ne tient "
-                    + "(quasi-fission). Ils se séparent après un échange de nucléons."
+                    ? I18n.text("Les deux noyaux se touchent et tournent ensemble quelques 10⁻²¹ s : au-delà de Z = 118, aucun noyau composé ne tient ")
+                    + I18n.text("(quasi-fission). Ils se séparent après un échange de nucléons.")
                     : "Les deux noyaux se touchent ; le modèle n'a pas de voie de sortie pour ce noyau composé : l'issue reste non résolue.";
             default -> "";
         };
@@ -1549,7 +1563,7 @@ public final class ReactorView {
             gc.strokeLine(x, y, x + bar, y);
             gc.strokeLine(x, y - 5, x, y + 5);
             gc.strokeLine(x + bar, y - 5, x + bar, y + 5);
-            I18n.fillText(gc, lengthText(length * 1e-15) + " · échelle réelle", x, y - 9);
+            I18n.fillText(gc, lengthText(length * 1e-15) + I18n.text(" · échelle réelle"), x, y - 9);
         }
         if (fullView.isSelected() && renderer.showElectric && r.pressureMax > 0)
             pressureLegend(gc, x, run == null ? y + 22 : y + 36, r);
@@ -1586,7 +1600,7 @@ public final class ReactorView {
             gc.setFill(new javafx.scene.paint.LinearGradient(x, 0, x + bw, 0, false, javafx.scene.paint.CycleMethod.NO_CYCLE, stops));
             gc.fillRoundRect(x, row, bw, 6, 3, 3);
             gc.setFill(Color.web("#BFCBDD"));
-            I18n.fillText(gc, "entre eux : U = eφ, " + energy(r.potentialTop * Math.pow(10, -FusionRenderer.POTENTIAL_DECADES) * 1000) + " → "
+            I18n.fillText(gc, I18n.text("entre eux : U = eφ, ") + energy(r.potentialTop * Math.pow(10, -FusionRenderer.POTENTIAL_DECADES) * 1000) + " → "
                     + energy(r.potentialTop * 1000) + " (col au contact) · lignes : isopotentielles", x + bw + 8, row + 7);
             row += 14;
         }
@@ -1708,21 +1722,21 @@ public final class ReactorView {
             out.add("antiparticule de l'électron : charge +1e, masse 0,511 MeV/c²");
             out.add("créé quand un proton devient neutron (interaction faible, β⁺)");
             out.add("spin 1/2 · moment magnétique ≈ 1 magnéton de Bohr (1 838 μN)");
-            out.add("vitesse " + ResultView.speed(beta) + " · énergie cinétique " + energy(kinetic * 1000));
+            out.add("vitesse " + ResultView.speed(beta) + I18n.text(" · énergie cinétique ") + energy(kinetic * 1000));
             out.add("au premier électron rencontré : annihilation en deux photons γ de 511 keV");
             return out;
         }
         if ("neutrino".equals(kind)) {
             out.add("neutre, masse < 0,8 eV/c² : il file pratiquement à c");
-            out.add("énergie " + energy(kinetic * 1000) + " emportée hors du réacteur (ou du Soleil)");
+            out.add(I18n.text("énergie ") + energy(kinetic * 1000) + I18n.text(" emportée hors du réacteur (ou du Soleil)"));
             out.add("n'interagit que par l'interaction faible : il traverserait la Terre sans s'arrêter");
             out.add("spin 1/2 · hélicité gauche");
             return out;
         }
         if (a == 0) {
-            out.add("énergie " + energy(kinetic * 1000) + " = " + scientificShort(kinetic * 1.602176634e-13) + " J");
-            out.add("longueur d'onde λ = hc/E = " + lengthText(1239.84198 / Math.max(kinetic, 1e-12) * 1e-15));
-            out.add("fréquence ν = E/h = " + scientificShort(kinetic * 1.602176634e-13 / 6.62607015e-34) + " Hz");
+            out.add(I18n.text("énergie ") + energy(kinetic * 1000) + " = " + scientificShort(kinetic * 1.602176634e-13) + " J");
+            out.add(I18n.text("longueur d'onde λ = hc/E = ") + lengthText(1239.84198 / Math.max(kinetic, 1e-12) * 1e-15));
+            out.add(I18n.text("fréquence ν = E/h = ") + scientificShort(kinetic * 1.602176634e-13 / 6.62607015e-34) + " Hz");
             out.add("lumière γ, invisible et très pénétrante : sans masse ni charge, elle file à c");
             return out;
         }
@@ -1732,25 +1746,25 @@ public final class ReactorView {
         out.add("masse " + String.format(I18n.locale(), "%,.2f", rest) + " MeV/c² = " + String.format(I18n.locale(), "%.4f", rest / 931.49410242) + " u");
         if (z > 0 && a > 1) {
             double binding = z * 938.27208816 + n * 939.56542052 - rest;
-            out.add("énergie de liaison " + fmt(binding) + " MeV · " + fmt(binding / a) + " MeV par nucléon");
+            out.add(I18n.text("énergie de liaison ") + fmt(binding) + " MeV · " + fmt(binding / a) + I18n.text(" MeV par nucléon"));
         }
         if (z > 0) {
             out.add("charge +" + z + "e · rayon " + fmt(radius) + " fm");
-            if (radius > 0) out.add("champ électrique en surface ≈ " + scientificShort(1.43996e21 * z / (radius * radius)) + " V/m");
+            if (radius > 0) out.add(I18n.text("champ électrique en surface ≈ ") + scientificShort(1.43996e21 * z / (radius * radius)) + " V/m");
         } else out.add("neutre : aucun champ électrique");
         String sp = spinParity == null || spinParity.isBlank() ? spinText(spin) : spinParity;
-        if (!knownMoment) out.add("spin " + sp + " · moment magnétique non renseigné");
+        if (!knownMoment) out.add("spin " + sp + I18n.text(" · moment magnétique non renseigné"));
         else if (spin > 0 && Math.abs(moment) > 1e-6) {
-            out.add("spin " + sp + " · moment magnétique μ = " + fmt(moment) + " μN");
-            if (radius > 0) out.add("champ magnétique au pôle ≈ " + scientificShort(1.0102e12 * Math.abs(moment) / Math.pow(radius, 3)) + " T");
-        } else out.add("spin " + sp + " · dipôle magnétique intrinsèque nul");
+            out.add("spin " + sp + I18n.text(" · moment magnétique μ = ") + fmt(moment) + " μN");
+            if (radius > 0) out.add(I18n.text("champ magnétique au pôle ≈ ") + scientificShort(1.0102e12 * Math.abs(moment) / Math.pow(radius, 3)) + " T");
+        } else out.add("spin " + sp + I18n.text(" · dipôle magnétique intrinsèque nul"));
         out.add(z == 0 && a == 1 ? "libre, il se désintègre en ~15 min (proton + électron + antineutrino)" : stability(z, a));
-        if (excitation > .05) out.add("excité : E* = " + fmt(excitation) + " MeV · T ≈ " + fmt(Math.sqrt(8 * excitation / Math.max(1, a))) + " MeV");
+        if (excitation > .05) out.add(I18n.text("excité : E* = ") + fmt(excitation) + " MeV · T ≈ " + fmt(Math.sqrt(8 * excitation / Math.max(1, a))) + " MeV");
         if (beta > 1e-7) {
-            out.add("vitesse " + ResultView.speed(beta) + " · énergie cinétique " + energy(kinetic * 1000));
+            out.add("vitesse " + ResultView.speed(beta) + I18n.text(" · énergie cinétique ") + energy(kinetic * 1000));
             if (z > 0 && run != null && run.getFieldT() > 0) {
                 double p = rest * beta / Math.sqrt(1 - beta * beta);
-                out.add("dans " + fmt(run.getFieldT()) + " T : cercle de Lorentz r = p/qB = " + lengthText(3.33564095e-3 * p / (z * run.getFieldT())));
+                out.add(I18n.text("dans ") + fmt(run.getFieldT()) + " T : cercle de Lorentz r = p/qB = " + lengthText(3.33564095e-3 * p / (z * run.getFieldT())));
             }
         }
         return out;
@@ -1772,7 +1786,7 @@ public final class ReactorView {
         for (CollisionBody b : last.getBodiesList()) {
             if (b == central || parts.size() == 3) continue;
             boolean light = b.getA() == 0 && !b.getKind().equals("positron");
-            parts.add(symbolOfBody(b) + (light ? " à c" : " à " + fmt(100 * speedOf(b)) + " % de c"));
+            parts.add(symbolOfBody(b) + (light ? " à c" : I18n.text(" à ") + fmt(100 * speedOf(b)) + " % de c"));
         }
         return parts.isEmpty() ? "aucun" : String.join(", ", parts);
     }
@@ -1786,40 +1800,40 @@ public final class ReactorView {
         if (model.contains("Bosch-Hale")) return "Voie légère : section efficace ajustée aux mesures (Bosch–Hale).";
         if (model.contains("Interaction faible")) return "p + p : voie faible estimée ; fusion directe très rare.";
         if (model.contains("Capture effective")) return "Capture et produits estimés : potentiel propre au couple, modèle Woods–Saxon / WKB.";
-        return model.isBlank() ? "Provenance du modèle non fournie pour ce tir." : "Modèle du tir : " + model;
+        return model.isBlank() ? "Provenance du modèle non fournie pour ce tir." : I18n.text("Modèle du tir : ") + model;
     }
 
     private void model() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Modèle et données");
         alert.setHeaderText("Collisions de noyaux entièrement ionisés, et le plasma où elles ont lieu");
-        alert.setContentText("Tailles et distances à la même échelle (rayons de charge mesurés ; aucun grossissement).\n\n"
-                + "Approche : Coulomb + Woods–Saxon, impulsions relativistes, force de Lorentz (DOP853), depuis 12 fois la distance de "
-                + "rebroussement (la répulsion n'y vaut que ~8 % de l'énergie). La lecture suit le temps physique : on voit les noyaux traverser "
-                + "la carte lancés, puis freiner contre la répulsion.\n\n"
-                + "La vue zoome à mesure qu'ils se rapprochent (∝ r^0,35, figée dans la zone de freinage) jusqu'au contact ; une fois la "
-                + "fusion faite, elle observe d'abord le recul depuis le lieu de rupture, puis l'élément créé, et le bilan s'ouvre (un "
-                + "élément choisi y amène la vue).\n\n"
-                + "Par-dessus la scène, seulement des calculs : le tableau de bord suit l'instant (élan K et tension V, force de répulsion, "
-                + "distance, vitesse, η, compression β₂ ; puis force forte, chaleur de friction, recouvrement ; E*, température √(8E*/A), "
-                + "pression ⅔E*/V ; Q et énergie emportée). « Inspecter » donne la loi de l'instant, chiffrée, et l'explication de l'étape ; "
-                + "un clic dans la scène pose une sonde — E₁, E₂, leur somme, ε₀E²/2, U = eφ, le col.\n\n"
-                + "Champ électrique : un halo par noyau — la densité d'énergie de son propre champ, ε₀|E_i|²/2, sur quatre décades sous sa "
-                + "maximum commun des réactifs (sphères uniformément chargées), teinte conventionnelle de chaque isotope ; les halos se "
-                + "superposent sans trou. Entre les noyaux, le potentiel combiné U = eφ = Σ kZᵢe²/rᵢ (l'énergie d'une charge +e) en couleurs "
-                + "de chaleur sur 2,2 décades sous le col au contact, là où deux potentiels comptent et où leurs champs s'opposent ; "
-                + "isopotentielles par carrés marchants ; le col (point de selle, E = 0) trouvé par Newton et chiffré. Des points suivent "
-                + "E total (mobilité ∝ √E) et sont entraînés par leurs charges (part de chacune dans |E|²). Contact nucléaire : "
-                + "recouvrement ρ₁·ρ₂ des densités de Woods–Saxon. Champ magnétique : dipôles des spins (moments connus) et charges en mouvement ; "
-                + "des repères mobiles suivent B total, sans orbites dessinées. Noyaux : gouttes liquides, comprimées par le champ de l'autre (β₂ de Bohr–Mottelson) ; "
+        alert.setContentText(I18n.text("Tailles et distances à la même échelle (rayons de charge mesurés ; aucun grossissement).\n\n")
+                + I18n.text("Approche : Coulomb + Woods–Saxon, impulsions relativistes, force de Lorentz (DOP853), depuis 12 fois la distance de ")
+                + I18n.text("rebroussement (la répulsion n'y vaut que ~8 % de l'énergie). La lecture suit le temps physique : on voit les noyaux traverser ")
+                + I18n.text("la carte lancés, puis freiner contre la répulsion.\n\n")
+                + I18n.text("La vue zoome à mesure qu'ils se rapprochent (∝ r^0,35, figée dans la zone de freinage) jusqu'au contact ; une fois la ")
+                + I18n.text("fusion faite, elle observe d'abord le recul depuis le lieu de rupture, puis l'élément créé, et le bilan s'ouvre (un ")
+                + I18n.text("élément choisi y amène la vue).\n\n")
+                + I18n.text("Par-dessus la scène, seulement des calculs : le tableau de bord suit l'instant (élan K et tension V, force de répulsion, ")
+                + I18n.text("distance, vitesse, η, compression β₂ ; puis force forte, chaleur de friction, recouvrement ; E*, température √(8E*/A), ")
+                + I18n.text("pression ⅔E*/V ; Q et énergie emportée). « Inspecter » donne la loi de l'instant, chiffrée, et l'explication de l'étape ; ")
+                + I18n.text("un clic dans la scène pose une sonde — E₁, E₂, leur somme, ε₀E²/2, U = eφ, le col.\n\n")
+                + I18n.text("Champ électrique : un halo par noyau — la densité d'énergie de son propre champ, ε₀|E_i|²/2, sur quatre décades sous sa ")
+                + I18n.text("maximum commun des réactifs (sphères uniformément chargées), teinte conventionnelle de chaque isotope ; les halos se ")
+                + I18n.text("superposent sans trou. Entre les noyaux, le potentiel combiné U = eφ = Σ kZᵢe²/rᵢ (l'énergie d'une charge +e) en couleurs ")
+                + I18n.text("de chaleur sur 2,2 décades sous le col au contact, là où deux potentiels comptent et où leurs champs s'opposent ; ")
+                + I18n.text("isopotentielles par carrés marchants ; le col (point de selle, E = 0) trouvé par Newton et chiffré. Des points suivent ")
+                + I18n.text("E total (mobilité ∝ √E) et sont entraînés par leurs charges (part de chacune dans |E|²). Contact nucléaire : ")
+                + I18n.text("recouvrement ρ₁·ρ₂ des densités de Woods–Saxon. Champ magnétique : dipôles des spins (moments connus) et charges en mouvement ; ")
+                + I18n.text("des repères mobiles suivent B total, sans orbites dessinées. Noyaux : gouttes liquides, comprimées par le champ de l'autre (β₂ de Bohr–Mottelson) ; ")
                 + "chaudes, elles vibrent (amplitudes thermiques √(T/C)).\n\n"
-                + "Onde : paquet de largeur ƛ = ħ/p, rides à la longueur d'onde de de Broglie locale ; η = Z₁Z₂α/β. Effet tunnel : amplitude WKB "
-                + "exp(−∫κdr) ; le noyau réapparaît au contact. Le passage n'a pas de trajectoire classique : c'est une mise en scène du changement "
-                + "d'identité, signalée.\n\n"
-                + "Réactions : Bosch–Hale pour D–T, D–D, D–³He ; sinon capture (ondes partielles, WKB sous la barrière, Hill–Wheeler au-dessus). "
-                + "Désexcitation : Weisskopf, γ, fission de Bohr–Wheeler ; quasi-fission au-delà de Z = 118.\n\n"
-                + "Plasma : ⟨σv⟩ maxwellien, bremsstrahlung (avec correction relativiste), pertes W/τ ; ignition si la part chargée de la fusion "
-                + "compense les pertes (critère de Lawson).\n\n" + (run == null ? "" : run.getModel() + "\n" + run.getNotes()));
+                + I18n.text("Onde : paquet de largeur ƛ = ħ/p, rides à la longueur d'onde de de Broglie locale ; η = Z₁Z₂α/β. Effet tunnel : amplitude WKB ")
+                + I18n.text("exp(−∫κdr) ; le noyau réapparaît au contact. Le passage n'a pas de trajectoire classique : c'est une mise en scène du changement ")
+                + I18n.text("d'identité, signalée.\n\n")
+                + I18n.text("Réactions : Bosch–Hale pour D–T, D–D, D–³He ; sinon capture (ondes partielles, WKB sous la barrière, Hill–Wheeler au-dessus). ")
+                + I18n.text("Désexcitation : Weisskopf, γ, fission de Bohr–Wheeler ; quasi-fission au-delà de Z = 118.\n\n")
+                + I18n.text("Plasma : ⟨σv⟩ maxwellien, bremsstrahlung (avec correction relativiste), pertes W/τ ; ignition si la part chargée de la fusion ")
+                + I18n.text("compense les pertes (critère de Lawson).\n\n") + (run == null ? "" : run.getModel() + "\n" + run.getNotes()));
         alert.getDialogPane().setPrefWidth(760);
         alert.show();
     }
@@ -1887,8 +1901,8 @@ public final class ReactorView {
     }
 
     static String duration(double s) {
-        if (s >= 3.156e7) return scientificShort(s / 3.156e7) + " ans";
-        if (s >= 86400) return fmt(s / 86400) + " j";
+        if (s >= 3.156e7) return scientificShort(s / 3.156e7) + I18n.text(" ans");
+        if (s >= 86400) return fmt(s / 86400) + I18n.text(" j");
         if (s >= 3600) return fmt(s / 3600) + " h";
         if (s >= 60) return fmt(s / 60) + " min";
         if (s >= 1) return fmt(s) + " s";

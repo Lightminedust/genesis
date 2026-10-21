@@ -26,3 +26,6 @@ packaging/__pycache__/
 *.log
 artifacts/
 index.html
+
+# Vidéos du site : trop lourdes pour le dépôt, elles vivent sur le serveur
+assets/*.mp4

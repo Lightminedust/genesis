@@ -2,13 +2,17 @@ package org.genesis.app;
 
 import com.studio.genesis.grpc.UniverseFrame;
 import java.util.Locale;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javafx.geometry.Pos;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -30,6 +34,9 @@ public final class LabLoader {
     private final Label detail = new Label();
     private final Label elapsedLabel = new Label();
     private final Button cancel = new Button("Annuler");
+    /** Le petit cadre « Soutenir Genesis », montré seulement pendant le démarrage. */
+    private final VBox support = new VBox(8);
+    private Consumer<String> opener;
     private Predicate<UniverseFrame> ready;
     private Runnable onCancel;
     private double elapsed;
@@ -54,7 +61,8 @@ public final class LabLoader {
                 onCancel.run();
             }
         });
-        VBox card = new VBox(12, spinner, title, detail, elapsedLabel, new HBox(cancel));
+        buildSupport();
+        VBox card = new VBox(12, spinner, title, detail, elapsedLabel, new HBox(cancel), support);
         ((HBox) card.getChildren().get(4)).setAlignment(Pos.CENTER);
         card.setAlignment(Pos.CENTER);
         card.setMaxSize(460, VBox.USE_PREF_SIZE);
@@ -65,6 +73,55 @@ public final class LabLoader {
         root.setStyle("-fx-background-color: rgba(4,7,14,0.72);");
         root.setVisible(false);
         root.setOpacity(0);
+    }
+
+    /** Liens du cadre de soutien : texte affiché, adresse ouverte. */
+    static final String[][] SUPPORT_LINKS = {
+            {"★  GitHub", "https://github.com/Lightminedust/genesis"},
+            {"Site de Genesis", "https://genesis.gemmi-e.com"},
+            {"Gemmie", "https://gemmi-e.com/contact"},
+            {"r/gemmie", "https://www.reddit.com/r/gemmie/"},
+            {"✉  nellawassi@gmail.com", "mailto:nellawassi@gmail.com"},
+    };
+
+    /** Discret par construction : un filet, deux lignes de texte, des liens en pastilles sans couleur vive. */
+    private void buildSupport() {
+        Region rule = new Region();
+        rule.setMinHeight(1);
+        rule.setMaxHeight(1);
+        rule.setStyle("-fx-background-color: #1C2840;");
+        Label heading = new Label("SOUTENIR GENESIS");
+        heading.setStyle("-fx-text-fill: #6F86A8; -fx-font-size: 10px; -fx-font-weight: bold;");
+        Label text = new Label("Genesis est gratuit. Une étoile sur GitHub, un message ou un passage sur r/gemmie l'aide à grandir.");
+        text.setWrapText(true);
+        text.setMaxWidth(380);
+        text.setStyle("-fx-text-fill: #7F8FAB; -fx-font-size: 11.5px; -fx-text-alignment: center;");
+        text.setAlignment(Pos.CENTER);
+        FlowPane links = new FlowPane(6, 6);
+        links.setAlignment(Pos.CENTER);
+        links.setPrefWrapLength(390);
+        for (String[] link : SUPPORT_LINKS) {
+            Button pill = new Button(link[0]);
+            pill.getStyleClass().add("support-link");
+            pill.setFocusTraversable(false);
+            pill.setTooltip(new Tooltip(link[1].replaceFirst("^mailto:", "")));
+            pill.setOnAction(event -> {
+                if (opener != null) opener.accept(link[1]);
+            });
+            links.getChildren().add(pill);
+        }
+        support.getChildren().addAll(rule, heading, text, links);
+        support.setAlignment(Pos.CENTER);
+        support.setPadding(new javafx.geometry.Insets(8, 0, 0, 0));
+        support.setVisible(false);
+        support.setManaged(false);
+    }
+
+    /** Montrer le cadre de soutien sous l'attente en cours (le démarrage) ; `open` ouvre une adresse. */
+    void withSupport(Consumer<String> open) {
+        opener = open;
+        support.setVisible(true);
+        support.setManaged(true);
     }
 
     StackPane getNode() {
@@ -85,6 +142,8 @@ public final class LabLoader {
         failed = false;
         showing = true;
         cancel.setText("Annuler");
+        support.setVisible(false);       // seul le démarrage le demande (withSupport)
+        support.setManaged(false);
         root.setVisible(true);
     }
 

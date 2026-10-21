@@ -268,7 +268,7 @@ public final class PlasmaInset {
             gc.setFont(Font.font("Segoe UI", 9.5));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setFill(Color.web("#9FB4CE"));
-            I18n.fillText(gc, "≈ " + scientificShort(ions) + " ion dans la boîte", bx + bw / 2, by + bh / 2, bw - 10);
+            I18n.fillText(gc, "≈ " + scientificShort(ions) + I18n.text(" ion dans la boîte"), bx + bw / 2, by + bh / 2, bw - 10);
         }
         Iterator<double[]> it = flashes.iterator();
         while (it.hasNext()) {
@@ -302,19 +302,19 @@ public final class PlasmaInset {
         double row = by + bh + 14;
         I18n.fillText(gc, debye >= spacing ? "largeur " + lengthText(box) + " = 4 λ_D · λ_D = " + lengthText(debye) + " · N_D = " + scientificShort(debyeNumber)
                 : "largeur 4a = " + lengthText(box) + " · λ_D = " + lengthText(debye) + " < a : N_D = " + scientificShort(debyeNumber) + " < 1", bx, row, bw);
-        I18n.fillText(gc, "v_th : ions " + speed(ionSpeed) + " · électrons " + speed(electronSpeed) + " (√(m_i/m_e) fois plus vite)", bx, row + 13, bw);
+        I18n.fillText(gc, "v_th : ions " + speed(ionSpeed) + I18n.text(" · électrons ") + speed(electronSpeed) + I18n.text(" (√(m_i/m_e) fois plus vite)"), bx, row + 13, bw);
         I18n.fillText(gc, "f_p = " + frequency(plasmaFrequency) + " · onde : δn/n = " + fmt(100 * WAVE_DENSITY) + " % (choisi) · 1 s = "
                 + scientificShort(secondsPerSecond) + " s", bx, row + 26, bw);
         I18n.fillText(gc, "freinage " + power(medium.bremsWM3()) + " : " + rate(photonsPerSecond), bx, row + 39, bw);
         double r = Math.max(1, sceneFm) * 1e-15, ratio = r / screening;
         double coupling = medium.zA() * medium.zB() * 1.43996e-9 / screening / (medium.temperatureKev() * 1e3);
         gc.setFill(Color.web("#9FB4CE"));
-        I18n.fillText(gc, "à " + fmt(Math.max(1, sceneFm)) + " fm : e^(−r/λ) = " + (ratio < 1e-3 ? "1 − " + scientificShort(ratio) : fmt(Math.exp(-ratio)))
-                + (coupling < 1 ? " · Salpeter f = " + factor(Math.exp(coupling)) : " · fortement couplé : Γ = Z₁Z₂e²/λkT = " + number(coupling)), bx, row + 52, bw);
+        I18n.fillText(gc, I18n.text("à ") + fmt(Math.max(1, sceneFm)) + " fm : e^(−r/λ) = " + (ratio < 1e-3 ? "1 − " + scientificShort(ratio) : fmt(Math.exp(-ratio)))
+                + (coupling < 1 ? " · Salpeter f = " + factor(Math.exp(coupling)) : I18n.text(" · fortement couplé : Γ = Z₁Z₂e²/λkT = ") + number(coupling)), bx, row + 52, bw);
         gc.setFill(Color.web("#6F86A3"));
         I18n.fillText(gc, (ionCount > 0 ? "1 point ≈ " + number(ions / ionCount) + " ions, " + number(electrons / Math.max(1, electronCount))
-                + " électrons" : "points : les particules réellement dans la boîte")
-                + " · couleur : ½mv² · traînée : v·" + scientificShort(exposure) + " s", bx, row + 65, bw);
+                + I18n.text(" électrons") : "points : les particules réellement dans la boîte")
+                + I18n.text(" · couleur : ½mv² · traînée : v·") + scientificShort(exposure) + " s", bx, row + 65, bw);
         gc.restore();
     }
 
@@ -379,7 +379,7 @@ public final class PlasmaInset {
     private static String rate(double perSecond) {
         if (perSecond >= 1) return fmt(perSecond) + " photons/s";
         if (perSecond <= 0) return "aucun photon";
-        return "1 photon toutes les " + ReactorView.duration(1 / perSecond);
+        return I18n.text("1 photon toutes les ") + ReactorView.duration(1 / perSecond);
     }
 
     private static String number(double v) {

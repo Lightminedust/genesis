@@ -78,7 +78,7 @@ public class AppTest {
     @Test void staleEngineIsDetectable() {
         UniverseFrame stale = UniverseFrame.newBuilder().setTick(1827).setProtocolVersion(3).build();
         assertNotEquals(EngineClient.PROTOCOL_VERSION, stale.getProtocolVersion());
-        assertEquals(25, EngineClient.PROTOCOL_VERSION);
+        assertEquals(27, EngineClient.PROTOCOL_VERSION);
     }
 
     @Test void frameSurvivesSerialization() throws Exception {

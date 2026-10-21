@@ -300,8 +300,8 @@ public final class ResultView {
             for (double[] h : hits) over |= Math.hypot(e.getX() - h[0], e.getY() - h[1]) < 12;
             chart.setCursor(over ? Cursor.HAND : Cursor.DEFAULT);
         });
-        Label caption = label("Chaque trait : un corps éjecté, dans sa direction de vol (plan du choc) ; plus il est long, plus il emporte "
-                + "d'énergie (anneaux : échelle logarithmique). Un clic l'amène dans la vue principale.", "#8FA7C4", 10, false);
+        Label caption = label(I18n.text("Chaque trait : un corps éjecté, dans sa direction de vol (plan du choc) ; plus il est long, plus il emporte ")
+                + I18n.text("d'énergie (anneaux : échelle logarithmique). Un clic l'amène dans la vue principale."), "#8FA7C4", 10, false);
         VBox reading = new VBox(5);
         reading.getChildren().add(label(FusionDashboard.spaced("LECTURE"), "#7FA6CF", 9, true));
         for (String[] line : reading()) reading.getChildren().add(label(line[0], line[1], 11.5, false));
@@ -458,27 +458,27 @@ public final class ResultView {
         }
         if (shown.elastic()) {
             out.add(new String[]{shown.touched()
-                    ? "Contact atteint, sans état final lié : les deux noyaux se séparent élastiquement, déviés de θ = " + fmt(shown.deflection()) + "°."
-                    : "Pas de fusion : la répulsion les a renvoyés, déviés de θ = " + fmt(shown.deflection()) + "°.", "#E6EEFA"});
-            out.add(new String[]{"L'élan du choc (" + energy(shown.energyMev() * 1000) + ") est rendu : rien n'est créé, rien n'est émis.", "#B9C9DF"});
-            out.add(new String[]{"Probabilité de fusion à ce tir : " + probability(shown.probability()) + ".", "#FFC46B"});
+                    ? I18n.text("Contact atteint, sans état final lié : les deux noyaux se séparent élastiquement, déviés de θ = ") + fmt(shown.deflection()) + "°."
+                    : I18n.text("Pas de fusion : la répulsion les a renvoyés, déviés de θ = ") + fmt(shown.deflection()) + "°.", "#E6EEFA"});
+            out.add(new String[]{I18n.text("L'élan du choc (") + energy(shown.energyMev() * 1000) + I18n.text(") est rendu : rien n'est créé, rien n'est émis."), "#B9C9DF"});
+            out.add(new String[]{I18n.text("Probabilité de fusion à ce tir : ") + probability(shown.probability()) + ".", "#FFC46B"});
             return out;
         }
         if (center != null) out.add(new String[]{Character.toUpperCase(center.role().charAt(0)) + center.role().substring(1) + " : "
-                + center.symbol() + " (" + center.name() + "), " + center.status() + " — il recule à "
-                + percent(center.beta()) + " avec " + energy(center.kineticMev() * 1000) + ".", "#E6EEFA"});
-        if (best != null && total > 0) out.add(new String[]{"Le plus énergique : " + best.symbol() + ", " + energy(best.kineticMev() * 1000) + " ("
-                + fmt(100 * best.kineticMev() / total) + " % de l'énergie emportée), à " + percent(best.beta()) + ".", "#9FE0FF"});
+                + center.symbol() + " (" + center.name() + "), " + center.status() + I18n.text(" — il recule à ")
+                + percent(center.beta()) + I18n.text(" avec ") + energy(center.kineticMev() * 1000) + ".", "#E6EEFA"});
+        if (best != null && total > 0) out.add(new String[]{I18n.text("Le plus énergique : ") + best.symbol() + ", " + energy(best.kineticMev() * 1000) + " ("
+                + fmt(100 * best.kineticMev() / total) + I18n.text(" % de l'énergie emportée), à ") + percent(best.beta()) + ".", "#9FE0FF"});
         List<Particle> massive = new ArrayList<>();
         for (Particle p : shown.particles()) if (p.a() > 0) massive.add(p);
-        if (massive.size() == 2 && shown.particles().size() == 2) out.add(new String[]{"Deux corps : impulsions égales et opposées — le plus léger "
-                + "emporte le plus d'énergie (K ∝ 1/m).", "#B9C9DF"});
-        if (photons > 0) out.add(new String[]{"Lumière : " + photons + " photon" + (photons > 1 ? "s" : "") + " γ, " + energy(light * 1000)
-                + " — invisible à l'œil, très pénétrante.", "#FFD36A"});
-        if (lost > 0) out.add(new String[]{"Neutrino : " + energy(lost * 1000) + " perdus — il traverserait la Terre sans s'arrêter.", "#B8F5C8"});
-        out.add(new String[]{"Conservés : " + shown.nucleonsIn() + " nucléons → " + shown.nucleonsOut() + " · charge +" + shown.chargeIn() + "e → +"
-                + shown.chargeOut() + "e · énergie (erreur du calcul " + String.format(Locale.ROOT, "%.0e", shown.energyError()) + ").", "#8FA7C4"});
-        if (shown.lifetimeS() > 0) out.add(new String[]{"Le noyau composé a vécu ≈ " + duration(shown.lifetimeS()) + ".", "#8FA7C4"});
+        if (massive.size() == 2 && shown.particles().size() == 2) out.add(new String[]{I18n.text("Deux corps : impulsions égales et opposées — le plus léger ")
+                + I18n.text("emporte le plus d'énergie (K ∝ 1/m)."), "#B9C9DF"});
+        if (photons > 0) out.add(new String[]{I18n.text("Lumière : ") + photons + " photon" + (photons > 1 ? "s" : "") + " γ, " + energy(light * 1000)
+                + I18n.text(" — invisible à l'œil, très pénétrante."), "#FFD36A"});
+        if (lost > 0) out.add(new String[]{"Neutrino : " + energy(lost * 1000) + I18n.text(" perdus — il traverserait la Terre sans s'arrêter."), "#B8F5C8"});
+        out.add(new String[]{I18n.text("Conservés : ") + shown.nucleonsIn() + I18n.text(" nucléons → ") + shown.nucleonsOut() + " · charge +" + shown.chargeIn() + "e → +"
+                + shown.chargeOut() + I18n.text("e · énergie (erreur du calcul ") + String.format(Locale.ROOT, "%.0e", shown.energyError()) + ").", "#8FA7C4"});
+        if (shown.lifetimeS() > 0) out.add(new String[]{I18n.text("Le noyau composé a vécu ≈ ") + duration(shown.lifetimeS()) + ".", "#8FA7C4"});
         return out;
     }
 
@@ -591,8 +591,8 @@ public final class ResultView {
         VBox page = new VBox(9);
         double e = shown.energyMev(), q = shown.qMev();
         page.getChildren().add(label(FusionDashboard.spaced("OÙ VA L'ÉNERGIE"), "#7FA6CF", 9, true));
-        page.getChildren().add(label(shown.elastic() ? "Entrée : élan du choc " + energy(e * 1000) + " — rendu tel quel : rien n'est converti."
-                : "Entrée : élan " + energy(e * 1000) + "  +  bilan de masse Q = " + fmt(q) + " MeV  =  " + energy((e + q) * 1000), "#E6EEFA", 11.5, false));
+        page.getChildren().add(label(shown.elastic() ? I18n.text("Entrée : élan du choc ") + energy(e * 1000) + I18n.text(" — rendu tel quel : rien n'est converti.")
+                : I18n.text("Entrée : élan ") + energy(e * 1000) + "  +  bilan de masse Q = " + fmt(q) + " MeV  =  " + energy((e + q) * 1000), "#E6EEFA", 11.5, false));
         Map<String, double[]> parts = new LinkedHashMap<>();
         Map<String, String> colors = new LinkedHashMap<>();
         double excitation = 0;
@@ -630,8 +630,8 @@ public final class ResultView {
         }
         page.getChildren().addAll(bar, legend);
         if (shown.elastic() || q <= 0) {
-            page.getChildren().add(label(shown.elastic() ? "Aucune réaction : aucune énergie créée." : "Q = " + fmt(q) + " MeV : la réaction absorbe "
-                    + scientificShort(-q * MEV_J) + " J, pris sur l'élan du choc — rien à gagner en énergie.", "#FF9C7A", 11.5, true));
+            page.getChildren().add(label(shown.elastic() ? "Aucune réaction : aucune énergie créée." : "Q = " + fmt(q) + I18n.text(" MeV : la réaction absorbe ")
+                    + scientificShort(-q * MEV_J) + I18n.text(" J, pris sur l'élan du choc — rien à gagner en énergie."), "#FF9C7A", 11.5, true));
             return page;
         }
         double perReaction = q * MEV_J, fuelKg = shown.fuelMassMev() / U_MEV * U_KG;
@@ -654,7 +654,7 @@ public final class ResultView {
             scales.getChildren().add(b);
         }
         double j = joules[scale];
-        String what = scale == 0 ? "pour une seule réaction (" + fmt(q) + " MeV)" : "pour " + SCALES[scale] + " de combustible " + shown.fuelName();
+        String what = scale == 0 ? I18n.text("pour une seule réaction (") + fmt(q) + " MeV)" : I18n.text("pour ") + SCALES[scale] + " de combustible " + shown.fuelName();
         Label big = label(scientificShort(j) + " J", "#FFC46B", 22, true);
         VBox head = new VBox(0, big, label(what, "#9FB4CE", 10.5, false));
         VBox equivalences = new VBox(3);
@@ -677,10 +677,10 @@ public final class ResultView {
         if (below != null && !below.label().equals("1 kg de TNT")) out.add("= " + ratio(joules / below.joules()) + " × " + below.phrase());
         if (above != null && !above.label().equals("1 kg de TNT")) out.add("= " + above.phrase() + " ÷ " + ratio(above.joules() / joules));
         if (joules >= 1e6) {
-            out.add("une ville de 100 000 habitants la consomme (électricité) en " + duration(joules / CITY_W));
-            out.add("l'humanité la consomme en " + duration(joules / HUMANITY_W));
+            out.add(I18n.text("une ville de 100 000 habitants la consomme (électricité) en ") + duration(joules / CITY_W));
+            out.add(I18n.text("l'humanité la consomme en ") + duration(joules / HUMANITY_W));
         }
-        if (joules >= 1) out.add("le Soleil la rayonne en " + duration(joules / SUN_W));
+        if (joules >= 1) out.add(I18n.text("le Soleil la rayonne en ") + duration(joules / SUN_W));
         return out;
     }
 

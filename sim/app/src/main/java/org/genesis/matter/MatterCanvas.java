@@ -476,10 +476,10 @@ public class MatterCanvas {
         gc.setTextBaseline(VPos.TOP);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         gc.setFill(TEXT);
-        I18n.fillText(gc, "Matière · " + state.getCount() + " atomes de " + state.getName().toLowerCase(), 86, 14);
+        I18n.fillText(gc, I18n.text("Matière · ") + state.getCount() + " atomes de " + state.getName().toLowerCase(), 86, 14);
         gc.setFont(Font.font(UI, 13));
         gc.setFill(SOFT);
-        I18n.fillText(gc, "sphère = un atome (σ = " + Visuals.fixed(state.getSigmaAngstrom(), 2) + " Å) · boîte "
+        I18n.fillText(gc, I18n.text("sphère = un atome (σ = ") + Visuals.fixed(state.getSigmaAngstrom(), 2) + I18n.text(" Å) · boîte ")
                 + Math.round(state.getBoxX()) + " × " + Math.round(state.getBoxY()) + " × "
                 + Math.round(state.getBoxZ()) + " Å", 86, 44);
         gc.setTextAlign(TextAlignment.RIGHT);
@@ -554,7 +554,7 @@ public class MatterCanvas {
             if (mark[1] == 0) {
                 I18n.fillText(gc, "fusion " + Visuals.format(mark[0]) + " K", x, y + 25);
             } else {
-                I18n.fillText(gc, "ébullition " + Visuals.format(mark[0]) + " K", x, y - 6);
+                I18n.fillText(gc, I18n.text("ébullition ") + Visuals.format(mark[0]) + " K", x, y - 6);
             }
         }
     }
@@ -626,26 +626,26 @@ public class MatterCanvas {
         }
         y += 12;
         y = wrapped(x + 18, y + 8, PANEL_WIDTH - 36, supercritical
-                ? "Au-delà du point critique du modèle (" + Visuals.format(state.getModelCriticalK())
-                + " K) : liquide et gaz ne se distinguent plus, il n'y a qu'un fluide."
-                : "Solide : l'atome garde ses voisins. Liquide : entouré, mais ses voisins changent. "
+                ? I18n.text("Au-delà du point critique du modèle (") + Visuals.format(state.getModelCriticalK())
+                + I18n.text(" K) : liquide et gaz ne se distinguent plus, il n'y a qu'un fluide.")
+                : I18n.text("Solide : l'atome garde ses voisins. Liquide : entouré, mais ses voisins changent. ")
                 + "Gaz : presque seul.", 11, SOFT, 3);
 
         // Le réel, pour comparer.
         y += 6;
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
-        I18n.fillText(gc, state.getName().toUpperCase() + " RÉEL (1 bar, mesures)", x + 18, y);
+        I18n.fillText(gc, state.getName().toUpperCase() + I18n.text(" RÉEL (1 bar, mesures)"), x + 18, y);
         y += 18;
         gc.setFont(Font.font(MONO, 12));
         gc.setFill(TEXT);
         if (state.getMeltingK() > 0) {
-            I18n.fillText(gc, "fond à " + Visuals.format(state.getMeltingK()) + " K · bout à "
+            I18n.fillText(gc, I18n.text("fond à ") + Visuals.format(state.getMeltingK()) + I18n.text(" K · bout à ")
                     + Visuals.format(state.getBoilingK()) + " K", x + 18, y);
             y += 17;
         }
         if (state.getCriticalK() > 0) {
-            I18n.fillText(gc, "point critique : " + Visuals.format(state.getCriticalK()) + " K (modèle : "
+            I18n.fillText(gc, "point critique : " + Visuals.format(state.getCriticalK()) + I18n.text(" K (modèle : ")
                     + Visuals.format(state.getModelCriticalK()) + " K)", x + 18, y);
             y += 17;
         }
@@ -654,8 +654,8 @@ public class MatterCanvas {
         y += 110;
         y = wrapped(x + 18, y, PANEL_WIDTH - 36, "ε/k = " + Visuals.format(state.getEpsilonK()) + " K, σ = "
                 + Visuals.fixed(state.getSigmaAngstrom(), 2) + " Å · " + state.getSource(), 10, MUTED, 4);
-        wrapped(x + 18, y + 4, PANEL_WIDTH - 36, "Pas de gravité : à cette échelle, elle est des milliards de "
-                + "fois plus faible que l'agitation thermique. Un liquide forme une goutte qui flotte.", 10, MUTED, 3);
+        wrapped(x + 18, y + 4, PANEL_WIDTH - 36, I18n.text("Pas de gravité : à cette échelle, elle est des milliards de ")
+                + I18n.text("fois plus faible que l'agitation thermique. Un liquide forme une goutte qui flotte."), 10, MUTED, 3);
     }
 
     /** La courbe V(r) : le puits où les atomes se tiennent, le mur où ils se repoussent. */
@@ -693,7 +693,7 @@ public class MatterCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, 10));
-        I18n.fillText(gc, "puits −ε à r = 2^⅙ σ = " + Visuals.fixed(Math.pow(2, 1 / 6.0) * state.getSigmaAngstrom(), 2)
+        I18n.fillText(gc, I18n.text("puits −ε à r = 2^⅙ σ = ") + Visuals.fixed(Math.pow(2, 1 / 6.0) * state.getSigmaAngstrom(), 2)
                 + " Å", wellX + 8, wellY + 4);
         I18n.fillText(gc, "répulsion ↑", x + 16, y + 8);
         gc.setTextAlign(TextAlignment.RIGHT);
@@ -749,8 +749,8 @@ public class MatterCanvas {
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
-        I18n.fillText(gc, "Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome) · poignée ↔ : "
-                + "piston · température des parois : en bas", 20, top + FOOTER / 2);
+        I18n.fillText(gc, I18n.text("Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome) · poignée ↔ : ")
+                + I18n.text("piston · température des parois : en bas"), 20, top + FOOTER / 2);
         gc.setTextBaseline(VPos.BASELINE);
     }
 

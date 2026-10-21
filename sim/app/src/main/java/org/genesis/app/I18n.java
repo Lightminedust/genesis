@@ -38,7 +38,21 @@ import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Presentation-only localization. Simulation state and protocol values remain untouched. */
+/**
+ * Presentation-only localization. Simulation state and protocol values remain untouched.
+ *
+ * The program is written in French; English is produced at display time, in this order:
+ * <ol>
+ *   <li>a reviewed label ({@code en-overrides.tsv}) or an exact sentence ({@code en.tsv});</li>
+ *   <li>a template ({@code en-templates.tsv}): numbers, nuclide labels (U-238, ²³⁸U) and element names are taken out
+ *       as {0}, {1}… so that one entry covers every value the engine can send; numbers are put back with an English
+ *       decimal point;</li>
+ *   <li>a longer text is cut into sentences and parts (line breaks, " · ", runs of spaces, sentence ends) and each part
+ *       is translated by the two steps above;</li>
+ *   <li>known phrases ({@code en-fragments.tsv}) are replaced, but only if nothing French is left: a half-translated
+ *       sentence reads worse than the French original, so the original is kept and {@link #missing} reports it.</li>
+ * </ol>
+ */
 public final class I18n {
     public enum Language { FR, EN }
 
@@ -48,10 +62,22 @@ public final class I18n {
     private static final Set<String> ELEMENT_SYMBOLS = Set.of(("H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og").split(" "));
     private static final Map<String, String> OVERRIDES = load("/i18n/en-overrides.tsv");
     private static final Map<String, String> ENGLISH = load("/i18n/en.tsv");
+    private static final Map<String, String> TEMPLATES = load("/i18n/en-templates.tsv");
+    private static final Map<String, String> ELEMENT_NAMES = elementNames();
+    private static final Pattern SLOT = slotPattern();
+    private static final Pattern SEGMENT = Pattern.compile(
+            "\\n+|\\s+·\\s+|\\s+—\\s+|\\s{3,}|(?<=[.!?…;])\\s+(?=[\\p{Lu}\\d«(¹²³⁴⁵⁶⁷⁸⁹])");
+    private static final Pattern FRENCH_WORD = Pattern.compile("(?iu)(?<!\\p{L})(de(?! Broglie)|en|au|neutre|ionisant|ionisants|non|le|la|les|des|du|un|une|et|est|sont|pour|avec|dans|sur|"
+            + "par|aux|qui|que|ne|pas|ce|cette|ces|il|elle|ils|elles|se|sa|ses|leur|leurs|mais|ou|donc|sans|sous|vers|entre|"
+            + "après|avant|noyau|noyaux|moteur|énergie|lumière|vitesse|temps|calcul|tir|choc|soudure|chaleur|étoile|niveau|"
+            + "couche|fois|chaque|aucun|aucune|tout|toute|tous|toutes|trop|très|peu|encore|déjà|ici)(?!\\p{L})"
+            + "|(?<!\\p{L})(?:l|d|qu|n|s|j|c)['’](?=\\p{L})|[éèêëàâçùûîïôœ]");
+    private static final Pattern ENGLISH_WORD = Pattern.compile(
+            "(?iu)(?<!\\p{L})(the|of|is|are|and|with|from|into|its|this|that|which|no longer|cannot)(?!\\p{L})");
     private static final Map<String, String> FRAGMENTS = fragments();
     private static final Pattern FRAGMENT_PATTERN = fragmentPattern();
     private static final Pattern SPACED_HEADING = Pattern.compile("\\p{L}\\u2009\\p{L}");
-    private static final Pattern SPACED_CAPS = Pattern.compile("\\p{L} \\p{L} \\p{L}");
+    private static final Pattern SPACED_CAPS = Pattern.compile("(?<!\\S)\\p{Lu} \\p{Lu} \\p{Lu}(?!\\S)");
     private static final Map<String, String> CACHE = Collections.synchronizedMap(new LinkedHashMap<>(512, .75f, true) {
         @Override protected boolean removeEldestEntry(Map.Entry<String, String> eldest) { return size() > 4096; }
     });
@@ -71,7 +97,8 @@ public final class I18n {
     public static void setLanguage(Language next) {
         if (language == next) return;
         language = next;
-        PREFS.put(LANGUAGE_PREF, next == Language.EN ? "en" : "fr");
+        // Une langue imposée au lancement (-Dgenesis.lang : tests, aperçus) ne remplace jamais le choix enregistré.
+        if (System.getProperty("genesis.lang") == null) PREFS.put(LANGUAGE_PREF, next == Language.EN ? "en" : "fr");
         CACHE.clear();
         for (Map.Entry<Property<String>, String> item : new ArrayList<>(SOURCES.entrySet())) {
             display(item.getKey(), item.getValue());
@@ -101,10 +128,126 @@ public final class I18n {
             String plain = source.replace("\u2009   ", " ").replace("\u2009", "");
             if (!plain.equals(source)) return spaced(english(plain));
         }
+        String whole = whole(source);
+        if (whole != null) return whole;
+        // Already English (a piece translated before being joined): fragments would only damage it.
+        if (!looksFrench(source) && ENGLISH_WORD.matcher(source).find()) return source;
+        String parts = segments(source);
+        if (parts != null) return parts;
+        String fragmented = fragments(source);
+        return looksFrench(fragmented) ? source : fragmented;
+    }
+
+    /** One piece of text, translated as a whole (reviewed label, exact sentence, or template), or null. */
+    private static String whole(String source) {
         String override = OVERRIDES.get(source);
         if (override != null) return override;
         String exact = ENGLISH.get(source);
         if (exact != null && preservesNotation(source, exact)) return exact;
+        String trimmed = source.strip();
+        if (!trimmed.equals(source) && !trimmed.isEmpty()) {
+            String inner = whole(trimmed);
+            if (inner != null) {
+                int start = source.indexOf(trimmed);
+                return source.substring(0, start) + inner + source.substring(start + trimmed.length());
+            }
+            return null;
+        }
+        return template(source);
+    }
+
+    /** The text with numbers, nuclides and element names replaced by {0}, {1}…, and what was taken out. */
+    private record Slots(String key, List<String> values, List<Character> kinds) {}
+
+    private static Slots slots(String source) {
+        Matcher matcher = SLOT.matcher(source);
+        StringBuilder key = new StringBuilder();
+        List<String> values = new ArrayList<>();
+        List<Character> kinds = new ArrayList<>();
+        int last = 0;
+        while (matcher.find()) {
+            key.append(source, last, matcher.start()).append('{').append(values.size()).append('}');
+            values.add(matcher.group());
+            kinds.add(matcher.group("nuc") != null || matcher.group("sym") != null ? 'n' : matcher.group("elem") != null ? 'e' : '#');
+            last = matcher.end();
+        }
+        key.append(source, last, source.length());
+        return new Slots(key.toString(), values, kinds);
+    }
+
+    private static String template(String source) {
+        Slots slots = slots(source);
+        if (slots.values().isEmpty()) return null;
+        String target = TEMPLATES.get(slots.key());
+        if (target == null) return null;
+        StringBuilder out = new StringBuilder();
+        Matcher hole = Pattern.compile("\\{(\\d+)}").matcher(target);
+        int last = 0;
+        while (hole.find()) {
+            int index = Integer.parseInt(hole.group(1));
+            if (index >= slots.values().size()) return null;
+            out.append(target, last, hole.start()).append(englishValue(slots.values().get(index), slots.kinds().get(index)));
+            last = hole.end();
+        }
+        out.append(target.substring(last));
+        return out.toString();
+    }
+
+    /** A value put back into an English template: a decimal comma becomes a point, an element name is translated. */
+    private static String englishValue(String value, char kind) {
+        if (kind == 'e') return ELEMENT_NAMES.getOrDefault(value, value);
+        if (kind == '#') return value.replaceAll("(?<=\\d),(?=\\d)", ".");
+        return value;
+    }
+
+    /** A longer text cut into parts, each translated as a whole; null unless every French part could be. */
+    private static String segments(String source) {
+        Matcher matcher = SEGMENT.matcher(source);
+        if (!matcher.find()) return null;
+        matcher.reset();
+        StringBuilder out = new StringBuilder();
+        int last = 0;
+        boolean changed = false;
+        while (true) {
+            boolean found = matcher.find();
+            int end = found ? matcher.start() : source.length();
+            String part = source.substring(last, end);
+            if (!part.isBlank() && looksFrench(part)) {
+                String translated = whole(part);
+                if (translated == null) translated = segmentsOrNull(part);
+                if (translated == null) return null;
+                part = translated;
+                changed = true;
+            } else if (!part.isBlank()) {
+                // Sans accent ni mot-outil (« Ag-107 reste Ag-107. »), une partie peut encore être française :
+                // la table la reconnaît, sinon elle reste telle quelle.
+                String translated = whole(part);
+                if (translated != null && !translated.equals(part)) {
+                    part = translated;
+                    changed = true;
+                }
+            }
+            out.append(part);
+            if (!found) break;
+            out.append(matcher.group());
+            last = matcher.end();
+        }
+        return changed ? out.toString() : null;
+    }
+
+    private static String segmentsOrNull(String part) {
+        // a part may still hold a label and its value ("Énergie : 4,2 MeV"): try the label alone
+        int colon = part.indexOf(" : ");
+        if (colon > 0) {
+            String head = whole(part.substring(0, colon));
+            String tail = part.substring(colon + 3);
+            String tailEnglish = looksFrench(tail) ? whole(tail) : tail;
+            if (head != null && tailEnglish != null) return head + ": " + tailEnglish;
+        }
+        return null;
+    }
+
+    private static String fragments(String source) {
         Matcher matcher = FRAGMENT_PATTERN.matcher(source);
         StringBuffer translated = new StringBuffer();
         while (matcher.find()) {
@@ -112,6 +255,102 @@ public final class I18n {
         }
         matcher.appendTail(translated);
         return translated.toString();
+    }
+
+    /** Whether a text still reads as French (an accented letter, or a French function word). */
+    public static boolean looksFrench(String text) {
+        return text != null && FRENCH_WORD.matcher(text).find();
+    }
+
+    /**
+     * For checking coverage: the parts of a French text that English mode cannot translate yet, each given as the key a
+     * translation table would need (the template key when the part holds numbers, nuclides or element names).
+     */
+    public static List<String> missing(String source) {
+        List<String> out = new ArrayList<>();
+        if (source == null || source.isBlank() || !looksFrench(source)) return out;
+        if (source.contains("   ") && SPACED_CAPS.matcher(source).find()) {
+            return missing(source.replace("   ", "\u0000").replace(" ", "").replace("\u0000", " ").toLowerCase(Locale.ROOT));
+        }
+        if (source.indexOf('\u2009') >= 0 && SPACED_HEADING.matcher(source).find()) {
+            String plain = source.replace("\u2009   ", " ").replace("\u2009", "");
+            if (!plain.equals(source)) return missing(plain);
+        }
+        if (whole(source) != null) return out;
+        Matcher matcher = SEGMENT.matcher(source);
+        int last = 0;
+        boolean split = false;
+        while (true) {
+            boolean found = matcher.find();
+            int end = found ? matcher.start() : source.length();
+            String part = source.substring(last, end).strip();
+            if (!part.isEmpty() && looksFrench(part) && whole(part) == null && segmentsOrNull(part) == null) {
+                Slots slots = slots(part);
+                out.add(slots.values().isEmpty() ? part : slots.key());
+            }
+            if (!found) break;
+            split = true;
+            last = matcher.end();
+        }
+        return out;
+    }
+
+    /**
+     * For building the tables: the French parts of a text as the translator looks them up (one key per part, the
+     * template key when the part holds numbers, nuclides or element names), whether or not a translation exists.
+     */
+    public static List<String> units(String source) {
+        List<String> out = new ArrayList<>();
+        if (source == null || source.isBlank() || !looksFrench(source)) return out;
+        if (source.contains("   ") && SPACED_CAPS.matcher(source).find()) {
+            return units(source.replace("   ", "\u0000").replace(" ", "").replace("\u0000", " ").toLowerCase(Locale.ROOT));
+        }
+        if (source.indexOf(' ') >= 0 && SPACED_HEADING.matcher(source).find()) {
+            String plain = source.replace("    ", " ").replace(" ", "");
+            if (!plain.equals(source)) return units(plain);
+        }
+        Matcher matcher = SEGMENT.matcher(source);
+        int last = 0;
+        while (true) {
+            boolean found = matcher.find();
+            int end = found ? matcher.start() : source.length();
+            String part = source.substring(last, end).strip();
+            if (!part.isEmpty() && looksFrench(part)) {
+                Slots slots = slots(part);
+                out.add(slots.values().isEmpty() ? part : slots.key());
+            }
+            if (!found) break;
+            last = matcher.end();
+        }
+        return out;
+    }
+
+    /** The element names as the engine writes them, capitalised and in lower case, with their English names. */
+    private static Map<String, String> elementNames() {
+        Map<String, String> names = new LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : load("/i18n/elements.tsv").entrySet()) {
+            names.put(entry.getKey(), entry.getValue());
+            names.putIfAbsent(entry.getKey().toLowerCase(Locale.ROOT), entry.getValue().toLowerCase(Locale.ROOT));
+        }
+        return names;
+    }
+
+    private static Pattern slotPattern() {
+        List<String> names = new ArrayList<>(ELEMENT_NAMES.keySet());
+        names.sort(Comparator.comparingInt(String::length).reversed());
+        List<String> quoted = new ArrayList<>();
+        for (String name : names) if (name.length() > 1) quoted.add(Pattern.quote(name));
+        String elements = quoted.isEmpty() ? "(?!)" : String.join("|", quoted);
+        // Ions (Fe⁻, Ca²⁺) ; W±, K±, B± et Ds± sont aussi des particules (boson W, kaons, mésons B et Ds) : pas des ions.
+        List<String> ions = new ArrayList<>();
+        for (String symbol : ELEMENT_SYMBOLS) if (!List.of("W", "K", "B", "Ds").contains(symbol)) ions.add(symbol);
+        return Pattern.compile(
+                "(?<nuc>(?<![\\p{L}\\d])[A-Z][a-z]?-\\d{1,3}m?(?![\\p{L}\\d])|(?<![\\p{L}\\d])[⁰¹²³⁴⁵⁶⁷⁸⁹]+[A-Z][a-z]?(?![a-z])"
+                + "|(?<![\\p{L}\\d])(?:" + String.join("|", ions) + ")[⁰¹²³⁴⁵⁶⁷⁸⁹]*[⁻⁺](?![\\p{L}]))"
+                + "|(?<sym>\\((?:" + String.join("|", ELEMENT_SYMBOLS) + ")\\))"
+                + "|(?<elem>(?<![\\p{L}'’-])(?:" + elements + ")(?![\\p{L}'’]))"
+                + "|(?<num>(?<![\\p{L}\\d_.,])[-−+]?\\d+(?:[\\u202F\\u00A0\\u2009]\\d{3})*(?:[.,]\\d+)?"
+                + "(?:(?:\\s?[·×]\\s?10)?[⁻⁺]?[⁰¹²³⁴⁵⁶⁷⁸⁹]+|[eE][-+]?\\d+)?)");
     }
 
     private static String spaced(String source) {
@@ -268,6 +507,9 @@ public final class I18n {
     }
 
     private static void display(Property<String> property, String source) {
+        // Un texte lié (le libellé interne d'un MenuButton suit celui du bouton) reflète déjà une source traduite :
+        // JavaFX refuse qu'on l'écrive.
+        if (property.isBound()) return;
         String rendered = text(source);
         if (rendered == null || rendered.equals(property.getValue())) return;
         UPDATING.add(property);

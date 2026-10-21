@@ -86,12 +86,18 @@ public class App extends Application {
 
     /** Le cœur d'étoile : conservé, mais retiré de l'interface (on se concentre sur la fusion). */
     static final boolean STAR_SCREEN = false;
+    /** Le laboratoire subatomique (protons, neutrons, électrons pas à pas) est incomplet : masqué du menu et du clavier, son code reste. */
+    static final boolean SUBATOMIC_SCREEN = false;
+    /** La vue de Bohr (anneaux, électrons qui tournent) est en travaux : bouton et touche O masqués, son code reste. */
+    static final boolean BOHR_VIEW = false;
 
     private static final double PREFERRED_WIDTH = 1440;
     private static final double PREFERRED_HEIGHT = 900;
     private static final double SIDEBAR_WIDTH = 400;
 
     private SimCanvas simCanvas;
+    /** La dernière frame reçue : le noyau visé par « Tirer une α ». */
+    private UniverseFrame lastFrame;
     private MatterCanvas matterCanvas;
     private FusionLab fusionView;
     private ReactorView reactorView;
@@ -139,6 +145,11 @@ public class App extends Application {
     private final Label electronCount = new Label("0");
     private TimelineBar timeline;
     private final LabLoader loader = new LabLoader();
+    /** « Une nouvelle version est disponible », en bas à droite. */
+    private final UpdateCard updateCard = new UpdateCard();
+    /** Une version plus récente trouvée sur GitHub, proposée dès que l'écran de chargement s'efface. */
+    private UpdateChecker.Release pendingUpdate;
+    private static final String SKIPPED_VERSION_PREF = "update.skipped";
     private HBox guide;
     private boolean genesisShown;
     /**
@@ -147,12 +158,22 @@ public class App extends Application {
      */
     private static final boolean GENESIS_ENABLED = false;
     private static final int START_ELEMENT = 92;
+    /** Énergie d'une α tirée depuis l'atome, dans le laboratoire (keV) : celle d'une désintégration α typique. */
+    private static final double ALPHA_LAB_KEV = 5000;
     private boolean startElementLoaded;
     private Button lightButton;
     private Popup lightPopup;
     private final ToggleGroup scaleGroup = new ToggleGroup();
     private final ToggleGroup dragGroup = new ToggleGroup();
     private ToggleButton autoSpin;
+    private ToggleButton valenceOnly;
+    private ToggleButton bohrView;
+    /**
+     * Frames tenues jusqu'à l'impact de la particule qu'elles annoncent (proton, neutron, électron) : l'atome ne change
+     * d'identité qu'au moment où la particule le touche. {frame, instant de l'impact sur `clock`}.
+     */
+    private final java.util.ArrayDeque<Object[]> heldFrames = new java.util.ArrayDeque<>();
+    private double clock;
     private Slider laserSlider;
     private Label laserLabel;
     private Rectangle laserSwatch;
@@ -195,18 +216,21 @@ public class App extends Application {
             loader.show("Démarrage du moteur Python",
                     "Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.",
                     frame -> true, null);
+            loader.withSupport(this::openLink);
             try {
                 bundledEngine = BundledEngine.start();
                 setStatus("Chargement du moteur Python embarqué…", "#FBBF24");
                 waitForBundledEngine(bundledEngine);
             } catch (IOException error) {
-                simCanvas.setStatusMessage("Moteur embarqué impossible à démarrer : " + error.getMessage());
-                setStatus("Moteur embarqué impossible à démarrer : " + error.getMessage(), "#F87171");
+                simCanvas.setStatusMessage(I18n.text("Moteur embarqué impossible à démarrer : ") + error.getMessage());
+                setStatus(I18n.text("Moteur embarqué impossible à démarrer : ") + error.getMessage(), "#F87171");
                 loader.fail("Démarrage impossible", error.getMessage());
             }
         } else {
             connect();
         }
+
+        checkForUpdates();
 
         new AnimationTimer() {
             private long previous;
@@ -214,7 +238,14 @@ public class App extends Application {
             public void handle(long now) {
                 double delta = previous == 0 ? 0 : Math.min(.1, (now - previous) / 1e9);
                 previous = now;
+                clock += delta;
+                releaseHeldFrames();
                 loader.tick(delta);
+                updateCard.tick(delta);
+                if (pendingUpdate != null && !loader.isShowing()) {
+                    offerUpdate(pendingUpdate);
+                    pendingUpdate = null;
+                }
                 if (!reactorActive && !subatomicActive && !nucleonActive) {
                     simCanvas.tick(now);
                     timeline.tick();
@@ -341,7 +372,8 @@ public class App extends Application {
         subatomicView.getNode().setVisible(false);
         quantumLab.getNode().setVisible(false);
         StackPane laboratories = new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
-                reactorView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode());
+                reactorView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode(),
+                updateCard.getNode());
         BorderPane localizedShell = new BorderPane(laboratories);
         localizedShell.setTop(buildLanguageBar());
         Scene scene = new Scene(localizedShell,
@@ -387,6 +419,10 @@ public class App extends Application {
 
     /** Pour les aperçus : une image de l'écran de l'atome. */
     /** Pour les aperçus : choisir la vue du journal, sans toucher à la préférence enregistrée. */
+    void previewPanel(String shell) {
+        simCanvas.previewPanel(shell);
+    }
+
     void previewJournal(boolean withGenesis) {
         genesisShown = withGenesis;
         guide.setVisible(withGenesis);
@@ -401,12 +437,114 @@ public class App extends Application {
 
     /** Pour les aperçus : l'écran d'attente d'un laboratoire. */
     void previewLoader() {
-        loader.show("Ouverture du laboratoire de fusion",
-                "Le moteur prépare les noyaux, leurs champs et les données des réactions mesurées.", f -> false, null);
+        loader.show("Démarrage du moteur Python",
+                "Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.", f -> false, null);
+        loader.withSupport(url -> { });
+    }
+
+    /** Pour les aperçus : valence seule dans la vue 3D, phase de ψ dans le panneau Orbitale. */
+    void previewOrbitalModes(boolean valence, boolean phase) {
+        valenceOnly.setSelected(valence);
+        simCanvas.setValenceOnly(valence);
+        quantumView.setPhaseMode(phase);
+    }
+
+    /** Pour les aperçus : la vue de Bohr. */
+    void previewBohr(boolean on) {
+        bohrView.setSelected(on);
+        simCanvas.setBohrMode(on);
+    }
+
+    /** Pour les aperçus : la carte de mise à jour, avec une version fictive. */
+    void previewUpdate() {
+        loader.hide();
+        updateCard.offer("0.2.0", "0.3.0", true, new UpdateCard.Actions() {
+            @Override public void install() { }
+            @Override public void openPage() { }
+            @Override public void skip() { }
+        });
+    }
+
+    /** Ouvre une adresse (page web ou mailto:) avec le navigateur ou le client mail du système. */
+    private void openLink(String url) {
+        try {
+            getHostServices().showDocument(url);
+        } catch (RuntimeException error) {
+            setStatus(I18n.text("Impossible d'ouvrir ") + url, "#FBBF24");
+        }
+    }
+
+    /**
+     * Au démarrage, en arrière-plan : la dernière version publiée sur GitHub. Rien depuis les sources (pas de numéro de
+     * version), rien hors ligne, rien pour une version que l'utilisateur a choisi d'ignorer.
+     */
+    private void checkForUpdates() {
+        String current = UpdateChecker.currentVersion();
+        if (current == null) {
+            return;
+        }
+        String skipped = java.util.prefs.Preferences.userNodeForPackage(App.class).get(SKIPPED_VERSION_PREF, "");
+        UpdateChecker.latest(UpdateChecker.client(), current).thenAccept(found -> found
+                .filter(release -> UpdateChecker.compare(release.version(), current) > 0)
+                .filter(release -> !release.version().equals(skipped))
+                .ifPresent(release -> Platform.runLater(() -> pendingUpdate = release)));
+    }
+
+    private void offerUpdate(UpdateChecker.Release release) {
+        String current = UpdateChecker.currentVersion();
+        boolean canInstall = Boolean.getBoolean("genesis.bundled") && release.installer().isPresent();
+        updateCard.offer(current, release.version(), canInstall, new UpdateCard.Actions() {
+            @Override public void install() { installUpdate(release); }
+            @Override public void openPage() { openLink(release.page()); }
+            @Override public void skip() {
+                java.util.prefs.Preferences.userNodeForPackage(App.class).put(SKIPPED_VERSION_PREF, release.version());
+            }
+        });
+    }
+
+    /** Télécharge l'installateur, vérifie son empreinte, le lance, puis ferme Genesis pour qu'il puisse remplacer les fichiers. */
+    private void installUpdate(UpdateChecker.Release release) {
+        UpdateChecker.Asset installer = release.installer().orElse(null);
+        if (installer == null) {
+            openLink(release.page());
+            return;
+        }
+        updateCard.downloading(0);
+        Thread worker = new Thread(() -> {
+            try {
+                java.nio.file.Path folder = java.nio.file.Path.of(System.getProperty("java.io.tmpdir"), "Genesis-update");
+                long[] shown = {0};
+                java.nio.file.Path file = UpdateChecker.download(UpdateChecker.client(), release, installer, folder, fraction -> {
+                    long percent = Math.round(fraction * 100);
+                    if (percent != shown[0]) {
+                        shown[0] = percent;
+                        Platform.runLater(() -> updateCard.downloading(fraction));
+                    }
+                });
+                Platform.runLater(() -> {
+                    updateCard.status("Empreinte vérifiée. Lancement de l'installateur…");
+                    try {
+                        new ProcessBuilder(file.toString()).start();
+                        Platform.exit();
+                    } catch (IOException error) {
+                        updateCard.failed(error.getMessage());
+                    }
+                });
+            } catch (IOException error) {
+                Platform.runLater(() -> updateCard.failed(error.getMessage()));
+            } catch (InterruptedException error) {
+                Thread.currentThread().interrupt();
+            }
+        }, "genesis-update");
+        worker.setDaemon(true);
+        worker.start();
     }
 
     void tickForPreview(long now) {
+        clock += 1 / 60.0;
+        releaseHeldFrames();
         loader.tick(1 / 60.0);
+        updateCard.tick(1 / 60.0);
         if (genesisShown) {
             genesis.tick(1 / 60.0);
         }
@@ -525,19 +663,31 @@ public class App extends Application {
         fire.setFocusTraversable(false);
         fire.setTooltip(I18n.tooltip("un photon de cette longueur d'onde vers l'atome · touche L"));
         fire.setOnAction(event -> firePhoton());
-        HBox light = new HBox(6, lightButton, fire);
+        // Tirer sur le noyau : un neutron lent (calculé ici), ou une α (la chambre de collision la calcule).
+        MenuButton shoot = new MenuButton("☢  Tirer sur le noyau");
+        shoot.getStyleClass().add("dash-menu");
+        shoot.setFocusTraversable(false);
+        shoot.setTooltip(I18n.tooltip("un projectile vers le noyau : capture, fission, transmutation · touche B : un neutron"));
+        MenuItem neutronShot = new MenuItem("n   ·  un neutron lent (0,0253 eV)");
+        neutronShot.setOnAction(event -> fireNeutron());
+        MenuItem alphaShot = new MenuItem("α   ·  une particule α de 5 MeV → chambre de collision");
+        alphaShot.setOnAction(event -> fireAlpha());
+        shoot.getItems().addAll(neutronShot, alphaShot);
+        HBox light = new HBox(6, lightButton, fire, shoot);
         light.setAlignment(Pos.CENTER_LEFT);
 
         MenuButton labs = new MenuButton("Laboratoires");
         labs.getStyleClass().add("dash-menu");
         labs.setFocusTraversable(false);
-        MenuItem fusion = new MenuItem("⚛   Fusion de deux noyaux");
+        MenuItem fusion = new MenuItem("⚛   Fusion · fission · transmutation");
         fusion.setOnAction(event -> openFusion());
         MenuItem subatomic = new MenuItem("◈   Laboratoire subatomique");
         subatomic.setOnAction(event -> openSubatomic());
         MenuItem nucleon = new MenuItem("◉   Le monde subatomique (quarks, hadrons, partons)");
         nucleon.setOnAction(event -> openNucleon());
-        labs.getItems().addAll(fusion, subatomic, nucleon);
+        labs.getItems().add(fusion);
+        if (SUBATOMIC_SCREEN) labs.getItems().add(subatomic);
+        labs.getItems().add(nucleon);
         if (STAR_SCREEN) {
             MenuItem star = new MenuItem("★   Cœur d'étoile");
             star.setOnAction(event -> send(ActionType.STAR_START));
@@ -655,9 +805,23 @@ public class App extends Application {
         autoSpin.setFocusTraversable(false);
         autoSpin.setTooltip(I18n.tooltip("l'atome tourne lentement sur lui-même"));
         autoSpin.setOnAction(event -> simCanvas.setAutoSpin(autoSpin.isSelected()));
+        valenceOnly = new ToggleButton("Valence");
+        valenceOnly.getStyleClass().add("view-toggle");
+        valenceOnly.setFocusTraversable(false);
+        valenceOnly.setTooltip(I18n.tooltip("ne montrer que les sous-couches ouvertes : les pleines, sphériques (théorème d'Unsöld), "
+                + "cachent la forme de la valence · touche V"));
+        valenceOnly.setOnAction(event -> simCanvas.setValenceOnly(valenceOnly.isSelected()));
+        bohrView = new ToggleButton("Bohr");
+        bohrView.getStyleClass().add("view-toggle");
+        bohrView.setFocusTraversable(false);
+        bohrView.setTooltip(I18n.tooltip("le modèle de Bohr (1913) : couches en anneaux, électrons qui tournent. Image historique, "
+                + "pratique pour compter les électrons ; la réalité quantique est le nuage · touche O"));
+        bohrView.setOnAction(event -> simCanvas.setBohrMode(bohrView.isSelected()));
+        bohrView.setVisible(BOHR_VIEW);
+        bohrView.setManaged(BOHR_VIEW);
         Button out = viewButton("−", "dézoomer · touche −", () -> simCanvas.nudgeZoom(0.6));
         Button in = viewButton("+", "zoomer · touche + (ou la molette)", () -> simCanvas.nudgeZoom(1.6));
-        HBox bar = new HBox(4, scales, rule(), rotate, pan, rule(), recenter, views, autoSpin, rule(), out, in);
+        HBox bar = new HBox(4, scales, rule(), rotate, pan, rule(), recenter, views, autoSpin, valenceOnly, bohrView, rule(), out, in);
         bar.setAlignment(Pos.CENTER);
         bar.getStyleClass().add("view-bar");
         bar.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -811,11 +975,18 @@ public class App extends Application {
         return tab;
     }
 
+    /**
+     * Le canevas épouse toute la place de l'onglet, en largeur ET en hauteur : quand le journal grandit, le dessin se
+     * resserre (la coupe rétrécit) au lieu d'être coupé par le bas.
+     */
     private static Region padded(javafx.scene.canvas.Canvas canvas) {
-        VBox box = new VBox(canvas);
-        box.setPadding(new Insets(10, 12, 10, 12));
+        Pane box = new Pane(canvas);
         box.setStyle("-fx-background-color: #05070F;");
+        box.setMinSize(0, 0);
+        box.setPrefSize(canvas.getWidth() + 24, canvas.getHeight() + 20);   // taille voulue, pas une contrainte
+        canvas.relocate(12, 10);
         canvas.widthProperty().bind(box.widthProperty().subtract(24));
+        canvas.heightProperty().bind(box.heightProperty().subtract(20));
         return box;
     }
 
@@ -882,7 +1053,7 @@ public class App extends Application {
         engineConnected = false;
         String host = bundledEngine == null ? System.getProperty("genesis.host", "localhost") : "127.0.0.1";
         int port = bundledEngine == null ? Integer.getInteger("genesis.port", 50051) : bundledEngine.port();
-        simCanvas.setStatusMessage("Connexion au moteur atomique (" + host + ":" + port + ")...");
+        simCanvas.setStatusMessage(I18n.text("Connexion au moteur atomique (") + host + ":" + port + ")...");
         int generation = ++connectionGeneration;
 
         client = new EngineClient(host, port,
@@ -915,7 +1086,7 @@ public class App extends Application {
         reconnectPending = true;
         double delay = Math.min(10.0, 1.5 * Math.pow(1.6, reconnectAttempts));
         reconnectAttempts++;
-        setStatus(String.format("Moteur injoignable · nouvel essai dans %.0f s", delay), "#FBBF24");
+        setStatus(String.format(I18n.text("Moteur injoignable · nouvel essai dans %.0f s"), delay), "#FBBF24");
         PauseTransition pause = new PauseTransition(Duration.seconds(delay));
         pause.setOnFinished(event -> {
             reconnectPending = false;
@@ -938,7 +1109,7 @@ public class App extends Application {
                     tableButton.setDisable(false);
                 });
             } catch (RuntimeException error) {
-                Platform.runLater(() -> setStatus("Table périodique indisponible : " + error.getMessage(), "#F87171"));
+                Platform.runLater(() -> setStatus(I18n.text("Table périodique indisponible : ") + error.getMessage(), "#F87171"));
             }
         }, "periodic-table-loader");
         loader.setDaemon(true);
@@ -953,6 +1124,7 @@ public class App extends Application {
         protocolMismatchReported = false;
         reconnectAttempts = 0;
         engineConnected = true;
+        lastFrame = frame;
         if (!startElementLoaded) {
             // Au lancement, un atome d'uranium 238 : son nuage, son noyau, et sa longue chaîne dans la timeline.
             startElementLoaded = true;
@@ -966,6 +1138,25 @@ public class App extends Application {
             send(start);
         }
 
+        // Une particule arrive (proton, neutron, électron capturé) : elle part maintenant, et l'atome ne change
+        // qu'à l'impact. Les frames suivantes attendent derrière, dans l'ordre ; plusieurs vols se font en parallèle.
+        double flight = simCanvas.announce(frame);
+        if (flight > 0 || !heldFrames.isEmpty()) {
+            double previous = heldFrames.isEmpty() ? clock : (double) heldFrames.peekLast()[1];
+            heldFrames.add(new Object[]{frame, Math.max(previous, clock + flight)});
+            return;
+        }
+        applyFrame(frame);
+    }
+
+    /** Les frames tenues dont la particule a touché l'atome. */
+    private void releaseHeldFrames() {
+        while (!heldFrames.isEmpty() && (double) heldFrames.peek()[1] <= clock) {
+            applyFrame((UniverseFrame) heldFrames.poll()[0]);
+        }
+    }
+
+    private void applyFrame(UniverseFrame frame) {
         simCanvas.applyFrame(frame);
         updateMatter(frame);
         loader.onFrame(frame);
@@ -983,7 +1174,7 @@ public class App extends Application {
                 genesis.explain(event);
             }
         }
-        setStatus("Connecté · règles et données servies par le moteur (" + frame.getSource() + ")", "#34D399");
+        setStatus(I18n.text("Connecté · règles et données servies par le moteur (") + frame.getSource() + ")", "#34D399");
     }
 
     /** Échelle de la matière : la carte de l'atome cède la place à la boîte d'atomes. */
@@ -1038,6 +1229,30 @@ public class App extends Application {
                 f -> f.getReactor().getActive(), ActionType.REACTOR_STOP);
     }
 
+    private void fireNeutron() {
+        send(ActionType.FIRE_NEUTRON);
+    }
+
+    /**
+     * Une particule α de 5 MeV (énergie typique d'une désintégration α) sur le noyau affiché : la chambre de collision
+     * s'ouvre avec He-4 contre lui, l'énergie convertie dans le centre de masse.
+     */
+    private void fireAlpha() {
+        if (lastFrame == null || lastFrame.getAtom().getProtons() < 1) {
+            setStatus(I18n.text("Aucun noyau à viser : choisir d'abord un élément."), "#FBBF24");
+            return;
+        }
+        int z = lastFrame.getAtom().getProtons();
+        int a = z + lastFrame.getAtom().getNeutrons();
+        openFusion();
+        if (!engineConnected || protocolMismatchReported || client == null) {
+            return;
+        }
+        client.send(ActionType.SET_REACTOR_NUCLEUS_A, 2004);
+        client.send(ActionType.SET_REACTOR_NUCLEUS_B, z * 1000 + a);
+        client.send(ActionType.SET_REACTOR_ENERGY, ALPHA_LAB_KEV * a / (a + 4.0));
+    }
+
     private void openSubatomic() {
         openLab(ActionType.SUBATOMIC_START, "Ouverture du laboratoire subatomique",
                 "Le moteur place les protons, neutrons et électrons et calcule leurs potentiels.",
@@ -1066,8 +1281,8 @@ public class App extends Application {
             return;
         }
         if (protocolMismatchReported) {
-            loader.fail("Moteur obsolète", "Le moteur parle une ancienne version du contrat (v"
-                    + EngineClient.PROTOCOL_VERSION + " attendue). Arrête-le et relance : docker compose up --build");
+            loader.fail("Moteur obsolète", I18n.text("Le moteur parle une ancienne version du contrat (v")
+                    + EngineClient.PROTOCOL_VERSION + I18n.text(" attendue). Arrête-le et relance : docker compose up --build"));
             return;
         }
         send(start);
@@ -1160,26 +1375,26 @@ public class App extends Application {
             return;
         }
         protocolMismatchReported = true;
-        String message = "Moteur obsolète : protocole v" + received
-                + " reçu, v" + EngineClient.PROTOCOL_VERSION + " attendu.\n"
-                + "Le conteneur tourne encore sur une ancienne image.\n"
-                + "Arrête-le puis relance :  docker compose up --build";
+        String message = I18n.text("Moteur obsolète : protocole v") + received
+                + I18n.text(" reçu, v") + EngineClient.PROTOCOL_VERSION + " attendu.\n"
+                + I18n.text("Le conteneur tourne encore sur une ancienne image.\n")
+                + I18n.text("Arrête-le puis relance :  docker compose up --build");
         simCanvas.setStatusMessage(message);
         setStatus("Version de protocole incompatible - relance docker compose up --build", "#F87171");
-        loader.fail("Moteur obsolète", "Le moteur envoie le protocole v" + received + ", le client attend v"
-                + EngineClient.PROTOCOL_VERSION + ". Arrête-le et relance : docker compose up --build");
+        loader.fail("Moteur obsolète", I18n.text("Le moteur envoie le protocole v") + received + I18n.text(", le client attend v")
+                + EngineClient.PROTOCOL_VERSION + I18n.text(". Arrête-le et relance : docker compose up --build"));
     }
 
     private void onError(Throwable error) {
         engineConnected = false;
         if (bundledEngine != null) {
-            String detail = "Connexion au moteur Python interrompue. Nouvel essai en cours. Journal : "
+            String detail = I18n.text("Connexion au moteur Python interrompue. Nouvel essai en cours. Journal : ")
                     + bundledEngine.logPath();
             loader.fail("Moteur injoignable", detail);
             simCanvas.setStatusMessage(detail);
         } else {
             loader.fail("Moteur injoignable", "La connexion au moteur est coupée ; elle reprendra seule dès qu'il répondra.");
-            simCanvas.setStatusMessage("Moteur injoignable.\nLance : docker compose up --build\n"
+            simCanvas.setStatusMessage(I18n.text("Moteur injoignable.\nLance : docker compose up --build\n")
                     + "(reconnexion automatique en cours)");
         }
         scheduleReconnect();
@@ -1217,7 +1432,7 @@ public class App extends Application {
             tableDialog.show();
         } catch (RuntimeException error) {
             tableDialog = null;
-            setStatus("Ouverture de la table impossible : " + error, "#F87171");
+            setStatus(I18n.text("Ouverture de la table impossible : ") + error, "#F87171");
         }
     }
 
@@ -1306,9 +1521,15 @@ public class App extends Application {
             case R -> send(subatomicActive ? ActionType.SUBATOMIC_RESET : ActionType.RESET);
             case S -> {
                 if (subatomicActive) leaveLab(ActionType.SUBATOMIC_STOP, f -> !f.getSubatomic().getActive());
-                else openSubatomic();
+                else if (SUBATOMIC_SCREEN) openSubatomic();
             }
             case T -> openPeriodicTable();
+            case V -> {
+                if (!subatomicActive) {
+                    valenceOnly.setSelected(!valenceOnly.isSelected());
+                    simCanvas.setValenceOnly(valenceOnly.isSelected());
+                }
+            }
             case DIGIT1, NUMPAD1 -> { if (!subatomicActive) goTo(SimCanvas.Scale.ATOME); }
             case DIGIT2, NUMPAD2 -> { if (!subatomicActive) goTo(SimCanvas.Scale.NOYAU); }
             case DIGIT3, NUMPAD3 -> { if (!subatomicActive) goTo(SimCanvas.Scale.NUCLEON); }
@@ -1323,6 +1544,8 @@ public class App extends Application {
             case B -> {
                 if (ADVANCED_SCALES) {
                     openPartnerTable();
+                } else if (!subatomicActive) {
+                    fireNeutron();
                 }
             }
             case U -> {
@@ -1332,6 +1555,9 @@ public class App extends Application {
             case O -> {
                 if (STAR_SCREEN) {
                     send(starActive ? ActionType.STAR_STOP : ActionType.STAR_START);
+                } else if (BOHR_VIEW && !subatomicActive) {
+                    bohrView.setSelected(!bohrView.isSelected());
+                    simCanvas.setBohrMode(bohrView.isSelected());
                 }
             }
             case ADD, PLUS, EQUALS -> {

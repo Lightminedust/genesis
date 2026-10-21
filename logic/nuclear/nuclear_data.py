@@ -16,13 +16,12 @@ noyaux que personne n'a jamais observés.
 """
 
 import math
-import os
-import sqlite3
 from functools import lru_cache
 
-import mendeleev
 import radioactivedecay as rd
 from scipy import constants as sc
+
+from common import elements_db
 
 MEV_PER_U = sc.physical_constants["atomic mass constant energy equivalent in MeV"][0]
 ELECTRON_MEV = sc.physical_constants["electron mass energy equivalent in MeV"][0]
@@ -33,8 +32,7 @@ FREE_NEUTRON_HALF_LIFE_S = 878.4 * math.log(2)
 DATASET = "ICRP-107, radioactivedecay"
 MENDELEEV_SOURCE = "NUBASE, mendeleev"
 
-_DB = sqlite3.connect(os.path.join(os.path.dirname(mendeleev.__file__), "elements.db"),
-                      check_same_thread=False)
+_DB = elements_db.DB   # verrouillée : plusieurs threads la lisent
 _DATA = rd.DEFAULTDATA
 
 _UNIT_S = {

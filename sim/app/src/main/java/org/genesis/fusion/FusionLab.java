@@ -329,7 +329,7 @@ public class FusionLab {
 
     private void openPicker(String which) {
         picking = which;
-        pickerTitle.setText("Choisir l'atome " + which);
+        pickerTitle.setText(I18n.text("Choisir l'atome ") + which);
         picker.setVisible(true);
         picker.setManaged(true);
         if (state != null) {
@@ -438,7 +438,7 @@ public class FusionLab {
         thermalToggle.setSelected(true);
         thermalToggle.setText("Plasma");
         thermalToggle.setTooltip(I18n.tooltip("Plasma : chaque choc a une énergie et une visée tirées au hasard (Maxwell-Boltzmann).\n"
-                + "Faisceau : énergie fixe, comme dans un accélérateur."));
+                + I18n.text("Faisceau : énergie fixe, comme dans un accélérateur.")));
         thermalToggle.setStyle("-fx-background-color: #1E293B; -fx-text-fill: #FDBA74; -fx-font-weight: bold;"
                 + " -fx-background-radius: 10; -fx-cursor: hand;");
         thermalToggle.selectedProperty().addListener((obs, was, now) -> {
@@ -488,7 +488,7 @@ public class FusionLab {
         HBox bar = new HBox(14, thermalToggle, title, energy, readout, fire, insist, replay);
         bar.setAlignment(Pos.CENTER);
         bar.setPadding(new Insets(10, 18, 10, 18));
-        bar.setStyle("-fx-background-color: #0A0F1CE8; -fx-background-radius: 16; -fx-border-color: #1B2438;"
+        bar.setStyle(I18n.text("-fx-background-color: #0A0F1CE8; -fx-background-radius: 16; -fx-border-color: #1B2438;")
                 + " -fx-border-radius: 16;");
         bar.setMaxWidth(Region.USE_PREF_SIZE);
         HBox wrapper = new HBox(bar);
@@ -660,7 +660,7 @@ public class FusionLab {
             toast.getChildren().add(energyLine);
         }
         if (state.getAttempts() > 1) {
-            Label tries = new Label("il a fallu " + state.getAttempts() + " tirs" + (state.getAbove() ? "" : " (effet tunnel)"));
+            Label tries = new Label(I18n.text("il a fallu ") + state.getAttempts() + " tirs" + (state.getAbove() ? "" : " (effet tunnel)"));
             tries.setStyle("-fx-text-fill: #A5B0C6; -fx-font-size: 11px;");
             toast.getChildren().add(tries);
         }
@@ -766,7 +766,7 @@ public class FusionLab {
         updating = false;
         if (impact.getOnMouseReleased() == null) {
             impact.valueProperty().addListener((obs, old, value) ->
-                    impactValue.setText("visée : " + Visuals.format(value.doubleValue()) + " fm"
+                    impactValue.setText(I18n.text("visée : ") + Visuals.format(value.doubleValue()) + " fm"
                             + (value.doubleValue() < 0.05 ? " (plein centre)" : " de décalage")));
             impact.setOnMouseReleased(event -> onImpact.accept(impact.getValue()));
         }
@@ -2203,8 +2203,8 @@ public class FusionLab {
                 }
                 glow(gx, gy, 40, Color.WHITE, 0.6);
             }
-            note("Barrière de Coulomb : " + energyText(state.getBarrierMev() * 1000) + (ratio > 1
-                    ? " · " + Visuals.format(ratio) + " fois l'énergie de ce choc" : " · ce choc la dépasse"),
+            note(I18n.text("Barrière de Coulomb : ") + energyText(state.getBarrierMev() * 1000) + (ratio > 1
+                    ? " · " + Visuals.format(ratio) + I18n.text(" fois l'énergie de ce choc") : " · ce choc la dépasse"),
                     Color.web("#7DD3FC"));
         }
         // Le point neutre (vue avancée) : entre deux charges de même signe, le champ s'annule.
@@ -2228,7 +2228,7 @@ public class FusionLab {
                 gc.strokeLine(p[0] - s, p[1] - s * 0.5, p[0] + s, p[1] + s * 0.5);
                 gc.strokeLine(p[0] - s, p[1] + s * 0.5, p[0] + s, p[1] - s * 0.5);
             }
-            note("Point neutre (✕) : les deux champs s'y annulent · V = " + energyText(vSaddle * 1000), Color.web("#7DD3FC"));
+            note(I18n.text("Point neutre (✕) : les deux champs s'y annulent · V = ") + energyText(vSaddle * 1000), Color.web("#7DD3FC"));
         }
         // Le demi-tour de ce choc : un trait d'or sur l'axe, à la distance réelle où l'élan sera épuisé.
         double turning = shotTurningFm();
@@ -2247,7 +2247,7 @@ public class FusionLab {
                 gc.setStroke(GOLD.deriveColor(0, 1, 1, 0.75 * presence));
                 gc.setLineWidth(2.5);
                 gc.strokeLine(mx - vx * 12, my - vy * 12, mx + vx * 12, my + vy * 12);
-                note("Trait d'or : son élan sera épuisé à " + Visuals.format(turning) + " fm (demi-tour)", GOLD);
+                note(I18n.text("Trait d'or : son élan sera épuisé à ") + Visuals.format(turning) + " fm (demi-tour)", GOLD);
             }
         }
     }
@@ -2328,7 +2328,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
-        I18n.fillText(gc, "MESURES DE RÉSISTANCE (r = " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm)",
+        I18n.fillText(gc, I18n.text("MESURES DE RÉSISTANCE (r = ") + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm)",
                 x + 14, y + 20);
         double pressure = compression(r);
         double energy = shotEnergyMev();
@@ -2344,7 +2344,7 @@ public class FusionLab {
                 inWell ? "la force forte l'aspire : il accélère vers le centre" : "il ralentit en poussant contre le champ");
         double logTunnel = tunnel > 0 ? Math.max(0, 1 + Math.log10(tunnel) / 30) : 0;
         row = measure(x, row, w, "Passage par effet tunnel", tunnel >= 0.5 ? Visuals.format(100 * tunnel) + " %"
-                : tunnel > 0 ? "1 sur " + NucleusPanel.scientific(1 / tunnel) : "0", logTunnel, TUNNEL,
+                : tunnel > 0 ? I18n.text("1 sur ") + NucleusPanel.scientific(1 / tunnel) : "0", logTunnel, TUNNEL,
                 "chance de traverser le bouclier à chaque tir");
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
@@ -2372,7 +2372,7 @@ public class FusionLab {
                 gc.setTextAlign(TextAlignment.LEFT);
                 gc.setFont(Font.font(UI, 10));
                 gc.setFill(MUTED);
-                I18n.fillText(gc, NucleusPanel.scientific(ratio) + " × la répulsion"
+                I18n.fillText(gc, NucleusPanel.scientific(ratio) + I18n.text(" × la répulsion")
                         + (ratio < 1e-3 ? " · négligeable, aucun effet sur la fusion" : ""), x + 14, row + 21);
                 row += 12;
             }
@@ -2392,7 +2392,7 @@ public class FusionLab {
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
         I18n.fillText(gc, shot && state.getLorentzDeflectionFm() > 0
-                ? "trajectoire déviée de " + NucleusPanel.scientific(state.getLorentzDeflectionFm()) + " fm par q·v×B"
+                ? I18n.text("trajectoire déviée de ") + NucleusPanel.scientific(state.getLorentzDeflectionFm()) + I18n.text(" fm par q·v×B")
                 : "le spin de A tourne autour du champ de B", x + 14, row + 19);
     }
 
@@ -2425,7 +2425,7 @@ public class FusionLab {
 
     private static String ratioText(double ratio) {
         if (ratio >= 1.5) {
-            return Visuals.format(ratio) + " × plus que";
+            return Visuals.format(ratio) + I18n.text(" × plus que");
         }
         if (ratio >= 0.67) {
             return "autant que";
@@ -2458,7 +2458,7 @@ public class FusionLab {
                 double kms = speed * 299792.458;
                 String v = kms >= 1000 ? String.format(java.util.Locale.ROOT, "%,.0f", kms).replace(',', ' ')
                         : Visuals.format(kms);
-                I18n.fillText(gc, "élan · v = " + v + " km/s",
+                I18n.fillText(gc, I18n.text("élan · v = ") + v + " km/s",
                         pa[0] + sign * ux * (sa + elan * 0.6), pa[1] + sign * uy * (sa + elan * 0.6) - 14);
             }
         }
@@ -2502,7 +2502,7 @@ public class FusionLab {
         }
         if (state.getBarrierMev() > 0) {
             ring(state.getBarrierRFm(), Color.web("#FB923C"), 0.5, false);
-            labelAt(state.getBarrierRFm(), true, "sommet de la colline · " + energyText(state.getBarrierMev() * 1000),
+            labelAt(state.getBarrierRFm(), true, I18n.text("sommet de la colline · ") + energyText(state.getBarrierMev() * 1000),
                     Color.web("#FDBA74"));
         }
         double e = state.getEnergyKev() / 1000;
@@ -2787,7 +2787,7 @@ public class FusionLab {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10.5));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#A5F3FC"));
-        I18n.fillText(gc, "spin " + spinParity.replace("+", "").replace("-", "") + " · précession", x + radius * 1.4,
+        I18n.fillText(gc, "spin " + spinParity.replace("+", "").replace("-", "") + I18n.text(" · précession"), x + radius * 1.4,
                 y - length * 0.8);
     }
 
@@ -2872,7 +2872,7 @@ public class FusionLab {
         I18n.fillText(gc, "mouvement " + Visuals.format(100 * (1 - share)) + " %", x, y + 22);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFill(tunnelling ? TUNNEL : REPULSION);
-        I18n.fillText(gc, tunnelling ? "effet tunnel" : "répulsion " + Visuals.format(100 * share) + " %", x + width, y + 22);
+        I18n.fillText(gc, tunnelling ? "effet tunnel" : I18n.text("répulsion ") + Visuals.format(100 * share) + " %", x + width, y + 22);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(Font.font(UI, 9.5));
         gc.setFill(SOFT);
@@ -2905,14 +2905,14 @@ public class FusionLab {
         I18n.fillText(gc, "q₁ = +" + za + "e · q₂ = +" + zb + "e · r = " + Visuals.format(r) + " fm", x, y + 22);
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 15));
         gc.setFill(REPULSION);
-        I18n.fillText(gc, "répulsion : " + (force >= 0.1 ? Visuals.format(force) : NucleusPanel.scientific(force)) + " N",
+        I18n.fillText(gc, I18n.text("répulsion : ") + (force >= 0.1 ? Visuals.format(force) : NucleusPanel.scientific(force)) + " N",
                 x, y + 42);
         double start = startFm;
         if (r < start * 0.95) {
             double ratio = start / r;
             gc.setFont(Font.font(UI, FontWeight.BOLD, 12));
             gc.setFill(GOLD);
-            I18n.fillText(gc, "depuis le départ : r ÷ " + Visuals.format(ratio) + "  →  F × " + Visuals.format(ratio * ratio),
+            I18n.fillText(gc, I18n.text("depuis le départ : r ÷ ") + Visuals.format(ratio) + "  →  F × " + Visuals.format(ratio * ratio),
                     x, y + 62);
         }
     }
@@ -2920,15 +2920,15 @@ public class FusionLab {
     private void drawBanner(double width, double height, int phase, boolean tunnelling) {
         String text = switch (phase) {
             case 0 -> "Les électrons sont arrachés (" + Visuals.format(state.getA().getIonizationEv())
-                    + " eV suffisent) : il ne reste que les noyaux, chargés +";
+                    + I18n.text(" eV suffisent) : il ne reste que les noyaux, chargés +");
             case 1 -> tunnelling ? "Effet tunnel : il traverse le bouclier sans avoir l'énergie de le franchir"
                     : state.getDeflected() ? "Visée décalée : la répulsion courbe sa trajectoire"
-                    : state.getGhostSizesCount() > 0 ? "Les autres chocs du plasma (traits fins) sont déviés ; il a fallu "
-                    + state.getAttempts() + " tirs pour que celui-ci passe"
+                    : state.getGhostSizesCount() > 0 ? I18n.text("Les autres chocs du plasma (traits fins) sont déviés ; il a fallu ")
+                    + state.getAttempts() + I18n.text(" tirs pour que celui-ci passe")
                     : approaching() ? "Il pousse contre le bouclier de répulsion : la flèche rouge mange son élan (dorée)"
                     : "Le bouclier le renvoie : la répulsion redevient de l'élan";
             case 2 -> state.getDeflected() ? "Dévié : sa visée était décalée de " + Visuals.format(state.getImpactUsedFm())
-                    + " fm, il passe à côté (moment cinétique l = " + state.getOrbitalL() + ")"
+                    + I18n.text(" fm, il passe à côté (moment cinétique l = ") + state.getOrbitalL() + ")"
                     : state.getReflected() ? "Renvoyé au sommet : un noyau est aussi une onde, une part est réfléchie"
                     : "Plus d'élan : demi-tour, le bouclier l'a renvoyé";
             default -> "";
@@ -3206,7 +3206,7 @@ public class FusionLab {
             double rise = Math.exp(-Math.pow((CHAOS - tc) / 0.12, 2));
             glow(center[0], center[1], sc * 10, Color.WHITE, 0.95 * rise);
             caption(width, height, state.getQuasiFission() ? "Trop de protons : ils ne tiennent pas ensemble"
-                    : "Noyau composé " + compound.getLabel() + " : une goutte trop chaude, qui vibre", GOLD);
+                    : I18n.text("Noyau composé ") + compound.getLabel() + I18n.text(" : une goutte trop chaude, qui vibre"), GOLD);
             return;
         }
         // 3. L'éjection : chaque produit part dans sa direction, à sa vitesse (quantité de mouvement conservée :
@@ -3313,8 +3313,8 @@ public class FusionLab {
             }
             I18n.fillText(gc, (state.getQMev() > 0 ? "+" : "") + Visuals.fixed(shown, Math.abs(state.getQMev()) < 10 ? 2 : 1)
                     + " MeV", width / 2, 156);
-            note("E = Δm·c² : la masse disparue (" + Visuals.format(100 * (state.getMassBeforeU() - state.getMassAfterU())
-                    / state.getMassBeforeU()) + " %) est devenue cette énergie", GOLD);
+            note(I18n.text("E = Δm·c² : la masse disparue (") + Visuals.format(100 * (state.getMassBeforeU() - state.getMassAfterU())
+                    / state.getMassBeforeU()) + I18n.text(" %) est devenue cette énergie"), GOLD);
         }
         if (!resultShown && t < 0.9) {
             caption(width, height, state.getQuasiFission() ? "Ils se séparent" : "Éjection : l'énergie part avec les particules",
@@ -3543,8 +3543,8 @@ public class FusionLab {
             gc.setFont(Font.font(UI, 12));
             gc.setFill(SOFT);
             double row = y + 50;
-            for (String line : SimCanvas.wrap("Aucun noyau de " + (state.getA().getZ() + state.getB().getZ())
-                    + " protons ne tient : la répulsion les a séparés, ils repartent tels qu'ils étaient.", 62)) {
+            for (String line : SimCanvas.wrap(I18n.text("Aucun noyau de ") + (state.getA().getZ() + state.getB().getZ())
+                    + I18n.text(" protons ne tient : la répulsion les a séparés, ils repartent tels qu'ils étaient."), 62)) {
                 I18n.fillText(gc, line, x + 18, row);
                 row += 17;
             }
@@ -3563,11 +3563,11 @@ public class FusionLab {
         I18n.fillText(gc, survivor.getZ() + " p · " + (survivor.getA() - survivor.getZ()) + " n · charge +" + survivor.getZ()
                 + "e · spin " + spin, x + 130, y + 68);
         I18n.fillText(gc, Math.abs(survivor.getMagneticMoment()) > 1e-3
-                ? "moment magnétique " + Visuals.format(survivor.getMagneticMoment()) + " μN (lignes autour de lui)"
+                ? I18n.text("moment magnétique ") + Visuals.format(survivor.getMagneticMoment()) + " μN (lignes autour de lui)"
                 : "aucun moment magnétique : champ électrique seul", x + 130, y + 85);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(MUTED);
-        I18n.fillText(gc, survivor.getStatus() + " · recule à " + Visuals.format(100 * survivor.getSpeedC()) + " % de c ("
+        I18n.fillText(gc, survivor.getStatus() + I18n.text(" · recule à ") + Visuals.format(100 * survivor.getSpeedC()) + " % de c ("
                 + Visuals.format(survivor.getKineticMev()) + " MeV)", x + 18, y + 106);
         return y + h;
     }
@@ -3588,7 +3588,7 @@ public class FusionLab {
             }
         }
         return "protons " + zIn + " → " + zOut + (leptons > 0 ? " (+ " + leptons + " devenu neutron)" : "")
-                + "   ·   nucléons " + aIn + " → " + aOut + (aIn == aOut ? " ✓" : "")
+                + I18n.text("   ·   nucléons ") + aIn + " → " + aOut + (aIn == aOut ? " ✓" : "")
                 + "   ·   charge +" + zIn + "e → +" + (zOut + leptons) + "e ✓";
     }
 
@@ -3659,7 +3659,7 @@ public class FusionLab {
             gc.setFill(GOLD);
             String detail = light
                     ? Visuals.format(energy) + " MeV · λ = " + Visuals.format(1239.84198 / Math.max(product.getKineticMev(), 1e-9))
-                    + " fm · à la vitesse de la lumière"
+                    + I18n.text(" fm · à la vitesse de la lumière")
                     : Visuals.format(energy) + " MeV" + (count > 1 ? " au total" : "") + " · "
                     + Visuals.format(100 * product.getSpeedC()) + " % de c ("
                     + String.format(java.util.Locale.ROOT, "%,.0f", product.getSpeedC() * 299792.458).replace(',', ' ')
@@ -3688,7 +3688,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(SOFT);
         I18n.fillText(gc, "masse avant " + Visuals.fixed(before, 6) + " u", left, y + 50);
-        I18n.fillText(gc, "masse après " + Visuals.fixed(after, 6) + " u", left, y + 74);
+        I18n.fillText(gc, I18n.text("masse après ") + Visuals.fixed(after, 6) + " u", left, y + 74);
         // Les deux barres, zoomées sur la différence : on voit la masse qui manque.
         double lost = before - after;
         double bx = left + 210;
@@ -3709,7 +3709,7 @@ public class FusionLab {
         } else if (lost < 0) {
             gc.setFill(REPULSION);
             gc.fillRoundRect(bx + wBefore, y + 40, wAfter - wBefore, 12, 6, 6);
-            I18n.fillText(gc, "gagné : " + Visuals.fixed(-lost, 6) + " u (pris sur l'énergie du choc)", bx + wBefore - 120, y + 92);
+            I18n.fillText(gc, I18n.text("gagné : ") + Visuals.fixed(-lost, 6) + I18n.text(" u (pris sur l'énergie du choc)"), bx + wBefore - 120, y + 92);
         }
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 20));
         gc.setFill(GOLD);
@@ -3997,7 +3997,7 @@ public class FusionLab {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
-        I18n.fillText(gc, "L'ESSENTIEL · distance " + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm", x + 14, y + 20);
+        I18n.fillText(gc, I18n.text("L'ESSENTIEL · distance ") + (r >= 100 ? Visuals.format(r) : Visuals.fixed(r, 1)) + " fm", x + 14, y + 20);
         double pressure = compression(r);
         double speed = speedAt(r, shotEnergyMev());
         double kms = speed * 299792.458;
@@ -4010,7 +4010,7 @@ public class FusionLab {
         row = measure(x, row, w, "Répulsion", forceText(coulombForce(r)), Math.min(1, Math.max(0,
                 (Math.log10(Math.max(coulombForce(r), 1e-12)) + 8) / 11)), REPULSION, "F = k·q₁q₂/r²");
         measure(x, row, w, "Chance de passer", tunnel >= 0.5 ? Visuals.format(100 * tunnel) + " %"
-                : tunnel > 0 ? "1 sur " + NucleusPanel.scientific(1 / tunnel) : "0",
+                : tunnel > 0 ? I18n.text("1 sur ") + NucleusPanel.scientific(1 / tunnel) : "0",
                 tunnel > 0 ? Math.max(0, 1 + Math.log10(tunnel) / 30) : 0, TUNNEL, "effet tunnel, par choc frontal");
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);

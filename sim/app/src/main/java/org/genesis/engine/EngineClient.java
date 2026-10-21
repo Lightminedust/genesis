@@ -27,7 +27,7 @@ public class EngineClient {
      * champs se décalent et l'affichage devient silencieusement faux, donc on
      * préfère refuser de dessiner.
      */
-    public static final int PROTOCOL_VERSION = 25;
+    public static final int PROTOCOL_VERSION = 27;
     // Une collision de noyaux lourds transporte tous ses produits et échantillons.
     // Le plafond gRPC implicite (4 Mio) coupait le flux et recréait une chambre vide.
     static final int MAX_FRAME_BYTES = 64 * 1024 * 1024;

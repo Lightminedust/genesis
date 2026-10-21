@@ -34,16 +34,15 @@ Unités réduites en interne : σ = 1, ε = 1, m = 1, k = 1.
 """
 
 import math
-import os
-import sqlite3
 
-import mendeleev
 import numpy as np
 from chemicals.lennard_jones import Stockmayer, Stockmayer_methods, molecular_diameter, molecular_diameter_methods
 from scipy import constants as sc
 from scipy.spatial import cKDTree
 
-_DB = sqlite3.connect(os.path.join(os.path.dirname(mendeleev.__file__), "elements.db"), check_same_thread=False)
+from common import elements_db
+
+_DB = elements_db.DB   # verrouillée : plusieurs threads la lisent
 
 CUTOFF = 2.5            # portée du potentiel, en σ (au-delà, < 1,6 % du puits)
 SKIN = 0.4              # marge de la liste de voisins
