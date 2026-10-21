@@ -13,7 +13,7 @@ sim/out/
 sim/bin/
 sim/*.class
 
-# Paquets Windows générés
+# Paquets générés (Windows, Linux, macOS)
 dist/
 packaging/__pycache__/
 
@@ -29,3 +29,6 @@ index.html
 
 # Vidéos du site : trop lourdes pour le dépôt, elles vivent sur le serveur
 assets/*.mp4
+
+# macOS
+.DS_Store

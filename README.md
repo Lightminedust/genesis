@@ -122,6 +122,18 @@ engine listens only on `127.0.0.1` and stops with the application. On Linux,
 its log is in `${XDG_STATE_HOME:-~/.local/state}/genesis/logs/engine.log`
 and its cache in `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
+## macOS package (Apple Silicon)
+
+On a Mac with JDK 21 and a Python environment holding `logic/requirements.txt`
+and PyInstaller, run `bash packaging/build-macos.sh 0.3.0`; without a Mac, the
+GitHub Actions workflow `.github/workflows/macos-package.yml` builds it on an
+Apple Silicon runner. It produces `Genesis-0.3.0-macos-arm64.dmg` and
+`Genesis-0.3.0-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
+version starting with 0, so the bundle carries `1.3.0` internally; the real
+number is passed as `-Dgenesis.version`, which the update check reads first.
+The app is signed ad hoc and not notarized: on first launch, right-click it
+and choose **Open**. The engine log is in `~/Library/Logs/Genesis/engine.log`.
+
 ## Subatomic laboratory
 
 > Hidden for now (incomplete): it no longer appears in the **Laboratories**

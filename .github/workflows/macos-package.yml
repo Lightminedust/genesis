@@ -1,0 +1,51 @@
+name: macOS package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version (major.minor.patch)
+        required: true
+        default: '0.3.0'
+
+permissions:
+  contents: read
+
+jobs:
+  macos-arm64:
+    # Apple Silicon : le paquet suit le processeur de la machine qui le construit.
+    runs-on: macos-14
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: logic/requirements.txt
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Python engine dependencies
+        run: |
+          python -m venv logic/venv
+          logic/venv/bin/python -m pip install --upgrade pip
+          logic/venv/bin/python -m pip install -r logic/requirements.txt 'pyinstaller>=6,<7'
+
+      - name: Build and smoke-test macOS engine and packages
+        env:
+          GENESIS_VERSION: ${{ inputs.version }}
+        run: bash packaging/build-macos.sh "$GENESIS_VERSION"
+
+      - name: Upload macOS release files
+        uses: actions/upload-artifact@v4
+        with:
+          name: genesis-macos-arm64
+          path: |
+            dist/macos/*.dmg
+            dist/macos/*.zip
+          if-no-files-found: error
+          retention-days: 14

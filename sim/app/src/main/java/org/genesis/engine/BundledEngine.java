@@ -13,7 +13,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-/** Démarre le moteur Python embarqué par le paquet Windows ou Linux et l'arrête avec la fenêtre. */
+/** Démarre le moteur Python embarqué par le paquet Windows, macOS ou Linux et l'arrête avec la fenêtre. */
 public final class BundledEngine implements AutoCloseable {
     private final Process process;
     private final int port;
@@ -62,10 +62,12 @@ public final class BundledEngine implements AutoCloseable {
             throw new IOException("Impossible de localiser le moteur embarqué", error);
         }
         String os = System.getProperty("os.name", "").toLowerCase(Locale.ROOT);
-        String engineName;
-        if (os.startsWith("windows")) engineName = "GenesisEngine.exe";
-        else if (os.startsWith("linux")) engineName = "GenesisEngine";
-        else throw new IOException(I18n.text("Plateforme non prise en charge pour le moteur embarqué : ") + os);
+        boolean windows = os.startsWith("windows");
+        boolean mac = os.startsWith("mac");
+        if (!windows && !mac && !os.startsWith("linux")) {
+            throw new IOException(I18n.text("Plateforme non prise en charge pour le moteur embarqué : ") + os);
+        }
+        String engineName = windows ? "GenesisEngine.exe" : "GenesisEngine";
         Path executable = jar.getParent().resolve("engine").resolve(engineName);
         if (!Files.isRegularFile(executable)) {
             throw new IOException(I18n.text("Moteur introuvable : ") + executable);
@@ -77,17 +79,20 @@ public final class BundledEngine implements AutoCloseable {
             port = reservation.getLocalPort();
         }
 
+        Path home = Path.of(System.getProperty("user.home"));
         Path logPath;
         Path cachePath;
-        if (os.startsWith("windows")) {
+        if (windows) {
             String localAppData = System.getenv("LOCALAPPDATA");
             Path data = localAppData == null || localAppData.isBlank()
-                    ? Path.of(System.getProperty("user.home"), "AppData", "Local", "Genesis")
+                    ? home.resolve("AppData").resolve("Local").resolve("Genesis")
                     : Path.of(localAppData, "Genesis");
             logPath = data.resolve("logs").resolve("engine.log");
             cachePath = data.resolve("cache");
+        } else if (mac) {
+            logPath = home.resolve("Library").resolve("Logs").resolve("Genesis").resolve("engine.log");
+            cachePath = home.resolve("Library").resolve("Caches").resolve("Genesis");
         } else {
-            Path home = Path.of(System.getProperty("user.home"));
             logPath = xdgDirectory("XDG_STATE_HOME", home.resolve(".local").resolve("state"))
                     .resolve("genesis").resolve("logs").resolve("engine.log");
             cachePath = xdgDirectory("XDG_CACHE_HOME", home.resolve(".cache"))

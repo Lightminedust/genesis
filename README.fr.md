@@ -122,6 +122,20 @@ un lanceur au menu des applications. Java et Python sont inclus. Le moteur
 son journal est dans `${XDG_STATE_HOME:-~/.local/state}/genesis/logs/engine.log`
 et son cache dans `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
+## Paquet macOS (Apple Silicon)
+
+Sur un Mac avec un JDK 21 et un environnement Python équipé de
+`logic/requirements.txt` et de PyInstaller, lancer
+`bash packaging/build-macos.sh 0.3.0` ; sans Mac, le workflow GitHub Actions
+`.github/workflows/macos-package.yml` le construit sur une machine Apple
+Silicon. Il produit `Genesis-0.3.0-macos-arm64.dmg` et
+`Genesis-0.3.0-macos-arm64.zip` dans `dist/macos/`. jpackage refuse une version
+macOS qui commence par 0 : le paquet porte `1.3.0` en interne, et le vrai
+numéro passe par `-Dgenesis.version`, que la vérification des mises à jour lit
+en premier. L'application est signée localement (ad hoc), pas notariée : au
+premier lancement, clic droit puis **Ouvrir**. Le journal du moteur est dans
+`~/Library/Logs/Genesis/engine.log`.
+
 ## Laboratoire subatomique
 
 > Masqué pour l'instant (incomplet) : il n'apparaît plus dans le menu
