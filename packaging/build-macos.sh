@@ -84,7 +84,8 @@ mkdir -p "$work/proto"
     --name GenesisEngine --paths "$work/proto" --paths "$repo/logic" \
     --collect-submodules numpy.core \
     --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable \
-    --collect-data chainlab --collect-data moleculelab \
+    --add-data "$repo/logic/chainlab/data:chainlab/data" \
+    --add-data "$repo/logic/moleculelab/data:moleculelab/data" \
     --distpath "$work/python-dist" --workpath "$work/python-work" \
     --specpath "$work/python-spec" "$repo/packaging/macos_engine.py"
 
