@@ -1,4 +1,5 @@
 # French source	English display text. Reviewed; editable.
+ — cliquer sur un atome ou dans le vide	 — click an atom or empty space
 #9FB4CE	#9FB4CE
 % (choisi) · 1 s =	% (chosen) · 1 s =
 % (perdus)	% (lost)
@@ -15,6 +16,7 @@
 (Pour un neutrino, la région des résonances est calculée par dualité : W tiré dans ce spectre.)	(For a neutrino, the resonance region is computed by duality: W drawn from this spectrum.)
 (Probabilités intégrées sur tous les angles.)	(Probabilities integrated over all angles.)
 (action-réaction). Il repart avec	(action and reaction). It leaves with
+(au-delà du critique prompt)	(beyond prompt critical)
 (au-dessus du mur de Coulomb).	(above the Coulomb wall).
 (col au contact)	(neck at contact)
 (dernier électron hors coupe : orbitale occupée visible) · bleu ψ > 0 · orange ψ < 0	(last electron outside the slice: visible occupied orbital) · blue ψ > 0 · orange ψ < 0
@@ -26,6 +28,7 @@
 (impulsions opposées)	(opposite momenta)
 (masses AME2020).	(AME2020 masses).
 (moins d'1 s réelle à cette vitesse)	(less than 1 real s at this speed)
+(non convergé)	(not converged)
 (négatif : ils s'opposent)	(negative: they oppose each other)
 (plein centre)	(dead centre)
 (probabilité de ce tir :	(probability of this shot:
@@ -34,12 +37,14 @@
 (repos du Δ)	(Δ rest frame)
 (résultat de l'assemblage précédent)	(result of the previous assembly)
 (selon son isotope), parcouru de repères mobiles suivant E total ; le champ des spins et des charges en mouvement	(by isotope), crossed by moving markers that follow the total E; the field of the spins and of the moving charges
+(sphère nue comprimée)	(compressed bare sphere)
 (système dinucléaire, chauffé de	(dinuclear system, heated by
 (trop long à cette vitesse : accélère)	(too long at this speed: speed up)
 (un proton posé ici)	(a proton placed here)
 (une configuration de l'état |J, M = J⟩, sans moment orbital : les projections ±½ s'ajoutent)	(one configuration of the state |J, M = J⟩, with no orbital momentum: the ±½ projections add up)
 (vide)	(empty)
 (voie suivie dans %.1f %% des cas)	(path taken in %.1f %% of cases)
+(voir Méthode & validation) ; les géométries et les forces sont fiables.	(see Method & validation); geometries and forces are reliable.
 (vu	(seen
 (ν emporte	(ν carries away
 (√(m_i/m_e) fois plus vite)	(√(m_i/m_e) times faster)
@@ -124,11 +129,16 @@
 ; un grand angle demande un photon dur, de longueur d'onde λ = ħc/Q =	; a large angle needs a hard photon, with wavelength λ = ħc/Q =
 > 118 : pas de noyau composé	> 118: no compound nucleus
 A parmi les isotopes stables de Z ?	Is A among the stable isotopes of Z?
+acide laurique	lauric acid
+agrégat d'or	gold cluster
 AME / Mendeleev : valeur evaluee ; statut mesure/extrapolation non fourni	AME / Mendeleev: evaluated value; measured/extrapolated status not given
 APPROCHE	APPROACH
 APPROCHE · L'ÉLAN DEVIENT RÉPULSION	APPROACH · MOMENTUM BECOMES REPULSION
+arcs : champ du noyau vers ses liaisons, dévié par son dipôle	arcs: field from the nucleus to its bonds, bent by its dipole
+Arrêt sur le dernier état valide : au pas suivant, le cycle auto-cohérent n'avait plus d'état sensé (une charge hors de toute borne, malgré le confinement des anions à −2,5 e). Refroidissez, relaxez ou déplacez un atome.	Stopped on the last valid state: at the next step, the self-consistent cycle no longer had a sensible state (a charge beyond any bound, despite the anion confinement at −2.5 e). Cool down, relax or move an atom.
 AUCUN NOYAU NOUVEAU	NO NEW NUCLEUS
 Ac porte déjà une charge négative : il repousse l'électron	Ac already carries a negative charge: it repels the electron
+Afficher	Show
 Ag porte déjà une charge négative : il repousse l'électron	Ag already carries a negative charge: it repels the electron
 Ajoute des protons et des neutrons.	Add protons and neutrons.
 Ajoute un proton ou un neutron.	Add a proton or a neutron.
@@ -137,6 +147,8 @@ Ajouter des protons ou choisir un élément dans la table.	Add protons or choose
 Al porte déjà une charge négative : il repousse l'électron	Al already carries a negative charge: it repels the electron
 Am porte déjà une charge négative : il repousse l'électron	Am already carries a negative charge: it repels the electron
 Analyse pas à pas : le temps s'arrêtera après chaque événement	Step-by-step analysis: time will stop after each event
+Angle H–C–H	H–C–H angle
+Angle H–O–H	H–O–H angle
 Angle de %.0f° fixé au curseur : on regarde ce qui arrive aux tirs qui dévient là.	Angle of %.0f° set by the slider: we look at what happens to the shots deflected there.
 Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°	Angle drawn by the physics from dσ/dΩ: half of the shots are deflected by less than %.0f°
 Angle tiré par la physique selon dσ/dΩ : la moitié des tirs dévient de moins de %.0f°,	Angle drawn by the physics from dσ/dΩ: half of the shots are deflected by less than %.0f°,
@@ -155,6 +167,7 @@ Asset Genesis absent :	Genesis asset missing:
 Astuce : dans l'onglet Lumière, un clic sur une raie accorde le laser exactement.	Tip: in the Light tab, clicking a spectral line tunes the laser to it exactly.
 Asymétrie	Asymmetry
 At porte déjà une charge négative : il repousse l'électron	At already carries a negative charge: it repels the electron
+Atome	Atom
 Attrape un noyau, rapproche-le ou éloigne-le, puis lâche-le : la vraie force quantique	Grab a nucleus, bring it closer or move it away, then let go: the real quantum force
 Au	Au
 Au plus près	Close up
@@ -164,6 +177,7 @@ Au sommet du mur de Coulomb (	At the top of the Coulomb wall (
 Au-delà du fer (Z = 26), souder deux noyaux coûte de l'énergie au lieu d'en libérer : le noyau formé est une transmutation, qui fissionne souvent. La capture est retenue, sa vraie probabilité reste affichée	Beyond iron (Z = 26), welding two nuclei costs energy instead of releasing it: the nucleus formed is a transmutation, which often fissions. The capture is kept, its true probability stays displayed
 Au-delà du point critique du modèle	Beyond the model's critical point
 Au-delà du point critique du modèle (	Beyond the model's critical point (
+Aucun	None
 Aucun atome isolé ne retient deux électrons de plus : les dianions atomiques n'existent pas.	No isolated atom holds two extra electrons: atomic dianions do not exist.
 Aucun nouvel element annonce.	No new element announced.
 Aucun noyau	No nucleus
@@ -178,6 +192,11 @@ Aucun événement de cette catégorie.	No event in this category.
 Aucune charge visible : pas de champ électrique ici.	No visible charge: no electric field here.
 Aucune couleur n'est échangée : les deux sacs échangent seulement de l'impulsion (−t =	No colour is exchanged: the two bags only exchange momentum (−t =
 Aucune couleur n'est échangée : seulement de l'impulsion (l'échange d'un « poméron », un état de gluons sans couleur nette).	No colour is exchanged: only momentum (the exchange of a « pomeron », a state of gluons with no net colour).
+Aucune fission : chaque neutron est diffusé, absorbé ou s'échappe, et rien ne le remplace.	No fission: every neutron is scattered, absorbed or escapes, and nothing replaces it.
+Aucune fission : la matière diffuse ou absorbe les neutrons, sans jamais en produire.	No fission: the matter scatters or absorbs the neutrons, and never makes any.
+Aucune fission spontanée tabulée : il faut un neutron extérieur pour amorcer la chaîne.	No tabulated spontaneous fission: an outside neutron is needed to start the chain.
+Aucune masse, aussi grande soit-elle, ne diverge.	No mass, however large, diverges.
+aucune paire partagée : deux ions	no shared pair: two ions
 Aucune raie mesurée de Ac dans le simulateur	No measured line of Ac in the simulator
 Aucune raie mesurée de Ag dans le simulateur	No measured line of Ag in the simulator
 Aucune raie mesurée de Al dans le simulateur	No measured line of Al in the simulator
@@ -297,13 +316,20 @@ Aucune raie mesurée de Yb dans le simulateur	No measured line of Yb in the simu
 Aucune raie mesurée de Zn dans le simulateur	No measured line of Zn in the simulator
 Aucune raie mesurée de Zr dans le simulateur	No measured line of Zr in the simulator
 Aucune réaction : aucune énergie créée.	No reaction: no energy created.
+Aucune voie entre noyaux pesés.	No path between weighed nuclei.
 Autre événement	Another event
+Autres	Others
+Autres matériaux…	Other materials…
+Au₆ · agrégat d'or	Au₆ · gold cluster
 B porte déjà une charge négative : il repousse l'électron	B already carries a negative charge: it repels the electron
+BAC À SABLE	SANDBOX
 BILAN D'ÉNERGIE DANS LE TEMPS	ENERGY BALANCE OVER TIME
 BILAN DE MASSE	MASS BALANCE
+BILAN DES MASSES	MASS BALANCE
 BILAN · ISSUE NON RÉSOLUE	REPORT · UNRESOLVED OUTCOME
 BILAN · PAS DE FUSION	REPORT · NO FUSION
 Ba porte déjà une charge négative : il repousse l'électron	Ba already carries a negative charge: it repels the electron
+Bac à sable	Sandbox
 Barrière :	Barrier:
 Barrière : —	Barrier: —
 Barrière de Coulomb	Coulomb barrier
@@ -313,6 +339,8 @@ Bh porte déjà une charge négative : il repousse l'électron	Bh already carrie
 Bi porte déjà une charge négative : il repousse l'électron	Bi already carries a negative charge: it repels the electron
 Bilan : tout est conservé	Balance: everything is conserved
 Bilan de la collision	Collision report
+Bilan des masses du noyau…	Mass balance of the nucleus…
+Bilan des masses en cours…	Mass balance in progress…
 Bk porte déjà une charge négative : il repousse l'électron	Bk already carries a negative charge: it repels the electron
 Blanc ✓ — neutre en couleur : l'interaction forte peut les lier.	White ✓ — colour neutral: the strong interaction can bind them.
 Bohr	Bohr
@@ -320,6 +348,8 @@ Br porte déjà une charge négative : il repousse l'électron	Br already carrie
 Brouillard : |ψ|², la probabilité de présence des électrons, intégrée le long du regard.	Fog: |ψ|², the probability of finding the electrons, integrated along the line of sight.
 C porte déjà une charge négative : il repousse l'électron	C already carries a negative charge: it repels the electron
 C'est moi, Genesis ! Ajoute un proton, tire un photon : je te dirai ce que le moteur a calculé.	It's me, Genesis! Add a proton, fire a photon: I'll tell you what the engine computed.
+caféine	caffeine
+CALCUL DU TRANSPORT…	COMPUTING TRANSPORT…
 CAPTURE D'UN ÉLECTRON	ELECTRON CAPTURE
 CARTE · L'ÉLÉMENT CRÉÉ ET CE QUI EN SORT	MAP · THE ELEMENT CREATED AND WHAT COMES OUT OF IT
 CE	EC
@@ -334,22 +364,37 @@ CONTACT · AUCUN ÉTAT LIÉ	CONTACT · NO BOUND STATE
 CONTACT · LES DEUX NOYAUX TOURNENT ENSEMBLE	CONTACT · THE TWO NUCLEI ROTATE TOGETHER
 COULEUR = AGITATION DE L'ATOME (clic : état)	COLOUR = MOTION OF THE ATOM (click: state)
 COULEUR = ÉTAT MESURÉ (clic : température)	COLOUR = MEASURED STATE (click: temperature)
+bleu : force nulle · blanc : traction · orange : compression	blue: no force · white: tension · orange: compression
+COURBE D'ASTON	ASTON CURVE
+CRITIQUE	CRITICAL
+CRITIQUE PROMPT	PROMPT CRITICAL
 Ca porte déjà une charge négative : il repousse l'électron	Ca already carries a negative charge: it repels the electron
+Calcul de la hessienne…	Computing the Hessian…
 Calcul des trajectoires et des voies de sortie…	Computing the trajectories and the exit channels…
+Calcul du transport des neutrons…	Computing neutron transport…
 Calcul quantique en cours	Quantum calculation in progress
 Calculer la collision  →	Compute the collision  →
+Calculer les vibrations	Compute the vibrations
 Calculer une nouvelle collision à chaque fin	Compute a new collision at each end
+Calculé ↔ mesuré	Computed ↔ measured
 Capture effective	Effective capture
 Capture effective Woods-Saxon / WKB ; sigma par ondes partielles Hill-Wheeler	Effective Woods-Saxon / WKB capture; sigma from Hill-Wheeler partial waves
 Capture estimee, non section mesuree de fusion.	Estimated capture, not a measured fusion cross section.
 Capture et produits estimés : potentiel propre au couple, modèle Woods–Saxon / WKB.	Capture and products estimated: potential specific to the pair, Woods–Saxon / WKB model.
 Carte	Map
+Cascade et excursion en calcul…	Computing the cascade and the excursion…
+Cascade et excursion…	Cascade and excursion…
+Cascade…	Cascade…
 Cd porte déjà une charge négative : il repousse l'électron	Cd already carries a negative charge: it repels the electron
 Ce	Ce
 Ce noyau n'a jamais été pesé : pas de masse mesurée.	This nucleus has never been weighed: no measured mass.
 Ce noyau ne fissionne pas avec un neutron lent (barrière de fission trop haute).	This nucleus does not fission with a slow neutron (fission barrier too high).
 Ce porte déjà une charge négative : il repousse l'électron	Ce already carries a negative charge: it repels the electron
+Ce que chaque paire d'atomes se fait, calculé (décomposition exacte des forces par paires) : grains cyan	What each pair of atoms does to the other, computed (exact pairwise decomposition of the forces): cyan grains
+Ce que chaque paire d'atomes se fait, calculé (décomposition exacte des forces par paires) : grains cyan des électrons partagés dans les liaisons, filet violet quand deux atomes s'attirent à distance, orange quand ils se repoussent	What each pair of atoms does to the other, computed (exact pairwise decomposition of the forces): cyan grains of shared electrons in the bonds, a violet stream when two atoms attract at a distance, orange when they repel
+Ce que font les électrons : la bande (orbitales qui se recouvrent), l'électrostatique, la coordination	What the electrons do: the band term (overlapping orbitals), electrostatics, coordination
 Ce que le boson peut voir	What the boson can see
+Ce que veut dire chaque signe de la scène	What each sign in the scene means
 Cet événement : inélastique profond.	This event: deep inelastic.
 Cet événement : quasi-élastique.	This event: quasi-elastic.
 Cet événement : résonances (dualité).	This event: resonances (duality).
@@ -365,23 +410,37 @@ Champ externe B	External field B
 Champ électrique : un halo par noyau — la densité d'énergie de son propre champ, ε₀|E_i|²/2, sur quatre décades sous sa	Electric field: one halo per nucleus — the energy density of its own field, ε₀|E_i|²/2, over four decades below the
 Chance de passer	Chance of getting through
 Chaque anneau est 10 fois plus loin du noyau que le précédent.	Each ring is 10 times farther from the nucleus than the previous one.
+Chaque atome y apporte les électrons qu'il garde (charge de Mulliken) :	Each atom brings to it the electrons it keeps (Mulliken charge):
 Chaque fm de corde coûte σ ≈ 0,9 GeV : un quark ne peut jamais sortir seul.	Each fm of string costs σ ≈ 0.9 GeV: a quark can never come out alone.
 Chaque fm de corde coûte σ ≈ 0,9 GeV.	Each fm of string costs σ ≈ 0.9 GeV.
+Chaque génération compte moins de neutrons que la précédente : la chaîne s'éteint.	Each generation has fewer neutrons than the one before: the chain dies out.
 Chaque trait : un corps éjecté, dans sa direction de vol (plan du choc) ; plus il est long, plus il emporte	Each line: an ejected body, in its direction of flight (collision plane); the longer it is, the more energy it carries
 Chaque événement est tiré au hasard selon ces probabilités : deux essais ne racontent pas la même histoire.	Each event is drawn at random from these probabilities: two runs do not tell the same story.
+Charge totale	Total charge
 Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.	Loading the data and the simulation models. The connection will open automatically.
 Chargement du moteur Python embarqué…	Loading the built-in Python engine…
+Charges de Mulliken : δ− là où les électrons s'accumulent, δ+ là où ils manquent	Mulliken charges: δ− where electrons pile up, δ+ where they are missing
+Charges de Mulliken : δ− là où les électrons s'accumulent, δ+ là où ils manquent (la couleur des	Mulliken charges: δ− where electrons pile up, δ+ where they are missing (the colour of the
+Charges de Mulliken : δ− là où les électrons s'accumulent, δ+ là où ils manquent (la couleur des bulles les montre déjà)	Mulliken charges: δ− where electrons pile up, δ+ where they are missing (the colour of the bubbles already shows them)
+Charges de Mulliken : δ− là où les électrons s'accumulent, δ+ là où ils manquent (la couleur des surfaces les montre déjà)	Mulliken charges: δ− where electrons pile up, δ+ where they are missing (the colour of the surfaces already shows them)
 Chauffer dans une flamme	Heat in a flame
 Choisi selon sa charge au carré (u : 4/9, d : 1/9) et sa part d'impulsion x =	Chosen by its squared charge (u: 4/9, d: 1/9) and its momentum fraction x =
 Choisir l'atome	Choose the atom
+Choisir un noyau	Choose a nucleus
+Choisir un noyau à gauche.	Choose a nucleus on the left.
 Choisir un élément	Choose an element
+Choisir un élément, puis cliquer sur un atome pour l'y attacher (ou dans le vide).	Pick an element, then click an atom to attach it there (or click empty space).
 Choisis le projectile, règle le faisceau et l'angle, puis lance-le.	Choose the projectile, set the beam and the angle, then fire.
 Choisis un moule (baryon, méson ou libre), glisse des quarks dans ses emplacements, fais du blanc, puis « Tester la	Choose a mould (baryon, meson or free), drag quarks into its slots, make white, then « Test the
 Cinq constituants au plus. Double clic sur un quark pour le retirer.	Five constituents at most. Double-click a quark to remove it.
 Cinétique       %+8.3f MeV	Kinetic         %+8.3f MeV
+Cinétique ponctuelle à neutrons retardés	Point kinetics with delayed neutrons
+Cinétique ponctuelle à neutrons retardés ;	Point kinetics with delayed neutrons;
 Cl porte déjà une charge négative : il repousse l'électron	Cl already carries a negative charge: it repels the electron
 Clic : avancer le temps jusqu'à	Click: move time forward to
+Clic dans la sphère : un neutron	Click in the sphere: a neutron
 Clique un élément pour le construire (la table se referme ; Échap pour fermer).	Click an element to build it (the table closes; Esc to close).
+Cliquer sur un atome pour lire sa charge et les forces qu'il subit.	Click an atom to read its charge and the forces acting on it.
 Cm porte déjà une charge négative : il repousse l'électron	Cm already carries a negative charge: it repels the electron
 Cn porte déjà une charge négative : il repousse l'électron	Cn already carries a negative charge: it repels the electron
 Co porte déjà une charge négative : il repousse l'électron	Co already carries a negative charge: it repels the electron
@@ -391,6 +450,7 @@ Collisions de noyaux entièrement ionisés, et le plasma où elles ont lieu	Coll
 Complet	Full
 Comprendre	Understand
 Comprendre ce résultat →	Understand this result →
+Compression	Compression
 Compression du champ	Field compression
 Configuration électronique	Electron configuration
 Connecté · règles et données servies par le moteur	Connected · rules and data supplied by the engine
@@ -424,24 +484,38 @@ Cœur d'étoile	Star core
 Cœur d'étoile ·	Star core ·
 DENSITÉ	DENSITY
 DENSITÉ ÉLECTRONIQUE ρ, échelle log (clic : Δρ)	ELECTRON DENSITY ρ, log scale (click: Δρ)
+DESTIN DES NEUTRONS	FATE OF THE NEUTRONS
+DEUX VOIES	TWO PATHS
+Dans chaque bulle, des arcs partis du noyau, captés par les liaisons et penchés par la déformation du	In each bubble, arcs leaving the nucleus, caught by the bonds and bent by the deformation of the
+Dans chaque bulle, des arcs partis du noyau, captés par les liaisons et penchés par la déformation du nuage de l'atome (son dipôle calculé)	In each bubble, arcs leaving the nucleus, caught by the bonds and bent by the deformation of the atom's cloud (its computed dipole)
+Dans chaque sphère, des filaments partis du noyau qui s'incurvent selon la pente de la densité : vers	In each sphere, filaments leaving the nucleus that bend along the slope of the density: towards
+Dans chaque sphère, des filaments partis du noyau qui s'incurvent selon la pente de la densité : vers les liaisons et les paires libres	In each sphere, filaments leaving the nucleus that bend along the slope of the density: towards the bonds and the lone pairs
 Dans le moule méson, l'emplacement « + » reçoit la matière, « − » l'antimatière ; le bouton	In the meson mould, the « + » slot takes matter, the « − » slot antimatter; the
 Db porte déjà une charge négative : il repousse l'électron	Db already carries a negative charge: it repels the electron
 De côté	Side
 De face (axe z vers le haut)	Front (z axis up)
 Densité	Density
+Des molécules dans une sphère : chauffer ou lancer une	Molecules in a sphere: heat them or fire a
+Des molécules dans une sphère : chauffer ou lancer une étincelle pour franchir la barrière d'activation.	Molecules in a sphere: heat them or fire a spark to cross the activation barrier.
 Desexcitation statistique : evaporation de Weisskopf (n, p, d, t, He3, alpha), gamma, fission de Bohr-Wheeler (partage a densite de charge constante, energie cinetique de Viola) ; les fragments evaporent a leur tour.	Statistical de-excitation: Weisskopf evaporation (n, p, d, t, He3, alpha), gamma, Bohr-Wheeler fission (split at constant charge density, Viola kinetic energy); the fragments evaporate in turn.
 Deux cordes se tendent	Two strings stretch
 Deux corps : impulsions égales et opposées — le plus léger	Two bodies: equal and opposite momenta — the lighter one
+Deux mondes : le tableau de droite les sépare.	Two worlds: the board on the right keeps them apart.
 Deux noyaux nus, à la même échelle. Autour de chacun, son champ électrique : un halo à sa couleur	Two bare nuclei, at the same scale. Around each, its electric field: a halo in its colour
 Deux quarks identiques de même couleur : le principe d'exclusion de Pauli l'interdit (la fonction d'onde de couleur doit être antisymétrique).	Two identical quarks of the same colour: the Pauli exclusion principle forbids it (the colour wave function must be antisymmetric).
 Diffraction : ils se frôlent	Diffraction: they brush past each other
 Diffusion dans ce modèle	Scattering in this model
 Distances comprimées (échelle logarithmique) : la sonde ne mesure ici que les corps.	Compressed distances (logarithmic scale): here the probe only measures the bodies.
+Dix neutrons d'amorçage à la fois, comme une source	Ten starter neutrons at once, like a source
 Ds porte déjà une charge négative : il repousse l'électron	Ds already carries a negative charge: it repels the electron
+du mélange naturel	of the natural mix
 Durée d'une fluctuation ħ/Q	Lifetime of a fluctuation ħ/Q
 Durée de vie de	Lifetime of
 Durée de vie τ = ħ/Γ ≈ 1,7 fm/c, soit 5·10⁻²⁴ s.	Lifetime τ = ħ/Γ ≈ 1.7 fm/c, i.e. 5·10⁻²⁴ s.
 Dy porte déjà une charge négative : il repousse l'électron	Dy already carries a negative charge: it repels the electron
+Dynamique libre : l'énergie totale se conserve	Free dynamics: the total energy is conserved
+Dynamique moléculaire à température fixée (ensemble NVT, thermostat CSVR) : la molécule vibre, tourne, et peut réagir	Molecular dynamics at a set temperature (NVT ensemble, CSVR thermostat): the molecule vibrates, rotates, and can react
+Dynamique sans thermostat (ensemble NVE) : l'énergie totale (potentielle + cinétique) se conserve	Dynamics without a thermostat (NVE ensemble): the total energy (potential + kinetic) is conserved
 DÉSEXCITATION	DE-EXCITATION
 DÉSEXCITATION · ÉMISSIONS CALCULÉES	DE-EXCITATION · COMPUTED EMISSIONS
 DÉSINTÉGRATION	DECAY
@@ -451,6 +525,7 @@ Démarrage impossible	Could not start
 Démarrage…	Starting…
 Déplacer	Pan
 Désexcitation : Weisskopf, γ, fission de Bohr–Wheeler ; quasi-fission au-delà de Z = 118.	De-excitation: Weisskopf, γ, Bohr–Wheeler fission; quasi-fission beyond Z = 118.
+Détails de l'atome	Atom details
 Dévié : sa visée était décalée de	Deflected: its aim was offset by
 E = Δm·c² : la masse disparue	E = Δm·c²: the missing mass
 E = Δm·c² : la masse disparue (	E = Δm·c²: the missing mass (
@@ -460,6 +535,8 @@ E total (mobilité ∝ √E) et sont entraînés par leurs charges (part de chac
 EFFET PHOTOÉLECTRIQUE	PHOTOELECTRIC EFFECT
 EFFET TUNNEL · L'ONDE TRAVERSE LE MUR	QUANTUM TUNNELLING · THE WAVE CROSSES THE WALL
 EN	EN
+Entre atomes qui ne partagent pas de paire d'électrons (au moins quatre liaisons d'écart, deux molécules, ou deux ions) : des points qui glissent vers le milieu quand la force calculée les attire ; quand elle les repousse, des points orange qui partent de là où leurs nuages se touchent et s'écartent vers les deux atomes, d'autant plus vite et plus vifs que la force est grande	Between atoms that share no electron pair (at least four bonds apart, two molecules, or two ions): dots sliding toward the middle when the computed force pulls them together; when it pushes them apart, orange dots that leave the point where their clouds touch and move out toward both atoms, faster and brighter as the force grows
+ESSAYER	TRY
 Effet tunnel : il traverse le bouclier sans avoir l'énergie de le franchir	Quantum tunnelling: it crosses the shield without having the energy to get over it
 Elle casse encore	It breaks again
 Elle suit	It follows
@@ -475,6 +552,7 @@ En vrai, le nuage (≈	In reality, the cloud (≈
 En émettant un	By emitting a
 En émettant un photon virtuel	By emitting a virtual photon
 En émettant un photon virtuel,	By emitting a virtual photon,
+Encore un neutron, ou une rafale.	Another neutron, or a burst.
 Entre les deux noyaux, le potentiel combiné : l'énergie qu'aurait une charge +e posée ici. Leurs	Between the two nuclei, the combined potential: the energy a charge +e placed here would have. Their
 Entrée : élan	In: momentum
 Entrée : élan du choc	In: momentum of the collision
@@ -483,6 +561,8 @@ Erreur max : %.2e MeV · calcul Verlet, %d images	Max error: %.2e MeV · Verlet 
 Erreur relative d'énergie	Relative energy error
 Erreur relative d'énergie :	Relative energy error:
 Es porte déjà une charge négative : il repousse l'électron	Es already carries a negative charge: it repels the electron
+Espèces	Species
+Espèces présentes	Species present
 Essaie	Try
 Essaie :	Try:
 Essaie : dans l'onglet Lumière, clique une raie marquée ▲. Ce sont les énergies que cet atome accepte.	Try: in the Light tab, click a line marked ▲. Those are the energies this atom accepts.
@@ -495,18 +575,26 @@ Et maintenant : l'électron est monté d'un étage. Il n'y restera pas : il va r
 Et maintenant : l'électron va redescendre en émettant de la lumière. C'est ce qui colore les flammes.	And now: the electron will come back down by emitting light. That is what colours flames.
 Eu porte déjà une charge négative : il repousse l'électron	Eu already carries a negative charge: it repels the electron
 Exact pour un électron seul ; approché au-delà.	Exact for a single electron; approximate beyond that.
+Excursion…	Excursion…
 E₁ + E₂ = 0 : aucune force sur une charge test	E₁ + E₂ = 0: no force on a test charge
 F effective par paire · cyan : attraction · ambre : répulsion · épaisseur ∝ |F|	Effective F per pair · cyan: attraction · amber: repulsion · thickness ∝ |F|
 F porte déjà une charge négative : il repousse l'électron	F already carries a negative charge: it repels the electron
+FISSION	FISSION
+FISSION, FUSION, RADIOACTIVITÉ : CE QUE RAPPORTE UN KILOGRAMME	FISSION, FUSION, RADIOACTIVITY: WHAT ONE KILOGRAM YIELDS
 FORCES DU NOYAU · énergie de liaison	NUCLEAR FORCES · binding energy
 FORCES ENTRE LES DEUX NOYAUX	FORCES BETWEEN THE TWO NUCLEI
+FUSION	FUSION
 FUSION · LA FORCE FORTE SOUDE LES DEUX NOYAUX	FUSION · THE STRONG FORCE WELDS THE TWO NUCLEI
 FUSION · LES DEUX FORMES SE FONDENT EN UNE	FUSION · THE TWO SHAPES MERGE INTO ONE
+FUSION →  les légers gagnent à s'unir	FUSION →  light nuclei gain by joining
 Faisceau	Beam
 Faisceau : énergie fixe, comme dans un accélérateur.	Beam: fixed energy, as in an accelerator.
 Fe porte déjà une charge négative : il repousse l'électron	Fe already carries a negative charge: it repels the electron
+Fer 56	Iron 56
 Fermer	Close
 Fermer le bilan	Close the report
+Fission et réaction en chaîne : neutrons, σ_f, k_eff.	Fission and chain reaction: neutrons, σ_f, k_eff.
+Fission spontanée présente, mais sa multiplicité n'est pas tabulée ici.	Spontaneous fission is present, but its multiplicity is not tabulated here.
 Fl porte déjà une charge négative : il repousse l'électron	Fl already carries a negative charge: it repels the electron
 Flèches = spin de chaque électron : ↑ +½ (jaune), ↓ −½ (rose).	Arrows = spin of each electron: ↑ +½ (yellow), ↓ −½ (pink).
 Fm porte déjà une charge négative : il repousse l'électron	Fm already carries a negative charge: it repels the electron
@@ -514,8 +602,14 @@ Forces : somme vectorielle de chaque paire	Forces: vector sum of each pair
 Formation en Breit–Wigner : le pic est à 190 mb pour π⁺p.	Breit–Wigner formation: the peak is at 190 mb for π⁺p.
 Fr porte déjà une charge négative : il repousse l'électron	Fr already carries a negative charge: it repels the electron
 Français	Français
+Fusion : plasma chaud, barrière de Coulomb, critère de Lawson.	Fusion: hot plasma, Coulomb barrier, Lawson criterion.
 GAZ D'ATOMES	GAS OF ATOMS
 GAZ PARTIELLEMENT IONISÉ	PARTIALLY IONISED GAS
+GFN1-xTB (calculé ici)	GFN1-xTB (computed here)
+GFN1-xTB n'est paramétré que de l'hydrogène au radon (Z = 1 à 86) ; au-delà, aucun calcul n'est possible.	GFN1-xTB is parametrized only from hydrogen to radon (Z = 1 to 86); beyond, no calculation is possible.
+GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés	GFN1-xTB overestimates binding energies relative to isolated atoms
+GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés (voir Méthode & validation) ; les géométries et les forces sont fiables.	GFN1-xTB overestimates binding energies relative to isolated atoms (see Method & validation); geometries and forces are reliable.
+glycérol	glycerol
 GOUTTE QUANTIQUE · vibrations et pions	QUANTUM DROP · vibrations and pions
 Ga porte déjà une charge négative : il repousse l'électron	Ga already carries a negative charge: it repels the electron
 Gaz : presque seul.	Gas: almost alone.
@@ -523,6 +617,8 @@ Gd porte déjà une charge négative : il repousse l'électron	Gd already carrie
 Ge porte déjà une charge négative : il repousse l'électron	Ge already carries a negative charge: it repels the electron
 Genesis	Genesis
 Genesis - Choisir le partenaire de la molécule	Genesis - Choose the molecule's partner
+Genesis - Choisir un noyau pour le bac à sable	Genesis - Choose a nucleus for the sandbox
+Genesis - Choisir un élément pour l'établi moléculaire	Genesis - Choose an element for the molecular workbench
 Genesis - Table périodique	Genesis - Periodic table
 Genesis est gratuit. Une étoile sur GitHub, un message ou un passage sur r/gemmie l'aide à grandir.	Genesis is free. A star on GitHub, a message or a visit to r/gemmie helps it grow.
 Genesis explique chaque événement avec des mots simples	Genesis explains each event in plain words
@@ -535,11 +631,14 @@ Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome)
 Glisser : tourner la boîte · molette : zoom (vers l'avant : retour à l'atome) · poignée ↔ :	Drag: rotate the box · wheel: zoom (forwards: back to the atom) · handle ↔:
 Glisser : tourner · clic droit ou Maj : déplacer · double-clic : centrer et approcher.	Drag: rotate · right-click or Shift: pan · double-click: centre and zoom in.
 Gluons visibles (attendus	Visible gluons (expected
+grains : la paire, tirée de sa densité le long de la liaison	grains: the pair, drawn from its density along the bond
+Graphite : glisser sur la sphère	Graphite: drag onto the sphere
 Gravité	Gravity
 Gros disques : quarks de valence (le proton en a toujours trois). Étincelles colorées : quarks de mer	Big discs: valence quarks (the proton always has three). Coloured sparks: sea quarks
 Gros disques : quarks de valence (le proton en a toujours trois). Étincelles colorées : quarks de mer,	Big discs: valence quarks (the proton always has three). Coloured sparks: sea quarks,
 H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og	H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og
 H porte déjà une charge négative : il repousse l'électron	H already carries a negative charge: it repels the electron
+halo : densité projetée, bord 0,3 e/Å², teinte des charges	halo: projected density, edge 0.3 e/Å², tinted by charge
 HALO DE	HALO OF
 Hadrons formés : neutron + π⁺.	Hadrons formed: neutron + π⁺.
 Hadrons formés : proton + π⁰.	Hadrons formed: proton + π⁰.
@@ -557,6 +656,7 @@ Hs porte déjà une charge négative : il repousse l'électron	Hs already carrie
 I porte déjà une charge négative : il repousse l'électron	I already carries a negative charge: it repels the electron
 ILS REPARTENT	THEY FLY APART
 IMPULSION DU NUCLÉON	MOMENTUM OF THE NUCLEON
+INERTE	INERT
 INSTABLE  ->  CE	UNSTABLE  ->  EC
 INSTABLE  ->  beta+ / CE	UNSTABLE  ->  beta+ / EC
 INSTABLE : désintégration attendue CE.	UNSTABLE: EC decay expected.
@@ -604,6 +704,8 @@ Isotopes stables observés dans la nature.	Stable isotopes observed in nature.
 J'ai fait avancer le temps jusqu'au prochain événement	I moved time forward to the next event
 J'ai fait avancer le temps jusqu'au prochain événement (	I moved time forward to the next event (
 J, pris sur l'élan du choc — rien à gagner en énergie.	J, taken from the momentum of the collision — no energy to gain.
+JAUGE Q = Δm·c²	Q GAUGE = Δm·c²
+jours	days
 K (consigne)	K (setpoint)
 K (modèle	K (model
 K (modèle :	K (model:
@@ -619,9 +721,11 @@ L'atome a avalé ton photon	The atom swallowed your photon
 L'atome a capturé un électron.	The atom captured an electron.
 L'atome n'a pas gardé cet électron.	The atom did not keep this electron.
 L'atome vient d'émettre de la lumière	The atom has just emitted light
+L'attraction de London (D3), faible et à longue portée	London attraction (D3), weak and long-ranged
 L'installateur est vérifié (SHA-256) avant d'être lancé ; Genesis se ferme pendant l'installation.	The installer is verified (SHA-256) before it runs; Genesis closes during the installation.
 L'onde : paquet de de Broglie et onde évanescente sous la barrière	The wave: de Broglie packet and evanescent wave under the barrier
 L'onde s'était enfoncée dans le mur, mais ce coup-ci elle n'est pas passée (probabilité	The wave had sunk into the wall, but this time it did not get through (probability
+L'ÉNERGIE D'UNE FISSION	THE ENERGY OF ONE FISSION
 L'élan du choc	The momentum of the collision
 L'élan du choc (	The momentum of the collision (
 L'électron est capturé : ion B⁻	The electron is captured: B⁻ ion
@@ -631,28 +735,38 @@ L'électron est capturé : ion W⁻	The electron is captured: W⁻ ion
 L'électron est repoussé	The electron is repelled
 L'électron excité retombera en ≈	The excited electron will fall back in ≈
 L'électron n'est pas retenu	The electron is not held
+L'énergie au fil du calcul s'affichera ici.	The energy along the calculation will appear here.
 L'énergie de la corde devient une paire	The energy of the string becomes a pair
 L'énergie gagnée en se liant part sous forme de lumière.	The energy gained by binding leaves as light.
 L'énergie gagnée par l'électron en se liant part en lumière.	The energy the electron gains by binding leaves as light.
 L'état excité est instable : la membrane vibre, prête à se scinder.	The excited state is unstable: the membrane vibrates, ready to split.
 L'état excité palpite, prêt à se scinder.	The excited state throbs, ready to split.
 LA CIBLE	THE TARGET
+LA DENSITÉ	THE DENSITY
 LA MER DE PARTONS	THE SEA OF PARTONS
+LA SPHÈRE	THE SPHERE
 LE CALCUL	THE CALCULATION
 LE CHOC	THE COLLISION
+Le cycle auto-cohérent n'a pas d'état sensé à cette géométrie (une charge hors de toute borne, malgré le confinement des anions à −2,5 e) : GFN1-xTB ne la décrit pas. Déplacez un atome ou retirez-le.	The self-consistent cycle has no sensible state at this geometry (a charge beyond any bound, despite the anion confinement at −2.5 e): GFN1-xTB does not describe it. Move an atom or remove it.
 LE DERNIER TIR	THE LAST SHOT
 LE GLUON	THE GLUON
 LE GOUFFRE DES ÉCHELLES · vue logarithmique	THE GULF OF SCALES · logarithmic view
+LE MATÉRIAU	THE MATERIAL
 LE MUR À FRANCHIR	THE WALL TO CROSS
+le mélange naturel : masse atomique standard	the natural mix: standard atomic weight
+Le même isotope pour tous les atomes de cet élément (D₂O : les deux H)	The same isotope for every atom of this element (D₂O: both H)
+LE NOYAU	THE NUCLEUS
 LE PLASMA AUTOUR	THE SURROUNDING PLASMA
 LE PLASMA · LAWSON	THE PLASMA · LAWSON
 LE PLUS RAPIDE	THE FASTEST
 LE PROJECTILE	THE PROJECTILE
+LE RÉFLECTEUR	THE REFLECTOR
 LE TIR	THE SHOT
 LECTURE DES GRANDEURS	READING THE QUANTITIES
 LES CAS POSSIBLES	THE POSSIBLE CASES
 LES DEUX NOYAUX	THE TWO NUCLEI
 LES FORMES SE FONDENT	THE SHAPES MERGE
+Les paires d'électrons partagées, localisées (Pipek–Mezey). Une paire sur deux atomes : un trait, éclat selon l'indice de Mayer, couleur selon la force interne le long de la liaison (bleu nulle, blanc traction, orange compression), grains tirés de la densité de la paire ; sa part π : deux lobes de part et d'autre, orientés comme sa densité. Une paire sur trois atomes ou plus (métaux, pont B–H–B) : une étoile de son barycentre vers ses atomes. Deux ions sans paire partagée (NaCl) : des pointillés.	The shared electron pairs, localized (Pipek–Mezey). A pair on two atoms: a line, as bright as the Mayer index, coloured by the internal force along the bond (blue none, white tension, orange compression), grains drawn from the pair's density; its π part: two lobes on either side, oriented like its density. A pair on three atoms or more (metals, B–H–B bridge): a star from its centroid to its atoms. Two ions with no shared pair (NaCl): dots.
 LIMITES DU MODÈLE	LIMITS OF THE MODEL
 LOIN DES NOYAUX	FAR FROM THE NUCLEI
 LOIS EN JEU	LAWS AT WORK
@@ -666,14 +780,22 @@ La charge entre au carré : un e⁺ a la même probabilité qu'un e⁻.	The char
 La charge entre au carré : un e⁻ a la même probabilité qu'un e⁺.	The charge enters squared: an e⁻ has the same probability as an e⁺.
 La charge entre au carré : un μ⁺ a la même probabilité qu'un e⁻.	The charge enters squared: a μ⁺ has the same probability as an e⁻.
 La charge entre au carré : un μ⁻ a la même probabilité qu'un e⁺.	The charge enters squared: a μ⁻ has the same probability as an e⁺.
+La chaîne s'éteint : les neutrons fuient ou sont capturés plus vite qu'ils ne naissent.	The chain dies out: neutrons leak or get captured faster than they are born.
+La chaîne tirée s'est éteinte.	The drawn chain died out.
 La connexion au moteur est coupée ; elle reprendra seule dès qu'il répondra.	The connection to the engine is lost; it will resume by itself as soon as the engine answers.
 La contraction de Lorentz du projectile n'est pas dessinée.	The Lorentz contraction of the projectile is not drawn.
+La convention des cartes de potentiel électrostatique : le potentiel exact de la molécule (noyaux et	The convention of electrostatic potential maps: the exact potential of the molecule (nuclei and
 La corde a cassé : σ·ΔL = %.0f MeV paie une paire %s%s̄ (%s MeV). Le quark arraché part avec	The string broke: σ·ΔL = %.0f MeV pays for a %s%s̄ pair (%s MeV). The struck quark leaves with
 La corde a donné σd en masse ; ce qui reste, Q = M − m₁ − m₂, devient le mouvement des deux morceaux : dos à dos à p* le long de la corde dans le repos du parent (plus le p_T de la paire, effet tunnel), puis emportés par son élan.	The string gave σd as mass; what remains, Q = M − m₁ − m₂, becomes the motion of the two pieces: back to back at p* along the string in the parent's rest frame (plus the pair's p_T, from tunnelling), then carried along by its momentum.
 La corde casse : le sac se divise	The string breaks: the bag splits
 La corde s'étire, le sac s'allonge	The string stretches, the bag elongates
 La corde se rompt	The string breaks
 La couche externe ne gagne rien à accueillir cet électron.	The outer shell gains nothing by taking in this electron.
+La densité électronique ρ = |Ψ|² des électrons de valence : les liaisons sont les ponts entre les noyaux	The electron density ρ = |Ψ|² of the valence electrons: bonds are the bridges between the nuclei
+La géométrie sort du calcul.	The geometry comes out of the calculation.
+La hessienne (dérivées secondes de l'énergie) par différences des forces	The Hessian (second derivatives of the energy) from differences of the forces
+La hessienne (dérivées secondes de l'énergie) par différences des forces :	The Hessian (second derivatives of the energy) from differences of the forces:
+La hessienne (dérivées secondes de l'énergie) par différences des forces : les fréquences propres et la forme de chaque mode	The Hessian (second derivatives of the energy) from differences of the forces: the eigenfrequencies and the shape of each mode
 La loi de l'instant, trois mesures et l'issue : la lecture simple	The law of the moment, three measurements and the outcome: the simple reading
 La masse du muon est dans la cinématique, pas dans le tenseur leptonique.	The muon mass is in the kinematics, not in the lepton tensor.
 La masse invariante est fixée par le lepton	The invariant mass is set by the lepton
@@ -681,15 +803,21 @@ La masse manquante est devenue l'énergie qui lie le noyau.	The missing mass has
 La membrane est bosselée par ce qui la heurte (∝ x) et tremble là où un événement a lieu. Positions illustratives.	The membrane is dented by what hits it (∝ x) and trembles where an event takes place. Positions are illustrative.
 La physique choisit l'angle selon dσ/dΩ (la plupart des électrons dévient à peine)	The physics chooses the angle from dσ/dΩ (most electrons are barely deflected)
 La physique choisit l'angle selon dσ/dΩ (la plupart des électrons dévient à peine) ;	The physics chooses the angle from dσ/dΩ (most electrons are barely deflected);
+La population croît, mais au rythme des neutrons retardés (secondes) : un réacteur se pilote ici.	The population grows, but at the pace of delayed neutrons (seconds): this is where a reactor is controlled.
 La porte déjà une charge négative : il repousse l'électron	La already carries a negative charge: it repels the electron
 La première fois, de quelques secondes à une minute ; ensuite, le résultat est gardé.	The first time, from a few seconds to a minute; after that, the result is kept.
 La règle a des exceptions mesurées (Cr, Cu, Pd, La, Gd…) : un ou deux électrons y changent de sous-couche (4s → 3d pour Cr et Cu) ; Genesis les applique.	The rule has measured exceptions (Cr, Cu, Pd, La, Gd…): one or two electrons change subshell there (4s → 3d for Cr and Cu); Genesis applies them.
 La répulsion entre protons exige des neutrons en renfort.	The repulsion between protons calls for neutrons as reinforcement.
+La somme de toutes les forces sur le noyau	The sum of every force on the nucleus
+La sphère s'est vaporisée puis dispersée	The sphere vaporised, then flew apart
 La vue zoome à mesure qu'ils se rapprochent (∝ r^0,35, figée dans la zone de freinage) jusqu'au contact ; une fois la	The view zooms in as they get closer (∝ r^0.35, frozen in the braking region) until contact; once the
 Laboratoire de fusion	Fusion laboratory
+Laboratoire de la réaction en chaîne	Chain-reaction laboratory
+Laboratoire moléculaire	Molecular laboratory
 Lance le moteur (docker compose up --build), la connexion reprendra seule.	Start the engine (docker compose up --build); the connection will resume by itself.
 Lance un projectile : le moteur calcule ici la probabilité de chaque cas.	Fire a projectile: the engine computes the probability of each case here.
 Lancer l'électron  →	Fire the electron  →
+Lawson : nτT minimal	Lawson: minimum nτT
 Le	The
 Le W a une portée de ħc/M_W = 0,0025 fm : pour interagir, il doit passer sur un quark. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm).	The W has a range of ħc/M_W = 0.0025 fm: to interact, it must pass over a quark. The sparks around the nucleon: its virtual pions (range ħ/m_π c = 1.4 fm).
 Le W change la saveur d'un quark et retourne son spin	The W changes the flavour of a quark and flips its spin
@@ -717,15 +845,20 @@ Le détacher dans sa propre fenêtre (second écran)	Detach it into its own wind
 Le faisceau	The beam
 Le fragment lourd reste ici, le léger s'éloigne.	The heavy fragment stays here, the light one moves away.
 Le gluon porte la couleur, mais c'est lui la colle : il est déjà dans le sac (ce sont les cordes).	The gluon carries colour, but it is the glue itself: it is already in the bag (it is the strings).
+Le modèle et ses données	The model and its data
 Le moteur Python ne répond pas après	The Python engine is not answering after
 Le moteur Python s'est arrêté (code	The Python engine stopped (code
+Le moteur calcule le transport des neutrons dans la sphère.	The engine is computing neutron transport in the sphere.
+Le moteur calcule le transport des neutrons…	The engine is computing neutron transport…
 Le moteur calcule les cas possibles et tire un événement…	The engine computes the possible cases and draws an event…
+Le moteur charge les sections efficaces évaluées (ENDF/B-VIII.0) et calcule le transport des neutrons.	The engine loads the evaluated cross sections (ENDF/B-VIII.0) and computes neutron transport.
 Le moteur envoie le protocole v	The engine sends protocol v
 Le moteur parle une ancienne version du contrat (v	The engine speaks an older version of the protocol (v
 Le moteur place les protons, neutrons et électrons et calcule leurs potentiels.	The engine is placing the protons, neutrons and electrons and computing their potentials.
 Le moteur prépare le nucléon : quarks, gluons, sections efficaces mesurées.	The engine is preparing the nucleon: quarks, gluons, measured cross sections.
 Le moteur prépare les noyaux, leurs champs et les données des réactions mesurées.	The engine is preparing the nuclei, their fields and the measured reaction data.
 Le moteur referme le laboratoire et reprend l'atome là où il était.	The engine closes the laboratory and picks the atom up where it left off.
+Le moteur résout les électrons de valence (GFN1-xTB) et relaxe la première molécule.	The engine solves the valence electrons (GFN1-xTB) and relaxes the first molecule.
 Le moteur tire un autre événement dans le même spectre…	The engine is drawing another event from the same spectrum…
 Le moteur tire un événement dans ce cas…	The engine is drawing an event in this case…
 Le moule est plein. Double clic sur un quark pour le retirer, ou change de moule.	The mould is full. Double-click a quark to remove it, or change mould.
@@ -738,6 +871,7 @@ Le noyau composé a vécu ≈	The compound nucleus lived ≈
 Le noyau est hors de la vallée de stabilité.	The nucleus is outside the valley of stability.
 Le noyau vient de se transformer	The nucleus has just transformed
 Le noyau vient de se transformer :	The nucleus has just transformed:
+Le nuage des électrons de valence de chaque molécule, vu en transparence ; son bord : là où le regard	The valence electron cloud of each molecule, seen through; its edge: where the line of sight
 Le nucléon au repos	The nucleon at rest
 Le nucléon reste lui-même : diffusion élastique (W = M)	The nucleon stays itself: elastic scattering (W = M)
 Le paramètre d'impact dessiné est illustratif.	The impact parameter drawn is illustrative.
@@ -762,9 +896,12 @@ Le proton est lui aussi un sac de quarks.	The proton is also a bag of quarks.
 Le proton n'est pas ajouté	The proton is not added
 Le proton part d'un bloc avec l'impulsion du W.	The proton leaves as one with the W's momentum.
 Le quark arraché tire la corde de gluons ; le sac s'étire en tube autour d'elle.	The struck quark pulls the gluon string; the bag stretches into a tube around it.
+Le ralenti : combien de nanosecondes simulées défilent par seconde	Slow motion: how many simulated nanoseconds go by per second
 Le recul	The recoil
+Le ressort de votre main, la paroi du réacteur	The spring of your hand, the reactor wall
 Le sac garde sa forme et ses trois quarks leur état ; il part avec l'impulsion du photon.	The bag keeps its shape and the three quarks keep their state; it leaves with the photon's momentum.
 Le seuil est connu, mais il ne suffit pas à prédire une probabilité.	The threshold is known, but it is not enough to predict a probability.
+Le symbole de chaque élément	The symbol of each element
 Le temps reprend	Time resumes
 Le temps s'écoule sans s'arrêter	Time flows without stopping
 Le téléchargement s'ouvre dans ton navigateur.	The download opens in your browser.
@@ -782,10 +919,17 @@ Les deux hadrons repartent intacts.	The two hadrons leave intact.
 Les deux noyaux se touchent ; le modèle n'a pas de voie de sortie pour ce noyau composé : l'issue reste non résolue.	The two nuclei touch; the model has no exit channel for this compound nucleus: the outcome stays unresolved.
 Les deux noyaux se touchent et tournent ensemble quelques 10⁻²¹ s : au-delà de Z = 118, aucun noyau composé ne tient	The two nuclei touch and rotate together for a few 10⁻²¹ s: beyond Z = 118, no compound nucleus holds together
 Les facteurs de forme mesurent à quel point la charge et l'aimantation sont étalées : la section efficace s'effondre quand Q² croît, parce que le proton intact ne peut pas absorber un coup sec.	The form factors measure how spread out the charge and the magnetisation are: the cross section collapses as Q² grows, because the intact proton cannot absorb a sharp blow.
+Les grandeurs calculées : k_eff, masse critique, destin des neutrons, N(t)	The computed quantities: k_eff, critical mass, fate of the neutrons, N(t)
 Les hadrons s'éloignent	The hadrons move apart
+Les lignes du champ des charges partielles, du + vers le −, en nombre proportionnel à la charge (Gauss)	The field lines of the partial charges, from + to −, their number proportional to the charge (Gauss)
 Les morceaux s'éloignent en tirant deux cordes de gluons ; les sacs s'étirent en tubes.	The pieces move apart pulling two gluon strings; the bags stretch into tubes.
+Les neutrons prompts suffisent à eux seuls : la population explose en nanosecondes.	Prompt neutrons are enough on their own: the population explodes in nanoseconds.
+Les noyaux (et leurs électrons de cœur) se repoussent à courte distance	Nuclei (and their core electrons) repel each other at short range
+Les noyaux descendent vers le minimum d'énergie le plus proche (FIRE) : une géométrie d'équilibre. Pour chercher une forme plus stable, chauffer au thermostat puis relaxer (recuit)	The nuclei slide down to the nearest energy minimum (FIRE): an equilibrium geometry. To look for a more stable shape, heat with the thermostat, then relax (annealing)
 Les nucléons ne sont pas figés : la surface vibre (Bohr–Mottelson), et chaque pion	The nucleons are not frozen: the surface vibrates (Bohr–Mottelson), and each virtual
 Les positions sont illustratives (les PDF n'en donnent pas) ; les taux de fusion sont fixés par l'équilibre détaillé.	Positions are illustrative (PDFs do not give them); fusion rates are fixed by detailed balance.
+Les produits pèsent plus que le noyau de départ : il faudrait fournir l'énergie manquante.	The products weigh more than the starting nucleus: the missing energy would have to be supplied.
+Les produits pèseraient plus que lui : aucune énergie à en tirer.	The products would weigh more than it: no energy to be had.
 Les sous-couches se remplissent par n + l croissant ; à n + l égal, la plus petite n d'abord.	Subshells fill in order of increasing n + l; for equal n + l, the smaller n comes first.
 Les voies (n,p) et (n,α), quand elles existent ici, pèsent quelques pour cent au plus : comptées comme capture.	The (n,p) and (n,α) paths, where they exist here, weigh a few percent at most: counted as capture.
 Les électrons internes masquent le noyau à l'électron de valence.	The inner electrons screen the nucleus from the valence electron.
@@ -793,6 +937,9 @@ Les électrons sont arrachés	The electrons are stripped off
 Les électrons sont arrachés (	The electrons are stripped off (
 Les éléments encadrés en pointillés n'ont aucun isotope stable.	Elements framed with a dotted line have no stable isotope.
 Li porte déjà une charge négative : il repousse l'électron	Li already carries a negative charge: it repels the electron
+Libre	Free
+Lignée suivie : un clic dans le vide la relâche.	Following a lineage: click empty space to let go.
+Liée de	Bound by
 Lr porte déjà une charge négative : il repousse l'électron	Lr already carries a negative charge: it repels the electron
 Lu porte déjà une charge négative : il repousse l'électron	Lu already carries a negative charge: it repels the electron
 Lumière	Light
@@ -812,6 +959,7 @@ Magnétique spin–spin	Magnetic spin–spin
 Masse	Mass
 Masse :	Mass:
 Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)	Catalogue atomic mass: %.6f u   ·   %s   ·   Fully ionised nucleus (+%de)
+Masse critique (sphère nue)	Critical mass (bare sphere)
 Masses evaluees (Weizsaecker si inconnues), cinematique relativiste exacte a chaque etape.	Evaluated masses (Weizsäcker when unknown), exact relativistic kinematics at each step.
 Matière	Matter
 Matière ·	Matter ·
@@ -843,6 +991,7 @@ MeV/c : deux sacs de quarks, chacun ralenti par	MeV/c: two bags of quarks, each 
 MeV/c dans le laboratoire) et le	MeV/c in the laboratory) and the
 MeV/nucléon	MeV/nucleon
 Mg porte déjà une charge négative : il repousse l'électron	Mg already carries a negative charge: it repels the electron
+Minimum atteint : les forces s'annulent sur chaque noyau	Minimum reached: the forces cancel on every nucleus
 Mn porte déjà une charge négative : il repousse l'électron	Mn already carries a negative charge: it repels the electron
 Mo porte déjà une charge négative : il repousse l'électron	Mo already carries a negative charge: it repels the electron
 Modèle	Model
@@ -853,6 +1002,9 @@ Modèle du tir :	Model of the shot:
 Modèle et données	Model and data
 Molécule	Molecule
 Molécule ·	Molecule ·
+Molécules	Molecules
+Moment dipolaire	Dipole moment
+Moment dipolaire de l'eau	Dipole moment of water
 Moment magnétique	Magnetic moment
 Moment magnétique :	Magnetic moment:
 Montre une fusion : la capture est retenue, sa vraie probabilité reste affichée	Shows a fusion: the capture is kept, its true probability stays displayed
@@ -873,7 +1025,13 @@ Métal alcalin	Alkali metal
 Métal de transition	Transition metal
 Métal pauvre	Post-transition metal
 Métalloïde	Metalloid
+Méthode	Method
+Méthode & validation	Method & validation
 N porte déjà une charge négative : il repousse l'électron	N already carries a negative charge: it repels the electron
+N'importe quel noyau : énergie de liaison, Q de la fission et de la fusion, réaction en chaîne possible ou non	Any nucleus: binding energy, fission and fusion Q, whether a chain reaction is possible
+naturel	natural
+NEUTRONS N(t) ET TEMPÉRATURE	NEUTRONS N(t) AND TEMPERATURE
+NEUTRONS PAR GÉNÉRATION	NEUTRONS PER GENERATION
 NOUVEL ÉLÉMENT	NEW ELEMENT
 NOYAU	NUCLEUS
 NOYAU COMPOSÉ	COMPOUND NUCLEUS
@@ -890,6 +1048,8 @@ Neutre	Neutral
 Neutre)	Neutral)
 Neutrino	Neutrino
 Neutrino :	Neutrino:
+Neutrons par fission ν̄	Neutrons per fission ν̄
+Neutrons retardés β	Delayed neutrons β
 Nh porte déjà une charge négative : il repousse l'électron	Nh already carries a negative charge: it repels the electron
 Ni porte déjà une charge négative : il repousse l'électron	Ni already carries a negative charge: it repels the electron
 No porte déjà une charge négative : il repousse l'électron	No already carries a negative charge: it repels the electron
@@ -902,6 +1062,7 @@ Noyau au centre : taille sous-pixel à cette échelle. Molette : échelle élect
 Noyau composé	Compound nucleus
 Noyau composé : excité de	Compound nucleus: excited by
 Noyau grossi · positions Python	Nucleus enlarged · Python positions
+Noyaux dans le cœur	Nuclei in the core
 Noyaux entierement ionises ; energie du centre de masse	Fully ionised nuclei; centre-of-mass energy
 Noyaux lourds : à l'intérieur, la répulsion des	Heavy nuclei: inside, the repulsion of the
 Noyaux nus ; ecrantage electronique, transfert et couplages collectifs absents.	Bare nuclei; electron screening, transfer and collective couplings are not included.
@@ -916,10 +1077,13 @@ ORBITALES · ↑ spin +½  ↓ spin −½ · R =	ORBITALS · ↑ spin +½  ↓ s
 Og porte déjà une charge négative : il repousse l'électron	Og already carries a negative charge: it repels the electron
 On ne le pose pas comme un quark.	It is not placed like a quark.
 Onde : paquet de largeur ƛ = ħ/p, rides à la longueur d'onde de de Broglie locale ; η = Z₁Z₂α/β. Effet tunnel : amplitude WKB	Wave: packet of width ƛ = ħ/p, ripples at the local de Broglie wavelength; η = Z₁Z₂α/β. Quantum tunnelling: WKB amplitude
+Orbitales	Orbitals
 Os porte déjà une charge négative : il repousse l'électron	Os already carries a negative charge: it repels the electron
 Ouverture de la table impossible	Could not open the table
 Ouverture de la table impossible :	Could not open the table:
 Ouverture du laboratoire de fusion	Opening the fusion laboratory
+Ouverture du laboratoire de la réaction en chaîne	Opening the chain-reaction laboratory
+Ouverture du laboratoire moléculaire	Opening the molecular laboratory
 Ouverture du laboratoire subatomique	Opening the subatomic laboratory
 Ouverture du monde subatomique	Opening the subatomic world
 OÙ SONT ALLÉS LES ÉLECTRONS : Δρ (clic : densité)	WHERE THE ELECTRONS WENT: Δρ (click: density)
@@ -930,6 +1094,7 @@ PASSAGE PAR EFFET TUNNEL	QUANTUM TUNNELLING
 PHOTON NON ABSORBÉ	PHOTON NOT ABSORBED
 PHYSIQUE DE L'INSTANT	PHYSICS OF THE MOMENT
 PLUS PETIT x RÉSOLU	SMALLEST x RESOLVED
+points vers le milieu : attraction · orange, vers les atomes : répulsion	dots toward the middle: attraction · orange, toward the atoms: repulsion
 POTENTIEL DE PAIRE V(r) · p–n de référence pour plusieurs nucléons	PAIR POTENTIAL V(r) · reference p–n for several nucleons
 PRESSION CALCULÉE	COMPUTED PRESSURE
 PROBABILITÉ	PROBABILITY
@@ -945,7 +1110,9 @@ Pas de charge de couleur : il ne peut pas entrer dans un hadron.	No colour charg
 Pas de fusion : la répulsion les a renvoyés, déviés de θ =	No fusion: the repulsion sent them back, deflected by θ =
 Pas de gravité : à cette échelle, elle est des milliards de	No gravity: at this scale, it is billions of
 Pas de noyau : ajoute un proton ou choisis un élément.	No nucleus: add a proton or choose an element.
+Pas de réaction en chaîne calculée.	No chain reaction computed.
 Pas de seuil de séparation pour une particule seule.	No separation threshold for a single particle.
+Pas encore calculées.	Not computed yet.
 Pas encore un élément	Not an element yet
 Pas à pas	Step by step
 Passage par effet tunnel	Quantum tunnelling
@@ -960,11 +1127,13 @@ Plasma : chaque choc a une énergie et une visée tirées au hasard (Maxwell-Bol
 Plasma : ⟨σv⟩ maxwellien, bremsstrahlung (avec correction relativiste), pertes W/τ ; ignition si la part chargée de la fusion	Plasma: Maxwellian ⟨σv⟩, bremsstrahlung (with relativistic correction), losses W/τ; ignition if the charged share of the fusion
 Plateforme non prise en charge pour le moteur embarqué	Platform not supported by the built-in engine
 Plateforme non prise en charge pour le moteur embarqué :	Platform not supported by the built-in engine:
+Plomb 208	Lead 208
 Plus d'élan : demi-tour, le bouclier l'a renvoyé	No momentum left: it turns back, the shield has sent it away
 Plus haut = plus d'énergie. Aufbau : chaque électron prend la case libre la plus basse	Higher = more energy. Aufbau: each electron takes the lowest free box
 Plus haut = plus d'énergie. Aufbau : chaque électron prend la case libre la plus basse ;	Higher = more energy. Aufbau: each electron takes the lowest free box;
 Plus la résolution Q² monte, plus le nucléon montre de gluons et de paires quark–antiquark.	The higher the resolution Q², the more gluons and quark–antiquark pairs the nucleon shows.
 Plus tard	Later
+Plutonium militaire (Jezebel)	Weapons-grade plutonium (Jezebel)
 Pm porte déjà une charge négative : il repousse l'électron	Pm already carries a negative charge: it repels the electron
 Po porte déjà une charge négative : il repousse l'électron	Po already carries a negative charge: it repels the electron
 Point de selle de U = eφ : le long de l'axe, U y est minimal ; en travers, maximal. Les deux	Saddle point of U = eφ: along the axis, U is at its minimum there; across, at its maximum. The two
@@ -997,24 +1166,35 @@ Prochaine étape :	Next step:
 Produits	Products
 Provenance du modèle non fournie pour ce tir.	Model origin not supplied for this shot.
 Précession du spin (Bloch)	Spin precession (Bloch)
+Préparation du laboratoire…	Preparing the laboratory…
+Préparation…	Preparing…
 Pt porte déjà une charge négative : il repousse l'électron	Pt already carries a negative charge: it repels the electron
 Pu porte déjà une charge négative : il repousse l'électron	Pu already carries a negative charge: it repels the electron
+Période	Period
 Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)	Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (equivalent)
 Q = (Σm avant − Σm après)·c² =	Q = (Σm before − Σm after)·c² =
+Q de la meilleure coupure	Q of the best split
+Q des masses (Δm·c²)	Q from masses (Δm·c²)
+Q par réaction	Q per reaction
+Q récupérable (ENDF)	Recoverable Q (ENDF)
+Q récupérable ENDF/B-VIII.0 (fragments, γ, β ; sans les neutrinos)	ENDF/B-VIII.0 recoverable Q (fragments, γ, β; without the neutrinos)
 Q · MASSE → ÉNERGIE	Q · MASS → ENERGY
 Q · ÉNERGIE ABSORBÉE	Q · ENERGY ABSORBED
+QUÊTE DU RENDEMENT	QUEST FOR YIELD
 Quarks et antiquarks de mer (attendus	Sea quarks and antiquarks (expected
 Quasi-élastique (Llewellyn Smith) : facteurs de forme vectoriels et axial g_A = −1,27.	Quasi-elastic (Llewellyn Smith): vector form factors and axial g_A = −1.27.
 Quasi-élastique : le neutron devient un proton	Quasi-elastic: the neutron becomes a proton
 Quasi-élastique : le proton devient un neutron	Quasi-elastic: the proton becomes a neutron
 Q²  transfert	Q²  transfer
 Q² de mon dernier coup	Q² of my last hit
+radioactif, demi-vie	radioactive, half-life
 REBOND AU CONTACT	BOUNCE AT CONTACT
 REBOND · LA RÉPULSION REND L'ÉLAN	BOUNCE · THE REPULSION GIVES THE MOMENTUM BACK
 REBOND · SÉPARATION ÉLASTIQUE	BOUNCE · ELASTIC SEPARATION
 Ra porte déjà une charge négative : il repousse l'électron	Ra already carries a negative charge: it repels the electron
 Radioactif · demi-vie non renseignée	Radioactive · half-life not available
 Radioactivite ulterieure des residus non suivie.	Later radioactivity of the residues is not followed.
+Rayon critique	Critical radius
 Rayon du noyau	Nuclear radius
 Rayonnement de recombinaison	Recombination radiation
 Rb porte déjà une charge négative : il repousse l'électron	Rb already carries a negative charge: it repels the electron
@@ -1022,9 +1202,16 @@ Re porte déjà une charge négative : il repousse l'électron	Re already carrie
 Recalculer la paire p + n	Recompute the p + n pair
 Rechercher un nom, un symbole ou un numéro atomique…	Search a name, a symbol or an atomic number…
 Rejouer le même calcul	Replay the same calculation
+Rejouer le même tir	Replay the same shot
+Relaxation	Relaxation
+Relaxation : la molécule cherche son minimum d'énergie	Relaxation: the molecule looks for its energy minimum
+Relaxation vers le minimum d'énergie	Relaxation towards the energy minimum
+Relâché : les noyaux suivent à nouveau leurs seules forces	Released: the nuclei follow their own forces again
 Remplace chaque quark par son antiquark (et inversement)	Replaces each quark by its antiquark (and the other way round)
 Renvoyé au sommet : un noyau est aussi une onde, une part est réfléchie	Sent back at the top: a nucleus is also a wave, part of it is reflected
 Renvoyés : la répulsion rend l'élan.	Sent back: the repulsion gives the momentum back.
+Retirer	Remove
+Retirer le réflecteur	Remove the reflector
 Retour à l'atome	Back to the atom
 Revenir au début de l'étape (ou à la précédente)	Back to the start of the step (or to the previous one)
 Rf porte déjà une charge négative : il repousse l'électron	Rf already carries a negative charge: it repels the electron
@@ -1036,6 +1223,7 @@ Rien ne peut arriver à cet atome tout seul.	Nothing can happen to this atom on 
 Rien pour l'instant. Tire un photon, ajoute une particule ou fais couler le temps : chaque événement s'écrira ici, avec son calcul.	Nothing yet. Fire a photon, add a particle or let time run: every event will be written here, with its calculation.
 Rn porte déjà une charge négative : il repousse l'électron	Rn already carries a negative charge: it repels the electron
 Ru porte déjà une charge négative : il repousse l'électron	Ru already carries a negative charge: it repels the electron
+RÉACTION EN CHAÎNE	CHAIN REACTION
 RÉACTION NUCLÉAIRE	NUCLEAR REACTION
 RÉACTIONS EN COURS (par kg et par seconde)	REACTIONS UNDER WAY (per kg and per second)
 RÉEL (1 bar, mesures)	REAL (1 bar, measurements)
@@ -1045,7 +1233,10 @@ RÉSOLUTION Q²	RESOLUTION Q²
 RÉSULTAT · L'ÉLÉMENT CRÉÉ	RESULT · THE ELEMENT CREATED
 RÉSULTAT · QUASI-FISSION	RESULT · QUASI-FISSION
 RÔLE	ROLE
+Réacteur	Reactor
+Réaction en chaîne	Chain reaction
 Réactions : Bosch–Hale pour D–T, D–D, D–³He ; sinon capture (ondes partielles, WKB sous la barrière, Hill–Wheeler au-dessus).	Reactions: Bosch–Hale for D–T, D–D, D–³He; otherwise capture (partial waves, WKB under the barrier, Hill–Wheeler above it).
+Réactivité	Reactivity
 Régler à	Set to
 Répulsion	Repulsion
 Répulsion électrique	Electric repulsion
@@ -1055,8 +1246,11 @@ S porte déjà une charge négative : il repousse l'électron	S already carries 
 SEUIL DE SÉPARATION	SEPARATION THRESHOLD
 SOUDURE	WELD
 SOUDURE : FRICTION NUCLÉAIRE	WELD: NUCLEAR FRICTION
+SOUS-CRITIQUE	SUBCRITICAL
 SOUTENIR GENESIS	SUPPORT GENESIS
 SPECTRE · cliquer pour régler le laser	SPECTRUM · click to tune the laser
+sphère : un atome · bord : sa charge (magenta δ−, cyan δ+)	sphere: an atom · rim: its charge (magenta δ−, cyan δ+)
+SUR-CRITIQUE DIFFÉRÉ	DELAYED SUPERCRITICAL
 SYSTÈME DINUCLÉAIRE	DINUCLEAR SYSTEM
 Sa portée minuscule impose un contact : le neutrino doit passer sur le quark.	Its tiny range forces a contact: the neutrino has to pass over the quark.
 Saisir un nucléon dans la vue, tirer puis relâcher : Python réintègre l'état choisi avec cette impulsion.	Grab a nucleon in the view, pull and release it: Python re-integrates the chosen state with this momentum.
@@ -1069,6 +1263,7 @@ Se porte déjà une charge négative : il repousse l'électron	Se already carrie
 Section efficace ajustee aux mesures ; probabilite uniforme sur le disque incident, pas une section differentielle en impact.	Cross section fitted to measurements; uniform probability over the incident disc, not an impact-differential cross section.
 Sg porte déjà une charge négative : il repousse l'électron	Sg already carries a negative charge: it repels the electron
 Si porte déjà une charge négative : il repousse l'électron	Si already carries a negative charge: it repels the electron
+Simulateur	Simulator
 Site de Genesis	Genesis website
 Sm porte déjà une charge négative : il repousse l'électron	Sm already carries a negative charge: it repels the electron
 Sn porte déjà une charge négative : il repousse l'électron	Sn already carries a negative charge: it repels the electron
@@ -1078,11 +1273,14 @@ Soudure calculee : mouvement radial dans le potentiel Coulomb + Woods-Saxon depu
 Soudure calculée : la force forte	Computed weld: the strong force
 Soudure calculée : la force forte (	Computed weld: the strong force (
 Spectre des ions à plusieurs électrons non tabulé	Spectrum of many-electron ions not tabulated
+Sphère nue : chaque neutron qui sort est perdu	Bare sphere: every neutron that leaves is lost
+Sphère nue : chaque neutron qui sort est perdu.	Bare sphere: every neutron that leaves is lost.
 Sr porte déjà une charge négative : il repousse l'électron	Sr already carries a negative charge: it repels the electron
 Stable : aucune désintégration n'est possible, il vivra éternellement.	Stable: no decay is possible, it will live forever.
 Sur la carte, ce qui reste exact : la direction, la vitesse, l'énergie et	On the map, what stays exact: the direction, the speed, the energy and
 Survole un élément pour le détailler.	Hover over an element to see its details.
 Survoler une sous-couche : pourquoi elle vient là.	Hover over a subshell to see why it comes there.
+Suspendre ou reprendre le calcul	Pause or resume the calculation
 Séparation après contact : K =	Separation after contact: K =
 T : cercle de Lorentz r = p/qB =	T: Lorentz circle r = p/qB =
 T = exp	T = exp
@@ -1092,19 +1290,27 @@ TEMPS SIMULÉ	SIMULATED TIME
 TEMPÉRATURE	TEMPERATURE
 TEMPÉRATURE DU PLASMA	PLASMA TEMPERATURE
 THÉORIE	THEORY
+tous les	all
+trait : paire d'électrons sur deux atomes · lobes : part π	line: an electron pair on two atoms · lobes: π part
 TRANSMUTATION · LA FORCE FORTE SOUDE LES DEUX NOYAUX	TRANSMUTATION · THE STRONG FORCE WELDS THE TWO NUCLEI
 TRANSMUTATION · LES DEUX FORMES SE FONDENT EN UNE	TRANSMUTATION · THE TWO SHAPES MERGE INTO ONE
+TRANSPORT	TRANSPORT
+TRANSPORT DES NEUTRONS	NEUTRON TRANSPORT
 Ta porte déjà une charge négative : il repousse l'électron	Ta already carries a negative charge: it repels the electron
+Table périodique  ↗	Periodic table  ↗
 Table périodique indisponible	Periodic table unavailable
 Table périodique indisponible :	Periodic table unavailable:
+Tableau périodique…	Periodic table…
 Tailles et distances à la même échelle (rayons de charge mesurés ; aucun grossissement).	Sizes and distances at the same scale (measured charge radii; no magnification).
 Tb porte déjà une charge négative : il repousse l'électron	Tb already carries a negative charge: it repels the electron
 Tc porte déjà une charge négative : il repousse l'électron	Tc already carries a negative charge: it repels the electron
 Te porte déjà une charge négative : il repousse l'électron	Te already carries a negative charge: it repels the electron
+Temps de génération Λ	Generation time Λ
 Temps suspendu	Time paused
 Température	Temperature
 Test de stabilité	Stability test
 Th porte déjà une charge négative : il repousse l'électron	Th already carries a negative charge: it repels the electron
+Thermostat	Thermostat
 Ti porte déjà une charge négative : il repousse l'électron	Ti already carries a negative charge: it repels the electron
 Tir refusé : énergie trop basse pour ce couple	Shot refused: energy too low for this pair
 Tir refusé : énergie trop haute pour le modèle	Shot refused: energy too high for the model
@@ -1116,9 +1322,12 @@ Tm porte déjà une charge négative : il repousse l'électron	Tm already carrie
 Tout	All
 Tout est conservé : énergie, impulsion, charge et nombre de baryons.	Everything is conserved: energy, momentum, charge and baryon number.
 Tout le nucléon part d'un bloc : les trois quarks gardent leur état fondamental.	The whole nucleon leaves as one: the three quarks keep their ground state.
+Tout retirer, puis construire une molécule atome par atome	Remove everything, then build a molecule atom by atom
 Toute énergie courbe l'espace : chacun déforme le fond autour de lui (lentille d'Einstein, θ_E² ∝ E	All energy curves space: each one distorts the background around it (Einstein lens, θ_E² ∝ E
 Toute énergie courbe l'espace : chacun déforme le fond autour de lui (lentille d'Einstein, θ_E² ∝ E,	All energy curves space: each one distorts the background around it (Einstein lens, θ_E² ∝ E,
+Toutes les grandeurs : cinétique, spectre, énergie d'une fission	Every quantity: kinetics, spectrum, energy of one fission
 Toutes les métriques, les calques et le milieu	All the metrics, the layers and the medium
+Traction : votre main tire l'atome, l'autre tient le reste par son centre de masse	Pulling: your hand pulls the atom, the other holds the rest by its centre of mass
 Trait d'or : son élan sera épuisé à	Gold line: its momentum will be used up at
 Trois quarks liés par la corde de gluons bougent sans cesse dans leur sac.	Three quarks bound by the gluon string keep moving inside their bag.
 Trois quarks up de la même couleur : la règle de couleur et le principe de Pauli le refusent	Three up quarks of the same colour: the colour rule and the Pauli principle forbid it
@@ -1141,9 +1350,13 @@ Un clic en approche un ; un clic dans le vide revient.	A click zooms in on one; 
 Un de ses neutrons s'est changé en proton, en éjectant un électron. Un proton de plus : c'est l'élément suivant du tableau.	One of its neutrons turned into a proton, ejecting an electron. One more proton: it is the next element in the table.
 Un de ses protons a avalé un électron du cortège et s'est changé en neutron. Un proton de moins : c'est l'élément précédent.	One of its protons swallowed an electron from the cloud and turned into a neutron. One proton fewer: it is the previous element.
 Un de ses protons s'est changé en neutron, en éjectant un positon. Un proton de moins : c'est l'élément précédent du tableau.	One of its protons turned into a neutron, ejecting a positron. One proton fewer: it is the previous element in the table.
+Un faisceau de fils par liaison : leur nombre suit l'indice de Mayer, fils dorés pour la part σ, fils	One bundle of threads per bond: their number follows the Mayer bond order, gold threads for the σ part,
+Un faisceau de fils par liaison : leur nombre suit l'indice de Mayer, fils dorés pour la part σ, fils cyan torsadés pour la part π (doubles, triples liaisons) ; la largeur suit le recouvrement calculé	One bundle of threads per bond: their number follows the Mayer bond order, gold threads for the σ part, twisted cyan threads for the π part (double, triple bonds); the width follows the computed overlap
 Un gluon n'a pas de masse, son spin vaut 1 et il porte une couleur et une anticouleur (huit	A gluon has no mass, its spin is 1 and it carries a colour and an anticolour (eight
 Un gluon échange la couleur entre un quark de chaque hadron : chacun garde son élan, mais reste lié à l'autre.	A gluon exchanges colour between one quark of each hadron: each keeps its momentum, but stays bound to the other.
 Un neutrino muonique n'a pas de charge : ni le puits de Coulomb ni la force forte ne le dévient.	A muon neutrino has no charge: neither the Coulomb well nor the strong force deflects it.
+Un neutron allume une chaîne sans fin	One neutron starts a never-ending chain
+Un neutron d'amorçage au centre (ou cliquer dans la sphère pour choisir où)	One starter neutron at the centre (or click in the sphere to choose where)
 Un neutron lent traverse presque toujours un atome seul sans rien toucher : on montre le cas où il interagit.	A slow neutron almost always crosses a single atom without touching anything: this shows the case where it interacts.
 Un neutron quitte le noyau	A neutron leaves the nucleus
 Un neutron rejoint le noyau	A neutron joins the nucleus
@@ -1155,9 +1368,12 @@ Un quark retourne son spin	A quark flips its spin
 Un quark seul n'a pas de corde à tirer : il en faut au moins deux.	A lone quark has no string to pull: it takes at least two.
 Un électron est arraché	An electron is torn away
 Un électron s'échappe	An electron escapes
+Une cascade tirée au hasard dans la vraie géométrie, puis l'excursion calculée	A cascade drawn at random in the real geometry, then the computed excursion
 Une corde casse	A string breaks
 Une couleur par sous-couche (s bleu, p vert, d orange, f rose), chacune à sa propre échelle.	One colour per subshell (s blue, p green, d orange, f pink), each on its own scale.
+Une génération remplace exactement la précédente : la population reste stable.	Each generation exactly replaces the previous one: the population stays steady.
 Une ligne choisie ouvre sa fiche et amène la vue principale sur ce corps.	A selected line opens its card and brings the main view to that body.
+Une orbitale moléculaire ψ, avec sa phase (bleu +, orange −) : choisir dans le diagramme des niveaux	A molecular orbital ψ, with its phase (blue +, orange −): pick one in the level diagram
 Une paire	A pair
 Une paire dd̄ sort du champ de couleur : n + π+, impulsions opposées dans le repos du Δ.	A dd̄ pair comes out of the colour field: n + π+, opposite momenta in the Δ rest frame.
 Une paire dd̄ sort du champ de couleur : n + π0, impulsions opposées dans le repos du Δ.	A dd̄ pair comes out of the colour field: n + π0, opposite momenta in the Δ rest frame.
@@ -1166,6 +1382,12 @@ Une paire uū sort du champ de couleur : n + π-, impulsions opposées dans le 
 Une paire uū sort du champ de couleur : n + π0, impulsions opposées dans le repos du Δ.	A uū pair comes out of the colour field: n + π0, opposite momenta in the Δ rest frame.
 Une paire uū sort du champ de couleur : p + π-, impulsions opposées dans le repos du Δ.	A uū pair comes out of the colour field: p + π-, opposite momenta in the Δ rest frame.
 Une paire uū sort du champ de couleur : p + π0, impulsions opposées dans le repos du Δ.	A uū pair comes out of the colour field: p + π0, opposite momenta in the Δ rest frame.
+Une seule flèche par atome : la somme de toutes les forces sur son noyau	A single arrow per atom: the sum of every force on its nucleus
+Une sphère de matière : on la comprime, on y tire des neutrons, on regarde	A sphere of matter: squeeze it, fire neutrons into it, watch
+Une sphère de matière fissile : k_eff, masse critique, cascade et excursion	A sphere of fissile material: k_eff, critical mass, cascade and excursion
+Une sphère de matière fissile et son réflecteur : le transport des neutrons (ENDF/B-VIII.0) dit si la chaîne s'éteint, se maintient ou diverge.	A sphere of fissile material and its reflector: neutron transport (ENDF/B-VIII.0) tells whether the chain dies out, holds steady or diverges.
+Uranium naturel	Natural uranium
+Uranium naturel (tamper)	Natural uranium (tamper)
 Utiliser ce noyau	Use this nucleus
 V porte déjà une charge négative : il repousse l'électron	V already carries a negative charge: it repels the electron
 VISÉE (DÉCALAGE DU TIR)	AIM (SHOT OFFSET)
@@ -1173,6 +1395,8 @@ VITESSE	SPEED
 VITESSE DU TEMPS	SPEED OF TIME
 Valence	Valence
 Version de protocole incompatible - relance docker compose up --build	Incompatible protocol version - rerun docker compose up --build
+Vibrations	Vibrations
+Vibrations de l'eau	Vibrations of water
 Visée b	Impact b
 Visée décalée : la répulsion courbe sa trajectoire	Offset aim: the repulsion bends its path
 Vitesse de lecture	Playback speed
@@ -1182,6 +1406,7 @@ Voies mesurées	Measured decay paths
 Voies mesurées :	Measured decay paths:
 Voir la version	See the release
 Volume proportionnel au nombre de nucléons : le noyau est une goutte de matière incompressible.	Volume proportional to the number of nucleons: the nucleus is a drop of incompressible matter.
+Votre main	Your hand
 Vue avancée	Advanced view
 Vue avancée : formules, toutes les forces, lignes de champ	Advanced view: formulas, all the forces, field lines
 Vue d'ensemble	Overview
@@ -1199,11 +1424,14 @@ Z = nombre de protons	Z = number of protons
 ZONE DU COL	NECK REGION
 Zn porte déjà une charge négative : il repousse l'électron	Zn already carries a negative charge: it repels the electron
 Zr porte déjà une charge négative : il repousse l'électron	Zr already carries a negative charge: it repels the electron
+abondances naturelles	natural abundances
 absorbe le photon d'un bloc	absorbs the photon as a whole
 action-réaction). Il repart avec	action and reaction). It leaves with
+acétylène	acetylene
 affiché comprimé : le plus éloigné est à	shown compressed: the farthest one is at
 affinité électronique non tabulée : capture admise	electron affinity not tabulated: capture allowed
 ajoute un quark	add a quark
+ammoniac	ammonia
 amplifiée	magnified
 année	year
 années	years
@@ -1218,11 +1446,16 @@ antiquark	antiquark
 antiquark (antimatière)	antiquark (antimatter)
 antirouge (cyan)	antired (cyan)
 antivert (magenta)	antigreen (magenta)
+après	after
 après le dernier instant calculé, chaque hadron libre file en ligne droite   ·   molette : zoom   ·   glisser : tourner	after the last computed instant, each free hadron flies in a straight line   ·   wheel: zoom   ·   drag: rotate
+arcs des atomes	atom arcs
 arraché par la corde : un méson blanc	pulled out by the string: a white meson
 arrive	arrives
 atelier de hadrons	hadron workshop
 atmosphères	atmospheres
+atome d'azote	nitrogen atom
+atome d'hydrogène	hydrogen atom
+atome d'oxygène	oxygen atom
 atome excité	excited atom
 atome immobile au centre	atom at rest at the centre
 atomes de	atoms of
@@ -1230,13 +1463,17 @@ attendu.	expected.
 attendue). Arrête-le et relance : docker compose up --build	expected). Stop it and restart it: docker compose up --build
 attente tirée au hasard selon les durées de vie	wait drawn at random from the lifetimes
 attraction faible →	weak attraction →
+attraction à distance	attraction at a distance
+attractions et répulsions sans liaison	attractions and repulsions without a bond
 au centre (créé)	at the centre (created)
 au centre, avec son spin et ses champs électrique et magnétique calculés.	at the centre, with its spin and its computed electric and magnetic fields.
 au contact, R₁ + R₂ ≈	at contact, R₁ + R₂ ≈
 au plus (2n²)	at most (2n²)
 au premier électron rencontré : annihilation en deux photons γ de 511 keV	at the first electron it meets: annihilation into two γ photons of 511 keV
+au sommet de la courbe de liaison : aucune fission, des diffusions et des captures	at the top of the binding curve: no fission, only scattering and captures
 au total	in total
 au-delà de Z = 118, aucun noyau composé ne tient	beyond Z = 118, no compound nucleus holds together
+au-delà du critique prompt)	beyond prompt critical)
 au-dessus du mur	above the wall
 au-dessus du mur de Coulomb).	above the Coulomb wall).
 aucun	none
@@ -1245,6 +1482,7 @@ aucun isotope stable, radioactif quoi qu'il arrive	no stable isotope, radioactiv
 aucun moment magnétique : champ électrique seul	no magnetic moment: electric field only
 aucun noyau	no nucleus
 aucun noyau chargé pour l'attirer	no charged nucleus to attract it
+aucun noyau pesé	no weighed nucleus
 aucun nœud radial	no radial node
 aucun photon	no photon
 aucun puits : pas de liaison	no well: no bond
@@ -1257,26 +1495,34 @@ aucune	none
 aucune : trop froid pour que les noyaux se touchent	none: too cold for the nuclei to touch
 aucune couleur ne peut être montrée sans inventer de raie	no colour can be shown without inventing a line
 aucune raie de référence pour cet élément ; aucune formule ne prédit fidèlement le spectre d'un atome à plusieurs électrons	no reference line for this element; no formula faithfully predicts the spectrum of an atom with several electrons
+aucune voie exothermique	no exothermic path
 autant que	as much as
 autre désintégration	another decay
 avance le temps jusqu'au prochain événement, tiré au hasard · touche →	moves time forward to the next event, drawn at random · key →
+avant	before
 avec	with
+bande (orbitales qui se recouvrent)	band (overlapping orbitals)
 barre : part de la masse (log) · trait : au départ · ± : dans la fenêtre	bar: share of the mass (log) · tick: at the start · ±: in the window
 barrière du choc : V(d) = kZ₁Z₂e²/d =	collision barrier: V(d) = kZ₁Z₂e²/d =
 baryon · 3 quarks	baryon · 3 quarks
+benzène	benzene
 beta+ / CE	beta+ / EC
 bilan de masse Q =	mass balance Q =
+blanc tirée	white when pulled
 bleu ψ > 0 · orange ψ < 0	blue ψ > 0 · orange ψ < 0
 bombe d'Hiroshima	Hiroshima bomb
+bord orangé : répulsion	orange rim: repulsion
 boson de Higgs	Higgs boson
 boson scalaire	scalar boson
 boson vecteur	vector boson
+bulles les montre déjà)	bubbles already shows them)
 calcul exact (formule de Rydberg, masse réduite)	exact calculation (Rydberg formula, reduced mass)
 canal ferme	channel closed
 capture : ondes partielles, transmission de Hill-Wheeler (modèle) ; énergie de capture ; cas le plus favorable : tout reste dans le plasma	capture: partial waves, Hill-Wheeler transmission (model); capture energy; most favourable case: everything stays in the plasma
 capture électronique	electron capture
 capture électronique : p + e⁻ → n + ν	electron capture: p + e⁻ → n + ν
 cas possibles	possible cases
+cascade	cascade
 ce choc la dépasse	this collision exceeds it
 ce n'est plus le même élément.	it is no longer the same element.
 ce noyau)	this nucleus)
@@ -1295,7 +1541,9 @@ chaleur de la soudure calculée :	computed heat of the weld:
 chaleur dégagée par chaque kilo de matière	heat released by each kilogram of matter
 chaleur gagnée	heat gained
 champ magnétique au pôle ≈	magnetic field at the pole ≈
+champ électrique	electric field
 champ électrique en surface ≈	electric field at the surface ≈
+champ électrique, du + vers le −	electric field, from + to −
 champs s'y annulent : c'est le point le plus bas de la crête qui sépare les deux noyaux.	fields cancel there: it is the lowest point of the ridge that separates the two nuclei.
 champs s'y opposent ; la couleur (bleu → blanc) suit U, les lignes sont des isopotentielles.	fields oppose each other there; the colour (blue → white) follows U, the lines are equipotentials.
 chance d'interagir en traversant le	chance of interacting while crossing the
@@ -1309,10 +1557,14 @@ change un quark	changes a quark
 changer d'élément : la table périodique · touche T	change element: the periodic table · key T
 changer ▾	change ▾
 chaque émission emporte son énergie et laisse un noyau plus froid	each emission carries its energy away and leaves a colder nucleus
+charge	charge
 charge de smartphone	smartphone charge
 charge et nombre baryonique	charge and baryon number
+charge partielle	partial charge
 chaudes, elles vibrent (amplitudes thermiques √(T/C)).	when hot, they vibrate (thermal amplitudes √(T/C)).
 chercher : or, uranium, Fe…	search: gold, uranium, Fe…
+chez	on
+chlorure d'hydrogène	hydrogen chloride
 clair = densité · points = tirages dans la coupe xz · ↑↓ = spins	bright = density · dots = samples in the xz slice · ↑↓ = spins
 clair = électrons probables · calculée, pas dessinée	bright = likely electrons · computed, not drawn
 clic : Genesis explique cet événement	click: Genesis explains this event
@@ -1320,11 +1572,16 @@ clic : déplacer la sonde	click: move the probe
 clic : détails	click: details
 clic : entrer dans le noyau	click: enter the nucleus
 clic : sonder ici	click: probe here
+clic droit sur un atome	right-click an atom
 clic pour fermer	click to close
 clic sur la sonde : revenir à la théorie · ▶ : reprendre	click on the probe: back to the theory · ▶: resume
+clic sur un neutron : suivre sa lignée	click a neutron: follow its lineage
 clic sur un quark pour changer sa couleur.	click a quark to change its colour.
 cliquer dans la scène : sonder le champ à cet endroit	click in the scene: probe the field at that point
+cliquer pour exciter (dynamique libre)	click to excite (free dynamics)
 cliquer pour y entrer	click to enter it
+cliquer sur un atome ou dans le vide	click an atom or empty space
+cliquer sur un niveau pour voir son orbitale	click a level to see its orbital
 col  U =	neck  U =
 col au contact	neck at contact
 col au contact :	neck at contact:
@@ -1334,6 +1591,7 @@ compense les pertes (critère de Lawson).	makes up for the losses (Lawson criter
 compression de	compression of
 comprimé le long de l'axe par l'autre	compressed along the axis by the other one
 comète : ce qui bouge, sa traînée derrière lui	comet: what moves, with its trail behind it
+condition	condition
 consommés	consumed
 corde se rompt	string breaks
 corde tendue	stretched string
@@ -1352,10 +1610,13 @@ couleurs neutres	neutral colours
 coupe xz · |ψ|² en échelle log (4 décades)	xz slice · |ψ|² on a log scale (4 decades)
 coût	cost
 coût :	cost:
+critique	critical
+critique prompt	prompt critical
 créé	created
 créé par la fusion	created by the fusion
 créé quand un proton devient neutron (interaction faible, β⁺)	created when a proton becomes a neutron (weak interaction, β⁺)
 créé à	created at
+cyan torsadés pour la part π (doubles, triples liaisons) ; la largeur suit le recouvrement calculé	twisted cyan threads for the π part (double, triple bonds); the width follows the computed overlap
 cédé au nucléon	given to the nucleon
 cédés au	given to the
 côté	side
@@ -1385,7 +1646,9 @@ de masse √s =	of mass √s =
 dehors, il décroît en 1/r².	outside, it falls off as 1/r².
 demi-vie estimée	estimated half-life
 densité	density
+densité (mendeleev)	density (mendeleev)
 densité de cet état non calculée	density of this state not computed
+densité du métal (mendeleev), même densité atomique	metal density (mendeleev), same atomic density
 depuis le début	since the start
 depuis le début :	since the start:
 depuis le départ : r ÷	since the start: r ÷
@@ -1393,6 +1656,8 @@ dernier électron hors coupe : orbitale occupée visible) · bleu ψ > 0 · oran
 dernier électron placé) · bleu ψ > 0 · orange ψ < 0	last electron placed) · blue ψ > 0 · orange ψ < 0
 des repères mobiles suivent B total, sans orbites dessinées. Noyaux : gouttes liquides, comprimées par le champ de l'autre (β₂ de Bohr–Mottelson)	moving markers follow the total B, with no orbits drawn. Nuclei: liquid drops, compressed by the other's field (Bohr–Mottelson β₂)
 des repères mobiles suivent B total, sans orbites dessinées. Noyaux : gouttes liquides, comprimées par le champ de l'autre (β₂ de Bohr–Mottelson) ;	moving markers follow the total B, with no orbits drawn. Nuclei: liquid drops, compressed by the other's field (Bohr–Mottelson β₂);
+des électrons partagés dans les liaisons, filet violet quand deux atomes s'attirent à distance	of shared electrons in the bonds, a violet stream when two atoms attract at a distance
+des électrons partagés dans les liaisons, filet violet quand deux atomes s'attirent à distance,	of shared electrons in the bonds, a violet stream when two atoms attract at a distance,
 destin inconnu	fate unknown
 deutérium	deuterium
 deux fragments de fission	two fission fragments
@@ -1400,12 +1665,17 @@ devenu neutron)	turned into a neutron)
 devient un	becomes a
 devient un Δ(1232) : spin 3/2	becomes a Δ(1232): spin 3/2
 devient un Δ(1232) : spin 3/2,	becomes a Δ(1232): spin 3/2,
+diazote	dinitrogen
+dichlore	dichlorine
 diffusé	scattered
+dihydrogène	dihydrogen
+dioxygène	dioxygen
 dipôle magnétique intrinsèque nul	zero intrinsic magnetic dipole
 direction de vol :	direction of flight:
 direction de vol : (	direction of flight: (
 disparu	gone
 disparu :	gone:
+dispersion (London)	dispersion (London)
 distance vraie au centre	true distance to the centre
 distance vraie au centre :	true distance to the centre:
 distance, vitesse, η, compression β₂ ; puis force forte, chaleur de friction, recouvrement ; E*, température √(8E*/A)	distance, speed, η, compression β₂; then strong force, friction heat, overlap; E*, temperature √(8E*/A)
@@ -1414,6 +1684,7 @@ distances en échelle log · tailles agrandies	distances on a log scale · sizes
 donc il interagit avec lui-même : g → g g	so it interacts with itself: g → g g
 donne leur masse aux autres par le champ de Higgs	gives the others their mass through the Higgs field
 dont chaleur gardée	of which heat kept
+doublement magique : il renvoie les neutrons presque sans en absorber	doubly magic: it bounces neutrons back while absorbing almost none
 du	of the
 du noyau	from the nucleus
 du noyau :	from the nucleus:
@@ -1433,6 +1704,7 @@ désintégration forte	strong decay
 désintégration électromagnétique	electromagnetic decay
 désintégration α (perd 2 p + 2 n)	α decay (loses 2 p + 2 n)
 désintégration β⁺ (un proton devient neutron)	β⁺ decay (a proton becomes a neutron)
+désintégration β⁻	β⁻ decay
 désintégration β⁻ (un neutron devient proton)	β⁻ decay (a neutron becomes a proton)
 désintégration →	decay →
 dévié de	deflected by
@@ -1448,6 +1720,7 @@ e). Son énergie ε₀E²/2 décroît en 1/r⁴ : le halo	e). Its energy ε₀E�
 eV suffisent) : il ne reste que les noyaux, chargés	eV are enough): only the nuclei remain, with charge
 eV suffisent) : il ne reste que les noyaux, chargés +	eV are enough): only the nuclei remain, with charge +
 eV à Re =	eV at Re =
+eau	water
 effet tunnel	quantum tunnelling
 effet tunnel)	quantum tunnelling)
 effet tunnel, par choc frontal	quantum tunnelling, head-on collision
@@ -1457,9 +1730,11 @@ emporté par	carried away by
 emportée hors du réacteur (ou du Soleil)	carried out of the reactor (or out of the Sun)
 en	en
 en attente du calcul	waiting for the calculation
+en fusion	melting
 en moyenne dans	on average in
 en réalité, pas de trajectoire : le nuage	in reality, no trajectory: the cloud
 en surface : kZe/R² =	at the surface: kZe/R² =
+endothermique	endothermic
 entier.	whole.
 entre	between
 entre eux : U = eφ	between them: U = eφ
@@ -1493,6 +1768,8 @@ excitation restante	remaining excitation
 excité	excited
 excité : E* =	excited: E* =
 excité)	excited)
+excursion	excursion
+exothermique	exothermic
 exp(−∫κdr) ; le noyau réapparaît au contact. Le passage n'a pas de trajectoire classique : c'est une mise en scène du changement	exp(−∫κdr); the nucleus reappears at contact. The crossing has no classical trajectory: it is a staging of the change
 e⁺ (β⁺) : positon	e⁺ (β⁺): positron
 e⁺ + ν  positon et neutrino	e⁺ + ν  positron and neutrino
@@ -1507,16 +1784,27 @@ faible (courant chargé)	weak (charged current)
 faible (courant neutre)	weak (neutral current)
 faible 0,3	weak 0.3
 faire couler le temps, ou l'arrêter · Espace	let time run, or stop it · Space
+fertile	fertile
+filaments des atomes	atom filaments
 file de son côté.	flies off on its own side.
 file à c	flies off at c
 film ralenti : directions et rapports de vitesses calculés, distances à l'échelle de v = p/E	slow-motion film: directions and speed ratios computed, distances at the scale of v = p/E
 finit le trajet (probabilité de ce tir	finishes the trip (probability of this shot
 finit le trajet (probabilité de ce tir :	finishes the trip (probability of this shot:
+fissile	fissile
+fissile : fission par neutrons de toute énergie	fissile: fission by neutrons of any energy
+fissile ; métal en phase α (le plus dense)	fissile; α-phase metal (the densest)
 fission de Bohr-Wheeler	Bohr-Wheeler fission
+fission ou fusion	fission or fusion
+fission par neutron	neutron-induced fission
 fission spontanée	spontaneous fission
 fission spontanée : la répulsion électrique l'emporte, le noyau se scinde	spontaneous fission: the electric repulsion wins, the nucleus splits
+fissionnable rapide	fast-fissionable
+fissionnable rapide ; fission spontanée intense	fast-fissionable; intense spontaneous fission
+fissionnable rapide seulement	fast-fissionable only
 fluide supercritique	supercritical fluid
 flux maxwellien), « Jusqu'à la fusion » un choc parmi ceux qui fusionnent (pic de Gamow).	Maxwellian flux), « Until fusion » one collision among those that fuse (Gamow peak).
+flèche de la force nette	net force arrow
 fm  ·  le tir est réglé à	fm  ·  the shot is set to
 fm (demi-tour)	fm (U-turn)
 fm (là où V = E)	fm (where V = E)
@@ -1543,42 +1831,55 @@ foncent l'un vers l'autre à p* =	rush towards each other at p* =
 fond à	melts at
 fonte des formes : non tracée	merging of the shapes: not traced
 force forte : chaque nucléon est lié à ses voisins	strong force: each nucleon is bound to its neighbours
+force nette	net force
+force totale	total force
 forces : donne leur masse aux autres par le champ de Higgs	forces: gives the others their mass through the Higgs field
 forces : faible (courant chargé)	forces: weak (charged current)
 forces : faible (courant neutre)	forces: weak (neutral current)
 forces : forte, électromagnétique, faible	forces: strong, electromagnetic, weak
 forces : électromagnétique (vecteur)	forces: electromagnetic (carrier)
 forces : électromagnétique, faible	forces: electromagnetic, weak
+formaldéhyde	formaldehyde
 forme du nuage	shape of the cloud
 forme interpolée : cette étape n'est pas tracée	interpolated shape: this step is not traced
 fort 1000	strong 1000
 forte ne le voit pas — rien ne peut le lier dans un hadron.	interaction does not see it — nothing can bind it into a hadron.
 forte, électromagnétique, faible	strong, electromagnetic, weak
 fortement couplé : Γ = Z₁Z₂e²/λkT =	strongly coupled: Γ = Z₁Z₂e²/λkT =
+fourni et magenta autour des atomes δ−, mince et cyan autour des atomes δ+	fuller and magenta around δ− atoms, thinner and cyan around δ+ atoms
 fraction d'impulsion x (échelle log)	momentum fraction x (log scale)
 fragment de la rupture	fragment of the split
 fragment principal	main fragment
+fragments de fission	fission fragments
 frappe un quark	hits a quark
 frappé	struck
 freinage	braking
 fréquence ν = E/h =	frequency ν = E/h =
 fs, montrée en 3 s	fs, shown in 3 s
+fuite	leakage
+fusion avec lui-même	fusion with itself
 fusion faite, elle observe d'abord le recul depuis le lieu de rupture, puis l'élément créé, et le bilan s'ouvre (un	fusion is done, it first watches the recoil from the point of rupture, then the element created, and the report opens (an
 fusions par seconde dans cette fenêtre	fusions per second in this window
 g de TNT	g of TNT
 gagné	gained
 gagné :	gained:
 gain Q =	gain Q =
+gaz	gas
 glisser déplace la vue (aussi : clic droit glissé)	drag to move the view (also: right-click drag)
 glisser fait tourner l'atome en 3D	drag to rotate the atom in 3D
+glisser le bord : comprimer (Maj : ajouter de la matière)	drag the edge: squeeze (Shift: add matter)
+glisser un jeton : poser un réflecteur	drag a token: add a reflector
 glisser un quark : tendre sa corde  ·  vide : tourner  ·  molette : zoom	drag a quark: stretch its string  ·  empty space: rotate  ·  wheel: zoom
 gluon ÷ 10	gluon ÷ 10
+grandeur	quantity
 halo : ε₀|Eᵢ|²/2 de chaque noyau, à la teinte de son isotope	halo: ε₀|Eᵢ|²/2 of each nucleus, in the colour of its isotope
+halo de polarisation	polarization halo
 hauteur de la fenêtre	height of the window
 hauteur de la fenêtre :	height of the window:
 hors modele	outside the model
 humanité, 1 an	humanity, 1 year
 hydrogénoïde)	hydrogen-like)
+hélices : part π (double, triple)	helices: π part (double, triple)
 ici	here
 ici, surtout	here, mostly
 ici, surtout :	here, mostly:
@@ -1595,9 +1896,14 @@ ils tournent ensemble ≈	they rotate together ≈
 imminent à cette vitesse	imminent at this speed
 impulsions opposées)	opposite momenta)
 inconnu du PDG	unknown to the PDG
+indice	order
+indices de liaison (Mayer)	bond orders (Mayer)
+inerte	inert
 instant figé : l'échange dure ~10⁻²⁵ s	frozen instant: the exchange lasts ~10⁻²⁵ s
 interaction faible : un W virtuel change la saveur	weak interaction: a virtual W changes the flavour
 interaction forte : %s MeV · %.0f %%	strong interaction: %s MeV · %.0f %%
+interactions entre atomes	interactions between atoms
+intermédiaire	intermediate
 invisible à l'œil, très pénétrante.	invisible to the eye, very penetrating.
 invisible)	invisible)
 inélastique profond	deep inelastic
@@ -1607,10 +1913,18 @@ ionisant	ionising
 ionisation : dE/dx =	ionisation: dE/dx =
 isopotentielles par carrés marchants ; le col (point de selle, E = 0) trouvé par Newton et chiffré. Des points suivent	equipotentials by marching squares; the saddle (E = 0) found by Newton's method and given in numbers. Dots follow
 j	d
+jamais	never
 jamais isolé.	ever isolated.
 jamais observé	never observed
+k_eff : neutrons d'une génération à la suivante	k_eff: neutrons from one generation to the next
+k_eff = neutrons d'une génération / neutrons de la précédente	k_eff = neutrons of one generation / neutrons of the previous one
+k_eff = neutrons produits / (absorbés + échappés)	k_eff = neutrons produced / (absorbed + escaped)
+k_eff SELON LE RAYON	k_eff VERSUS RADIUS
+k_eff, la masse critique et la courbe : la lecture simple	k_eff, the critical mass and the curve: the simple reading
 kg de TNT	kg of TNT
 kt de TNT	kt of TNT
+k∞ (milieu infini)	k∞ (infinite medium)
+k∞ : la chaîne peut-elle diverger ?	k∞: can the chain diverge?
 l'%s dans un %s — on n'isole jamais un quark. Il reste %s : teste-le.	the %s in a %s — a quark is never isolated. What remains is %s: test it.
 l'angle de l'événement y est tiré	the event's angle is drawn from it
 l'antimuon	the antimuon
@@ -1618,7 +1932,7 @@ l'antineutrino	the antineutrino
 l'antiquark devra porter l'anticouleur	the antiquark will have to carry the anticolour
 l'atome et son nuage · touche 1	the atom and its cloud · key 1
 l'atome tourne lentement sur lui-même	the atom slowly turns on itself
-l'attire	attracts it
+l'attire	pulls it
 l'emporte sur la répulsion et soude les	wins over the repulsion and welds the
 l'humanité la consomme en	humanity uses it in
 l'on ne verrait pas les morceaux se séparer.	we would not see the pieces separate.
@@ -1653,6 +1967,7 @@ la dilatation du temps.	time dilation.
 la distance vraie. Les distances affichées sont comprimées.	the true distance. The distances shown are compressed.
 la force forte l'aspire : il accélère vers le centre	the strong force pulls it in: it accelerates towards the centre
 la masse	the mass
+la paroi	the wall
 la pression au cœur du Soleil	the pressure at the centre of the Sun
 la pression du cœur solaire	the pressure of the Sun's core
 la règle de manuel, pour comparer au calcul	the textbook rule, to compare with the calculation
@@ -1702,7 +2017,7 @@ le positron	the positron
 le produit	the product
 le proton	the proton
 le quark reçoit l'impulsion qui redonne W dans le modèle de cordes	the quark receives the momentum that gives back W in the string model
-le repousse	repels it
+le repousse	pushes it
 le spin de A tourne autour du champ de B	A's spin turns around B's field
 le temps est arrêté (▶ pour reprendre)	time is stopped (▶ to resume)
 le temps s'arrête après chaque événement, pour le lire · touche A	time stops after each event, so you can read it · key A
@@ -1712,8 +2027,11 @@ le tube s'étrangle et se sépare en deux sacs.	the tube pinches and separates i
 le tube s'étrangle et se sépare.	the tube pinches and separates.
 le verdict du calcul	the calculation's verdict
 les désintégrations restent tirées au hasard	decays remain drawn at random
+les fréquences propres et la forme de chaque mode	the eigenfrequencies and the shape of each mode
 les fusions sont rares à cette vitesse : accélère le temps	fusions are rare at this speed: speed up time
 les grands angles viennent du photon. Les étincelles autour du nucléon : ses pions virtuels (portée ħ/m_π c = 1,4 fm).	large angles come from the photon. The sparks around the nucleon: its virtual pions (range ħ/m_π c = 1.4 fm).
+les liaisons et les paires libres	the bonds and the lone pairs
+les lourds gagnent à se briser  ← FISSION	heavy nuclei gain by breaking  ← FISSION
 les nucléons appariés sont plus liés	paired nucleons are more tightly bound
 les nucléons de surface ont moins de voisins	nucleons at the surface have fewer neighbours
 les quarks (E = mc²). Les gluons échangent sans cesse la couleur : aucun quark n'est	the quarks (E = mc²). The gluons keep exchanging colour: no quark is
@@ -1721,23 +2039,44 @@ les spins s'ajoutent : le hadron a un moment cinétique	the spins add up: the ha
 les spins se compensent : aucun moment cinétique	the spins cancel out: no angular momentum
 les trois spins s'alignent, le sac se met à palpiter.	the three spins line up, the bag starts to throb.
 les événements, leur calcul et leur explication	the events, their calculation and their explanation
+liaison	bond
+liaison avec	bond with
+liaison halogène	halogen bond
+liaison π (torsadée)	π bond (twisted)
+liaison σ (le long de l'axe)	σ bond (along the axis)
+liaisons	bonds
+liaisons σ et π	σ and π bonds
 libre : ≈ 15 min	free: ≈ 15 min
 libre · exotiques	free · exotic
 libre, il se désintègre en ~15 min (proton + électron + antineutrino)	when free, it decays in ~15 min (proton + electron + antineutrino)
 libérés	released
+liquide	liquid
+liseré ambré δ−, cyan δ	amber rim δ−, cyan δ
+liseré ambré δ−, cyan δ+	amber rim δ−, cyan δ+
+liseré magenta δ−, cyan δ	magenta rim δ−, cyan δ
+liseré magenta δ−, cyan δ+	magenta rim δ−, cyan δ+
 liés, ils vibrent	bound, they vibrate
 loi angulaire isotrope (non modélisée)	isotropic angular law (not modelled)
 longueur d'onde λ = hc/E =	wavelength λ = hc/E =
 loupe  Z=	magnifier  Z=
+lourd : renvoie les neutrons et freine l'expansion	heavy: returns neutrons and holds back the expansion
 lui cède ν =	gives it ν =
 lumière	light
 lumière γ	γ light
 lumière γ, invisible et très pénétrante : sans masse ni charge, elle file à c	γ light, invisible and very penetrating: with no mass and no charge, it flies at c
+légende	legend
+léger, peu absorbant	light, weakly absorbing
+léger, peu absorbant ;	light, weakly absorbing;
 m non mesuré : les 2l + 1 orientations à la fois, d'où un nuage sphérique.	m not measured: all 2l + 1 orientations at once, hence a spherical cloud.
 m non résolu	m not resolved
+magenta δ−, cyan δ	magenta δ−, cyan δ
+magenta δ−, cyan δ+	magenta δ−, cyan δ+
+main/paroi	hand/wall
 masse	mass
 masse après	mass after
 masse avant	mass before
+masse convertie	converted mass
+masse critique	critical mass
 masse disparue	mass lost
 masse invariante	invariant mass
 masse mesurée	measured mass
@@ -1748,12 +2087,14 @@ masses des quarks (Higgs) : Σ m = %s MeV	quark masses (Higgs): Σ m = %s MeV
 masses m + M	masses m + M
 maximum commun des réactifs (sphères uniformément chargées), teinte conventionnelle de chaque isotope ; les halos se	common maximum of the reactants (uniformly charged spheres), conventional tint of each isotope; the halos
 mer q+q̄	sea q+q̄
+mesuré	measured
 mesurée (NUBASE, mendeleev)	measured (NUBASE, mendeleev)
 milliards K	billion K
 milliards d'années	billion years
 milliards de °C	billion °C
 millions K	million K
 millions d'années	million years
+modes · cliquer pour exciter (dynamique libre)	modes · click to excite (free dynamics)
 modifié	modified
 modifié : teste à nouveau	changed: test again
 modèle %s MeV  ·  mesuré %s MeV  ·  écart %+.0f	model %s MeV  ·  measured %s MeV  ·  difference %+.0f
@@ -1775,6 +2116,8 @@ mur de Coulomb B =	Coulomb wall B =
 médiateur du courant neutre : ne change jamais la saveur	mediator of the neutral current: never changes flavour
 mélange des m	mixture of m
 méson · quark + antiquark	meson · quark + antiquark
+méthane	methane
+méthanol	methanol
 même élément, autre isotope	same element, another isotope
 n   ·  un neutron lent (0,0253 eV)	n   ·  a slow neutron (0.0253 eV)
 n'a pas de charge de couleur : il ne ressent pas l'interaction forte et ne peut pas être un constituant d'un hadron.	has no colour charge: it does not feel the strong interaction and cannot be a constituent of a hadron.
@@ -1789,14 +2132,20 @@ neutre : aucun champ électrique	neutral: no electric field
 neutre, masse < 0,8 eV/c² : il file pratiquement à c	neutral, mass < 0.8 eV/c²: it flies off practically at c
 neutrino muonique · invisible\nm < 0,8 eV · charge 0 · hélicité gauche\nun W⁺ : il change la saveur d'un quark	muon neutrino · invisible\nm < 0.8 eV · charge 0 · left-handed helicity\none W⁺: it changes the flavour of a quark
 neutrino électronique	electron neutrino
+neutrinos (perdus)	neutrinos (lost)
 neutron (u d d), charge 0, spin ½ · en émettant un π⁻, il devient proton	neutron (u d d), charge 0, spin ½ · by emitting a π⁻, it becomes a proton
 neutron absorbé, proton éjecté	neutron absorbed, proton ejected
 neutron absorbé, α éjectée	neutron absorbed, α ejected
 neutron · udd\nm 939,6 MeV · charge 0 · spin ½\naucun champ électrique autour	neutron · udd\nm 939.6 MeV · charge 0 · spin ½\nno electric field around it
 neutrons : ils font l'isotope · N / Maj+N	neutrons: they make the isotope · N / Shift+N
+neutrons prompts	prompt neutrons
+neutrons retardés	delayed neutrons
 nm arrache l'électron	nm ejects the electron
 nombre baryonique	baryon number
+nombre de nucléons A	number of nucleons A
 non absorbé : il continue	not absorbed: it carries on
+non calculé	not computed
+non convergé)	not converged)
 non résolu	not resolved
 noyau	nucleus
 noyau composé	compound nucleus
@@ -1808,9 +2157,11 @@ noyau radioactif · demi-vie	radioactive nucleus · half-life
 noyau vide	empty nucleus
 noyaux	nuclei
 noyaux (agrandis)	nuclei (enlarged)
+noyaux stables pesés (AME)	weighed stable nuclei (AME)
 noyaux tenus : lâche-les pour voir	nuclei held: let go of them to see
 nuage	cloud
 nuage :	cloud:
+nuage de l'atome (son dipôle calculé)	atom's cloud (its computed dipole)
 nucléons	nucleons
 nucléons ; un champ de charge	nucleons; a field of charge
 nucléons ; un champ de charge +	nucleons; a field of charge +
@@ -1825,25 +2176,35 @@ on en montre une par seconde environ	about one per second is shown
 on recommence jusqu'à ce que ça passe	try again until it gets through
 onde au contact	wave at contact
 onde trop fine pour être tracée à l'échelle : la tache blanche a le rayon λ (agrandi à 3 px)	wave too fine to be drawn to scale: the white spot has radius λ (enlarged to 3 px)
+orange quand ils se repoussent	orange when they repel
+orangé comprimée	orange when squeezed
 orbitale	orbital
 orbitale s : sphérique	s orbital: spherical
 ordre de Klechkowski (n + l croissant)	Klechkowski order (increasing n + l)
 orientation du spin : ↑	spin orientation: ↑
 orientation du spin : ↓	spin orientation: ↓
 ou	or
+ozone	ozone
 p + p : le rayonnement de freinage l'emporte toujours ; aucune température ne permet l'ignition.	p + p: bremsstrahlung always wins; no temperature allows ignition.
 p + p : voie faible estimée ; fusion directe très rare.	p + p: weak channel estimated; direct fusion is very rare.
 paire	pair
+paire de la liaison	bond pair
 par case, spins opposés ↑↓. Hund : une case chacun d'abord, spins parallèles.	per box, opposite spins ↑↓. Hund: one box each first, parallel spins.
+par kilogramme	per kilogram
 part avec l'impulsion du W ; le	leaves with the W's momentum; the
 part de l'élan changée en répulsion	share of the momentum turned into repulsion
 partage de l'énergie (Q + énergie du choc) entre les produits, selon la quantité de mouvement	sharing of the energy (Q + collision energy) among the products, by momentum
 particule α	α particle
+pas	steps
 pas assez de	not enough
 pas blanc. Trop de	not white. Too much
 pas de capture : rebond élastique au contact	no capture: elastic bounce at contact
+pas de chaîne : chaque fusion demande un plasma chaud et confiné	no chain: every fusion needs a hot, confined plasma
+pas de relaxation	relaxation steps
+pas/s	steps/s
 pause / reprise du temps de l'étoile	pause / resume the star's time
 perdus — il traverserait la Terre sans s'arrêter.	lost — it would cross the Earth without stopping.
+peroxyde d'hydrogène	hydrogen peroxide
 pertes : freinage	losses: braking
 peut voir	can see
 phase de ψ pour	phase of ψ for
@@ -1856,6 +2217,7 @@ pile AA (3,7 Wh)	AA battery (3.7 Wh)
 pion π⁺ · méson (u d̄)\nm 139,6 MeV · charge +1 · spin 0\nforce forte : il peut former un Δ	π⁺ pion · meson (u d̄)\nm 139.6 MeV · charge +1 · spin 0\nstrong force: it can form a Δ
 pion π⁻ · méson (d ū)\nm 139,6 MeV · charge −1 · spin 0\nforce forte : il peut former un Δ	π⁻ pion · meson (d ū)\nm 139.6 MeV · charge −1 · spin 0\nstrong force: it can form a Δ
 piston · température des parois : en bas	piston · wall temperature: at the bottom
+plasma	plasma
 plasma : λ_D =	plasma: λ_D =
 plein centre)	dead centre)
 plonger dans le noyau, 100 000 fois plus petit · touche 2	dive into the nucleus, 100 000 times smaller · key 2
@@ -1871,10 +2233,13 @@ positon (antiélectron)	positron (anti-electron)
 positon + neutrino	positron + neutrino
 positon + neutrino ·	positron + neutrino ·
 positron · antimatière\nm 0,511 MeV · charge +1 · spin ½\nun photon échangé	positron · antimatter\nm 0.511 MeV · charge +1 · spin ½\none photon exchanged
+potentiel	potential
+potentielle + cinétique	potential + kinetic
 pour	for
 pour faire du blanc.	to make white.
 pour une seule réaction	for a single reaction
 pour une seule réaction (	for a single reaction (
+poussière : électrons partagés, vers l'atome δ−	dust: shared electrons, drifting to the δ− atom
 presque vide	almost empty
 presque vide :	almost empty:
 pression ⅔E*/V ; Q et énergie emportée). « Inspecter » donne la loi de l'instant, chiffrée, et l'explication de l'étape	pressure ⅔E*/V; Q and energy carried away). « Inspect » gives the law of the moment, with numbers, and the explanation of the step
@@ -1913,11 +2278,24 @@ quasi-élastique	quasi-elastic
 quasi-élastique (impossible : charge)	quasi-elastic (impossible: charge)
 qui restent sont tenus un peu plus fort.	that remain are held a little more tightly.
 r : 0,5–7 fm · axe V compressé (asinh)	r: 0.5–7 fm · V axis compressed (asinh)
+r(C–H) du méthane	r(C–H) of methane
+r(H–H)	r(H–H)
+r(O–H) de l'eau	r(O–H) of water
+radical H₃O	H₃O radical
+radical amidogène	amidogen radical
+radical hydroperoxyle	hydroperoxyl radical
+radical hydroxyle	hydroxyl radical
+radical imidogène	imidogen radical
+radical méthyle	methyl radical
 raie mesurée (NIST)	measured line (NIST)
 raies mesurées (NIST)	measured lines (NIST)
+ralenti	slow motion
+ralentit les neutrons qu'il renvoie (traité en gaz libre, sans S(α,β))	slows down the neutrons it returns (treated as a free gas, without S(α,β))
 ramène l'atome au centre, vu de trois quarts · double-clic sur la scène : centrer ce point	brings the atom back to the centre, seen in three-quarter view · double-click the scene: centre on that point
+rapide	fast
 rapports : Clebsch–Gordan d'isospin	ratios: isospin Clebsch–Gordan
 rayon X (réarrangement du cortège)	X-ray (rearrangement of the electron cloud)
+rayon critique	critical radius
 rebond au contact : pᵣ sortant = −pᵣ entrant · E et impulsion conservées	bounce at contact: outgoing pᵣ = −incoming pᵣ · E and momentum conserved
 rebroussement (la répulsion n'y vaut que ~8 % de l'énergie). La lecture suit le temps physique : on voit les noyaux traverser	turning-point distance (where the repulsion is only ~8 % of the energy). Playback follows physical time: the nuclei cross
 reconnexion automatique en cours)	reconnecting automatically)
@@ -1939,10 +2317,14 @@ revoir le dernier tir	replay the last shot
 reçu, v	received, v
 rien : le noyau composé est resté entier	nothing: the compound nucleus stayed whole
 réacteur D-T	D-T reactor
+réactivité en dollars : ρ / β	reactivity in dollars: ρ / β
+réflecteur	reflector
+réflecteur de graphite	graphite reflector
 régler la longueur d'onde du laser	set the laser wavelength
 répulsion	repulsion
 répulsion :	repulsion:
 répulsion de	repulsion of
+répulsion des noyaux	nuclear repulsion
 répulsion restante	remaining repulsion
 répulsion électrique entre protons	electric repulsion between protons
 répulsion ↑	repulsion ↑
@@ -1954,6 +2336,7 @@ résultat de l'assemblage précédent)	result of the previous assembly)
 s (excité)	s (excited)
 s'annihile au premier électron	annihilates with the first electron
 s'annihilent ; les trois quarks restants forment un Δ	annihilate; the three remaining quarks form a Δ
+s'attirent, bord orangé quand ils se repoussent	attract, an orange rim when they repel
 s'enfonce dans le mur et s'y éteint presque — pas tout à fait : elle se matérialise de l'autre côté	sinks into the wall and almost dies out there — not quite: it materialises on the other side
 s'écartent, chacun avec l'impulsion de la cinématique à deux corps.	move apart, each with the momentum of two-body kinematics.
 s'écartent.	move apart.
@@ -1964,6 +2347,7 @@ sans effet sur le	no effect on the
 sans rien casser : le	without breaking anything: the
 sauf si tu l'éclaires ou si tu le modifies.	unless you shine light on it or change it.
 se désintègre	decays
+selon la tension (bleu au repos, blanc tirée, orangé comprimée), poussière des électrons partagés	from the tension (blue at rest, white when pulled, orange when squeezed), dust of the shared electrons
 selon son isotope), parcouru de repères mobiles suivant E total ; le champ des spins et des charges en mouvement	by isotope), crossed by moving markers that follow the total E; the field of the spins and of the moving charges
 serait dévié de	would be deflected by
 seul médiateur à changer la saveur : c → s, b → c…	the only mediator that changes flavour: c → s, b → c…
@@ -1974,8 +2358,10 @@ simulé	simulated
 soit	that is
 soit en TNT	that is, in TNT
 soit en bombes d'Hiroshima	in Hiroshima bombs
+solide	solid
 sommet de la colline	top of the hill
 sommet de la colline ·	top of the hill ·
+sommet de la courbe	top of the curve
 son noyau ne peut pas retenir un électron de plus. Les électrons déjà là le repoussent	its nucleus cannot hold one more electron. The electrons already there push it away
 sortant	outgoing
 source	source
@@ -1985,8 +2371,11 @@ sous le mur : effet tunnel	under the wall: quantum tunnelling
 sous un mur de	under a wall of
 sous-couches pleines	full subshells
 sous-couches pleines,	full subshells,
+sous-critique	subcritical
 sphère = rayon quadratique moyen du proton, 0,84 fm × √(5/3)	sphere = root-mean-square radius of the proton, 0.84 fm × √(5/3)
 sphère = un atome (σ =	sphere = one atom (σ =
+sphère nue	bare sphere
+sphère nue comprimée)	compressed bare sphere)
 spin 1/2 · hélicité gauche	spin 1/2 · left-handed helicity
 spin 1/2 · moment magnétique ≈ 1 magnéton de Bohr (1 838 μN)	spin 1/2 · magnetic moment ≈ 1 Bohr magneton (1 838 μN)
 spin : l'électron est un fermion	spin: the electron is a fermion
@@ -1998,8 +2387,13 @@ stabilité ». Les règles : la couleur doit être neutre (le mélange de couleu
 stable : le plus léger des leptons chargés	stable: the lightest of the charged leptons
 stable à l'intérieur d'un hadron (la désintégration est celle du hadron)	stable inside a hadron (the decay is the hadron's)
 superposent sans trou. Entre les noyaux, le potentiel combiné U = eφ = Σ kZᵢe²/rᵢ (l'énergie d'une charge +e) en couleurs	overlap without gaps. Between the nuclei, the combined potential U = eφ = Σ kZᵢe²/rᵢ (the energy of a charge +e) in heat
+sur-critique différé	delayed supercritical
+surface de van der Waals), colorée par le potentiel électrostatique : rouge négatif, bleu positif	van der Waals surface), coloured by the electrostatic potential: red negative, blue positive
 surfaces au contact : ce col monterait à	surfaces in contact: this neck would rise to
+surfaces les montre déjà)	surfaces already shows them)
 survol : lire la valeur	hover: read the value
+survol : lire un noyau	hover: read a nucleus
+symboles	symbols
 synthèse additive : rouge + vert + bleu = blanc	additive mixing: red + green + blue = white
 système dinucléaire : il tourne ≈	dinuclear system: it rotates ≈
 système dinucléaire, chauffé de	dinuclear system, heated by
@@ -2010,7 +2404,9 @@ t ≈ 0 · la soudure prend ~10⁻²² s	t ≈ 0 · the weld takes ~10⁻²² s
 table périodique	periodic table
 tableau périodique et isotopes	periodic table and isotopes
 taille d'un atome d'H	size of an H atom
+tamper d'uranium naturel	natural-uranium tamper
 teinté	tinted
+temps (échelle logarithmique)	time (logarithmic scale)
 temps réel	real time
 temps simulé	simulated time
 temps simulé :	simulated time:
@@ -2018,6 +2414,7 @@ température	temperature
 tension V	tension V
 teste : l'interaction forte donne le reste	test: the strong interaction provides the rest
 tester la stabilité	test the stability
+thermique	thermal
 tire les deux noyaux l'un dans l'autre ; la friction nucléaire	pulls the two nuclei into each other; nuclear friction
 tirs	shots
 tirs pour que celui-ci passe	shots for this one to get through
@@ -2054,6 +2451,7 @@ un nucléon et ses quarks · touche 3	a nucleon and its quarks · key 3
 un nucléon s'échappe	a nucleon escapes
 un photon de cette longueur d'onde vers l'atome · touche L	a photon of this wavelength towards the atom · key L
 un photon de lumière visible	one photon of visible light
+un plasma chaud et confiné, pas une chaîne de neutrons.	a hot, confined plasma, not a neutron chain.
 un projectile vers le noyau : capture, fission, transmutation · touche B : un neutron	a projectile towards the nucleus: capture, fission, transmutation · key B: a neutron
 un proton capture un électron	a proton captures an electron
 un proton de plus : l'élément change	one more proton: the element changes
@@ -2088,6 +2486,7 @@ valence seule ·	valence only ·
 valeur est chiffrée.	value is given.
 valeur mesurée	measured value
 valeur non connue	value not known
+valeurs des charges δ	δ charge values
 vecteur de l'interaction forte	carrier of the strong interaction
 vecteur de l'électromagnétisme, portée infinie	carrier of electromagnetism, infinite range
 vers le fond	towards the back
@@ -2105,8 +2504,15 @@ vitesse	speed
 vitesse :	speed:
 vitesse relative	relative speed
 voici ce cas rare.	here is that rare case.
+voie	path
 voie suivie dans %.1f %% des cas)	path taken in %.1f %% of cases)
+voir Méthode & validation) ; les géométries et les forces sont fiables.	see Method & validation); geometries and forces are reliable.
+voir le tableau calculé ↔ mesuré.	see the computed ↔ measured table.
+voisins (coordination)	neighbours (coordination)
 voiture à 100 km/h	car at 100 km/h
+votre main	your hand
+votre main · la paroi	your hand · the wall
+vs atomes isolés	vs isolated atoms
 vu	seen
 vécu	lived
 x (fm)	x (fm)
@@ -2165,6 +2571,7 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 · électrons à moins de	· electrons less than
 · énergie cinétique	· kinetic energy
 À chaque distance, les équations de Kohn-Sham sont résolues pour tous les électrons.	At each distance, the Kohn-Sham equations are solved for all the electrons.
+À poser	To place
 À retenir	Remember
 À retenir :	Remember:
 À retenir : chaque élément rend toujours les mêmes couleurs. C'est sa signature.	Remember: each element always gives back the same colours. It is its signature.
@@ -2185,16 +2592,20 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 ÉNERGIE  √s	ENERGY  √s
 ÉNERGIE CALCULÉE	COMPUTED ENERGY
 ÉNERGIE DE L'ÉLECTRON (eV, échelle logarithmique)	ELECTRON ENERGY (eV, logarithmic scale)
+ÉNERGIE DE LIAISON PAR NUCLÉON	BINDING ENERGY PER NUCLEON
 ÉNERGIE DU FAISCEAU	BEAM ENERGY
 ÉNERGIE E(R) · calculée à	ENERGY E(R) · computed at
 ÉNERGIE EMPORTÉE	ENERGY CARRIED AWAY
 ÉNERGIE INITIALE	INITIAL ENERGY
-ÉQUIVALENCES	EQUIVALENTS
+ÉQUIVALENCES	EQUIVALENCES
 ÉTAT QUANTIQUE	QUANTUM STATE
 ÉTAT QUANTIQUE DE L'ÉLECTRON	QUANTUM STATE OF THE ELECTRON
 ÉTAT QUANTIQUE ·	QUANTUM STATE ·
+Étincelle : de l'énergie cinétique déposée sur un atome et ses voisins (clic droit sur l'atome), quantité de mouvement conservée	Spark: kinetic energy deposited on an atom and its neighbours (right-click the atom), momentum conserved
+étoile : paire sur trois atomes ou plus (multicentre)	star: a pair on three atoms or more (multicentre)
 ÉVAPORATION DE WEISSKOPF	WEISSKOPF EVAPORATION
 ÉVÉNEMENTS JUSQU'ICI	EVENTS SO FAR
+Écart HOMO–LUMO	HOMO–LUMO gap
 Échange d'un boson W⁺ virtuel	Exchange of a virtual W⁺ boson
 Échange d'un boson W⁻ virtuel	Exchange of a virtual W⁻ boson
 Échange d'un photon virtuel	Exchange of a virtual photon
@@ -2209,16 +2620,27 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 Énergie	Energy
 Énergie attendue : 0,1 à 2 000 000 keV, dans le domaine du modèle.	Expected energy: 0.1 to 2 000 000 keV, within the model's range.
 Énergie au-dessus de la barrière	Energy above the barrier
+Énergie cinétique	Kinetic energy
 Énergie conseillée pour ce couple	Recommended energy for this pair
 Énergie conseillée pour ce couple :	Recommended energy for this pair:
 Énergie d'ionisation	Ionisation energy
 Énergie de liaison (Weizsäcker)	Binding energy (Weizsäcker)
+Énergie de liaison de H₂ (Dₑ)	Bond energy of H₂ (Dₑ)
 Énergie de recul T = Q²/2M =	Recoil energy T = Q²/2M =
+Énergie des neutrons qui fissionnent	Energy of the neutrons that cause fission
 Énergie du choc (centre de masse)	Collision energy (centre of mass)
 Énergie du faisceau	Beam energy
+Énergie moyenne à la fission	Mean energy at fission
+Énergie potentielle	Potential energy
 Énergie totale  %+8.3f MeV	Total energy    %+8.3f MeV
+Énergie totale (conservée)	Total energy (conserved)
 Énergies d'ionisation et raies : mesurées (NIST) quand elles existent, sinon estimées par Slater.	Ionisation energies and lines: measured (NIST) when they exist, otherwise estimated with Slater's rules.
+Épaisseur	Thickness
+Établi	Workbench
+Établi vide	Empty workbench
+Établi vide : ajoutez un atome	Empty workbench: add an atom
 État fondamental : il ne peut plus descendre. Seul un photon de la bonne énergie le fera monter.	Ground state: it cannot go any lower. Only a photon of the right energy will raise it.
+Étincelle	Spark
 × la répulsion	× the repulsion
 × plus que	× more than
 × sa place	× its true place
@@ -2266,11 +2688,15 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 électron, en moyenne	electron, on average
 électron, en moyenne,	electron, on average,
 électrons	electrons
+électrons (liaison)	electrons (bonding)
 électrons : ils font l'ion · E / Maj+E	electrons: they make the ion · E / Shift+E
 électrons des couches internes : leur nuage serré fait le cœur lumineux (zoome)	inner-shell electrons: their tight cloud makes the bright core (zoom in)
 électrons dégénérés (Pauli)	degenerate electrons (Pauli)
+électrons partagés (liaison)	shared electrons (bond)
 électrons à moins de	electrons less than
+électrons β	β electrons
 électrons,	electrons,
+électrostatique des charges	charge electrostatics
 élément choisi y amène la vue).	element chosen there brings the view to it).
 émission	emission
 émission d'un neutron	neutron emission
@@ -2287,10 +2713,14 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 énergie de liaison	binding energy
 énergie de liaison (Weizsäcker)	binding energy (Weizsäcker)
 énergie de liaison (Weizsäcker) :	binding energy (Weizsäcker):
+énergie de liaison par nucléon	binding energy per nucleon
 énergie disponible √s − m − M	available energy √s − m − M
+énergie donnée	energy given
 énergie du tir	shot energy
 énergie du tir :	shot energy:
 énergie et taille	energy and size
+énergie libérée	energy released
+énergie potentielle	potential energy
 énergie pour arracher l'électron de valence	energy needed to remove the valence electron
 énergie totale	total energy
 étape	step
@@ -2300,11 +2730,19 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 état exotique	exotic state
 état prédit	predicted state
 états de spin (clic pour choisir)	spin states (click to choose)
+éthane	ethane
+éthylène	ethylene
+étincelle	spark
+étincelle pour franchir la barrière d'activation.	spark to cross the activation barrier.
 étrangeté · charme · beauté	strangeness · charm · beauty
 Γₓ ∝ (2sₓ+1)·μₓ·ε·σ(ε)·ρ(E* − Bₓ − ε)     (Weisskopf	Γₓ ∝ (2sₓ+1)·μₓ·ε·σ(ε)·ρ(E* − Bₓ − ε)     (Weisskopf
 Δ → N π (au sol)	Δ → N π (on the ground)
 Δx %.0e · Δcharge %.0e · Δcouleur %.0e	Δx %.0e · Δcharge %.0e · Δcolour %.0e
+Δρ  Déformation	Δρ  Deformation
+Δρ = ρ(molécule) − ρ(atomes isolés) : cyan, les électrons que la liaison a rassemblés ; orange, ceux qu'elle a pris	Δρ = ρ(molecule) − ρ(isolated atoms): cyan, the electrons the bond gathered; orange, those it took away
+Δρ sous 0,01 e/Å³ partout : rien n'a bougé (un atome seul est l'atome libre de référence)	Δρ below 0.01 e/Å³ everywhere: nothing has moved (a lone atom is the reference free atom)
 Δχ de Pauling =	Pauling Δχ =
+Λ pondéré par le flux adjoint ; β non pondéré.	Λ weighted by the adjoint flux; β unweighted.
 Σ masses avant − Σ masses après  ·  Σp⃗ = 0	Σ masses before − Σ masses after  ·  Σp⃗ = 0
 Σ|Y|² constante, nuage sphérique (Unsöld)	Σ|Y|² constant, spherical cloud (Unsöld)
 α   ·  une particule α de 5 MeV → chambre de collision	α   ·  a 5 MeV α particle → collision chamber
@@ -2314,6 +2752,11 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 β₂ point zéro =	zero-point β₂ =
 γ  rayon gamma (lumière)	γ  gamma ray (light)
 γ (transition isomérique)	γ (isomeric transition)
+γ prompts	prompt γ
+γ retardés	delayed γ
+δ+ électrons en moins	δ+ missing electrons
+δ±  charges partielles	δ±  partial charges
+δ− électrons en trop	δ− extra electrons
 κ = √(2μ(V − E))/ħ     P(ce tir) =	κ = √(2μ(V − E))/ħ     P(this shot) =
 λ dessinée ×	λ drawn ×
 λ dessinée ÷	λ drawn ÷
@@ -2328,10 +2771,12 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 ν neutrino : ne touche rien	ν neutrino: touches nothing
 ν s'échappe	ν escapes
 ν̄ antineutrino : ne touche rien	ν̄ antineutrino: touches nothing
+ρ  Densité	ρ  Density
 σ totale	total σ
 σ_inél = σ_tot − σ_él	σ_inel = σ_tot − σ_el
 σ·ΔL = %.0f MeV  ·  une paire u ū coûte %.0f MeV	σ·ΔL = %.0f MeV  ·  a u ū pair costs %.0f MeV
 τ → ℓ ν ν̄ ou hadrons	τ → ℓ ν ν̄ or hadrons
+ψ  Orbitale	ψ  Orbital
 — ajoute un quark	— add a quark
 — clic sur un quark pour changer sa couleur.	— click a quark to change its colour.
 — il recule à	— it recoils at
@@ -2350,11 +2795,13 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 ∞ (il s'arrête)	∞ (it stops)
 ≈ %.0f min réelles à cette vitesse)	≈ %.0f real min at this speed)
 ≈ %.0f s réelles à cette vitesse)	≈ %.0f real s at this speed)
+⌬   Laboratoire moléculaire	⌬   Molecular laboratory
 ⏭  Événement suivant	⏭  Next event
 ⏮ étape	⏮ step
 ⏸ Analyse : le temps est arrêté après l'événement.   ▶ reprendre   ·   ⏭ aller au suivant	⏸ Analysis: time is stopped after the event.   ▶ resume   ·   ⏭ go to the next one
 ⏸ arrêté · ▶ reprendre	⏸ stopped · ▶ resume
 ⏸ en pause	⏸ paused
+ⓘ  Les chiffres	ⓘ  The numbers
 ■ noyau stable réel	■ real stable nucleus
 ■ électrons gagnés	■ electrons gained
 ■ électrons partis	■ electrons gone
@@ -2363,16 +2810,122 @@ zoomer · touche + (ou la molette)	zoom in · key + (or the mouse wheel)
 ▾ replier les sous-couches pleines	▾ fold the full subshells
 ◉   Le monde subatomique (quarks, hadrons, partons)	◉   The subatomic world (quarks, hadrons, partons)
 ◌ couche pleine montrée en anneau : survoler pour voir ses électrons	◌ full shell shown as a ring: hover to see its electrons
+◎  Amener au rayon critique	◎  Set to the critical radius
 ● un point toutes les	● one dot every
 ◯ ton noyau	◯ your nucleus
 ★   Cœur d'étoile	★   Star core
+☢  Lancer la réaction en chaîne	☢  Start the chain reaction
+☢  Rafale ×10	☢  Burst ×10
 ☢  Tirer sur le noyau	☢  Fire at the nucleus
+☢ Nouveau tir	☢ New shot
 ⚛   Fusion de deux noyaux	⚛   Fusion of two nuclei
 ⚛   Fusion · fission · transmutation	⚛   Fusion · fission · transmutation
 ⚛  Jusqu'à la fusion	⚛  Until fusion
 ⚛  Jusqu'à la transmutation	⚛  Until transmutation
+⚛  Un neutron	⚛  One neutron
 ✓  assemblage viable	✓  viable assembly
 ✕  assemblage refusé	✕  assembly refused
 ✥ Déplacer	✥ Pan
 ✦  Tirer un photon	✦  Fire a photon
 ⧉ Fenêtre	⧉ Window
+Atome retiré : la géométrie se recalcule	Atom removed: the geometry is being recomputed
+Légende	Legend
+plus rien de partagé entre les noyaux : liaison rompue	nothing shared between the nuclei any more: broken bond
+trait plein : la molécule a gagné des électrons (Δρ > 0)	solid line: the molecule gained electrons (Δρ > 0)
+tirets : elle en a perdu, par rapport aux atomes libres (Δρ < 0)	dashes: it lost some, compared with the free atoms (Δρ < 0)
+Δρ vue en transparence ; une courbe à 0,025 · 0,05 · 0,1 · 0,2 · 0,4 · 0,8 · 1,6 e/Å²	Δρ seen through; a contour at 0.025 · 0.05 · 0.1 · 0.2 · 0.4 · 0.8 · 1.6 e/Å²
+point : un noyau	dot: a nucleus
+Calcul de la grille…	Computing the grid…
+Δρ = ρ(molécule) − ρ(atomes libres), vue en transparence : où les électrons sont allés en formant les liaisons	Δρ = ρ(molecule) − ρ(free atoms), seen through: where the electrons went when the bonds formed
+2 électrons	2 electrons
+|ψ|² vue en transparence : où l'électron peut être trouvé, ramenée à son maximum (0 → 1)	|ψ|² seen through: where the electron can be found, scaled to its maximum (0 → 1)
+sombre entre deux lobes : un nœud, ψ = 0, l'électron n'y est jamais	dark between two lobes: a node, ψ = 0, the electron is never there
+le signe de ψ n'est pas montré : ψ et −ψ ont le même nuage	the sign of ψ is not shown: ψ and −ψ have the same cloud
+orbitales qui se recouvrent	overlapping orbitals
+entropie électronique (occupations lissées)	electronic entropy (smeared occupations)
+Un atome seul	A single atom
+Liée	Bound
+À peine liée	Barely bound
+Non liée	Not bound
+rien à lier : la cohésion naît des voisins	nothing to bind: cohesion comes from neighbours
+l'énergie à fournir pour la séparer en atomes	the energy needed to pull it apart into atoms
+séparée en atomes, elle serait plus stable	split into atoms, it would be more stable
+Agitation des noyaux	Motion of the nuclei
+de la cohésion	of the cohesion
+plus rien à défaire	nothing left to break
+relaxation : les noyaux descendent sans vitesse	relaxation: the nuclei settle with no velocity
+énergie potentielle totale	total potential energy
+ce qui lie	what binds
+ce qui coûte	what costs
+reste : la cohésion	what remains: the cohesion
+il manque	short by
+Bilan énergétique	Energy balance
+La cohésion et sa balance sont comptées depuis les atomes isolés et neutres, calculés par le même modèle.	Cohesion and its balance are counted from isolated neutral atoms, computed with the same model.
+le vide	vacuum
+écart	gap
+occupé	filled
+Le rayon suit l'énergie, pas une distance : au centre, les électrons les plus liés ; au bord, le vide.	The radius follows energy, not distance: the most tightly bound electrons at the centre, vacuum at the edge.
+Survoler un cercle pour lire son niveau, cliquer pour voir son orbitale.	Hover over a ring to read its level, click to see its orbital.
+par voisin	by neighbour
+par terme	by term
+en équilibre	in equilibrium
+aucun voisin : rien ne le tire ni ne le pousse	no neighbour: nothing pulls or pushes it
+vu comme à l'écran	seen as on screen
+vu dans le plan de ses voisins	seen in the plane of its neighbours
+nette	net
+(la somme des flèches)	(the sum of the arrows)
+(la somme)	(the sum)
+un voisin qui l'attire	a neighbour pulling it
+qui le repousse	one pushing it away
+le reste (paires lointaines, halogène, main)	the rest (distant pairs, halogen, hand)
+une flèche de travers : la paire tient aussi l'angle	an arrow off the axis: the pair also holds the angle
+main / paroi	hand / wall
+la paire s'attire	the pair attracts
+elle se repousse	it repels
+VOISINS	NEIGHBOURS
+non liés	not bonded
+le long de l'axe : presque rien	along the axis: almost nothing
+le long de l'axe : ils s'attirent	along the axis: they attract
+le long de l'axe : ils se repoussent	along the axis: they repel
+de travers	off-axis
+plus rien de partagé entre les noyaux	nothing shared between the nuclei any more
+sans elle, GFN1 lui donnerait des électrons sans fin	without it, GFN1 would keep giving it electrons
+Cliquer sur un atome pour voir sa carte : ses voisins et les forces qu'il subit.	Click an atom to see its map: its neighbours and the forces acting on it.
+le signe de l'onde, pas une charge	the sign of the wave, not a charge
+bleu : ψ > 0 · orange : ψ < 0 — le signe de l'onde, pas une charge	blue: ψ > 0 · orange: ψ < 0 — the sign of the wave, not a charge
+point blanc et trait : les noyaux et leurs liaisons	white dot and line: the nuclei and their bonds
+l'essentiel	essentials
+vers	towards
+loin de	away from
+la force nette : où l'atome est poussé	net force: where the atom is pushed
+ils s'attirent	they attract
+ils se repoussent	they repel
+trait plein : liés	solid: bonded
+tirets : non liés	dashed: not bonded
+épaisseur : la force	thickness: the force
+le détail des forces : « par voisin », « par terme »	force details: “by neighbour”, “by term”
+LIÉS	BONDED
+NON LIÉS	NOT BONDED
+liaison en partie double (conjuguée)	partly double bond (conjugated)
+les électrons partagés le tiennent	the shared electrons hold it
+liaison comprimée : les cœurs se repoussent	compressed bond: the cores repel
+liaison rompue : plus rien de partagé	broken bond: nothing shared any more
+presque rien entre eux	almost nothing between them
+gêne stérique : leurs couches pleines se touchent	steric clash: their filled shells touch
+leurs orbitales se recouvrent	their orbitals overlap
+un début de liaison : leurs orbitales se recouvrent	the start of a bond: their orbitals overlap
+charges de même signe	like charges
+charges opposées	opposite charges
+cœurs trop proches	cores too close
+cohésion	cohesion
+relâcher : elle se détend, ou casse si on a trop tiré	release: it relaxes, or breaks if pulled too far
+cliquer un atome pour y attacher	click an atom to attach
+, ou dans le vide	, or in empty space
+clic droit sur	right-click
+: étincelle ou retirer	: spark or remove
+le saisir : le tirer	grab it: pull it
+orienté comme à l'écran	oriented as on screen
+survoler un voisin : ses valeurs	hover over a neighbour: its values
+bleu : ψ > 0 · rouge : ψ < 0 — le signe de l'onde, pas une charge	blue: ψ > 0 · red: ψ < 0 — the sign of the wave, not a charge
+boules et bâtonnets : les noyaux et leurs liaisons	balls and sticks: the nuclei and their bonds
+tous les H	all H

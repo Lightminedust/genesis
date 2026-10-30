@@ -130,6 +130,36 @@ message UserAction {
     HADRON_CLEAR = 78;        // atelier : vider la table
     COLLISION_FORCE = 79;     // un événement du cas choisi sur le spectre : value = indice du canal
     FIRE_NEUTRON = 80;        // un neutron thermique (0,0253 eV) vers le noyau de l'atome
+    CHAIN_START = 81;         // le laboratoire de la réaction en chaîne (masse critique)
+    CHAIN_STOP = 82;
+    CHAIN_SET_CORE = 83;      // value = indice du cœur dans ChainState.cores
+    CHAIN_SET_RADIUS = 84;    // amount = rayon du cœur, en cm
+    CHAIN_SET_REFLECTOR = 85; // value = indice du réflecteur (−1 : aucun) ; amount = épaisseur en cm (si > 0)
+    CHAIN_SET_COMPRESSION = 86;  // amount = facteur de compression de la densité du cœur
+    CHAIN_FIRE = 87;          // un tir : value = neutrons d'amorçage, vector = leur point de naissance (cm)
+    CHAIN_SET_MODE = 88;      // value = 0 simulateur, 1 bac à sable du rendement
+    CHAIN_SET_NUCLIDE = 89;   // value = 1000 Z + A : le noyau du bac à sable
+    CHAIN_CRITICAL = 90;      // amener le rayon au rayon critique calculé
+    MOLECULE_START = 91;      // le laboratoire moléculaire (GFN1-xTB)
+    MOLECULE_STOP = 92;
+    MOLECULE_PRESET = 93;     // value = indice dans MoleculeLabState.presets
+    MOLECULE_REACTION = 94;   // value = indice dans MoleculeLabState.reactions (le réacteur)
+    MOLECULE_ADD_ATOM = 95;   // value = Z ; amount = atome d'attache (−1 : le plus central) ; vector = position (Å), facultative
+    MOLECULE_REMOVE_ATOM = 96;   // value = indice de l'atome
+    MOLECULE_DRAG = 97;       // value = atome saisi (−1 : relâché) ; vector = la cible (Å)
+    MOLECULE_DYNAMICS = 98;   // value = 0 relaxation, 1 thermostat, 2 libre ; amount = température (K), si ≥ 0
+    MOLECULE_SPARK = 99;      // value = atome ; amount = énergie déposée (eV)
+    MOLECULE_VIEW = 100;      // value = 0 densité, 1 déformation, 2 orbitale ; amount = indice d'orbitale (−1 : HOMO) ;
+                              // vector[0] = 1 : la carte de potentiel est affichée (le moteur ne calcule la grille que
+                              // pour Δρ, ψ ou cette carte)
+    MOLECULE_MODES = 101;     // calculer les modes de vibration (hessienne)
+    MOLECULE_EXCITE = 102;    // value = mode ; amount = quanta hν
+    MOLECULE_CHARGE = 103;    // value = charge totale
+    MOLECULE_PAUSE = 104;     // value = 1 pause, 0 reprise
+    MOLECULE_CLEAR = 105;     // établi vide
+    MOLECULE_WALL = 106;      // amount = rayon de la paroi (Å), 0 : aucune
+    MOLECULE_ISOTOPE = 107;   // value = atome, ou −Z pour tous les atomes de l'élément Z ; amount = nombre de masse A
+                              // (0 : le mélange naturel)
   }
   ActionType type = 1;
   int32 value = 2;
@@ -745,6 +775,8 @@ message UniverseFrame {
   CollisionState collision = 54;  // la sonde électronique : cas, spectre, étapes calculées
   HadronLabState hadron_lab = 55; // l'atelier de hadrons : validité, masse, destin
   BagState bag = 56;              // la forme des hadrons (sac du MIT, tube de flux) et le puits de Coulomb du proton
+  ChainState chain = 57;          // la réaction en chaîne : masse critique, k_eff, cascade, bac à sable
+  MoleculeLabState molecule_lab = 58;   // le laboratoire moléculaire : noyaux, électrons (GFN1-xTB), forces
 }
 
 message SubatomicParticle {
@@ -1313,4 +1345,366 @@ message LawsonState {
   double wait_s = 20;               // temps moyen avant qu'un noyau donné fusionne
   double best_t_kev = 21;
   double best_triple = 22;
+}
+
+// ------------------------------------------------------------------
+// La réaction en chaîne : une sphère fissile, son réflecteur, k_eff calculé par le transport des neutrons
+// (ENDF/B-VIII.0, 44 groupes), la cascade tirée au hasard, l'excursion, et le bac à sable du rendement.
+// ------------------------------------------------------------------
+message ChainMaterial {
+  string key = 1;
+  string label = 2;
+  string detail = 3;
+  double density = 4;                 // g/cm³, nominale
+  bool fissile = 5;                   // a une section efficace de fission évaluée
+  string composition = 6;             // "93,7 % U-235 · 5,3 % U-238 · 1 % U-234" (en masse)
+  string source = 7;
+}
+
+// Un neutron de la cascade, de sa naissance à sa fin.
+message ChainTrack {
+  int32 generation = 1;
+  int32 parent = 2;                   // indice du neutron dont la fission l'a fait naître ; −1 : neutron source
+  repeated float points = 3;          // x, y, z (cm), t (ns) à chaque choc et à chaque surface traversée
+  repeated int32 groups = 4;          // groupe d'énergie sur chaque segment
+  string end = 5;                     // fission, capture, fuite
+  int32 children = 6;                 // neutrons nés de sa fission (loi de Terrell autour de ν̄)
+  repeated int32 kinds = 7;           // nature de chaque point : 0 naissance, 1 diffusion, 2 surface, 3 fuite, 4 fin
+}
+
+// Une ligne du tableau comparatif (U-235, Fe-56, Fe-60, D + T).
+message ChainCompare {
+  string label = 1;
+  string process = 2;
+  double q_mev = 3;
+  double j_per_kg = 4;
+  double tnt_per_kg = 5;              // tonnes de TNT par kilogramme
+  string condition = 6;
+  bool possible = 7;
+  string note = 8;
+}
+
+// Le bac à sable du rendement : n'importe quel noyau pesé.
+message YieldState {
+  int32 z = 1;
+  int32 a = 2;
+  string label = 3;
+  string name = 4;
+  double mass_u = 5;
+  double binding_per_nucleon = 6;     // MeV
+  repeated int32 curve_a = 7;         // courbe d'Aston : noyaux stables naturels (envoyée une fois)
+  repeated int32 curve_z = 8;
+  repeated double curve_ba = 9;
+  int32 peak_z = 10;
+  int32 peak_a = 11;
+  double peak_ba = 12;
+  bool fission_known = 13;            // une coupure en deux noyaux pesés existe
+  double fission_q_mev = 14;          // la coupure la plus favorable
+  int32 fission_z1 = 15;
+  int32 fission_a1 = 16;
+  int32 fission_z2 = 17;
+  int32 fission_a2 = 18;
+  double fission_products_u = 19;     // masse des deux morceaux
+  bool symmetric_known = 20;
+  double symmetric_q_mev = 21;
+  bool fusion_known = 22;             // X + X → (2Z, 2A) pesé
+  double fusion_q_mev = 23;
+  int32 fusion_z = 24;
+  int32 fusion_a = 25;
+  double fusion_product_u = 26;
+  double barrier_mev = 27;            // barrière de Coulomb de X + X
+  double lawson_triple = 28;          // nτT minimal (keV·s/m³) ; 0 : jamais d'ignition, ou non calculé
+  double lawson_t_kev = 29;
+  bool evaluated = 30;                // le noyau est dans la bibliothèque de neutrons
+  bool fission_data = 31;             // et il a une section efficace de fission
+  double k_infinity = 32;
+  double sigma_thermal_b = 33;        // σ_f à 0,0253 eV (groupe)
+  double sigma_fast_b = 34;           // σ_f vers 1,5 MeV (groupe)
+  double critical_kg = 35;            // sphère nue de métal pur ; 0 : jamais critique
+  string verdict = 36;
+  repeated ChainCompare compare = 37;
+  double fission_ba1 = 38;            // B/A des deux morceaux et du noyau fusionné (masses mesurées)
+  double fission_ba2 = 39;
+  double fusion_ba = 40;
+}
+
+message ChainState {
+  bool active = 1;
+  bool computing = 2;
+  string status = 3;
+  string error = 4;
+  repeated ChainMaterial cores = 5;          // envoyés une fois
+  repeated ChainMaterial reflectors = 6;
+  int32 core = 7;
+  int32 reflector = 8;                       // −1 : sphère nue
+  double radius_cm = 9;
+  double reflector_cm = 10;
+  double compression = 11;
+  int32 mode = 12;                           // 0 simulateur, 1 bac à sable
+  bool ready = 13;                           // un calcul de transport correspond à ces réglages
+  double k_eff = 14;
+  double k_infinity = 15;
+  string regime = 16;                        // sous-critique, critique, sur-critique différé, critique prompt
+  string regime_text = 17;
+  double density = 18;                       // g/cm³ après compression
+  double mass_kg = 19;
+  double reflector_mass_kg = 20;
+  double critical_radius_cm = 21;            // 0 : jamais critique
+  double critical_mass_kg = 22;
+  double leakage = 23;                       // destin des neutrons : fractions
+  double fission = 24;
+  double capture = 25;
+  double mean_fission_energy_ev = 26;        // énergie moyenne des neutrons qui font fissionner
+  double generation_time_s = 27;             // Λ, pondéré par l'importance (flux adjoint)
+  double beta = 28;                          // fraction de neutrons retardés
+  double dollars = 29;                       // réactivité ρ/β
+  double period_s = 30;                      // période asymptotique (inhour) ; négative : décroissance ; 0 : critique
+  double prompt_critical_k = 31;             // 1/(1 − β)
+  double nu_bar = 32;
+  repeated double curve_radius = 33;         // k_eff(R), même matériau, même réflecteur
+  repeated double curve_k = 34;
+  repeated double bounds_ev = 35;            // bornes des groupes (envoyées une fois)
+  repeated double spectrum = 36;             // flux du cœur par unité de léthargie, normé à 1
+  repeated double fission_spectrum = 37;     // part des fissions par groupe
+  repeated double flux_radius = 38;          // rayons des coquilles (cm) et flux total (normé), pour le profil
+  repeated double flux_profile = 39;
+  double source_n_s = 40;                    // neutrons de fission spontanée par seconde
+  string source_text = 41;
+  double q_recoverable_mev = 42;             // ENDF MT 458 : récupérable (sans les neutrinos)
+  double q_prompt_mev = 43;                  // déposé tout de suite (fragments, neutrons, γ prompts)
+  double q_mass_mev = 44;                    // Δm·c² des fragments tirés, avant leurs désintégrations β⁻
+  repeated LabFact energy_split = 45;        // le partage de l'énergie de fission (MT 458)
+  repeated string formulas = 46;
+  string model = 47;
+  string validation = 48;                    // Godiva recalculé
+  double outer_radius_cm = 49;
+  // Le tir : la cascade et l'excursion.
+  int32 run = 50;
+  bool shot = 51;                            // le tir correspond aux réglages en vigueur
+  repeated ChainTrack tracks = 52;
+  repeated double generation_counts = 53;    // effectif estimé de chaque génération
+  repeated double time_s = 54;               // l'excursion, sur une échelle de temps logarithmique
+  repeated double log10_neutrons = 55;
+  repeated double energy_j = 56;
+  repeated double temperature_k = 57;
+  repeated double radius_factor = 58;
+  repeated double k_t = 59;
+  repeated double power_w = 60;
+  repeated string phase = 61;
+  double yield_j = 62;
+  double fissions = 63;
+  double burned_fraction = 64;
+  double peak_temperature_k = 65;
+  string excursion_text = 66;
+  bool dispersed = 67;
+  repeated LabFact facts = 68;               // équivalences : TNT, Hiroshima, masse convertie...
+  YieldState sandbox = 69;
+  double core_atoms = 70;                    // noyaux dans le cœur
+  double divergence_probability = 71;        // chance qu'un seul neutron allume une chaîne sans fin
+  int32 sources = 72;                        // neutrons d'amorçage du tir
+  bool excursion_ready = 73;                 // l'excursion du tir `run` est dans cette frame (ou déjà reçue)
+}
+
+// --------------------------------------------------------
+// Le laboratoire moléculaire (GFN1-xTB)
+// --------------------------------------------------------
+message MoleculeAtom {
+  int32 z = 1;
+  string symbol = 2;
+  repeated double position = 3;              // Å
+  double charge = 4;                         // charge partielle de Mulliken (e) : δ+ / δ−
+  double coordination = 5;                   // nombre de coordination (D3)
+  repeated double force = 6;                 // force totale (eV/Å)
+  repeated double force_electronic = 7;      // les électrons de liaison (bande, électrostatique, coordination)
+  repeated double force_repulsion = 8;       // la répulsion des cœurs
+  repeated double force_dispersion = 9;      // London (D3)
+  repeated double force_external = 10;       // la souris, la paroi
+  double mass_u = 11;
+  double hardness = 12;                      // dureté GFN1 de l'atome (Eh) : l'amortissement de son potentiel
+  double covalent_radius = 13;               // Å, Pyykkö 2009 (le rayon de la sphère dessinée)
+  repeated double polarization = 14;         // dipôle de l'atome (e·Å) : son nuage est déformé dans la direction −d
+  int32 mass_number = 15;                    // son isotope (A) ; 0 : le mélange naturel (masse atomique standard)
+}
+
+// Une paire d'atomes : ce que chacun fait à l'autre, le long de l'axe A → B (eV/Å ; + attire, − repousse).
+// Décomposition exacte des forces GFN1-xTB (chaque terme est une somme sur les paires ; action = −réaction).
+message MoleculePair {
+  int32 a = 1;
+  int32 b = 2;
+  double distance = 3;                       // Å
+  double order = 4;                          // indice de Mayer
+  double electronic = 5;                     // les électrons : recouvrement, électrostatique des charges, coordination
+  double repulsion = 6;                      // la répulsion des cœurs
+  double dispersion = 7;                     // London
+  double total = 8;
+  // La force entière que la paire exerce sur A (eV/Å, 3 composantes ; sur B : l'opposée). Son long de l'axe est
+  // `total` ; le reste, de travers, vient des orbitales p (et d) dont l'orientation est fixée par toute la molécule :
+  // c'est lui qui tient les angles. Les forces de toutes les paires d'un atome font sa force (sauf la liaison halogène).
+  repeated double force = 9;
+  // La part des électrons (`electronic`), en deux : le recouvrement des orbitales (bande à densité fixée, et son
+  // décalage par la coordination) et l'électrostatique des charges (eV/Å le long de l'axe ; + attire).
+  double overlap = 10;
+  double charges = 11;
+  // La population de recouvrement de Mulliken (e) : > 0 liante ; < 0 antiliante — deux couches pleines qui se
+  // touchent se repoussent (gêne stérique).
+  double population = 12;
+}
+
+message MoleculeBond {
+  int32 a = 1;
+  int32 b = 2;
+  double order = 3;                          // indice de Mayer
+  double length = 4;                         // Å
+  double sigma = 5;                          // part σ de l'indice (s, p∥ : le long de l'axe)
+  double pi = 6;                             // part π (p perpendiculaires) : doubles et triples liaisons
+  double share = 7;                          // part des paires d'électrons de la liaison du côté de b (Pipek–Mezey) ;
+                                             // 0,5 : partage égal ; −1 : aucune paire à deux centres (paires à
+                                             // plusieurs centres, ou deux ions)
+  repeated double pi_axis = 8;               // la direction principale de la part π autour de l'axe (unitaire ;
+                                             // vide sans orbitales p) : l'éthylène, la normale à son plan
+  repeated double pi_split = 9;              // la part π le long de pi_axis, puis le long de (axe × pi_axis)
+  repeated float profile = 10;               // les électrons des paires de la liaison le long de l'axe, de a à b, en
+                                             // tranches égales (somme 1) ; vide sans paire à deux centres
+  double shared = 11;                        // la densité que a et b partagent au milieu de l'axe, rapportée à celle
+                                             // d'une liaison simple ordinaire (≈ 1) ; sous 0,03 : rompue, même si
+                                             // l'indice de Mayer (couches fermées) reste à 1
+}
+
+// Une paire d'électrons localisée (Pipek–Mezey) étalée sur trois atomes ou plus : la liaison à trois centres du pont
+// B–H–B, les liaisons des agrégats métalliques (Au₆ : trois paires, chacune sur un triangle d'atomes).
+message MoleculeMulticentre {
+  repeated int32 atoms = 1;                  // les atomes qui en portent au moins 10 %, par population décroissante
+  repeated double populations = 2;           // leur part de la paire (Mulliken, somme ≤ 1)
+  repeated double centroid = 3;              // le barycentre de la paire (Å)
+}
+
+message MoleculeOrbital {
+  double energy_ev = 1;
+  double occupation = 2;                     // 0 à 2
+}
+
+message MoleculeEvent {
+  double time_fs = 1;
+  string text = 2;
+  double energy_ev = 3;                      // énergie potentielle au moment de l'événement
+}
+
+message MoleculeMode {
+  double wavenumber = 1;                     // cm⁻¹ (négatif : imaginaire)
+  repeated double displacement = 2;          // 3N, Å (normé)
+}
+
+message MoleculeGrid {
+  int32 version = 1;
+  int32 kind = 2;                            // 0 densité ρ, 1 déformation Δρ, 2 orbitale ψ
+  int32 orbital = 3;
+  repeated double origin = 4;                // Å
+  double spacing = 5;                        // Å
+  repeated int32 counts = 6;                 // nx, ny, nz (x varie le plus lentement)
+  bytes data = 7;                            // ρ : uint16, ρ = peak (q/65535)⁴ ; Δρ, ψ : int16, peak · signe · (|q|/32767)²
+  double peak = 8;                           // e/Å³ (ψ : Å^−3/2)
+  repeated double positions = 9;             // les noyaux au moment du calcul de la grille (Å, 3N)
+  bytes bonds = 10;                          // vue ρ : data = ρ_at (nuages des atomes) ; bonds = ρ_ov (recouvrement, signé)
+  double bonds_peak = 11;
+  bytes esp = 12;                            // vue ρ : potentiel électrostatique (V) des noyaux et du nuage, signé
+  double esp_peak = 13;
+  reserved 14, 15;
+  repeated MoleculeOrbitalPart parts = 16;   // vue ψ : ce dont l'orbitale est faite (parts d'au moins 5 %)
+}
+
+// Une part d'une orbitale moléculaire : sa population de Mulliken sur une couche d'un atome.
+message MoleculeOrbitalPart {
+  int32 atom = 1;
+  string shell = 2;                          // « 2p », « 1s », « 5d »
+  double share = 3;                          // 0–1 (les parts d'une orbitale font 1)
+}
+
+// Le nuage de valence d'un élément, atome libre, vu en transparence : P⁰(d), les électrons par Å² le long d'une
+// droite qui passe à d du noyau (d = 0, step, 2·step…). Un atome qui garde N électrons a le nuage (N / electrons)·P⁰.
+message MoleculeCloud {
+  int32 z = 1;
+  double electrons = 2;                      // N⁰ : électrons de valence de l'atome libre
+  double step = 3;                           // Å
+  repeated float projected = 4;              // e/Å²
+  double surface = 5;                        // Å : où la densité de l'atome libre tombe à 0,002 e/bohr³ (contact)
+  double p_radius = 6;                       // Å : où une orbitale p de valence est la plus dense le long de son axe
+  repeated MoleculeIsotope isotopes = 7;     // les isotopes qu'on peut donner à ses atomes
+}
+
+// Un isotope : stable, ou radioactif d'au moins un an de demi-vie (³H, ¹⁴C).
+message MoleculeIsotope {
+  int32 mass_number = 1;
+  double mass = 2;                           // u (AME)
+  double abundance = 3;                      // % du mélange naturel (0 : absent de la nature)
+  double half_life_years = 4;                // 0 : stable
+}
+
+message MoleculeLabState {
+  bool active = 1;
+  bool ready = 2;
+  string status = 3;
+  string error = 4;
+  repeated string presets = 5;               // envoyés une fois
+  repeated string reactions = 6;
+  repeated int32 palette = 7;                // les éléments proposés sur l'établi
+  string label = 8;
+  repeated MoleculeAtom atoms = 9;
+  repeated MoleculeBond bonds = 10;
+  int32 dynamics = 11;                       // 0 relaxation, 1 thermostat, 2 libre
+  double temperature_target = 12;            // K
+  double temperature = 13;                   // K, instantanée (énergie cinétique)
+  bool paused = 14;
+  double time_fs = 15;
+  int32 steps = 16;
+  bool relaxed = 17;
+  double steps_per_second = 18;
+  int32 charge = 19;
+  double wall = 20;                          // Å
+  // Les énergies (eV).
+  double energy = 21;                        // énergie potentielle (électrons + noyaux)
+  double band = 22;
+  double coulomb2 = 23;
+  double coulomb3 = 24;
+  double repulsion = 25;
+  double dispersion = 26;
+  double halogen = 27;
+  double entropy = 28;
+  double binding = 29;                       // E − Σ E(atomes isolés, GFN1)
+  double kinetic = 30;
+  double tether_energy = 31;
+  double wall_energy = 32;
+  double tether_force_nn = 33;
+  repeated MoleculeOrbital orbitals = 34;
+  int32 homo = 35;
+  repeated double dipole = 36;               // Debye
+  bool converged = 37;
+  int32 iterations = 38;
+  string census = 39;                        // « 2 H₂O + O₂ »
+  repeated string species = 40;              // une ligne par espèce : formule · nom
+  repeated MoleculeEvent events = 41;
+  repeated double history_time = 42;         // fs (relaxation : n° de pas)
+  repeated double history_energy = 43;       // eV
+  repeated double history_kinetic = 44;      // eV
+  int32 view = 45;
+  int32 view_orbital = 46;
+  int32 drag_atom = 47;                      // −1 : rien de saisi
+  repeated double drag_target = 48;
+  repeated MoleculeMode modes = 49;
+  int32 excited_mode = 50;
+  bool computing_modes = 51;
+  MoleculeGrid grid = 52;                    // seulement quand elle change (version)
+  string model = 53;                         // la méthode, ses sources, ses limites (envoyé une fois)
+  repeated LabFact validation = 54;          // calculé ↔ mesuré (envoyé une fois)
+  bool unstable = 55;
+  repeated MoleculePair pairs = 56;          // les paires à moins de 5 Å
+  repeated int32 supported = 57;             // les éléments que GFN1-xTB sait calculer (envoyé une fois)
+  repeated MoleculeCloud clouds = 58;        // le nuage projeté de chaque élément présent (une fois par élément)
+  repeated MoleculeMulticentre multicentres = 59;  // les paires à plusieurs centres
+  double electronic_temperature = 60;        // K : 300 ; plus quand le cycle n'a convergé qu'occupations lissées
+  repeated int32 confined = 61;              // les atomes tenus à −2,5 e par la contrainte des anions
+  // Les termes des atomes isolés (eV) : band − band_atoms, coulomb2 + coulomb3 − coulomb_atoms, entropy − entropy_atoms,
+  // la répulsion, la dispersion et la liaison halogène font ensemble l'énergie de liaison (binding).
+  double band_atoms = 62;
+  double coulomb_atoms = 63;
+  double entropy_atoms = 64;
 }

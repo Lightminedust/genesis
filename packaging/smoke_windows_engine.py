@@ -48,6 +48,10 @@ def main():
                     if table.protocol_version != EXPECTED_PROTOCOL or len(table.elements) != 118:
                         raise AssertionError("Table périodique ou protocole incomplet")
                     print(f"Moteur autonome OK : {len(table.elements)} éléments, protocole {table.protocol_version}")
+                    k = chain_lab(stub)
+                    print(f"Réaction en chaîne OK : bibliothèque ENDF embarquée, k_eff = {k:.4f}")
+                    energy, atoms = molecule_lab(stub)
+                    print(f"Laboratoire moléculaire OK : paramètres GFN1-xTB embarqués, {atoms} atomes, E = {energy:.3f} eV")
                     return
                 except grpc.RpcError as error:
                     last_error = error
@@ -60,6 +64,46 @@ def main():
         except subprocess.TimeoutExpired:
             process.kill()
             process.wait(timeout=5)
+
+
+def chain_lab(stub):
+    """Ouvre le laboratoire de la réaction en chaîne : la bibliothèque de groupes doit être dans le paquet."""
+    def actions():
+        yield pb.UserAction(type=pb.UserAction.HELLO)
+        yield pb.UserAction(type=pb.UserAction.CHAIN_START)
+        time.sleep(120)
+
+    responses = stub.RunSimulation(actions(), timeout=120)
+    try:
+        for frame in responses:
+            chain = frame.chain
+            if chain.error:
+                raise AssertionError(f"Laboratoire de la réaction en chaîne : {chain.error}")
+            if chain.active and chain.ready and chain.k_eff > 0:
+                return chain.k_eff
+    finally:
+        responses.cancel()
+    raise AssertionError("Le laboratoire de la réaction en chaîne n'a rendu aucun k_eff")
+
+
+def molecule_lab(stub):
+    """Ouvre le laboratoire moléculaire : les paramètres GFN1-xTB et les tables D3 doivent être dans le paquet."""
+    def actions():
+        yield pb.UserAction(type=pb.UserAction.HELLO)
+        yield pb.UserAction(type=pb.UserAction.MOLECULE_START)
+        time.sleep(120)
+
+    responses = stub.RunSimulation(actions(), timeout=120)
+    try:
+        for frame in responses:
+            lab = frame.molecule_lab
+            if lab.error:
+                raise AssertionError(f"Laboratoire moléculaire : {lab.error}")
+            if lab.active and lab.ready and lab.atoms and lab.energy < 0:
+                return lab.energy, len(lab.atoms)
+    finally:
+        responses.cancel()
+    raise AssertionError("Le laboratoire moléculaire n'a rendu aucune énergie")
 
 
 if __name__ == "__main__":

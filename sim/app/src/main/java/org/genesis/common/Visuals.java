@@ -69,6 +69,44 @@ public final class Visuals {
         return Color.color(srgb(red / top * factor), srgb(green / top * factor), srgb(blue / top * factor));
     }
 
+    /**
+     * La couleur d'un corps noir à la température T (K) : la loi de Planck intégrée sur les fonctions colorimétriques
+     * CIE 1931 (380–780 nm, pas de 5 nm), puis XYZ → sRGB, normalisée à la composante la plus forte. La luminosité
+     * visible ∫ ȳ B dλ varie de plusieurs ordres de grandeur : elle est rendue sur une échelle logarithmique, de
+     * l'invisible (moins de 700 K) au plein éclat (vers 2 500 K). Rouge sombre, orange, jaune, blanc, puis bleuté.
+     */
+    public static Color blackbody(double kelvin) {
+        if (!(kelvin > 500)) {
+            return Color.BLACK;
+        }
+        double[] xyz = planckXyz(kelvin);
+        double red = Math.max(0, 3.2406 * xyz[0] - 1.5372 * xyz[1] - 0.4986 * xyz[2]);
+        double green = Math.max(0, -0.9689 * xyz[0] + 1.8758 * xyz[1] + 0.0415 * xyz[2]);
+        double blue = Math.max(0, 0.0557 * xyz[0] - 0.2040 * xyz[1] + 1.0570 * xyz[2]);
+        double top = Math.max(red, Math.max(green, blue));
+        if (top <= 0) {
+            return Color.BLACK;
+        }
+        double faint = planckXyz(700)[1];
+        double bright = planckXyz(2500)[1];
+        double level = Math.max(0, Math.min(1, Math.log(xyz[1] / faint) / Math.log(bright / faint)));
+        return Color.color(srgb(red / top * level), srgb(green / top * level), srgb(blue / top * level));
+    }
+
+    /** ∫ (x̄, ȳ, z̄) · B(λ, T) dλ, en unités arbitraires communes. */
+    static double[] planckXyz(double kelvin) {
+        double x = 0, y = 0, z = 0;
+        for (double nm = 380; nm <= 780; nm += 5) {
+            double lambda = nm * 1e-9;
+            double radiance = 1 / (Math.pow(lambda, 5) * Math.expm1(0.014387769 / (lambda * kelvin)));
+            double[] bar = cie1931(nm);
+            x += bar[0] * radiance;
+            y += bar[1] * radiance;
+            z += bar[2] * radiance;
+        }
+        return new double[]{x, y, z};
+    }
+
     /** x̄, ȳ, z̄ de la CIE 1931 (observateur 2°), ajustement multi-lobes de Wyman, Sloan et Shirley. */
     static double[] cie1931(double nm) {
         double x = 1.056 * lobe(nm, 599.8, 37.9, 31.0) + 0.362 * lobe(nm, 442.0, 16.0, 26.7)

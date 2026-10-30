@@ -1,27 +1,45 @@
 # French template (numbers, nuclides and element names as {0}, {1}…)	English template
 %.1f %% de plus de {0}°.	%.1f %% beyond {0}°.
+(Z = {0} à {1}) ; au-delà, aucun calcul n'est possible.	(Z = {0} to {1}); beyond that, no calculation is possible.
+(n,2n) au-delà de {0} MeV	(n,2n) above {0} MeV
 (n,p) {0} b ({1} %)	(n,p) {0} b ({1} %)
 (n,p) {0} b ({1} %).	(n,p) {0} b ({1} %).
 (n,α) {0} b ({1} %)	(n,α) {0} b ({1} %)
 (n,α) {0} b ({1} %).	(n,α) {0} b ({1} %).
 ({0} MeV/nucléon)	({0} MeV/nucleon)
 A = Z + N = {0} + {1} = {2} nucléons.	A = Z + N = {0} + {1} = {2} nucleons.
+Ajouter de la matière : {0} g	Add matter: {0} g
+Ajouter de la matière : {0} kg	Add matter: {0} kg
+Ajouter de la matière : {0} t	Add matter: {0} t
+Au bout de {0} s	After {0} s
 Au-dela de Z = {0}, aucun noyau ne tient : le systeme a deux noyaux tourne un instant puis se separe (quasi-fission), apres un transfert partiel de nucleons vers la symetrie ; energie cinetique de Viola.	Beyond Z = {0}, no nucleus holds together: the two-nucleus system rotates for an instant then separates (quasi-fission), after a partial transfer of nucleons towards symmetry; Viola kinetic energy.
 Aucun noyau à plus de {0} protons n'a jamais été produit.	No nucleus with more than {0} protons has ever been produced.
 Aucun élément connu pour Z = {0}	No known element for Z = {0}
 Aucune empreinte publiée pour {0} : installation refusée.	No hash published for {0}: installation refused.
+Base minimale d'orbitales de Slater (STO-NG), Hamiltonien de liaisons fortes H⁰ = ½(h_A + h_B) K π(R) S, électrostatique auto-cohérente des charges de couche (Klopman–Ohno, {0}e ordre), répulsion des cœurs, dispersion D3(BJ), liaison halogène.	Minimal basis of Slater orbitals (STO-NG), tight-binding Hamiltonian H⁰ = ½(h_A + h_B) K π(R) S, self-consistent electrostatics of shell charges (Klopman–Ohno, {0}rd order), core repulsion, D3(BJ) dispersion, halogen bonding.
 Bosch-Hale (mesures), prolongé par le modèle de capture ; masses mesurées ; produits chargés : {0} %	Bosch-Hale (measurements), extended by the capture model; measured masses; charged products: {0} %
 Bosch-Hale (mesures), prolongé par le modèle de capture ; masses mesurées ; produits chargés : {0} %, {1} %	Bosch-Hale (measurements), extended by the capture model; measured masses; charged products: {0} %, {1} %
+Briser {0} libérerait {1} MeV, mais il faudrait d'abord le déformer jusqu'à la rupture : ENDF/B-VIII.0 ne lui donne aucune fission par neutron.	Breaking {0} would release {1} MeV, but it would first have to be deformed to the breaking point: ENDF/B-VIII.0 gives it no neutron-induced fission.
+Briser {0} libérerait {1} MeV, mais il faudrait d'abord le déformer jusqu'à la rupture : ce noyau n'est pas dans la bibliothèque de neutrons du laboratoire.	Breaking {0} would release {1} MeV, but it would first have to be deformed to the breaking point: this nucleus is not in the lab's neutron library.
+C'est la fusion qui libère : {0} + {1} donne {2} MeV, derrière une barrière de Coulomb de {3} MeV	Fusion is what releases energy: {0} + {1} gives {2} MeV, behind a Coulomb barrier of {3} MeV
+Calcul de la hessienne ({0}N forces)…	Computing the Hessian ({0}N forces)…
+Calcul impossible : {0}	Calculation failed: {0}
 Cas calculés : élastique (Rosenbluth généralisé, facteurs de forme de Kelly), Δ({0}) (Breit–Wigner normalisé à G*_M({1}) = {2}), résonances supérieures (dualité de Bloom–Gilman) et profond inélastique (F₂ par DGLAP). e⁺ et e⁻ ont ici la même section efficace (l'échange de deux photons, ≈ {3} %, est négligé).	Cases computed: elastic (generalised Rosenbluth, Kelly form factors), Δ({0}) (Breit–Wigner normalised to G*_M({1}) = {2}), higher resonances (Bloom–Gilman duality) and deep inelastic (F₂ from DGLAP). e⁺ and e⁻ have the same cross section here (two-photon exchange, ≈ {3} %, is neglected).
+Ce qu'elle fait mal : les énergies d'atomisation et certaines énergies de réaction ({0} H₂ + O₂ : à peu près le double de la valeur mesurée)	What it does badly: atomization energies and some reaction energies ({0} H₂ + O₂: about twice the measured value)
+Ce que la méthode fait bien : géométries (±{0} Å), angles, vibrations ({1} à {2} % trop basses), polarité.	What the method does well: geometries (±{0} Å), angles, vibrations ({1} to {2} % too low), polarity.
 Cet événement : excitation Δ({0}).	This event: Δ({0}) excitation.
 Cet événement : formation Δ({0}).	This event: Δ({0}) formation.
 Chaque quark garde son impulsion, mais il est désormais lié à l'autre hadron : les morceaux qui s'éloignent restent reliés par deux cordes, qui s'étirent (σ ≈ {0} GeV/fm) puis se rompent.	Each quark keeps its momentum, but it is now bound to the other hadron: the pieces moving apart stay linked by two strings, which stretch (σ ≈ {0} GeV/fm) then break.
 Charge {0} : le puits du nucléon l'attire.	Charge {0}: the nucleon's well attracts it.
 Charge {0} : le puits du nucléon l'repousse.	Charge {0}: the nucleon's well repels it.
+Chaîne éteinte : un neutron seul n'allume une chaîne sans fin qu'avec {0} % de chances.	Chain died out: a single neutron starts a never-ending chain only {0} % of the time.
 Collision : l'électron passe en {0}d	Collision: the electron moves to {0}d
 Collision : l'électron passe en {0}f	Collision: the electron moves to {0}f
 Collision : l'électron passe en {0}p	Collision: the electron moves to {0}p
 Collision : l'électron passe en {0}s	Collision: the electron moves to {0}s
+Comprimer : la masse reste {0} g, la densité passe à {1} g/cm³	Squeeze: the mass stays {0} g, the density goes to {1} g/cm³
+Comprimer : la masse reste {0} kg, la densité passe à {1} g/cm³	Squeeze: the mass stays {0} kg, the density goes to {1} g/cm³
+Comprimer : la masse reste {0} t, la densité passe à {1} g/cm³	Squeeze: the mass stays {0} t, the density goes to {1} g/cm³
 DGLAP à l'ordre dominant (nf = {0}, α_s à une boucle) depuis une entrée de valence + gluon à Q₀² = {1} GeV² : la mer est engendrée par g → q q̄.	Leading-order DGLAP (nf = {0}, one-loop α_s) from a valence + gluon input at Q₀² = {1} GeV²: the sea is generated by g → q q̄.
 Demi-vie mesurée : {0} ans.	Measured half-life: {0} years.
 Demi-vie mesurée : {0} h.	Measured half-life: {0} h.
@@ -38,21 +56,30 @@ Demi-vie mesurée : {0} {1} {2} ans.	Measured half-life: {0} {1} {2} years.
 Demi-vie mesurée : {0} {1} {2} milliards d'années.	Measured half-life: {0} {1} {2} billion years.
 Demi-vie mesurée : {0} µs.	Measured half-life: {0} µs.
 Demi-vie mesurée : {0} × {1}^{2} s.	Measured half-life: {0} × {1}^{2} s.
+Données : ENDF/B-VIII.0 (NNDC) pour les neutrons, AME2020 pour les masses, ICRP-{0} pour les désintégrations, ICSBEP pour les assemblages critiques de référence.	Data: ENDF/B-VIII.0 (NNDC) for neutrons, AME2020 for masses, ICRP-{0} for decays, ICSBEP for the reference critical assemblies.
+Dynamique à {0} K (thermostat)	Dynamics at {0} K (thermostat)
 Défaut de masse {0} u converti en {1} MeV d'énergie de liaison ({2} MeV/nucléon).	Mass defect of {0} u converted into {1} MeV of binding energy ({2} MeV/nucleon).
 Désintégration faible (l'étrangeté change, seul le W le permet) : τ = {0} s (mesuré).	Weak decay (strangeness changes, only the W allows it): τ = {0} s (measured).
 Désintégration forte ouverte : p + π0, énergie libérée Q = {0} MeV.	Strong decay open: p + π0, energy released Q = {0} MeV.
 Désintégration forte ouverte : Λ + π0, énergie libérée Q = {0} MeV.	Strong decay open: Λ + π0, energy released Q = {0} MeV.
 E = {0} eV (v = {1} {2} m/s) : sans charge, aucune barrière ne l'arrête	E = {0} eV (v = {1} {2} m/s): with no charge, no barrier stops it
 Elle est plus faible que mesurée (≈ {0} % contre ≈ {1} % de l'impulsion à {2} GeV²).	It is weaker than measured (≈ {0} % against ≈ {1} % of the momentum at {2} GeV²).
+Excursion : dilatation du métal condensé, puis gaz parfait et rayonnement en expansion homologue ; inertie du solide, changements de phase du {0} et ionisation négligés ; réflecteur immobile.	Excursion: expansion of the condensed metal, then ideal gas and radiation in homologous expansion; solid inertia, {0} phase changes and ionisation neglected; reflector held still.
+Fission spontanée : {0} neutrons par seconde allument la chaîne sans aide extérieure.	Spontaneous fission: {0} neutrons per second light the chain with no outside help.
 Force forte, pas de boson échangé à un seul quark. σ_tot de Donnachie–Landshoff ({0}), extrapolée sous √s ≈ {1} GeV ; σ_él par le théorème optique (pic e^(Bt), partie réelle négligée)	Strong force, no boson exchanged with a single quark. Donnachie–Landshoff σ_tot ({0}), extrapolated below √s ≈ {1} GeV; σ_el from the optical theorem (e^(Bt) peak, real part neglected)
 Force forte, pas de boson échangé à un seul quark. σ_tot de Donnachie–Landshoff ({0}), extrapolée sous √s ≈ {1} GeV ; σ_él par le théorème optique (pic e^(Bt), partie réelle négligée) ;	Strong force, no boson exchanged with a single quark. Donnachie–Landshoff σ_tot ({0}), extrapolated below √s ≈ {1} GeV; σ_el from the optical theorem (e^(Bt) peak, real part neglected);
 Formé par la transition magnétique M1 d'un photon transverse, le Δ a surtout m = ±{0}/{1} : le pion sort selon {2} − {3}cos²θ*, plutôt sur le côté.	Formed by the M1 magnetic transition of a transverse photon, the Δ mostly has m = ±{0}/{1}: the pion leaves according to {2} − {3}cos²θ*, rather sideways.
 Formé par un pion (sans spin), le Δ a m = ±½ le long du faisceau : le pion sort selon {0} + {1}cos²θ*, surtout vers l'avant et l'arrière.	Formed by a pion (spinless), the Δ has m = ±½ along the beam: the pion leaves according to {0} + {1}cos²θ*, mostly forwards and backwards.
 Fusion montree a la demande : a ce tir, sa probabilite etait de {0}.	Fusion shown on request: for this shot, its probability was {0}.
+GFN1-xTB (Grimme, Bannwarth, Shushkov, JCTC {0}, {1}, {2}), réécrit en numpy et vérifié contre l'implémentation de référence dxtb à {3} Eh près.	GFN1-xTB (Grimme, Bannwarth, Shushkov, JCTC {0}, {1}, {2}), rewritten in numpy and checked against the dxtb reference implementation to within {3} Eh.
+GFN1-xTB n'est paramétré que de l'hydrogène au {0}	GFN1-xTB is only parametrized from hydrogen to {0}
+GFN1-xTB n'est paramétré que de l'hydrogène au {0} (Z = {1} à {2}) ; au-delà, aucun calcul n'est possible.	GFN1-xTB is only parametrized from hydrogen to {0} (Z = {1} to {2}); beyond that, no calculation is possible.
+Godiva (ICSBEP HEU-MET-FAST-{0}, R = {1} cm) recalculé : k = {2} (mesuré : {3})	Godiva (ICSBEP HEU-MET-FAST-{0}, R = {1} cm) recomputed: k = {2} (measured: {3})
 Hors domaine de validité sous A = {0} : indicatif seulement.	Outside the validity range below A = {0}: indicative only.
 Hors modele : au-dela de {0} MeV pour ce couple ({1} MeV par nucleon reduit), les noyaux se fragmentent ; non modelise.	Outside the model: beyond {0} MeV for this pair ({1} MeV per reduced nucleon), the nuclei break up; not modelled.
 Ignition : la fusion entretient seule la chaleur du plasma (nτT = {0} ≥ {1}).	Ignition: fusion alone keeps the plasma hot (nτT = {0} ≥ {1}).
 Il va redescendre seul vers {0}s en émettant des photons.	It will fall back to {0}s on its own, emitting photons.
+Implosion : la masse critique d'une sphère nue varie comme {0}/ρ².	Implosion: the critical mass of a bare sphere scales as {0}/ρ².
 L'antiquark d̄ du pion et un quark d du neutron s'annihilent ; il reste uud : un Δ⁺ de spin {0}/{1}, de masse W = √s, qui emporte toute l'impulsion du pion.	The pion's d̄ antiquark and a d quark of the neutron annihilate; what remains is uud: a Δ⁺ with spin {0}/{1} and mass W = √s, which carries all of the pion's momentum.
 L'antiquark ū du pion et un quark u du neutron s'annihilent ; il reste ddd : un Δ⁻ de spin {0}/{1}, de masse W = √s, qui emporte toute l'impulsion du pion.	The pion's ū antiquark and a u quark of the neutron annihilate; what remains is ddd: a Δ⁻ with spin {0}/{1} and mass W = √s, which carries all of the pion's momentum.
 L'atome se désexcite : photon de {0} nm	The atom de-excites: photon of {0} nm
@@ -61,10 +88,15 @@ L'électron est capturé en {0}d	The electron is captured in {0}d
 L'électron est capturé en {0}f	The electron is captured in {0}f
 L'électron est capturé en {0}p	The electron is captured in {0}p
 L'électron est capturé en {0}s	The electron is captured in {0}s
+La convention des cartes de potentiel électrostatique : le potentiel exact de la molécule (noyaux et nuage) sur la surface ρ = {0} électron par bohr³ ; magenta négatif, cyan positif (±{1} V)	The convention of electrostatic potential maps: the exact potential of the molecule (nuclei and cloud) on the surface ρ = {0} electron per bohr³; magenta negative, cyan positive (±{1} V)
+La dilatation du métal chaud a ramené k sous {0} : l'excursion s'arrête d'elle-même	The expansion of the hot metal brought k back below {0}: the excursion stops by itself
 La scène est vue du centre de masse (β = {0} c) : les deux hadrons arrivent l'un vers l'autre à p* = {1} MeV/c, chacun le mouvement interne ralenti par sa dilatation du temps.	The scene is seen from the centre of mass (β = {0} c): the two hadrons come towards each other at p* = {1} MeV/c, the internal motion of each slowed down by its time dilation.
+La surface où la densité électronique tombe à {0} électron par bohr³ (convention de Bader pour la	The surface where the electron density falls to {0} electron per bohr³ (Bader's convention for the
+La surface où la densité électronique tombe à {0} électron par bohr³ (convention de Bader pour la surface de van der Waals), colorée par le potentiel électrostatique : rouge négatif, bleu positif	The surface where the electron density falls to {0} electron per bohr³ (Bader's convention for the van der Waals surface), coloured by the electrostatic potential: red negative, blue positive
 La table de Sears ({0}) couvre les isotopes naturels et quelques actinides ({1}, {2}, {3}, {4}…), pas la plupart des noyaux radioactifs.	Sears' table ({0}) covers the natural isotopes and a few actinides ({1}, {2}, {3}, {4}…), not most radioactive nuclei.
 La {0}s se remplit avant la {1}d : c'est l'énergie qui commande, pas le numéro de couche.	The {0}s fills before the {1}d: energy is what decides, not the shell number (Aufbau / Klechkowski rule).
 Largeur Γ = Γ_Δ (p*/p*_Δ)³ (M_Δ/M) = {0} MeV (calibrée sur Δ → Nπ), τ = ħ/Γ.	Width Γ = Γ_Δ (p*/p*_Δ)³ (M_Δ/M) = {0} MeV (calibrated on Δ → Nπ), τ = ħ/Γ.
+Lawson : nτT ≥ {0} keV·s/m³ vers {1} keV	Lawson: nτT ≥ {0} keV·s/m³ near {1} keV
 Le W change aussi la saveur d'un quark : le nucléon devient un Δ⁰, de spin {0}/{1}.	The W also changes the flavour of a quark: the nucleon becomes a Δ⁰, with spin {0}/{1}.
 Le W change aussi la saveur d'un quark : le nucléon devient un Δ⁺, de spin {0}/{1}.	The W also changes the flavour of a quark: the nucleon becomes a Δ⁺, with spin {0}/{1}.
 Le W change aussi la saveur d'un quark : le nucléon devient un Δ⁻, de spin {0}/{1}.	The W also changes the flavour of a quark: the nucleon becomes a Δ⁻, with spin {0}/{1}.
@@ -75,17 +107,28 @@ Le antimuon est ultra-relativiste : il traverse {0} fm en {1} s.	The antimuon is
 Le modèle de continuum actuel couvre uniquement les ions hydrogénoïdes {0}s.	The current continuum model only covers hydrogen-like {0}s ions.
 Le muon est ultra-relativiste : il traverse {0} fm en {1} s.	The muon is ultra-relativistic: it crosses {0} fm in {1} s.
 Le neutron est absorbé et le noyau éjecte un {0}.	The neutron is absorbed and the nucleus ejects a {0}.
+Le nombre de paires d'électrons partagées : ≈ {0} simple, {1} double, {2} triple	The number of shared electron pairs: ≈ {0} single, {1} double, {2} triple
 Le nombre de quarks moins celui d'antiquarks ({0}) n'est pas un multiple de {1} : aucune combinaison de couleurs ne donne un objet neutre.	The number of quarks minus the number of antiquarks ({0}) is not a multiple of {1}: no combination of colours gives a neutral object.
 Le noyau composé {0} se scinde.	The compound nucleus {0} splits.
 Le noyau composé {0} se scinde. ν̄ = {1} neutrons en moyenne (ENDF/B-VIII.0) ; fragment lourd tiré autour de A ≈ {2}, charge au prorata de la masse.	The compound nucleus {0} splits. ν̄ = {1} neutrons on average (ENDF/B-VIII.0); heavy fragment drawn around A ≈ {2}, charge shared in proportion to mass.
+Le nuage des électrons de valence de chaque molécule, vu en transparence ; son bord : là où le regard croise {0} électron par Å². Chaque atome y apporte les électrons qu'il garde (charge de Mulliken) : fourni et magenta autour des atomes δ−, mince et cyan autour des atomes δ+	The valence electron cloud of each molecule, seen through; its edge: where the line of sight crosses {0} electron per Å². Each atom brings to it the electrons it keeps (Mulliken charge): fuller and magenta around δ− atoms, thinner and cyan around δ+ atoms
+Le nuage des électrons de valence jusqu'à la surface ρ = {0} électron par bohr³, qui épouse les atomes	The valence electron cloud up to the surface ρ = {0} electron per bohr³, which hugs the atoms
+Le nuage des électrons de valence jusqu'à la surface ρ = {0} électron par bohr³, qui épouse les atomes ;	The valence electron cloud up to the surface ρ = {0} electron per bohr³, which hugs the atoms;
 Le photon excite le nucléon : résonance Δ({0})	The photon excites the nucleon: Δ({0}) resonance
 Le positron est ultra-relativiste : il traverse {0} fm en {1} s.	The positron is ultra-relativistic: it crosses {0} fm in {1} s.
 Le quark frappé s'éloigne ; la corde de couleur qui le retenait s'étire (σ ≈ {0} GeV/fm).	The struck quark moves away; the colour string that held it stretches (σ ≈ {0} GeV/fm).
+Le rayon où k_eff = {0}, calculé par le transport des neutrons	The radius where k_eff = {0}, computed by neutron transport
 Le électron est ultra-relativiste : il traverse {0} fm en {1} s.	The electron is ultra-relativistic: it crosses {0} fm in {1} s.
+Les noyaux sont classiques (Born–Oppenheimer) ; l'état électronique est restreint, occupations lissées par Fermi à {0} K.	The nuclei are classical (Born–Oppenheimer); the electronic state is restricted, with occupations smeared by Fermi at {0} K.
 Les électrons, {0} fois plus légers, ne comptent pas.	The electrons, {0} times lighter, do not count.
 Maximum vers le fer-{0} : au-delà, la fusion ne libère plus d'énergie.	Maximum near iron-{0}: beyond it, fusion no longer releases energy.
 Maximum vers le {0}-{1} : au-delà, la fusion ne libère plus d'énergie.	Maximum near {0}-{1}: beyond it, fusion no longer releases energy.
+Mode {0} excité ({1} cm⁻¹, {2} quanta) : dynamique libre	Mode {0} excited ({1} cm⁻¹, {2} quanta): free dynamics
+Nouvelle masse : {0} u. La surface d'énergie ne change pas (Born–Oppenheimer) ; la dynamique et les vibrations, si.	New mass: {0} u. The energy surface does not change (Born–Oppenheimer); the dynamics and the vibrations do.
 P(interagir en le traversant) = σ/πr_p² = {0}	P(interacting while crossing it) = σ/πr_p² = {0}
+P(ν) : loi de Terrell (σ = {0}) autour de ν̄(E)	P(ν): Terrell distribution (σ = {0}) around ν̄(E)
+paire à {0} centres	{0}-centre pair
+Paramètres : xtb/tblite (LGPL-{0}).	Parameters: xtb/tblite (LGPL-{0}).
 Pas de section efficace mesurée pour {0}	No measured cross section for {0}
 Photon envoyé : λ = {0} nm	Photon sent: λ = {0} nm
 Q = S_n = [m({0}) + m_n − m({1})]·c² = {2} MeV, emportés par des photons γ	Q = S_n = [m({0}) + m_n − m({1})]·c² = {2} MeV, carried away by γ photons
@@ -94,9 +137,14 @@ Q = {0} MeV (masses mesurées (AME2020)) ;	Q = {0} MeV (measured masses (AME2020
 Q = {0} MeV (masses mesurées (AME2020)), partagés au hasard entre l'positon et le neutrino	Q = {0} MeV (measured masses (AME2020)), shared at random between the positron and the neutrino
 Q = {0} MeV (masses mesurées (AME2020)), partagés au hasard entre l'électron et le neutrino	Q = {0} MeV (measured masses (AME2020)), shared at random between the electron and the neutrino
 Q = {0} MeV (masses mesurées, AME2020)	Q = {0} MeV (measured masses, AME2020)
+Q de {0} + {1}	Q of {0} + {1}
 Quarks constituants (m = {0} MeV), corde en Y σ = {1} GeV², échange de gluons −({2}/{3})α_s/r ; taux de rupture Γ₀·exp(−πm²/σ) avec Γ₀ calibré (non calculé) ; spins non dynamiques.	Constituent quarks (m = {0} MeV), Y-shaped string σ = {1} GeV², gluon exchange −({2}/{3})α_s/r; breaking rate Γ₀·exp(−πm²/σ) with Γ₀ calibrated (not computed); spins not dynamical.
 Quasi-élastique : Llewellyn Smith (g_A = {0}, M_A = {1} GeV) ; résonances par dualité (Rein–Sehgal non implémenté) ; profond inélastique : F₂ et xF₃ par DGLAP.	Quasi-elastic: Llewellyn Smith (g_A = {0}, M_A = {1} GeV); resonances by duality (Rein–Sehgal not implemented); deep inelastic: F₂ and xF₃ from DGLAP.
 Règle de l'octet : {0} électrons externes ({1} pour la couche K).	Octet rule: {0} outer electrons ({1} for the K shell).
+Réacteur : CH₄ + {0} O₂ à {1} K	Reactor: CH₄ + {0} O₂ at {1} K
+Réacteur : H₂ + Cl₂ à {0} K	Reactor: H₂ + Cl₂ at {0} K
+Réacteur : H₂O + H₂O à {0} K	Reactor: H₂O + H₂O at {0} K
+Réacteur : {0} H₂ + O₂ à {1} K	Reactor: {0} H₂ + O₂ at {1} K
 STABLE : A={0} figure parmi les isotopes stables de l'élément.	STABLE: A={0} is among the stable isotopes of the element.
 Saut dans le temps : {0} ans	Jump in time: {0} years
 Saut dans le temps : {0} h	Jump in time: {0} h
@@ -117,10 +165,15 @@ Saut dans le temps : {0} µs	Jump in time: {0} µs
 Saut dans le temps : {0} × {1}^{2} s	Jump in time: {0} × {1}^{2} s
 Sections efficaces thermiques (Sears {0} (NIST), ENDF/B-VIII.0) : diffusion {1} b ({2} %)	Thermal cross sections (Sears {0} (NIST), ENDF/B-VIII.0): scattering {1} b ({2} %)
 Sections efficaces thermiques (Sears {0} (NIST), ENDF/B-VIII.0) : diffusion {1} b ({2} %).	Thermal cross sections (Sears {0} (NIST), ENDF/B-VIII.0): scattering {1} b ({2} %).
+Sous-critique : chaque neutron source n'engendre en moyenne que {0} neutrons au total (multiplication M = {1}/({2} − k)) ; la chaîne s'éteint.	Subcritical: each source neutron produces only {0} neutrons in total on average (multiplication M = {1}/({2} − k)); the chain dies out.
+Tous les éléments que GFN1-xTB sait calculer : de l'hydrogène au {0} (Z = {1} à {2})	Every element GFN1-xTB can compute: from hydrogen to {0} (Z = {1} to {2})
+Transport des neutrons par probabilités de première collision dans des coquilles sphériques, {0} groupes d'énergie tirés d'ENDF/B-VIII.0 (autoprotection de Bondarenko, correction de transport, diffusion isotrope ensuite).	Neutron transport by first-collision probabilities in spherical shells, {0} energy groups drawn from ENDF/B-VIII.0 (Bondarenko self-shielding, transport correction, then isotropic scattering).
 Téléchargement refusé par GitHub ({0})	Download refused by GitHub ({0})
 Un neutron lent arrive sur {0}	A slow neutron reaches {0}
 Un quark change de spin (transition magnétique M1) : le nucléon devient un Δ, de même charge, de spin {0}/{1}.	A quark flips its spin (M1 magnetic transition): the nucleon becomes a Δ, with the same charge and spin {0}/{1}.
 Une collision n'obéit pas à Δl = ±{0} : tous les états sont accessibles.	A collision does not obey Δl = ±{0}: every state can be reached.
+Une sphère nue devient critique à {0} kg.	A bare sphere goes critical at {0} kg.
+Uranium enrichi {0} % (Godiva)	Enriched uranium {0} % (Godiva)
 Vitesse du temps : {0} an / s	Time speed: {0} year / s
 Vitesse du temps : {0} heure / s	Time speed: {0} hour / s
 Vitesse du temps : {0} jour / s	Time speed: {0} day / s
@@ -148,8 +201,13 @@ Z = {0} -> {1} {2}, métalloïde.	Z = {0} -> {1} {2}, metalloid.
 Z = {0} -> {1} {2}, non-métal.	Z = {0} -> {1} {2}, non-metal.
 Z = {0} : le nombre de protons fixe l'élément	Z = {0}: the number of protons sets the element
 Z = {0} est le dernier élément connu ({1})	Z = {0} is the last known element ({1})
+Z = {0} à {1}) ; au-delà, aucun calcul n'est possible.	Z = {0} to {1}); beyond that, no calculation is possible.
 affinité électronique : {0} eV libérés (mesure)	electron affinity: {0} eV released (measured)
 affinité électronique ≤ {0} (mesurée)	electron affinity ≤ {0} (measured)
+atome de {0}	{0} atom
+au plus {0} K	at most {0} K
+au sommet de la courbe : B/A = {0} MeV	at the top of the curve: B/A = {0} MeV
+aucun : k∞ < {0}	none: k∞ < {0}
 aucune abondance naturelle tabulée : isotope le plus durable, {0} (t½ = {1} ans) ; atome neutre : Z = E = {2}	no natural abundance tabulated: longest-lived isotope, {0} (t½ = {1} years); neutral atom: Z = E = {2}
 aucune abondance naturelle tabulée : isotope le plus durable, {0} (t½ = {1} h) ; atome neutre : Z = E = {2}	no natural abundance tabulated: longest-lived isotope, {0} (t½ = {1} h); neutral atom: Z = E = {2}
 aucune abondance naturelle tabulée : isotope le plus durable, {0} (t½ = {1} jours) ; atome neutre : Z = E = {2}	no natural abundance tabulated: longest-lived isotope, {0} (t½ = {1} days); neutral atom: Z = E = {2}
@@ -162,11 +220,14 @@ aucune abondance naturelle tabulée : isotope le plus durable, {0} (t½ = {1} {2
 capture (n,γ) {0} b ({1} %)	capture (n,γ) {0} b ({1} %)
 capture (n,γ) {0} b ({1} %).	capture (n,γ) {0} b ({1} %).
 capture : ondes partielles, transmission de Hill-Wheeler (modèle) ; aucun noyau composé au-delà de Z = {0}	capture: partial waves, Hill-Wheeler transmission (model); no compound nucleus beyond Z = {0}
+carte de potentiel ({0} u.a.)	potential map ({0} a.u.)
 centre de masse : {0} MeV/c chacun, dos à dos	centre of mass: {0} MeV/c each, back to back
 chaque voie leptonique : {0} %	each leptonic channel: {0} %
 chemin pris dans {0} % des cas	path taken in {0} % of cases
 couplage α_s(M_Z) = {0} (une boucle, Λ = {1} GeV)	coupling α_s(M_Z) = {0} (one loop, Λ = {1} GeV)
 couple proportionnellement à la masse : g = m/v, v = {0} GeV	couples in proportion to mass: g = m/v, v = {0} GeV
+croise {0} électron par Å².	crosses {0} electron per Å².
+de l'énergie de Little Boy (≈ {0} kt)	of Little Boy's energy (≈ {0} kt)
 demi-vie de {0} : {1} ans (mesurée (ICRP-{2}, radioactivedecay))	half-life of {0}: {1} years (measured (ICRP-{2}, radioactivedecay))
 demi-vie de {0} : {1} h (mesurée (ICRP-{2}, radioactivedecay))	half-life of {0}: {1} h (measured (ICRP-{2}, radioactivedecay))
 demi-vie de {0} : {1} h (mesurée (NUBASE, mendeleev))	half-life of {0}: {1} h (measured (NUBASE, mendeleev))
@@ -190,6 +251,7 @@ demi-vie de {0} : {1} µs (mesurée (ICRP-{2}, radioactivedecay))	half-life of {
 demi-vie de {0} : {1} × {2}^{3} s (mesurée (NUBASE, mendeleev))	half-life of {0}: {1} × {2}^{3} s (measured (NUBASE, mendeleev))
 demi-vie de {0} : {1} × {2}^{3} s (noyau non lié : ~{4} s	half-life of {0}: {1} × {2}^{3} s (unbound nucleus: ~{4} s
 diffusion élastique : σ = {0} b (noyau seul)	elastic scattering: σ = {0} b (free nucleus)
+dioxyde de {0}	{0} dioxide
 doublet du spin : spin de l'électron parallèle (j = {0}/{1}) ou opposé (j = {2}/{3}) à son orbite	spin doublet: the electron's spin parallel (j = {0}/{1}) or opposite (j = {2}/{3}) to its orbit
 durée de vie de l'état : {0} ns	lifetime of the state: {0} ns
 durée de vie de {0}d : {1} ns.	lifetime of {0}d: {1} ns.
@@ -209,15 +271,22 @@ dσ/dΩ de μ⁻ à {0} MeV, tous les cas sommés (max {1} nb/sr) : l'angle de l
 dσ/dΩ de ν_μ à {0} MeV, tous les cas sommés (max {1} nb/sr) : l'angle de l'événement y est tiré	dσ/dΩ of ν_μ at {0} MeV, all cases summed (max {1} nb/sr): the event's angle is drawn from it
 dσ/dΩ de ν̄_μ à {0} MeV, tous les cas sommés (max {1} nb/sr) : l'angle de l'événement y est tiré	dσ/dΩ of ν̄_μ at {0} MeV, all cases summed (max {1} nb/sr): the event's angle is drawn from it
 dσ/dΩ* ∝ e^(Bt) : la diffraction, B = {0} GeV⁻², p* = {1} MeV/c	dσ/dΩ* ∝ e^(Bt): diffraction, B = {0} GeV⁻², p* = {1} MeV/c
+enveloppe {0} u.a.	{0} a.u. envelope
 e⁺ diffusé à E′ = {0} MeV, angle {1}°.	e⁺ scattered at E′ = {0} MeV, angle {1}°.
 e⁻ diffusé à E′ = {0} MeV, angle {1}°.	e⁻ scattered at E′ = {0} MeV, angle {1}°.
 faisceau gaussien de rayon {0} µm	Gaussian beam of radius {0} µm
 faisceau gaussien de rayon {0} µm.	Gaussian beam of radius {0} µm.
+fertile : une capture donne de l'uranium {0} après deux β⁻	fertile: a capture gives uranium {0} after two β⁻
+fissile, né du {0} dans un surgénérateur	fissile, bred from {0} in a breeder reactor
+fissile, se désintègre en {0} {1} (t½ {2} ans)	fissile, decays into {0} {1} (t½ {2} years)
 fission {0} b ({1} %)	fission {0} b ({1} %)
 fission {0} b ({1} %).	fission {0} b ({1} %).
+fissionnable au-delà de {0} MeV seulement ; captures résonnantes stériles	fissionable above {0} MeV only; sterile resonance captures
 forces : forte (porte la couleur : {0} états)	forces: strong (carries colour: {0} states)
 forte (porte la couleur : {0} états)	strong (carries colour: {0} states)
 fragment {0}	fragment {0}
+fusion {0} + {1} : Q = {2} MeV	fusion {0} + {1}: Q = {2} MeV
+génération {0}	generation {0}
 hélium {0}	helium {0}
 il a fallu fournir {0} eV	it took {0} eV
 il est attiré par {0} e et tombe dans un niveau élevé	it is attracted by {0} e and falls into a high level
@@ -232,22 +301,29 @@ isotope naturel le plus abondant, {0} ({1} %), radioactif (t½ = {2} {3} ans) ; 
 isotope naturel le plus abondant, {0} ({1} %), radioactif (t½ = {2} {3} milliards d'années) ; atome neutre : Z = E = {4}	most abundant natural isotope, {0} ({1} %), radioactive (t½ = {2} {3} billion years); neutral atom: Z = E = {4}
 l'ion Rn⁻ n'existe pas (affinité électronique ≤ {0})	the Rn⁻ ion does not exist (electron affinity ≤ {0})
 l'ion {0} n'existe pas (affinité électronique ≤ {1})	the {0} ion does not exist (electron affinity ≤ {1})
+la sphère nue critique de Los Alamos, {0}	the bare critical sphere of Los Alamos, {0}
 largeur Γ = {0} GeV (ordre dominant, sin²θ_W = {1} ; mesuré {2})	width Γ = {0} GeV (leading order, sin²θ_W = {1}; measured {2})
 largeur Γ = {0} GeV (somme de ses {1} voies, ordre dominant ; mesuré {2})	width Γ = {0} GeV (sum of its {1} channels, leading order; measured {2})
 largeur ≈ {0} MeV (mesure ; non recalculée ici)	width ≈ {0} MeV (measured; not recomputed here)
 le noyau éjecte {0} protons et {1} neutrons liés	the nucleus ejects {0} protons and {1} neutrons bound together
 le photon (spin {0}) emporte Δl = {1} ; le spin de l'électron ({2}/{3}) ne change pas	the photon (spin {0}) carries away Δl = {1}; the electron's spin ({2}/{3}) does not change
+léger, peu absorbant ; (n,2n) au-delà de {0} MeV	light, weakly absorbing; (n,2n) above {0} MeV
 magnésium {0}	magnesium {0}
 masse : < {0} eV (non nulle : les neutrinos oscillent)	mass: < {0} eV (not zero: neutrinos oscillate)
 masse constituante : {0} MeV (habillée de gluons)	constituent mass: {0} MeV (dressed with gluons)
+masse critique nue {0} kg (k∞ = {1})	bare critical mass {0} kg (k∞ = {1})
+masse {0} u	mass {0} u
 mesurée (ICRP-{0}, radioactivedecay)	measured (ICRP-{0}, radioactivedecay)
 modèle {0} eV  /  mesure {1} eV  (écart {2} %)	model {0} eV  /  measured {1} eV  (difference {2} %)
 molybdène {0}	molybdenum {0}
+monoxyde de {0}	{0} monoxide
+n,2n) au-delà de {0} MeV	n,2n) above {0} MeV
 n,p) {0} b ({1} %)	n,p) {0} b ({1} %)
 n,p) {0} b ({1} %).	n,p) {0} b ({1} %).
 n,α) {0} b ({1} %)	n,α) {0} b ({1} %)
 n,α) {0} b ({1} %).	n,α) {0} b ({1} %).
 noyau non lié : ~{0} s	unbound nucleus: ~{0} s
+nuage) sur la surface ρ = {0} électron par bohr³ ; magenta négatif, cyan positif (±{1} V)	cloud) on the surface ρ = {0} electron per bohr³; magenta negative, cyan positive (±{1} V)
 néon {0}	neon {0}
 p + p -> d + e+ + nu_e : pendant le contact, un proton devient neutron (interaction faible) ; spectre beta permis p E (E0 - E)^{0}, impulsion conservee par le recul du deuton.	p + p -> d + e+ + nu_e: during contact, a proton becomes a neutron (weak interaction); allowed beta spectrum p E (E0 - E)^{0}, momentum conserved by the deuteron's recoil.
 p est stable : c'est le baryon le plus léger, rien de plus léger ne porte le nombre baryonique {0}.	p is stable: it is the lightest baryon, nothing lighter carries baryon number {0}.
@@ -258,25 +334,39 @@ part de valence = {0} %  →  quark u → d	valence share = {0} %  →  quark u 
 particule α (noyau d'hélium {0})	α particle (helium-{0} nucleus)
 porte une couleur ET une anticouleur : {0} états	carries a colour AND an anticolour: {0} states
 portée = {0} fm	range = {0} fm
+potentiel sur l'enveloppe {0} u.a.	potential on the {0} a.u. envelope
+potentiel sur ρ = {0} u.a. : magenta négatif, cyan positif	potential on ρ = {0} a.u.: magenta negative, cyan positive
 proton ({0} {1})	proton ({0} {1})
 q = ({0} x +e) + ({1} x -e) = {2} [Neutre].	q = ({0} x +e) + ({1} x -e) = {2} [Neutral].
 quasi-élastique {0} %	quasi-elastic {0} %
+radioactif mais pas énergétique ; sa fission coûterait {0} MeV	radioactive but not energetic; its fission would cost {0} MeV
 refusé · {0}/{1}	refused · {0}/{1}
+réflecteur de {0}	{0} reflector
 résolution ≈ λ = ħc / Q  comparée à r_p = {0} fm	resolution ≈ λ = ħc / Q  compared with r_p = {0} fm
 résonances (dualité) {0} %	resonances (duality) {0} %
 résonances supérieures {0} %	higher resonances {0} %
 spin {0} (le seul scalaire)	spin {0} (the only scalar)
 séparation {0} fm	separation {0} fm
+temps ralenti ×{0}	time slowed ×{0}
+température {0} K	temperature {0} K
 tend à capter {0} e-	tends to gain {0} e-
 tend à céder {0} e-	tends to give up {0} e-
 tungstène {0}	tungsten {0}
+t½ = {0} millions d'années (NUBASE) : {1} W par kg	t½ = {0} million years (NUBASE): {1} W per kg
+t½ = {0} millions d'années : {1} W par kg	t½ = {0} million years: {1} W per kg
 un atome isolé ne retient jamais deux électrons de plus ; l'ion Rn⁻ n'existe pas (affinité électronique ≤ {0})	an isolated atom never holds two extra electrons; the Rn⁻ ion does not exist (electron affinity ≤ {0})
 un atome isolé ne retient jamais deux électrons de plus ; l'ion {0} n'existe pas (affinité électronique ≤ {1})	an isolated atom never holds two extra electrons; the {0} ion does not exist (electron affinity ≤ {1})
+vers {0} MeV	near {0} MeV
 ville de {0} {1} hab., {2} jour	town of {0} {1} inhabitants, {2} day
 voie suivie dans {0} % des cas	path taken in {0} % of cases
 xénon {0}	xenon {0}
 {0}	{0}
+{0} %	{0} %
+{0} % d'uranium {1}	{0} % uranium {1}
 {0} % de c	{0} % of c
+{0} % du combustible	{0} % of the fuel
+{0} % {1}	{0} % {1}
+{0} % {1}, {2} % {3} ; phase δ stabilisée au {4}	{0} % {1}, {2} % {3}; δ phase stabilised with {4}
 {0} (H)	{0} (H)
 {0} + D : le rayonnement de freinage l'emporte toujours ; aucune température ne permet l'ignition.	{0} + D: bremsstrahlung always wins; no temperature allows ignition.
 {0} + n → {1} + p : réaction (n,p)	{0} + n → {1} + p: (n,p) reaction
@@ -289,10 +379,21 @@ xénon {0}	xenon {0}
 {0} + {1} : le rayonnement de freinage l'emporte toujours ; aucune température ne permet l'ignition.	{0} + {1}: bremsstrahlung always wins; no temperature allows ignition.
 {0} + {1} : pas de noyau composé, pas de fusion qui libère de l'énergie.	{0} + {1}: no compound nucleus, no fusion that releases energy.
 {0} + {1} consomme de l'énergie (Q = {2} MeV) : aucun plasma ne peut l'entretenir.	{0} + {1} consumes energy (Q = {2} MeV): no plasma can sustain it.
+{0} : glisser sur la sphère	{0}: drag onto the sphere
+{0} GJ	{0} GJ
+{0} J	{0} J
+{0} K	{0} K
+{0} MJ	{0} MJ
+{0} MeV	{0} MeV
 {0} MeV rendus	{0} MeV returned
 {0} MeV/nucléon)	{0} MeV/nucleon)
+{0} PJ	{0} PJ
+{0} TJ	{0} TJ
+{0} W	{0} W
 {0} ans	{0} years
+{0} b	{0} b
 {0} chargé	{0} loaded
+{0} cm	{0} cm
 {0} dans [aucun]	{0} in [none]
 {0} dans [{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}]	{0} in [{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}]
 {0} dans [{1}, {2}, {3}, {4}, {5}, {6}, {7}]	{0} in [{1}, {2}, {3}, {4}, {5}, {6}, {7}]
@@ -303,21 +404,47 @@ xénon {0}	xenon {0}
 {0} dans [{1}, {2}]	{0} in [{1}, {2}]
 {0} dans [{1}]	{0} in [{1}]
 {0} e- externes, hors règle de l'octet	{0} outer e-, outside the octet rule
+{0} eV	{0} eV
 {0} eV (non mesuré ici)	{0} eV (not measured here)
 {0} eV : ion : raies non tabulées	{0} eV: ion: lines not tabulated
 {0} eV : profil naturel : P = {1} ; raies sans durée de vie non modélisées	{0} eV: natural profile: P = {1}; lines without a lifetime are not modelled
+{0} enrichi {1} % (Godiva)	Enriched uranium {1} % (Godiva)
+{0} est près du sommet de la courbe : le briser coûte {1} MeV et le fusionner avec lui-même coûte {2} MeV.	{0} is near the top of the curve: breaking it costs {1} MeV and fusing it with itself costs {2} MeV.
+{0} est près du sommet de la courbe : le briser coûte {1} MeV.	{0} is near the top of the curve: breaking it costs {1} MeV.
+{0} est près du sommet de la courbe : le fusionner avec lui-même coûte {1} MeV.	{0} is near the top of the curve: fusing it with itself costs {1} MeV.
+{0} est trop léger pour gagner à se briser ({1} MeV à fournir).	{0} is too light to gain by breaking ({1} MeV to supply).
+{0} est un noyau très lié : le briser coûte {1} MeV et le fusionner avec lui-même coûte {2} MeV.	{0} is a very tightly bound nucleus: breaking it costs {1} MeV and fusing it with itself costs {2} MeV.
+{0} est un noyau très lié : le briser coûte {1} MeV.	{0} is a very tightly bound nucleus: breaking it costs {1} MeV.
+{0} est un noyau très lié : le fusionner avec lui-même coûte {1} MeV.	{0} is a very tightly bound nucleus: fusing it with itself costs {1} MeV.
+{0} fissionne sous les neutrons, mais trop peu : k∞ = {1} < {2}.	{0} fissions under neutrons, but too little: k∞ = {1} < {2}.
+{0} fissions	{0} fissions
+{0} g	{0} g
+{0} g de TNT	{0} g of TNT
 {0} g de combustible	{0} g of fuel
+{0} g/cm³	{0} g/cm³
 {0} j	{0} d
+{0} kJ	{0} kJ
+{0} keV	{0} keV
 {0} keV rendus	{0} keV returned
+{0} kg	{0} kg
 {0} kg de TNT	{0} kg of TNT
+{0} kt de TNT	{0} kt of TNT
 {0} milliard d'années / s	{0} billion years / s
 {0} milliards d'années	{0} billion years
 {0} million d'années / s	{0} million years / s
 {0} millions d'années	{0} million years
+{0} modes de vibration calculés	{0} vibrational modes computed
+{0} n'a jamais été pesé : aucun bilan possible.	{0} has never been weighed: no balance possible.
 {0} n'existe pas : l'électron repart	{0} does not exist: the electron leaves again
+{0} naturel (tamper) : glisser sur la sphère	Natural {0} (tamper): drag onto the sphere
+{0} ne se brise pas en noyaux pesés.	{0} does not break into weighed nuclei.
 {0} nucléons	{0} nucleons
+{0} peut entretenir une réaction en chaîne : k∞ = {1}.	{0} can sustain a chain reaction: k∞ = {1}.
 {0} reste {1}.	{0} stays {1}.
 {0} rupture(s) de corde	{0} string break(s)
+{0} t	{0} t
+{0} t de TNT	{0} t of TNT
+{0} u	{0} u
 {0} {1}	{0} {1}
 {0} {1} (particule α)	{0} {1} (α particle)
 {0} {1} milliards d'années	{0} {1} billion years
@@ -342,10 +469,15 @@ xénon {0}	xenon {0}
 {0}p → {1}s : un photon de {2} nm	{0}p → {1}s: a photon of {2} nm
 {0}s → {1}s : DEUX photons à la fois	{0}s → {1}s: TWO photons at once
 À {0} keV, le freinage dépasse la fusion ; l'ignition demande nτT ≥ {1} vers {2} keV.	At {0} keV, bremsstrahlung exceeds fusion; ignition requires nτT ≥ {1} near {2} keV.
+Épaisseur du réflecteur : {0} cm	Reflector thickness: {0} cm
+Épaisseur du réflecteur : {0} mm	Reflector thickness: {0} mm
 État excité : l'électron occupe le niveau n = {0}.	Excited state: the electron occupies level n = {0}.
+Étincelle : {0} eV déposés autour de l'atome {1}	Spark: {0} eV deposited around atom {1}
 échange de couleur (cordes) {0} %	colour exchange (strings) {0} %
+échantillon tiré : ×{0} par génération (k_eff calculé : {1})	drawn sample: ×{0} per generation (computed k_eff: {1})
 élastique (diffraction) {0} %	elastic (diffraction) {0} %
 élastique {0} %	elastic {0} %
+énergie de liaison par nucléon {0}	binding energy per nucleon of {0}
 énergie libérée = énergie de liaison = {0} eV (mesure NIST)	energy released = binding energy = {0} eV (NIST measurement)
 énergie libérée = énergie de liaison = {0} eV (modèle de Slater)	energy released = binding energy = {0} eV (Slater model)
 énergie reçue = E({0}) − E({1}) = {2} eV	energy received = E({0}) − E({1}) = {2} eV
@@ -404,12 +536,28 @@ xénon {0}	xenon {0}
 Δ({0}) en Breit–Wigner pour un pion ; inélastique = échange de couleur et deux cordes (Lund).	Δ({0}) as a Breit–Wigner for a pion; inelastic = colour exchange and two strings (Lund).
 ΔE = {0} eV partagée : {1} nm + {2} nm	ΔE = {0} eV shared: {1} nm + {2} nm
 Δl = {0} est interdit pour un photon : seule l'émission double est possible, d'où une durée de vie de {1} s.	Δl = {0} is forbidden for one photon: only double emission is possible, hence a lifetime of {1} s.
+Δm = {0} u, coûte {1} MeV	Δm = {0} u, costs {1} MeV
+Δm = {0} u, libère {1} MeV	Δm = {0} u, releases {1} MeV
 θ_lab du p = {0}°	θ_lab of the p = {0}°
 θ_lab du π⁺ = {0}°	θ_lab of the π⁺ = {0}°
 θ_lab du π⁻ = {0}°	θ_lab of the π⁻ = {0}°
 μ⁺ diffusé à E′ = {0} MeV, angle {1}°.	μ⁺ scattered at E′ = {0} MeV, angle {1}°.
 μ⁻ diffusé à E′ = {0} MeV, angle {1}°.	μ⁻ scattered at E′ = {0} MeV, angle {1}°.
 σ totale sur ce nucléon = {0} cm²	total σ on this nucleon = {0} cm²
+σ_f à {0} eV	σ_f at {0} eV
 σ_inél = {0} mb	σ_inel = {0} mb
 σ_él = {0} mb	σ_el = {0} mb
 σ_él = σ_tot²/{0}πB	σ_el = σ_tot²/{0}πB
+Atome ajouté {0} : la géométrie se recalcule	Atom added {0}: the geometry is being recomputed
+électrons lissés à {0} K	electrons smoothed at {0} K
+tenu à {0} e	held at {0} e
+Charge tenue à {0} e par la contrainte des anions : sans elle, le terme du troisième ordre de GFN1, qui n'est pas borné, lui donnerait des électrons sans fin.	Charge held at {0} e by the anion constraint: without it, GFN1's third-order term, which is unbounded, would keep giving it electrons.
+charge tenue à {0} e par la contrainte des anions :	charge held at {0} e by the anion constraint:
+chaque point : un endroit où l'électron pourrait être ({0} tirages de |ψ|²)	each dot: a place where the electron could be ({0} draws from |ψ|²)
+aucun point : un nœud, ψ = {0}, l'électron n'y est jamais	no dots: a node, ψ = {0}, the electron is never there
+les lobes enferment {0} % de |ψ|² : l'électron y est {1} fois sur {2}	the lobes enclose {0} % of |ψ|²: the electron is inside them {1} times out of {2}
+entre un lobe bleu et un orange : un nœud, ψ = {0}	between a blue lobe and an orange one: a node, ψ = {0}
+SCHÉMA {0}D	{0}D SKETCH
+cliquer un cercle de la cible ({0}) : une autre orbitale	click a ring of the target ({0}): another orbital
+cliquer un atome : sa carte ({0})	click an atom: its map ({0})
+entre un lobe bleu et un rouge : un nœud, ψ = {0}	between a blue lobe and a red one: a node, ψ = {0}

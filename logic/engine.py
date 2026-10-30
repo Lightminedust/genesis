@@ -36,9 +36,10 @@ from common.units import format_duration
 # Incrémenté à chaque changement incompatible du contrat. Le client refuse de
 # dessiner une frame qui ne porte pas ce numéro : mieux vaut un message clair
 # qu'un affichage silencieusement faux.
-PROTOCOL_VERSION = 27
+PROTOCOL_VERSION = 28
 
 TICK_S = 0.05
+MOLECULE_TICK_S = 0.01
 HEARTBEAT_S = 0.25
 
 Action = genesis_pb2.UserAction
@@ -230,6 +231,12 @@ def session_frame(tick, session, evaluation, source, events, last_action, struct
         fill_lab(frame.lab, session.lab)
     if session.reactor is not None:
         fill_reactor(frame.reactor, session.reactor)
+    if session.chain is not None:
+        from chainlab import frame as chain_frame
+        chain_frame.fill(frame.chain, session.chain, sent_table if sent_table is not None else {})
+    if session.molecule_lab is not None:
+        from moleculelab import frame as molecule_frame
+        molecule_frame.fill(frame.molecule_lab, session.molecule_lab, sent_table if sent_table is not None else {})
     if session.subatomic is not None:
         fill_subatomic(frame.subatomic, session.subatomic, sent_table)
     if session.nucleon is not None:
@@ -1163,7 +1170,8 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
         previous = time.monotonic()
         while context.is_active() and not (closed.is_set() and actions.empty()):
             try:
-                first = actions.get(timeout=TICK_S)
+                # Le laboratoire moléculaire publie jusqu'à 40 instantanés par seconde : on les relaie sans attendre.
+                first = actions.get(timeout=MOLECULE_TICK_S if session.molecule_lab is not None else TICK_S)
                 pending = [first]
                 while not actions.empty():
                     pending.append(actions.get_nowait())
@@ -1213,6 +1221,10 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             due = due or (session.star is not None and (not session.paused or not session.star.ready))
             # La molécule aussi : ses noyaux bougent, ou son calcul avance.
             due = due or (session.molecule is not None and (not session.paused or not session.molecule.pair.ready))
+            # La réaction en chaîne : un calcul vient de commencer ou de finir dans son fil.
+            due = due or (session.chain is not None and session.chain.take_dirty())
+            # Le laboratoire moléculaire : un pas de dynamique ou une grille de densité vient d'être publié.
+            due = due or (session.molecule_lab is not None and session.molecule_lab.take_dirty())
             if pending or events or structure_changed or due:
                 try:
                     frame = session_frame(tick + 1, session, evaluation, self.repository.source, events,
@@ -1226,6 +1238,7 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
                 for event in events:
                     print(f"  t={format_duration(event['time_s'])} [{event['kind']}] {event['title']}")
 
+        session._close_chain()
         print("Le client a ferme la connexion.")
 
     @staticmethod
@@ -1366,6 +1379,93 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
                 experiment.error = str(error)
                 return [{'kind': 'info', 'time_s': session.time_s, 'title': 'Parametre refuse', 'formula': '', 'detail': str(error)}]
             return []
+        if kind == Action.MOLECULE_START:
+            return session.start_molecule_lab()
+        if kind == Action.MOLECULE_STOP:
+            return session.stop_molecule_lab()
+        molecules = session.molecule_lab
+        if molecules is not None:
+            vector = list(action.vector)[:3] if len(action.vector) >= 3 else None
+            if kind == Action.MOLECULE_PRESET:
+                molecules.load_preset(action.value)
+                return []
+            if kind == Action.MOLECULE_REACTION:
+                molecules.load_reaction(action.value)
+                return []
+            if kind == Action.MOLECULE_ADD_ATOM:
+                molecules.add_atom(action.value, int(action.amount), vector)
+                return []
+            if kind == Action.MOLECULE_REMOVE_ATOM:
+                molecules.remove_atom(action.value)
+                return []
+            if kind == Action.MOLECULE_DRAG:
+                if action.value < 0 or vector is None:
+                    molecules.release()
+                else:
+                    molecules.drag_atom(action.value, vector)
+                return []
+            if kind == Action.MOLECULE_DYNAMICS:
+                molecules.set_dynamics(action.value, action.amount if action.amount >= 0 else None)
+                return []
+            if kind == Action.MOLECULE_SPARK:
+                molecules.spark(action.value, action.amount)
+                return []
+            if kind == Action.MOLECULE_VIEW:
+                molecules.set_view(action.value, int(action.amount), bool(action.vector) and action.vector[0] > 0)
+                return []
+            if kind == Action.MOLECULE_MODES:
+                molecules.compute_modes()
+                return []
+            if kind == Action.MOLECULE_EXCITE:
+                molecules.excite_mode(action.value, action.amount)
+                return []
+            if kind == Action.MOLECULE_CHARGE:
+                molecules.set_charge(action.value)
+                return []
+            if kind == Action.MOLECULE_PAUSE:
+                molecules.set_paused(action.value != 0)
+                return []
+            if kind == Action.MOLECULE_ISOTOPE:
+                molecules.set_isotope(action.value, int(action.amount))
+                return []
+            if kind == Action.MOLECULE_CLEAR:
+                molecules.clear()
+                return []
+            if kind == Action.MOLECULE_WALL:
+                molecules.set_wall(action.amount)
+                return []
+        if kind == Action.CHAIN_START:
+            return session.start_chain()
+        if kind == Action.CHAIN_STOP:
+            return session.stop_chain()
+        chain = session.chain
+        if chain is not None:
+            if kind == Action.CHAIN_SET_CORE:
+                chain.set_core(action.value)
+                return []
+            if kind == Action.CHAIN_SET_RADIUS:
+                chain.set_radius(action.amount)
+                return []
+            if kind == Action.CHAIN_SET_REFLECTOR:
+                chain.set_reflector(action.value, action.amount if action.amount > 0 else None)
+                return []
+            if kind == Action.CHAIN_SET_COMPRESSION:
+                chain.set_compression(action.amount)
+                return []
+            if kind == Action.CHAIN_FIRE:
+                # value : neutrons d'amorçage (1 par défaut) ; vector : leur point de naissance (cm), s'il est donné.
+                chain.fire(position=list(action.vector)[:3] if len(action.vector) >= 3 else None,
+                           count=action.value or 1)
+                return []
+            if kind == Action.CHAIN_SET_MODE:
+                chain.set_mode(action.value)
+                return []
+            if kind == Action.CHAIN_SET_NUCLIDE:
+                chain.set_nuclide(action.value)
+                return []
+            if kind == Action.CHAIN_CRITICAL:
+                chain.go_critical()
+                return []
         if kind == Action.STAR_START:
             return session.start_star()
         if kind == Action.STAR_STOP:
@@ -1405,8 +1505,8 @@ def serve():
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(errors="backslashreplace")
     repository = ElementRepository()
-    from fusionlab import star
-    star.warm_up()          # la bibliothèque REACLIB met quelques secondes à se lire
+    # La bibliothèque REACLIB de l'étoile n'est plus lue au démarrage : sa lecture (des dizaines de secondes de
+    # Python) ralentissait tous les laboratoires ; elle se lit à la première ouverture du cœur d'étoile.
 
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     genesis_pb2_grpc.add_UniverseEngineServicer_to_server(

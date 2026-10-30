@@ -56,6 +56,7 @@ $pySpec = Join-Path $work 'python-spec'
     --name GenesisEngine --paths $protoDir --paths (Join-Path $repo 'logic') `
     --collect-submodules numpy.core `
     --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable `
+    --collect-data chainlab --collect-data moleculelab `
     --distpath $pyDist --workpath $pyWork --specpath $pySpec `
     (Join-Path $PSScriptRoot 'windows_engine.py')
 if ($LASTEXITCODE -ne 0) { throw 'PyInstaller a echoue.' }

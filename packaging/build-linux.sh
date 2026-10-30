@@ -43,6 +43,7 @@ mkdir -p "$work/proto"
     --name GenesisEngine --paths "$work/proto" --paths "$repo/logic" \
     --collect-submodules numpy.core \
     --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable \
+    --collect-data chainlab --collect-data moleculelab \
     --distpath "$work/python-dist" --workpath "$work/python-work" \
     --specpath "$work/python-spec" "$repo/packaging/linux_engine.py"
 

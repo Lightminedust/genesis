@@ -27,7 +27,7 @@ public class EngineClient {
      * champs se décalent et l'affichage devient silencieusement faux, donc on
      * préfère refuser de dessiner.
      */
-    public static final int PROTOCOL_VERSION = 27;
+    public static final int PROTOCOL_VERSION = 28;
     // Une collision de noyaux lourds transporte tous ses produits et échantillons.
     // Le plafond gRPC implicite (4 Mio) coupait le flux et recréait une chambre vide.
     static final int MAX_FRAME_BYTES = 64 * 1024 * 1024;
@@ -84,6 +84,24 @@ public class EngineClient {
 
     public void send(UserAction.ActionType type, double amount) {
         send(UserAction.newBuilder().setType(type).setAmount(amount).build());
+    }
+
+    public void send(UserAction.ActionType type, int value, double amount) {
+        send(UserAction.newBuilder().setType(type).setValue(value).setAmount(amount).build());
+    }
+
+    /** Un tir dans le laboratoire de la réaction en chaîne : `count` neutrons nés en `position` (cm), ou au centre. */
+    public void fireChain(int count, double[] position) {
+        UserAction.Builder b = UserAction.newBuilder().setType(UserAction.ActionType.CHAIN_FIRE).setValue(count);
+        if (position != null) for (double v : position) b.addVector(v);
+        send(b.build());
+    }
+
+    /** Une action avec sa valeur, sa quantité et un vecteur (une position en Å, par exemple) ; vector peut être null. */
+    public void send(UserAction.ActionType type, int value, double amount, double[] vector) {
+        UserAction.Builder b = UserAction.newBuilder().setType(type).setValue(value).setAmount(amount);
+        if (vector != null) for (double v : vector) b.addVector(v);
+        send(b.build());
     }
 
     public void kickSubatomic(int particle, int sample, double vx, double vy, double vz) {

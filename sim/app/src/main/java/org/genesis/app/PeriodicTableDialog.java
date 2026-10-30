@@ -24,6 +24,7 @@ import javafx.stage.Window;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.IntConsumer;
+import java.util.function.IntPredicate;
 
 /**
  * Sélecteur d'élément : la table périodique entière, telle qu'on la lit sur
@@ -42,12 +43,25 @@ public class PeriodicTableDialog {
     private final Stage stage = new Stage();
     private final Label detail = new Label("Survole un élément pour le détailler.");
     private final double cellSize;
+    private IntPredicate available = z -> true;
+    private String unavailable = "";
 
     public PeriodicTableDialog(Window owner, PeriodicTable table, IntConsumer onPick) {
         this(owner, table, onPick, "Genesis - Table périodique");
     }
 
     public PeriodicTableDialog(Window owner, PeriodicTable table, IntConsumer onPick, String windowTitle) {
+        this(owner, table, onPick, windowTitle, z -> true, "");
+    }
+
+    /**
+     * Une table dont certains éléments ne peuvent pas servir (le calcul n'a pas leurs paramètres) : ils restent visibles,
+     * pâlis, et disent pourquoi au survol et au clic au lieu d'être choisis.
+     */
+    public PeriodicTableDialog(Window owner, PeriodicTable table, IntConsumer onPick, String windowTitle,
+                               IntPredicate available, String unavailable) {
+        this.available = available;
+        this.unavailable = unavailable;
         // 18 colonnes de 46 px font 880 px de large : sur un écran étroit, la
         // fenêtre sortirait de l'écran. On rétrécit les cases plutôt.
         Rectangle2D screen = Screen.getPrimary().getVisualBounds();
@@ -139,14 +153,17 @@ public class PeriodicTableDialog {
         cell.setMinSize(cellSize, cellSize);
         cell.setMaxSize(cellSize, cellSize);
 
+        boolean usable = available.test(element.getZ());
         String idle = cellStyle(accent, radioactive, false);
         String hover = cellStyle(accent, radioactive, true);
         cell.setStyle(idle);
+        if (!usable) cell.setOpacity(.3);
 
         Runnable highlight = () -> {
             cell.setStyle(hover);
-            detail.setText(describe(element));
-            detail.setStyle("-fx-text-fill: " + toHex(accent) + "; -fx-font-size: 12px;");
+            detail.setText(usable ? describe(element)
+                    : element.getZ() + "  " + element.getName() + "  ·  " + I18n.text(unavailable));
+            detail.setStyle("-fx-text-fill: " + (usable ? toHex(accent) : "#FF9C8A") + "; -fx-font-size: 12px;");
         };
         cell.setOnMouseEntered(event -> highlight.run());
         cell.setOnMouseExited(event -> cell.setStyle(idle));
@@ -159,6 +176,10 @@ public class PeriodicTableDialog {
             }
         });
         cell.setOnAction(event -> {
+            if (!usable) {
+                highlight.run();   // pas de calcul possible : la table reste ouverte et dit pourquoi
+                return;
+            }
             onPick.accept(element.getZ());
             stage.hide();       // l'élément est choisi : la table s'efface, l'atome apparaît
         });

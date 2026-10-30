@@ -13,6 +13,8 @@ import org.genesis.atom.PhotonPacket;
 import org.genesis.subatomic.QuantumLab;
 import org.genesis.atom.QuantumView;
 import org.genesis.fusion.ReactorView;
+import org.genesis.chain.ChainView;
+import org.genesis.molecule.MoleculeView;
 import org.genesis.atom.SimCanvas;
 import org.genesis.atom.StabilityChart;
 import org.genesis.fusion.StarView;
@@ -90,6 +92,8 @@ public class App extends Application {
     static final boolean SUBATOMIC_SCREEN = false;
     /** La vue de Bohr (anneaux, électrons qui tournent) est en travaux : bouton et touche O masqués, son code reste. */
     static final boolean BOHR_VIEW = false;
+    /** Le simulateur de masse critique (réaction en chaîne) : mis de côté, son code et son moteur restent. */
+    static final boolean CHAIN_SCREEN = false;
 
     private static final double PREFERRED_WIDTH = 1440;
     private static final double PREFERRED_HEIGHT = 900;
@@ -101,6 +105,12 @@ public class App extends Application {
     private MatterCanvas matterCanvas;
     private FusionLab fusionView;
     private ReactorView reactorView;
+    private ChainView chainView;
+    private boolean chainActive;
+    private MoleculeView moleculeView;
+    private PeriodicTableDialog moleculeDialog;
+    private boolean moleculeActive;
+    private PeriodicTableDialog chainDialog;
     private SubatomicView subatomicView;
     private boolean subatomicActive;
     private QuantumLab quantumLab;
@@ -246,7 +256,13 @@ public class App extends Application {
                     offerUpdate(pendingUpdate);
                     pendingUpdate = null;
                 }
-                if (!reactorActive && !subatomicActive && !nucleonActive) {
+                if (chainActive) {
+                    chainView.tick(delta);
+                }
+                if (moleculeActive) {
+                    moleculeView.tick(delta);
+                }
+                if (!reactorActive && !subatomicActive && !nucleonActive && !chainActive && !moleculeActive) {
                     simCanvas.tick(now);
                     timeline.tick();
                     syncViewBar();
@@ -273,7 +289,7 @@ public class App extends Application {
                 if (chemistryActive) {
                     moleculeCanvas.tick(delta);
                 }
-                if (!reactorActive && !subatomicActive && !nucleonActive) {
+                if (!reactorActive && !subatomicActive && !nucleonActive && !chainActive && !moleculeActive) {
                     lightPanel.tick(delta);
                     quantumView.tick(delta);
                     stabilityChart.tick(delta);
@@ -313,6 +329,47 @@ public class App extends Application {
         reactorView.setOnNucleusB(code -> send(ActionType.SET_REACTOR_NUCLEUS_B, code));
         reactorView.setOnCollisionEnergy(kev -> sendAmount(ActionType.SET_REACTOR_ENERGY, kev));
         reactorView.setOnImpact(fm -> sendAmount(ActionType.SET_REACTOR_IMPACT, fm));
+        chainView = new ChainView(new ChainView.Actions() {
+            @Override public void back() { leaveLab(ActionType.CHAIN_STOP, f -> !f.getChain().getActive()); }
+            @Override public void core(int index) { send(ActionType.CHAIN_SET_CORE, index); }
+            @Override public void radius(double cm) { sendAmount(ActionType.CHAIN_SET_RADIUS, cm); }
+            @Override public void reflector(int index, double cm) { sendBoth(ActionType.CHAIN_SET_REFLECTOR, index, cm); }
+            @Override public void compression(double factor) { sendAmount(ActionType.CHAIN_SET_COMPRESSION, factor); }
+            @Override public void geometry(double cm, double compression) {
+                sendAmount(ActionType.CHAIN_SET_COMPRESSION, compression);
+                sendAmount(ActionType.CHAIN_SET_RADIUS, cm);
+            }
+            @Override public void fire(double[] position, int count) { fireChain(count, position); }
+            @Override public void mode(int mode) { send(ActionType.CHAIN_SET_MODE, mode); }
+            @Override public void nuclide(int code) { send(ActionType.CHAIN_SET_NUCLIDE, code); }
+            @Override public void critical() { send(ActionType.CHAIN_CRITICAL); }
+            @Override public void pickElement() { openChainTable(); }
+        });
+        moleculeView = new MoleculeView(new MoleculeView.Actions() {
+            @Override public void back() { leaveLab(ActionType.MOLECULE_STOP, f -> !f.getMoleculeLab().getActive()); }
+            @Override public void preset(int index) { send(ActionType.MOLECULE_PRESET, index); }
+            @Override public void reaction(int index) { send(ActionType.MOLECULE_REACTION, index); }
+            @Override public void addAtom(int z, int anchor, double[] position) {
+                sendVector(ActionType.MOLECULE_ADD_ATOM, z, anchor, position);
+            }
+            @Override public void removeAtom(int index) { send(ActionType.MOLECULE_REMOVE_ATOM, index); }
+            @Override public void drag(int index, double[] target) { sendVector(ActionType.MOLECULE_DRAG, index, 0, target); }
+            @Override public void release() { sendVector(ActionType.MOLECULE_DRAG, -1, 0, null); }
+            @Override public void dynamics(int mode, double kelvin) { sendBoth(ActionType.MOLECULE_DYNAMICS, mode, kelvin); }
+            @Override public void spark(int index, double ev) { sendBoth(ActionType.MOLECULE_SPARK, index, ev); }
+            @Override public void view(int kind, int orbital, boolean potential) {
+                sendVector(ActionType.MOLECULE_VIEW, kind, orbital, new double[]{potential ? 1 : 0});
+            }
+            @Override public void modes() { send(ActionType.MOLECULE_MODES); }
+            @Override public void isotope(int target, int massNumber) {
+                sendBoth(ActionType.MOLECULE_ISOTOPE, target, massNumber);
+            }
+            @Override public void excite(int mode, double quanta) { sendBoth(ActionType.MOLECULE_EXCITE, mode, quanta); }
+            @Override public void charge(int charge) { send(ActionType.MOLECULE_CHARGE, charge); }
+            @Override public void pause(boolean paused) { send(ActionType.MOLECULE_PAUSE, paused ? 1 : 0); }
+            @Override public void clear() { send(ActionType.MOLECULE_CLEAR); }
+            @Override public void pickElement() { openMoleculeTable(); }
+        });
         subatomicView = new SubatomicView(() -> leaveLab(ActionType.SUBATOMIC_STOP, f -> !f.getSubatomic().getActive()),
                 () -> send(ActionType.SUBATOMIC_RESET),
                 value -> send(ActionType.SUBATOMIC_SET_PROTONS, value),
@@ -369,10 +426,12 @@ public class App extends Application {
         fusionView.getNode().setVisible(false);
         starView.getNode().setVisible(false);
         reactorView.getNode().setVisible(false);
+        chainView.getNode().setVisible(false);
+        moleculeView.getNode().setVisible(false);
         subatomicView.getNode().setVisible(false);
         quantumLab.getNode().setVisible(false);
         StackPane laboratories = new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
-                reactorView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode(),
+                reactorView.getNode(), chainView.getNode(), moleculeView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode(),
                 updateCard.getNode());
         BorderPane localizedShell = new BorderPane(laboratories);
         localizedShell.setTop(buildLanguageBar());
@@ -681,11 +740,17 @@ public class App extends Application {
         labs.setFocusTraversable(false);
         MenuItem fusion = new MenuItem("⚛   Fusion · fission · transmutation");
         fusion.setOnAction(event -> openFusion());
+        MenuItem chain = new MenuItem("☢   Réaction en chaîne · masse critique");
+        chain.setOnAction(event -> openChain());
+        MenuItem molecule = new MenuItem("⌬   Laboratoire moléculaire");
+        molecule.setOnAction(event -> openMolecule());
         MenuItem subatomic = new MenuItem("◈   Laboratoire subatomique");
         subatomic.setOnAction(event -> openSubatomic());
         MenuItem nucleon = new MenuItem("◉   Le monde subatomique (quarks, hadrons, partons)");
         nucleon.setOnAction(event -> openNucleon());
         labs.getItems().add(fusion);
+        labs.getItems().add(molecule);
+        if (CHAIN_SCREEN) labs.getItems().add(chain);
         if (SUBATOMIC_SCREEN) labs.getItems().add(subatomic);
         labs.getItems().add(nucleon);
         if (STAR_SCREEN) {
@@ -1105,6 +1170,11 @@ public class App extends Application {
                 Platform.runLater(() -> {
                     periodicTable = table;
                     stabilityChart.setTable(table);
+                    String[] symbols = new String[table.getElementsCount() + 2];
+                    for (var element : table.getElementsList()) {
+                        if (element.getZ() < symbols.length) symbols[element.getZ()] = element.getSymbol();
+                    }
+                    chainView.setSymbols(symbols);
                     simCanvas.setParticles(table.getParticlesList());
                     tableButton.setDisable(false);
                 });
@@ -1185,14 +1255,22 @@ public class App extends Application {
         boolean subatomic = frame.getSubatomic().getActive();
         boolean nucleon = frame.getNucleon().getActive();
         boolean partons = frame.getPartons().getActive();
-        if (fusion != fusionActive || star != starActive || reactor != reactorActive || subatomic != subatomicActive || nucleon != nucleonActive || partons != partonsActive) {
+        boolean chain = frame.getChain().getActive();
+        boolean molecule = frame.getMoleculeLab().getActive();
+        if (fusion != fusionActive || star != starActive || reactor != reactorActive || subatomic != subatomicActive
+                || nucleon != nucleonActive || partons != partonsActive || chain != chainActive
+                || molecule != moleculeActive) {
+            chainActive = chain;
+            chainView.getNode().setVisible(chain);
+            moleculeActive = molecule;
+            moleculeView.getNode().setVisible(molecule);
             fusionActive = fusion;
             starActive = star;
             reactorActive = reactor;
             subatomicActive = subatomic;
             nucleonActive = nucleon;
             partonsActive = partons;
-            mainScreen.setVisible(!fusion && !star && !reactor && !subatomic && !nucleon);
+            mainScreen.setVisible(!fusion && !star && !reactor && !subatomic && !nucleon && !chain && !molecule);
             fusionView.getNode().setVisible(fusion);
             starView.getNode().setVisible(star);
             reactorView.getNode().setVisible(reactor);
@@ -1201,6 +1279,8 @@ public class App extends Application {
         }
         fusionView.applyFrame(frame);
         reactorView.applyFrame(frame);
+        chainView.applyFrame(frame);
+        moleculeView.applyFrame(frame);
         starView.applyFrame(frame);
         subatomicView.applyFrame(frame);
         quantumLab.applyFrame(frame);
@@ -1231,6 +1311,52 @@ public class App extends Application {
 
     private void fireNeutron() {
         send(ActionType.FIRE_NEUTRON);
+    }
+
+    private void openMolecule() {
+        openLab(ActionType.MOLECULE_START, "Ouverture du laboratoire moléculaire",
+                "Le moteur résout les électrons de valence (GFN1-xTB) et relaxe la première molécule.",
+                f -> f.getMoleculeLab().getActive() && f.getMoleculeLab().getReady(), ActionType.MOLECULE_STOP);
+    }
+
+    /** L'établi moléculaire : n'importe quel élément du tableau (GFN1-xTB calcule de H à Rn). */
+    private void openMoleculeTable() {
+        if (periodicTable == null) {
+            return;
+        }
+        if (moleculeDialog == null) {
+            moleculeDialog = new PeriodicTableDialog(moleculeView.getNode().getScene().getWindow(), periodicTable,
+                    atomicNumber -> {
+                        String symbol = "Z" + atomicNumber;
+                        for (var element : periodicTable.getElementsList()) {
+                            if (element.getZ() == atomicNumber) symbol = element.getSymbol();
+                        }
+                        moleculeView.chooseElement(atomicNumber, symbol);
+                    },
+                    "Genesis - Choisir un élément pour l'établi moléculaire", moleculeView::supports,
+                    "GFN1-xTB n'est paramétré que de l'hydrogène au radon (Z = 1 à 86) ; au-delà, aucun calcul n'est "
+                            + "possible.");
+        }
+        moleculeDialog.show();
+    }
+
+    private void openChain() {
+        openLab(ActionType.CHAIN_START, "Ouverture du laboratoire de la réaction en chaîne",
+                "Le moteur charge les sections efficaces évaluées (ENDF/B-VIII.0) et calcule le transport des neutrons.",
+                f -> f.getChain().getActive() && f.getChain().getReady(), ActionType.CHAIN_STOP);
+    }
+
+    /** Le bac à sable : n'importe quel élément du tableau, son isotope naturel. */
+    private void openChainTable() {
+        if (periodicTable == null) {
+            return;
+        }
+        if (chainDialog == null) {
+            chainDialog = new PeriodicTableDialog(chainView.getNode().getScene().getWindow(), periodicTable,
+                    atomicNumber -> send(ActionType.CHAIN_SET_NUCLIDE, atomicNumber * 1000),
+                    "Genesis - Choisir un noyau pour le bac à sable");
+        }
+        chainDialog.show();
     }
 
     /**
@@ -1312,6 +1438,39 @@ public class App extends Application {
             send(ActionType.CHEMISTRY_STOP);
         }
         simCanvas.jumpTo(scale);
+    }
+
+    private void fireChain(int count, double[] position) {
+        if (client == null) {
+            return;
+        }
+        try {
+            client.fireChain(count, position);
+        } catch (RuntimeException error) {
+            onError(error);
+        }
+    }
+
+    private void sendVector(ActionType action, int value, double amount, double[] vector) {
+        if (client == null) {
+            return;
+        }
+        try {
+            client.send(action, value, amount, vector);
+        } catch (RuntimeException error) {
+            onError(error);
+        }
+    }
+
+    private void sendBoth(ActionType action, int value, double amount) {
+        if (client == null) {
+            return;
+        }
+        try {
+            client.send(action, value, amount);
+        } catch (RuntimeException error) {
+            onError(error);
+        }
     }
 
     private void sendAmount(ActionType action, double amount) {
@@ -1477,6 +1636,14 @@ public class App extends Application {
                 case SPACE -> partonView.togglePlayback();
                 default -> { }
             }
+            return;
+        }
+        if (chainActive) {
+            if (event.getCode() == KeyCode.ESCAPE) leaveLab(ActionType.CHAIN_STOP, f -> !f.getChain().getActive());
+            return;
+        }
+        if (moleculeActive) {
+            if (event.getCode() == KeyCode.ESCAPE) leaveLab(ActionType.MOLECULE_STOP, f -> !f.getMoleculeLab().getActive());
             return;
         }
         if (nucleonActive) {

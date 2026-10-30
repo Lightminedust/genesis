@@ -103,6 +103,10 @@ class Session:
         self.star = None
         # Réacteur à fusion (tokamak, écran à part).
         self.reactor = None
+        # La réaction en chaîne : masse critique, k_eff, cascade de neutrons (écran à part).
+        self.chain = None
+        # Le laboratoire moléculaire : des molécules entières, leurs électrons (GFN1-xTB) et leurs forces.
+        self.molecule_lab = None
         # Laboratoire few-body indépendant de l'atome construit à l'accueil.
         self.subatomic = None
         # Le nucléon de l'intérieur : trois quarks dans une corde de couleur.
@@ -277,6 +281,7 @@ class Session:
     # ------------------------------------------------------------------
     def start_matter(self):
         from molecular.matter import Matter
+        self._close_chain()
         self.subatomic = self.nucleon = None
         self.molecule = None
         z, a = self.atom.protons, self.atom.protons + self.atom.neutrons
@@ -291,6 +296,7 @@ class Session:
 
     def start_fusion(self):
         from fusionlab.fusion import FusionLab
+        self._close_chain()
         self.subatomic = self.nucleon = None
         self.lab = FusionLab(rng_seed=self.rng.randrange(1 << 30))
         self.star = None
@@ -332,6 +338,7 @@ class Session:
 
     def start_reactor(self):
         from fusionlab.fusion_dynamics import FusionExperiment
+        self._close_chain()
         self.subatomic = self.nucleon = None
         self.reactor = FusionExperiment(rng_seed=self.rng.randrange(1 << 30))
         self.lab = None
@@ -346,8 +353,54 @@ class Session:
         self.reactor = None
         return [_event("structure", self.time_s, "Retour à l'atome")]
 
+    # ------------------------------------------------------------------
+    # La réaction en chaîne
+    # ------------------------------------------------------------------
+    def start_chain(self):
+        from chainlab.lab import ChainLab
+        self._close_chain()
+        self.reactor = self.lab = self.star = self.matter = self.molecule = None
+        self.subatomic = self.nucleon = None
+        self.chain = ChainLab(rng_seed=self.rng.randrange(1 << 30))
+        return [_event("structure", self.time_s, "Laboratoire de la réaction en chaîne",
+                       "k_eff = neutrons d'une génération / neutrons de la précédente",
+                       "Une sphère de matière fissile et son réflecteur : le transport des neutrons (ENDF/B-VIII.0) "
+                       "dit si la chaîne s'éteint, se maintient ou diverge.")]
+
+    def stop_chain(self):
+        self._close_chain()
+        return [_event("structure", self.time_s, "Retour à l'atome")]
+
+    def _close_chain(self):
+        """Arrête les laboratoires qui calculent dans leur propre fil (réaction en chaîne, molécules)."""
+        if self.chain is not None:
+            self.chain.close()
+            self.chain = None
+        if self.molecule_lab is not None:
+            self.molecule_lab.close()
+            self.molecule_lab = None
+
+    # ------------------------------------------------------------------
+    # Le laboratoire moléculaire
+    # ------------------------------------------------------------------
+    def start_molecule_lab(self):
+        from moleculelab.lab import MoleculeLab
+        self._close_chain()
+        self.reactor = self.lab = self.star = self.matter = self.molecule = None
+        self.subatomic = self.nucleon = None
+        self.molecule_lab = MoleculeLab(rng_seed=self.rng.randrange(1 << 30))
+        return [_event("structure", self.time_s, "Laboratoire moléculaire",
+                       "F = −∇E, E calculée par GFN1-xTB",
+                       "Des atomes, leurs électrons de valence et les forces qui les lient : la géométrie, les "
+                       "liaisons et les réactions sortent du calcul.")]
+
+    def stop_molecule_lab(self):
+        self._close_chain()
+        return [_event("structure", self.time_s, "Retour à l'atome")]
+
     def start_subatomic(self):
         from quantumlab.subatomic import SubatomicExperiment
+        self._close_chain()
         self.nucleon = None
         self.subatomic = SubatomicExperiment()
         self.reactor = self.lab = self.star = self.matter = self.molecule = None
@@ -360,6 +413,7 @@ class Session:
     # ------------------------------------------------------------------
     def start_nucleon(self):
         from quantumlab.nucleon import Nucleon
+        self._close_chain()
         self.subatomic = None
         self.nucleon = Nucleon('proton')
         self.partons = None
@@ -605,8 +659,11 @@ class Session:
         return []
 
     def start_star(self):
+        from fusionlab import star
         from fusionlab.star import Star
+        self._close_chain()
         self.subatomic = self.nucleon = None
+        star.warm_up()          # la bibliothèque REACLIB se lit à la première ouverture de l'étoile
         self.star = Star(rng_seed=self.rng.randrange(1 << 30))
         self.lab = None
         self.matter = None
@@ -977,8 +1034,8 @@ class Session:
     # ------------------------------------------------------------------
     def advance(self, real_dt):
         self.real_clock += real_dt
-        if self.lab is not None or self.reactor is not None:
-            return []          # le laboratoire et le réacteur n'avancent qu'à chaque tir
+        if self.lab is not None or self.reactor is not None or self.chain is not None or self.molecule_lab is not None:
+            return []          # les laboratoires n'avancent qu'à chaque tir, ou dans leur propre fil
         if self.star is not None:
             return self._advance_star(real_dt)
         if self.molecule is not None:

@@ -13,7 +13,7 @@ Licence: [EULA.txt](EULA.txt).
 
 ```
 JavaFX (sim/)  --- bidirectional gRPC --->  Python (logic/)  ---> MongoDB
-  draws the events     genesis.proto v27     clock + rules        periodic table
+  draws the events     genesis.proto v28     clock + rules        periodic table
                                              scipy, radioactivedecay, mendeleev
 ```
 
@@ -212,6 +212,120 @@ does not replace the quantum mechanics of the orbital.
 
 Laws, sources and limits: [the subatomic world](docs/SUBATOMIC_MODEL.md) and [the nucleon model](docs/NUCLEON_MODEL.md).
 
+## The molecular laboratory
+
+**⌬ Molecular laboratory** (Laboratories menu) puts atoms on a workbench and computes their electrons. Nobody decides
+that two atoms are bonded, or at what angle: for every position of the nuclei, the quantum tight-binding method
+GFN1-xTB gives the energy and the exact force on each nucleus, and geometry, bonds, vibrations and reactions follow.
+
+* **Bonds drawn as their electron pairs** — the occupied orbitals are localized (Pipek–Mezey) and each bond is shown
+  by what holds it: a pair on two atoms is a line (covalent or polar: water, benzene, SF₆, Au₂); a pair spread over
+  three atoms or more is a multicentre bond, drawn as a Lipscomb star from the pair's centroid (gold clusters: Au₆
+  has three such pairs, one per corner triangle, and no pair on a single couple of atoms; the B–H–B bridges of
+  diborane); two ions with no shared pair (NaCl) get dotted attraction. The planar D3h triangle of Au₆ is a ready
+  molecule, and GFN1-xTB puts it below the pyramid (+0.60 eV) and the octahedron (+1.10 eV).
+* **The polarization halo** — the valence electron cloud of each molecule seen through: at every pixel, the electrons
+  per Å² the line of sight crosses, computed every frame at full resolution from each atom's free-atom cloud (GFN1,
+  Abel-projected) scaled to the electrons it keeps (Mulliken charge); it matches the projected computed density to
+  95–99 %. Its edge is the 0.3 e/Å² contour; its colour is the charge of the atoms that own the point: magenta δ−,
+  cyan δ+, with δ+ / δ− signs beyond its edge. Fuller around the atoms that pull electrons (O, Cl), thin around those
+  that give them up (H). Option: the conventional electrostatic potential map — the exact potential of nuclei and
+  cloud (Fourier convolution) on the ρ = 0.002 a.u. surface.
+* **A minimal, computed picture** — atoms are glass bubbles (0.45 × Pyykkö covalent radius) with a glowing Fresnel
+  rim that turns magenta when the atom gained electrons (δ−) and cyan when it lost some (δ+), an incandescent nucleus,
+  and a few fine arcs that leave the nucleus, are caught where the bonds pierce the bubble and lean the way the atom's
+  cloud is deformed (its computed atomic dipole). A covalent bond is a single laser-like beam whose brightness follows
+  the Mayer bond order and the density the two atoms still share between their nuclei (a broken bond keeps a Mayer
+  order of 1 in this closed-shell model — O–O at 3 Å: 1.06 — but shares nothing: its beam goes out); its π part is two glass lobes on either side of the bond, along the computed direction of the
+  π density (ethylene: the plane normal; N₂: two perpendicular pairs); its colour gives the internal force along the
+  bond (blue none, white tension, orange compression); its grains are drawn from the density of its localized pair
+  along the axis (spread through C–H, denser on the O side of O–H). Non-bonded attraction is drawn as dots (hydrogen
+  bonds, van der Waals, ions), sliding toward the middle; repulsion as orange dots that leave the point where the two
+  clouds touch (free-atom surfaces at 0.002 e/bohr³) and move out toward both atoms, as fast and bright as the
+  computed pair force. Bloom is done on the GPU. The electric field lines are an option.
+* **Three views, three languages** — Δρ is a deformation-density map in contour lines (seen through, like the halo:
+  solid where the molecule gained electrons, dashed where it lost some, one contour per doubling from 0.025 to
+  1.6 e/Å²): benzene gains on every bond and loses on its carbon nuclei, as in the textbooks. ψ is one molecular
+  orbital drawn as in chemistry software: smooth solid lobes enclosing 85 % of |ψ|², blue where ψ > 0 and red where
+  ψ < 0 (the phase of the wave, not a charge), a node between them, with a 3D ball-and-stick skeleton whose bonds have
+  one, two or three sticks from the Mayer order; a closed mesh by marching tetrahedra on a fine grid (80 points per
+  side, computed by separable Gaussians), rendered by the GPU — sharp even while rotating. The camera looks along the thinnest axis of the cloud and tilts by 40°
+  when both phases would fall on the same lines of sight (a benzene π seen face-on); the view line says what the
+  orbital is made of (water HOMO: O 2p 100 %). Each view draws only what it says.
+* **Readings you can see** — the energy balance: cohesion (the energy to pull the molecule apart into atoms), then
+  each GFN1-xTB term minus its value in the free atoms, what binds versus what costs, summing exactly to the binding
+  energy (water: overlapping orbitals −19.2 eV, charges +1.4, nuclear repulsion +1.0 → −16.7 eV), and the motion of
+  the nuclei against the cohesion. The orbital levels as a target: radius linear in energy, filled rings carrying
+  their electrons, HOMO orange, the HOMO–LUMO gap a golden ring, LUMO dashed violet, vacuum at the edge; hover reads a
+  ring, a click shows its orbital. The selected atom as a 2D force map: by default only the net force and, per
+  neighbour, a link coloured and sized by what the pair does, with the neighbours listed as bonded / not bonded and a
+  computed reason (bond character from its π part; for non-bonded pairs, the dominant part of their force: steric
+  clash from an antibonding overlap, like or opposite charges, London, cores). Detailed tabs give one arrow per pair
+  (the full vector, sideways part included — it holds the angles) adding up exactly to the net force, or one arrow per
+  term (electrons, nuclei, London, hand). A 2D sketch card shows the molecule as a textbook skeletal formula (CH₃, OH written out, or every hydrogen; single,
+  double, triple and conjugated bonds from the Mayer order) that turns with the 3D view, linked both ways to the scene, with live charges, the selected atom's bond lengths and force, a
+  line of measurements and a hint that follows what you are doing.
+* **Who does what to whom, without arrows** — the forces are split exactly into atom pairs (action = −reaction);
+  hovering an atom says « H3 pulls it by 1.00 eV/Å (electrons +4.60 · nuclei −3.60) »; a squeezed nucleus trembles.
+* **The whole periodic table up to radon** — GFN1-xTB is parametrized for Z = 1–86 (all 86 checked: each relaxes
+  with a hydrogen attached); in the lab's periodic table, the elements beyond (uranium…) are greyed and say why.
+* **Isotopes** — select an atom and give it any stable isotope or one living at least a year (¹H ²H ³H, ¹³C ¹⁴C,
+  ¹⁸O…; AME masses), or give it to every atom of the element. Only the mass changes (Born–Oppenheimer): same
+  geometry, other dynamics and vibrations — D₂O vibrates at 0.72–0.73 × H₂O (measured 0.73–0.74), HDO decouples
+  its O–D and O–H stretches.
+* **Molecules of life** — glucose, lauric acid (a fatty acid, a lipid), glycerol, alanine and caffeine, from the
+  PubChem 3D conformers, relaxed by GFN1-xTB.
+* **Workbench** — pick an element and click an atom to attach it: C + 4 H relaxes by itself into the tetrahedron
+  (109.47°), water comes out bent. Grab an atom and pull: the rest of the molecule is held by its centre of mass, the
+  bond stretches, the energy rises, and the bond breaks.
+* **Dynamics and reactor** — relaxation (FIRE), molecular dynamics with a thermostat (CSVR) or free (energy
+  conserved, 0.25 fs steps); molecules in a sphere (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) that react when heated or hit
+  by a spark that deposits kinetic energy; the species present and each reaction are read from the Mayer bond orders
+  and the shared density. Hot runs keep going: when a bond breaks the self-consistent cycle switches from Broyden
+  mixing to a damped Newton step on the computed charge response (O₄ at 4,000 K: no stop, every step converged at
+  300 K), and a strict constraint holds any atom at −2.5 e at most, where GFN1's unbounded third-order term would
+  otherwise pile electrons on it (Pm₄ apart: −9 e); the status line says when it acts.
+* **Vibrations** — the Hessian from the analytic forces gives the normal modes (cm⁻¹); exciting one gives it n
+  quanta hν and lets the (anharmonic) dynamics run.
+
+GFN1-xTB is rewritten in numpy and checked against the reference implementation dxtb to 3·10⁻⁷ Eh. It gets
+geometries and vibrations right (water: 0.958 Å, frequencies 4–13 % low); it overestimates atomization energies and
+some reaction energies (2 H₂ + O₂ → 2 H₂O: −9.4 eV computed, ≈ −5.5 eV measured) — the laboratory says so, with a
+computed ↔ measured table. The model, its checks and its limits: [the molecular laboratory](docs/MOLECULE_MODEL.md).
+
+## The chain reaction
+
+> Hidden for now: it no longer appears in the **Laboratories** menu. Its code and engine are kept
+> (`CHAIN_SCREEN` in `App.java`, `logic/chainlab/`); the description below applies when it is re-enabled.
+
+**☢ Chain reaction · critical mass** (Laboratories menu) puts a sphere of fissile metal in the middle of the screen,
+with or without a reflector, and computes what its neutrons do. Every number comes from a calculation on evaluated data:
+
+* **A scene, not a form** — the material is a volume of nuclei (one dot for 10²³ real nuclei). Click in the sphere
+  to give birth to a neutron; drag its edge to squeeze it at constant mass (Shift: add matter) and watch the nuclei
+  close up and the dashed critical-radius ring come within reach; drag a beryllium, graphite or uranium token onto
+  it to add a reflector; a slider slows time down to the nanosecond. Colour says the state: a cold blue aura when
+  subcritical, amber at critical, a throbbing red beyond. Materials: U-235, Pu-239, U-238, Th-232, iron 56 and lead
+  208 (which never fission: the neutrons bounce, get captured with a violet γ flash, or leak), and eight more.
+* **Neutron transport** — first-collision probabilities in spherical shells, 44 energy groups built from ENDF/B-VIII.0
+  (Bondarenko self-shielding, transport correction, adjoint flux). The dashboard gives k_eff, k∞, the fate of the
+  neutrons (fission, capture, leakage), the critical radius and mass, k_eff(R), the reactivity in dollars, the period
+  (inhour equation, delayed neutrons), Λ, β, ν̄. Godiva, Jezebel and Flattop come out critical within half a percent;
+  the bare critical masses are those published (U-235 46 kg, Pu-239 10 kg, U-233 15 kg). U-238 and Th-232 never diverge.
+* **The shot** — a cascade drawn neutron by neutron in the real geometry (ν from Terrell's law around the evaluated ν̄):
+  each collision lands on a nucleus of the volume — a scatter sparks, a capture sends out a violet γ wave, a fission
+  bursts it into two fragments in a flash. The generations line up at the bottom (1 → 4 → 6 → 10…, or a ✕). If the
+  drawn chain holds, the computed excursion takes over: a storm of sparks spread along the computed flux, the metal
+  heats up, glows (black-body colour of the computed temperature), expands, boils, flies apart. A single neutron in a
+  barely supercritical sphere usually dies out — the scene says how rarely it lights a never-ending chain (2 % at
+  k = 1.02). The numbers (k_eff, critical mass, N(t), energy, TNT, Δm = E/c²) sit behind « ⓘ The numbers ».
+* **Sandbox — the quest for yield** — any weighed nucleus: the Aston curve, the best fission split and the fusion with
+  itself, a Q gauge from red (endothermic) to gold (exothermic), the mass balance before / after, and a table
+  U-235 · Fe-56 · Fe-60 · D + T. Fission and chain reaction (neutrons, σ_f, k_eff) and fusion (plasma, Coulomb, Lawson)
+  stay two separate worlds.
+
+The model, its data and its validation: [the chain reaction](docs/CHAIN_MODEL.md).
+
 ## What you can do
 
 At launch, the simulator loads a uranium-238 atom and opens the Orbital tab (the shape of the valence cloud, before the spectrum). The atom screen has three bands:
@@ -221,7 +335,7 @@ At launch, the simulator loads a uranium-238 atom and opens the Orbital tab (the
   - three counters − p⁺ + · − n + · − e⁻ +;
   - light: the wavelength (click: a small setting, with the flame) and "Fire a photon";
   - **☢ Fire at the nucleus**: a **slow neutron** (0.0253 eV), whose outcome is drawn in proportion to the measured cross sections (scattering, (n,γ) capture, fission of U-233/U-235/Pu-239, (n,α) on Li-6 and B-10, (n,p) on He-3 and N-14), with Q computed from measured masses; or a **5 MeV α particle**, which opens the collision chamber with He-4 against the nucleus on screen. Without a measured cross section (Tc-98…), Genesis says so and does not invent the outcome;
-  - on the right, the **Laboratories** menu (fusion · fission · transmutation, subatomic world), hidden until opened. As soon as one is chosen, a **waiting screen** (`LabLoader`) says what the engine is preparing and the elapsed time. It disappears when the frame confirms the laboratory, and says why if the engine does not answer (outdated, unreachable). Going back to the atom has the same wait;
+  - on the right, the **Laboratories** menu (fusion · fission · transmutation, molecular laboratory, subatomic world), hidden until opened. As soon as one is chosen, a **waiting screen** (`LabLoader`) says what the engine is preparing and the elapsed time. It disappears when the frame confirms the laboratory, and says why if the engine does not answer (outdated, unreachable). Going back to the atom has the same wait;
   - a coloured dot that gives the connection state on hover.
 - **The scene**, with its view bar:
   - the scale (Atom · Nucleus · Nucleon · Scale gap);
@@ -240,7 +354,7 @@ At launch, the simulator loads a uranium-238 atom and opens the Orbital tab (the
   - **Interactions**: clicking a station advances time up to it, event by event (decays are still drawn at random). Hovering a rail explains the path.
   - **Underneath**: the next step, and what it means in real time at the chosen speed.
 
-The chain comes from the engine (`Session.decay_chain`, dominant path at each step, ICRP-107 / NUBASE2020 data; contract v27).
+The chain comes from the engine (`Session.decay_chain`, dominant path at each step, ICRP-107 / NUBASE2020 data; contract v28).
 
 | Group | Action | Keys |
 |---|---|---|
@@ -249,7 +363,7 @@ The chain comes from the engine (`Session.decay_chain`, dominant path at each st
 | NUCLEUS | fire a slow neutron · fire an α (☢ menu) | `B` |
 | TIME | pause · speed · next event · step by step · go to a station (click) | `Space` · `[` `]` · `→` · `A` |
 | VIEW | atom, nucleus, nucleon, scale gap · wheel zoom · drag: rotate (or pan) · double-click: centre · valence only · Bohr model | `1` `2` `3` `G` · `+` `−` · `V` · `O` |
-| LABORATORIES | Laboratories menu: fusion · fission · transmutation, subatomic world | `U` · `K` |
+| LABORATORIES | Laboratories menu: fusion · fission · transmutation, molecular laboratory, subatomic world | `U` · `K` |
 
 The Matter and Molecule scales are disabled in the interface
 (`App.ADVANCED_SCALES = false`); their code and tests are kept.
@@ -725,6 +839,11 @@ They are also shown in the application (the atom's ⓘ chip).
 - **Neutrons**: only thermal neutrons (0.0253 eV), and only on nuclei whose
   cross sections are tabulated (natural isotopes and a few actinides).
 - **Beyond oganesson** (Z = 118): no proton is added.
+- **Chain reaction**: isotropic scattering after the transport correction;
+  graphite and beryllium as free gases (no S(α,β)); β not weighted by
+  importance; during the excursion, solid inertia, plutonium phase changes,
+  ionisation and fuel burn-up in k are neglected, and the reflector stays still.
+  Only the 16 nuclides of the group library have a k∞.
 - **Beyond iron** (Z₁ + Z₂ > 26): the collision chamber speaks of
   transmutation, not fusion, because welding two nuclei there costs energy.
 
@@ -749,6 +868,12 @@ They are also shown in the application (the atom's ⓘ chip).
 | Stellar places | standard solar model; ITER for the reactor |
 | Wave functions, integrals | `scipy.special` (Laguerre), `scipy.integrate` |
 | Half-lives, modes, branchings, daughters | ICRP-107 / NUBASE2020, via `radioactivedecay` |
+| Fast and thermal neutron cross sections, ν̄, χ, delayed neutrons, fission energy (chain reaction) | ENDF/B-VIII.0 (NNDC, OpenMC HDF5), collapsed to 44 groups by `logic/tools/build_chain_groups.py` |
+| Reference critical assemblies (validation) | ICSBEP: Godiva, Jezebel, Jezebel-233, Flattop-25; analytic benchmark LA-13511 |
+| Molecular electrons and forces (molecular laboratory) | GFN1-xTB (Grimme, Bannwarth, Shushkov 2017); parameters from xtb / tblite (LGPL-3.0), STO-NG expansions, D3 radii and reference C6 (Grimme 2010) extracted by `logic/tools/build_xtb_data.py`; checked against dxtb |
+| Molecular geometries, vibrations, reaction enthalpy (validation) | NIST CCCBDB; NIST-JANAF (ΔH°f of water) |
+| Fission multiplicity distribution, spontaneous-fission ν̄ | Terrell (1957); Holden & Zucker (1985) |
+| Thermal expansion of U, Pu, Th | CRC Handbook of Chemistry and Physics |
 | Thermal neutron cross sections (scattering, absorption) | Sears, *Neutron News* 3 (1992) 26, NIST table via `periodictable` |
 | Share of fission, (n,α), (n,p) in absorption; neutrons per fission ν̄ | ENDF/B-VIII.0 thermal evaluations (Mughabghab) |
 | Atomic masses (Q), very short-lived nuclei | AME2020 / NUBASE, `mendeleev` database |
@@ -792,6 +917,8 @@ The engine and the client are organised the same way, by domain:
 | Molecule and matter | `molecular/` | `matter/` |
 | Fusion, reactor, star | `fusionlab/` | `fusion/` |
 | Subatomic world | `quantumlab/` | `subatomic/` |
+| Molecular laboratory (GFN1-xTB) | `moleculelab/` | `molecule/` |
+| Chain reaction, critical mass (hidden) | `chainlab/` | `chain/` |
 | Genesis (set aside, not shown) | — | `mascot/` |
 | Tools and tests | `tools/`, `tests/` | `sim/app/src/test/java/org/genesis/` (same packages) |
 
@@ -799,7 +926,13 @@ File by file:
 
 | Path | Role |
 |---|---|
-| `core/genesis.proto` | The shared contract (v27), absorbable wavelengths in double precision |
+| `core/genesis.proto` | The shared contract (v28), absorbable wavelengths in double precision |
+| `logic/chainlab/transport.py` | Neutron transport in a sphere: first-collision probabilities, k_eff, adjoint flux, Λ |
+| `logic/chainlab/lab.py` | The chain reaction laboratory: settings, critical radius, cascade, excursion |
+| `logic/moleculelab/xtb.py` | GFN1-xTB in numpy: energy and analytic forces, term by term |
+| `logic/moleculelab/lab.py` | The molecular laboratory: workbench, relaxation, dynamics, pulling, spark, reactor, vibrations |
+| `sim/app/.../molecule/MoleculeView.java` | The molecular laboratory screen; the scene in `MoleculeScene` (density view), `DeformationMap` (Δρ contour map), `OrbitalSurface` and `OrbitalLayer` (ψ glass lobes; `OrbitalDots` without 3D); the readings in `EnergyBalance` (energy balance), `EnergyTarget` (orbital levels as a target) and `AtomMap` (force map of the selected atom) |
+| `sim/app/.../chain/ChainView.java` | The chain reaction screen; 3D sphere in `ChainScene`, sandbox in `YieldView` |
 | `logic/atomic/light_interaction.py` | Natural profiles, Gaussian beam and hydrogen-like 1s continuum |
 | `logic/simulator/simulation.py` | The clock and the rules: the living session |
 | `logic/engine.py` | gRPC server: reads the actions, advances time, sends the events |

@@ -164,7 +164,7 @@ def network():
 
 
 def warm_up():
-    """À lancer au démarrage du moteur : la bibliothèque met quelques secondes à se lire."""
+    """À la première ouverture du cœur d'étoile : la bibliothèque met des dizaines de secondes à se lire."""
     threading.Thread(target=network, daemon=True).start()
 
 

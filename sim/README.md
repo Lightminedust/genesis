@@ -36,6 +36,8 @@ Les classes gRPC (`com.studio.genesis.grpc`) sont générées depuis `../core/ge
 | [`matter`](app/src/main/java/org/genesis/matter/README.md) | Les échelles molécule et matière. |
 | [`fusion`](app/src/main/java/org/genesis/fusion/README.md) | Les laboratoires de fusion : chambre de collision, étoile. |
 | [`subatomic`](app/src/main/java/org/genesis/subatomic/README.md) | Le monde subatomique : collisions, atelier de hadrons, Modèle Standard, partons. |
+| [`chain`](app/src/main/java/org/genesis/chain/README.md) | La réaction en chaîne : masse critique, cascade de neutrons, excursion, bac à sable du rendement (écran masqué). |
+| [`molecule`](app/src/main/java/org/genesis/molecule/README.md) | Le laboratoire moléculaire : densité électronique en volume, forces, établi, dynamique, réacteur, vibrations. |
 | [`mascot`](app/src/main/java/org/genesis/mascot/README.md) | Genesis, la guide. Mise de côté : le code est là, elle n'est pas affichée. |
 
 ## Les aperçus

@@ -13,7 +13,7 @@ Licence d'utilisation : [EULA.txt](EULA.txt).
 
 ```
 JavaFX (sim/)  --- gRPC bidirectionnel --->  Python (logic/)  ---> MongoDB
-  dessine les événements   genesis.proto v27   horloge + règles     table périodique
+  dessine les événements   genesis.proto v28   horloge + règles     table périodique
                                                scipy, radioactivedecay, mendeleev
 ```
 
@@ -218,6 +218,138 @@ lumineux, gluons en ressorts dorés) :
 
 Lois, sources et limites : [le monde subatomique](docs/SUBATOMIC_MODEL.md) et [le modèle du nucléon](docs/NUCLEON_MODEL.md).
 
+## Le laboratoire moléculaire
+
+**⌬ Laboratoire moléculaire** (menu Laboratoires) pose des atomes sur un établi et calcule leurs électrons. Personne
+ne décide que deux atomes sont liés, ni sous quel angle : pour chaque position des noyaux, la méthode quantique de
+liaisons fortes GFN1-xTB donne l'énergie et la force exacte sur chaque noyau, et la géométrie, les liaisons, les
+vibrations et les réactions en découlent.
+
+* **Des liaisons dessinées par leurs paires d'électrons** — les orbitales occupées sont localisées (Pipek–Mezey) et
+  chaque liaison est montrée par ce qui la tient : une paire sur deux atomes est un trait (covalente ou polaire :
+  eau, benzène, SF₆, Au₂) ; une paire étalée sur trois atomes ou plus est une liaison multicentre, dessinée en étoile
+  de Lipscomb depuis le barycentre de la paire (agrégats d'or : Au₆ a trois telles paires, une par triangle de
+  sommet, et aucune sur un seul couple d'atomes ; les ponts B–H–B du diborane) ; deux ions sans paire partagée (NaCl)
+  ont des pointillés d'attraction. Le triangle plan D3h de Au₆ est dans les molécules toutes prêtes, et GFN1-xTB le
+  place sous la pyramide (+0,60 eV) et l'octaèdre (+1,10 eV).
+* **Le halo de polarisation** — le nuage des électrons de valence de chaque molécule vu en transparence : en chaque
+  pixel, les électrons par Å² que croise le regard, calculés à chaque image en pleine résolution à partir du nuage de
+  chaque atome libre (GFN1, projeté par transformée d'Abel) à l'échelle des électrons qu'il garde (charge de
+  Mulliken) ; il reproduit la densité calculée projetée à 95–99 %. Son bord est le contour 0,3 e/Å² ; sa couleur, la
+  charge des atomes à qui appartient le point : magenta δ−, cyan δ+, avec les signes δ+ / δ− au-delà de son bord.
+  Fourni autour des atomes qui attirent les électrons (O, Cl), mince autour de ceux qui les cèdent (H). En option, la
+  carte de potentiel conventionnelle : le potentiel exact des noyaux et du nuage (convolution de Fourier) sur la
+  surface ρ = 0,002 u.a.
+* **Une image épurée et calculée** — les atomes sont des bulles de verre (0,45 × rayon covalent de Pyykkö) au bord
+  de Fresnel lumineux, qui vire au magenta quand l'atome a gagné des électrons (δ−) et au cyan quand il en a perdu
+  (δ+), avec un noyau incandescent et quelques arcs fins qui partent du noyau, sont captés là où les liaisons percent
+  la bulle et se penchent dans le sens où le nuage de l'atome est déformé (son dipôle atomique calculé). Une liaison
+  covalente est un faisceau unique, tendu comme une corde, dont l'éclat suit l'indice de Mayer et la densité que les
+  deux atomes partagent encore entre leurs noyaux (rompue, une liaison garde un indice de 1 dans ce modèle à couches
+  fermées — O–O à 3 Å : 1,06 — mais ne partage plus rien : son faisceau s'éteint) ; sa part π, deux
+  lobes de verre de part et d'autre de la liaison, le long de la direction calculée de la densité π (éthylène : la
+  normale à son plan ; N₂ : deux paires perpendiculaires) ; sa couleur dit la force interne le long de la liaison
+  (bleu nulle, blanc traction, orange compression) ; ses grains sont tirés de la densité de sa paire localisée le long
+  de l'axe (étalés sur C–H, plus denses côté O dans O–H). Une attraction sans paire partagée se dessine en pointillés
+  (liaison hydrogène, van der Waals, ions), qui glissent vers le milieu ; une répulsion, en points orange qui partent
+  de là où les deux nuages se touchent (surfaces des atomes libres à 0,002 e/bohr³) et s'écartent vers les deux
+  atomes, aussi vite et vifs que la force calculée de la paire. Le bloom est calculé par la carte graphique. Les lignes du champ
+  électrique sont en option.
+* **Trois vues, trois langues** — Δρ est une carte de densité de déformation en courbes de niveau (vue en
+  transparence, comme le halo : trait plein où la molécule a gagné des électrons, tirets où elle en a perdu, une
+  courbe par doublement de 0,025 à 1,6 e/Å²) : le benzène gagne sur toutes ses liaisons et perd sur ses noyaux de
+  carbone, comme dans les manuels. ψ est une orbitale moléculaire en lobes de verre teinté : la surface qui enferme
+  85 % de |ψ|², bleue où ψ > 0 et rouge où ψ < 0 (la phase de l'onde, pas une charge), un nœud entre les deux, comme
+  dans les logiciels de chimie : des lobes pleins et lisses, un squelette en boules et bâtonnets en 3D dont les
+  liaisons ont un, deux ou trois bâtonnets selon l'indice de Mayer ; un maillage fermé par tétraèdres marchants sur une
+  grille fine (80 points par côté, calculée par séparation des gaussiennes), rendu par la carte graphique — net même
+  en tournant. La caméra regarde le long de l'axe où le nuage est le plus mince et s'incline de 40° quand les deux
+  phases tomberaient sur les mêmes lignes de visée (une π du benzène vue de face) ; la ligne de la vue dit ce dont
+  l'orbitale est faite (HOMO de l'eau : O 2p 100 %). Chaque vue ne dessine que ce qu'elle dit.
+* **Des lectures qui se voient** — le bilan d'énergie : la cohésion (l'énergie qu'il faut pour séparer la molécule
+  en atomes), puis chaque terme de GFN1-xTB moins sa valeur dans les atomes isolés, ce qui lie contre ce qui coûte,
+  dont la somme est exactement l'énergie de liaison (eau : orbitales qui se recouvrent −19,2 eV, charges +1,4,
+  répulsion des noyaux +1,0 → −16,7 eV), et l'agitation des noyaux rapportée à la cohésion. Les niveaux des orbitales
+  en cible : le rayon suit l'énergie, les cercles pleins portent leurs électrons, la HOMO orangée, l'écart HOMO–LUMO
+  en anneau doré, la LUMO en tirets violets, le vide au bord ; le survol lit un cercle, un clic montre son orbitale.
+  L'atome choisi en carte des forces, en 2D : par défaut la seule force nette et, pour chaque voisin, un trait coloré
+  et épaissi selon ce que la paire se fait, les voisins rangés en liés / non liés avec leur raison calculée (la nature
+  d'une liaison selon sa part π ; pour deux atomes non liés, la part dominante de leur force : gêne stérique d'un
+  recouvrement antiliant, charges de même signe ou opposées, London, cœurs). Les onglets détaillés donnent une flèche
+  par paire (le vecteur entier, sa part de travers comprise — elle tient les angles), dont la somme est exactement la
+  force nette, ou une flèche par terme (électrons, noyaux, London, main). Une vignette « Schéma 2D » montre la
+  molécule en formule de manuel (CH₃, OH écrits, ou tous les hydrogènes ; liaisons simples, doubles, triples et
+  conjuguées d'après l'indice de Mayer), qui tourne avec la vue 3D et lui répond dans les deux sens,, avec
+  en temps réel les charges, les longueurs et la force de l'atome choisi, une ligne de mesures et une consigne qui
+  suit le geste en cours.
+* **Qui fait quoi à qui, sans flèches** — les forces sont décomposées exactement par paires d'atomes (action =
+  −réaction) ; au survol d'un atome : « H3 l'attire de 1,00 eV/Å (électrons +4,60 · noyaux −3,60) » ; un noyau
+  comprimé tremble.
+* **Tout le tableau jusqu'au radon** — GFN1-xTB est paramétré pour Z = 1 à 86 (les 86 vérifiés : chacun se relaxe
+  avec un hydrogène attaché) ; dans le tableau du laboratoire, les éléments au-delà (uranium…) sont pâlis et disent
+  pourquoi.
+* **Les isotopes** — un atome choisi prend n'importe lequel de ses isotopes stables ou vivant au moins un an (¹H ²H
+  ³H, ¹³C ¹⁴C, ¹⁸O… ; masses de l'AME), lui seul ou tous les atomes de l'élément. Seule la masse change
+  (Born–Oppenheimer) : même géométrie, autres dynamique et vibrations — D₂O vibre à 0,72–0,73 × H₂O (mesuré
+  0,73–0,74), HDO découple ses élongations O–D et O–H.
+* **Des molécules du vivant** — glucose, acide laurique (un acide gras, un lipide), glycérol, alanine et caféine,
+  depuis les conformères 3D de PubChem, relaxés par GFN1-xTB.
+* **L'établi** — choisir un élément et cliquer sur un atome pour l'y attacher : C + 4 H se relaxe tout seul en
+  tétraèdre (109,47°), l'eau sort coudée. Saisir un atome et tirer : le reste de la molécule est tenu par son centre
+  de masse, la liaison s'étire, l'énergie monte, et elle casse.
+* **Dynamique et réacteur** — relaxation (FIRE), dynamique moléculaire avec thermostat (CSVR) ou libre (énergie
+  conservée, pas de 0,25 fs) ; des molécules dans une sphère (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) qui réagissent quand
+  on chauffe ou qu'une étincelle dépose de l'énergie cinétique ; les espèces présentes et chaque réaction sont lues
+  dans les indices de liaison de Mayer et la densité partagée. La dynamique chaude ne s'arrête plus : quand une
+  liaison casse, le cycle auto-cohérent passe du mélange de Broyden à un pas de Newton amorti sur la réponse calculée
+  des charges (O₄ à 4 000 K : aucun arrêt, chaque pas convergé à 300 K), et une contrainte stricte tient chaque atome
+  à −2,5 e au plus bas, là où le terme du troisième ordre de GFN1, non borné, y entasserait des électrons (Pm₄
+  dissocié : −9 e) ; la ligne d'état dit quand elle agit.
+* **Les vibrations** — la hessienne tirée des forces analytiques donne les modes propres (cm⁻¹) ; en exciter un lui
+  donne n quanta hν, et la dynamique (anharmonique) prend le relais.
+
+GFN1-xTB est réécrit en numpy et vérifié contre l'implémentation de référence dxtb à 3·10⁻⁷ Eh près. Il donne juste
+les géométries et les vibrations (eau : 0,958 Å, fréquences 4 à 13 % trop basses) ; il surestime les énergies
+d'atomisation et certaines énergies de réaction (2 H₂ + O₂ → 2 H₂O : −9,4 eV calculés, ≈ −5,5 eV mesurés) — le
+laboratoire le dit, avec un tableau calculé ↔ mesuré. Le modèle, ses vérifications et ses limites :
+[le laboratoire moléculaire](docs/MOLECULE_MODEL.md).
+
+## La réaction en chaîne
+
+> Masqué pour l'instant : il n'apparaît plus dans le menu **Laboratoires**. Son code et son moteur sont conservés
+> (`CHAIN_SCREEN` dans `App.java`, `logic/chainlab/`) ; la description ci-dessous vaut quand il est réactivé.
+
+**☢ Réaction en chaîne · masse critique** (menu Laboratoires) pose une sphère de métal fissile au milieu de l'écran,
+avec ou sans réflecteur, et calcule ce que font ses neutrons. Chaque nombre sort d'un calcul sur des données évaluées :
+
+* **Une scène, pas un formulaire** — la matière est un volume de noyaux (un point pour 10²³ noyaux réels). Un clic
+  dans la sphère y fait naître un neutron ; glisser son bord la comprime à masse constante (Maj : ajoute de la
+  matière), et l'on voit les noyaux se resserrer et l'anneau du rayon critique se rapprocher ; glisser un jeton de
+  béryllium, de graphite ou d'uranium sur la sphère pose un réflecteur ; un curseur ralentit le temps jusqu'à la
+  nanoseconde. La couleur dit l'état : aura bleu froid en sous-critique, ambre au critique, rouge qui palpite
+  au-delà. Matériaux : U-235, Pu-239, U-238, Th-232, fer 56 et plomb 208 (qui ne fissionnent jamais : les neutrons
+  rebondissent, sont capturés dans un éclair γ violet, ou fuient), et huit autres.
+* **Transport des neutrons** — probabilités de première collision dans des coquilles sphériques, 44 groupes d'énergie
+  construits depuis ENDF/B-VIII.0 (autoprotection de Bondarenko, correction de transport, flux adjoint). Le tableau de
+  bord donne k_eff, k∞, le destin des neutrons (fission, capture, fuite), le rayon et la masse critiques, k_eff(R), la
+  réactivité en dollars, la période (équation inhour, neutrons retardés), Λ, β, ν̄. Godiva, Jezebel et Flattop sortent
+  critiques à un demi-pour-cent près ; les masses critiques nues sont celles publiées (U-235 46 kg, Pu-239 10 kg,
+  U-233 15 kg). U-238 et Th-232 ne divergent jamais.
+* **Le tir** — une cascade tirée neutron par neutron dans la vraie géométrie (ν selon la loi de Terrell autour du ν̄
+  évalué) : chaque choc tombe sur un noyau du volume — une diffusion jette une étincelle, une capture lâche une onde γ
+  violette, une fission l'éclate en deux fragments dans un éclair. Les générations s'alignent en bas (1 → 4 → 6 →
+  10…, ou un ✕). Si la chaîne tirée tient, l'excursion calculée prend le relais : une tempête d'étincelles répartie
+  selon le flux calculé, le métal chauffe, rougeoie (couleur du corps noir à la température calculée), se dilate,
+  bout, se disperse. Un neutron seul dans une sphère à peine sur-critique s'éteint presque toujours : la scène dit
+  combien il est rare qu'il allume une chaîne sans fin (2 % à k = 1,02). Les chiffres (k_eff, masse critique, N(t),
+  énergie, TNT, Δm = E/c²) sont derrière « ⓘ Les chiffres ».
+* **Bac à sable — la quête du rendement** — n'importe quel noyau pesé : la courbe d'Aston, la meilleure coupure de
+  fission et la fusion avec lui-même, une jauge Q du rouge (endothermique) à l'or (exothermique), le bilan des masses
+  avant / après, et un tableau U-235 · Fe-56 · Fe-60 · D + T. Fission et réaction en chaîne (neutrons, σ_f, k_eff) et
+  fusion (plasma, Coulomb, Lawson) restent deux mondes séparés.
+
+Le modèle, ses données et sa validation : [la réaction en chaîne](docs/CHAIN_MODEL.md).
+
 ## Ce qu'on peut faire
 
 Au lancement, le simulateur charge un atome d'uranium 238 et ouvre l'onglet Orbitale (la forme du nuage de valence, avant le spectre). L'écran de l'atome tient en trois bandes :
@@ -227,7 +359,7 @@ Au lancement, le simulateur charge un atome d'uranium 238 et ouvre l'onglet Orbi
   - trois compteurs − p⁺ + · − n + · − e⁻ + ;
   - la lumière : la longueur d'onde (clic : un petit réglage, avec la flamme) et « Tirer un photon » ;
   - **☢ Tirer sur le noyau** : un **neutron lent** (0,0253 eV), dont l'issue est tirée au prorata des sections efficaces mesurées (diffusion, capture (n,γ), fission de U-233/U-235/Pu-239, (n,α) de Li-6 et B-10, (n,p) de He-3 et N-14), avec Q calculé sur les masses mesurées ; ou une **particule α de 5 MeV**, qui ouvre la chambre de collision avec He-4 contre le noyau affiché. Sans section efficace mesurée (Tc-98…), Genesis le dit et n'invente pas l'issue ;
-  - à droite, le menu **Laboratoires** (fusion · fission · transmutation, monde subatomique), masqué tant qu'on ne l'ouvre pas. Dès qu'on en choisit un, un **écran d'attente** (`LabLoader`) dit ce que le moteur prépare et le temps écoulé. Il s'efface quand la frame confirme le laboratoire, et dit pourquoi si le moteur ne répond pas (obsolète, injoignable). Le retour à l'atome a la même attente ;
+  - à droite, le menu **Laboratoires** (fusion · fission · transmutation, laboratoire moléculaire, monde subatomique), masqué tant qu'on ne l'ouvre pas. Dès qu'on en choisit un, un **écran d'attente** (`LabLoader`) dit ce que le moteur prépare et le temps écoulé. Il s'efface quand la frame confirme le laboratoire, et dit pourquoi si le moteur ne répond pas (obsolète, injoignable). Le retour à l'atome a la même attente ;
   - un point de couleur qui donne l'état de la connexion au survol.
 - **La scène**, avec sa barre de vue :
   - l'échelle (Atome · Noyau · Nucléon · Gouffre) ;
@@ -246,7 +378,7 @@ Au lancement, le simulateur charge un atome d'uranium 238 et ouvre l'onglet Orbi
   - **Interactions** : un clic sur une station avance le temps jusqu'à elle, événement par événement (les désintégrations restent tirées au hasard). Le survol d'un rail explique la voie.
   - **En dessous** : la prochaine étape, et ce qu'elle représente en temps réel à la vitesse choisie.
 
-La chaîne vient du moteur (`Session.decay_chain`, voie dominante à chaque pas, données ICRP-107 / NUBASE2020 ; contrat v27).
+La chaîne vient du moteur (`Session.decay_chain`, voie dominante à chaque pas, données ICRP-107 / NUBASE2020 ; contrat v28).
 
 | Groupe | Action | Clavier |
 |---|---|---|
@@ -255,7 +387,7 @@ La chaîne vient du moteur (`Session.decay_chain`, voie dominante à chaque pas,
 | NOYAU | tirer un neutron lent · tirer une α (menu ☢) | `B` |
 | TEMPS | pause · vitesse · prochain événement · pas à pas · aller jusqu'à une station (clic) | `Espace` · `[` `]` · `→` · `A` |
 | VUE | atome, noyau, nucléon, gouffre · zoom molette · glisser : tourner (ou déplacer) · double-clic : centrer · valence seule · modèle de Bohr | `1` `2` `3` `G` · `+` `−` · `V` · `O` |
-| LABORATOIRES | menu Laboratoires : fusion · fission · transmutation, monde subatomique | `U` · `K` |
+| LABORATOIRES | menu Laboratoires : fusion · fission · transmutation, laboratoire moléculaire, monde subatomique | `U` · `K` |
 
 Les échelles Matière et Molécule sont désactivées dans l'interface
 (`App.ADVANCED_SCALES = false`) ; leur code et leurs tests sont conservés.
@@ -746,6 +878,11 @@ Elles sont aussi rappelées dans l'application (pastille ⓘ de l'atome).
   les noyaux dont les sections efficaces sont tabulées (isotopes naturels et
   quelques actinides).
 - **Au-delà de l'oganesson** (Z = 118) : aucun proton n'est ajouté.
+- **Réaction en chaîne** : diffusion isotrope après correction de transport ;
+  graphite et béryllium en gaz libre (sans S(α,β)) ; β non pondéré par
+  l'importance ; pendant l'excursion, inertie du solide, changements de phase du
+  plutonium, ionisation et épuisement du combustible dans k sont négligés, et le
+  réflecteur reste immobile. Seuls les 16 noyaux de la bibliothèque ont un k∞.
 - **Au-delà du fer** (Z₁ + Z₂ > 26) : la chambre de collision parle de
   transmutation, pas de fusion, car souder deux noyaux y coûte de l'énergie.
 
@@ -770,6 +907,12 @@ Elles sont aussi rappelées dans l'application (pastille ⓘ de l'atome).
 | Lieux stellaires | modèle solaire standard ; ITER pour le réacteur |
 | Fonctions d'onde, intégrales | `scipy.special` (Laguerre), `scipy.integrate` |
 | Demi-vies, modes, branchements, filiations | ICRP-107 / NUBASE2020, via `radioactivedecay` |
+| Sections efficaces rapides et thermiques, ν̄, χ, neutrons retardés, énergie de fission (réaction en chaîne) | ENDF/B-VIII.0 (NNDC, HDF5 d'OpenMC), condensé en 44 groupes par `logic/tools/build_chain_groups.py` |
+| Assemblages critiques de référence (validation) | ICSBEP : Godiva, Jezebel, Jezebel-233, Flattop-25 ; cas analytique LA-13511 |
+| Électrons et forces des molécules (laboratoire moléculaire) | GFN1-xTB (Grimme, Bannwarth, Shushkov 2017) ; paramètres de xtb / tblite (LGPL-3.0), développements STO-NG, rayons et C6 de référence de D3 (Grimme 2010) extraits par `logic/tools/build_xtb_data.py` ; vérifié contre dxtb |
+| Géométries, vibrations, enthalpie de réaction des molécules (validation) | NIST CCCBDB ; NIST-JANAF (ΔH°f de l'eau) |
+| Loi de multiplicité des neutrons de fission, ν̄ de fission spontanée | Terrell (1957) ; Holden et Zucker (1985) |
+| Dilatation thermique de U, Pu, Th | CRC Handbook of Chemistry and Physics |
 | Sections efficaces des neutrons thermiques (diffusion, absorption) | Sears, *Neutron News* 3 (1992) 26, table du NIST via `periodictable` |
 | Part de fission, (n,α), (n,p) dans l'absorption ; neutrons par fission ν̄ | évaluations thermiques ENDF/B-VIII.0 (Mughabghab) |
 | Masses atomiques (Q), noyaux très éphémères | AME2020 / NUBASE, base de `mendeleev` |
@@ -813,6 +956,8 @@ Le moteur et le client sont rangés de la même façon, par domaine :
 | Molécule et matière | `molecular/` | `matter/` |
 | Fusion, réacteur, étoile | `fusionlab/` | `fusion/` |
 | Monde subatomique | `quantumlab/` | `subatomic/` |
+| Laboratoire moléculaire (GFN1-xTB) | `moleculelab/` | `molecule/` |
+| Réaction en chaîne, masse critique (masquée) | `chainlab/` | `chain/` |
 | Genesis (mise de côté, non affichée) | — | `mascot/` |
 | Outils et tests | `tools/`, `tests/` | `sim/app/src/test/java/org/genesis/` (mêmes paquets) |
 
@@ -820,7 +965,13 @@ Fichier par fichier :
 
 | Chemin | Rôle |
 |---|---|
-| `core/genesis.proto` | Le contrat partagé (v27), longueurs d'onde absorbables en double précision |
+| `core/genesis.proto` | Le contrat partagé (v28), longueurs d'onde absorbables en double précision |
+| `logic/chainlab/transport.py` | Le transport des neutrons dans une sphère : probabilités de première collision, k_eff, flux adjoint, Λ |
+| `logic/chainlab/lab.py` | Le laboratoire de la réaction en chaîne : réglages, rayon critique, cascade, excursion |
+| `logic/moleculelab/xtb.py` | GFN1-xTB en numpy : énergie et forces analytiques, terme par terme |
+| `logic/moleculelab/lab.py` | Le laboratoire moléculaire : établi, relaxation, dynamique, traction, étincelle, réacteur, vibrations |
+| `sim/app/.../molecule/MoleculeView.java` | L'écran du laboratoire moléculaire ; la scène dans `MoleculeScene` (vue ρ), `DeformationMap` (carte Δρ en courbes de niveau), `OrbitalSurface` et `OrbitalLayer` (lobes de verre de ψ ; `OrbitalDots` sans 3D) ; les lectures dans `EnergyBalance` (bilan d'énergie), `EnergyTarget` (niveaux en cible) et `AtomMap` (carte des forces de l'atome choisi) |
+| `sim/app/.../chain/ChainView.java` | L'écran de la réaction en chaîne ; sphère 3D dans `ChainScene`, bac à sable dans `YieldView` |
 | `logic/atomic/light_interaction.py` | Profils naturels, faisceau gaussien et continuum hydrogénoïde 1s |
 | `logic/simulator/simulation.py` | L'horloge et les règles : la session qui vit |
 | `logic/engine.py` | Serveur gRPC : lit les actions, avance le temps, envoie les événements |
