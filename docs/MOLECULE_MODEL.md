@@ -304,9 +304,16 @@ réutilisées d'un pas au suivant. Amortir davantage n'y fait presque rien (sur 
 calculée au premier ordre (perturbations des orbitales, occupations de Fermi, nombre d'électrons fixé ; vérifiée
 contre les différences finies à 10⁻⁸ près), et le pas (1 − J)⁻¹ r est divisé par deux tant que le résidu ne baisse
 pas : les 265 convergent, en 4 pas (médiane), à 300 K. En dernier recours — fragments séparés à couches ouvertes,
-Pm₄ dissocié, où il n'y a pas de point fixe atteignable à 300 K — un recuit électronique : occupations lissées à 30,
-10, 3 fois 300 K, puis 300 K, chaque palier partant du précédent ; si 300 K échoue encore, le résultat est celui du
-palier le plus froid qui a convergé, et la ligne d'état le dit (« électrons lissés à 3000 K »). Seules des
+Pm₄ dissocié, où il n'y a pas de point fixe atteignable à 300 K — un recuit électronique : occupations lissées à 50,
+20, 10, 3 fois 300 K, puis 300 K, chaque palier partant du précédent, avec un mélange doux (0,15) ; si 300 K échoue
+encore, le résultat est celui du palier le plus froid qui a convergé, et la ligne d'état le dit (« électrons lissés à
+3000 K »). Des atomes épars à couches ouvertes partagent un même niveau de Fermi : un rien fait passer un électron de
+l'un à l'autre. C'est le mélange qui compte (14 à 20 atomes H, O, N à 6 000 K : 4 cas sur 9 à 0,4, 9 sur 9 à 0,15, en
+34 diagonalisations). Le palier trouvé sert de départ aux pas suivants (un cran plus froid est retenté tous les
+40 calculs), et il survit à l'ajout d'un atome. Avant, un seul calcul pouvait coûter 22 000 diagonalisations (50 s) : le
+laboratoire semblait figé dès 12 à 14 atomes épars, l'interface restant fluide et les grilles ne venant plus. Un calcul
+s'arrête désormais à 1 200 diagonalisations ; un pas non convergé n'est pas intégré, la dynamique s'arrête sur le
+dernier état valide (20 atomes épars à 4 000 K : aucun arrêt, 76 % des pas à 300 K, 6 000 K au plus). Seules des
 charges convergées servent de départ au pas suivant. O₄ à 4 000 K avec des étincelles de 30 eV : 3 000 pas, aucun
 arrêt, aucun pas non convergé, tous à 300 K (71 tours au plus, 5,5 ms par pas) ; glucose : 53 tours au plus.
 
@@ -352,15 +359,29 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
 | vibrations de l'eau | 1438 · 3675 · 3787 cm⁻¹ | 1649 · 3832 · 3943 cm⁻¹ (ωₑ) |
 | r(C–H), angle du méthane | 1,086 Å, 109,47° | 1,087 Å, 109,47° |
 | 2 H₂ + O₂ → 2 H₂O (ΔE) | −9,43 eV | ≈ −5,5 eV (ΔH°₂₉₈ = −483,6 kJ/mol, sans les points zéro) |
+| atomisation CH₄ · H₂O · O₂ · CO₂ (Dₑ) | 25,24 · 16,69 · 11,29 · 29,91 eV | 18,2 · 10,1 · 5,21 · 16,9 eV |
+| CH₄ + 2 O₂ : liaison totale (Dₑ) | 47,82 eV | 28,6 eV |
+| CH₄ + 2 O₂ → CO₂ + 2 H₂O (ΔE) | −15,46 eV | ≈ −8,5 eV |
 
 ## Limites (dites à l'écran)
 
 - **Énergies de liaison et de réaction.** GFN1-xTB est paramétré pour les géométries, les conformations et les
-  interactions faibles ; ses énergies par rapport aux atomes isolés sont trop fortes (H₂ : 6,4 eV au lieu de 4,75),
-  et certaines énergies de réaction aussi (la combustion de l'hydrogène sort presque deux fois trop exothermique).
-  Le laboratoire affiche ces énergies, avec cet avertissement et le tableau ci-dessus.
+  interactions faibles ; ses énergies par rapport aux atomes isolés sont 1,3 à 2,2 fois trop fortes (H₂ 1,34 ; CH₄
+  1,39 ; H₂O 1,65 ; CO₂ 1,77 ; O₂ 2,17), comparées à Dₑ puisque le modèle n'a pas de point zéro. Ce n'est pas la
+  référence atomique : calculer les atomes en spin polarisé ne change que 0,05 eV par atome. Et les énergies de
+  réaction sont fausses aussi (1,7 à 1,8 fois trop fortes pour 2 H₂ + O₂ et CH₄ + 2 O₂), ce qu'aucun décalage par
+  élément ne peut corriger : une réaction garde ses atomes. Le chiffre est dit sous le bilan, précisé sous son ⓘ,
+  et dans le tableau ci-dessus. Les énergies du laboratoire se comparent entre elles, pas à une valeur mesurée.
 - **Spin.** L'état électronique est restreint (pas de polarisation de spin dans GFN1) ; le dioxygène est traité avec
-  des occupations fractionnaires sur ses deux orbitales π* dégénérées, pas comme un vrai triplet.
+  des occupations fractionnaires sur ses deux orbitales π* dégénérées, pas comme un vrai triplet, et GFN1 n'a aucun
+  terme d'énergie de spin (O₂ fermé ou « triplet » : 0,07 eV d'écart, au lieu d'environ 1 eV). Il n'y a donc pas de
+  barrière de spin : O₂ réagit trop facilement.
+- **Réacteur.** Une sphère de 4,9 Å pour 9 atomes, c'est environ 3 000 atm à 4 000 K : un nanoréacteur, pas une flamme.
+  Six trajectoires de CH₄ + 2 O₂ (4 ps, 2 500 et 4 000 K) : l'abstraction d'un H vers CH₃ + HO₂ ou CH₃ + H, la voie
+  radicalaire attendue, apparaît dans quatre d'entre elles ; toutes réagissent en moins de 1 ps, même à 2 500 K, bien
+  trop vite (densité, liaisons trop fortes, pas de barrière de spin) ; aucune n'atteint CO₂ + H₂O en 4 ps : elles
+  finissent en CH₂O₂ + H₂O₂ (quatre) ou en un seul agrégat CH₄O₄ (deux). Le laboratoire montre donc des mécanismes
+  possibles, pas des vitesses ni une combustion complète.
 - **Noyaux classiques.** Pas d'énergie de point zéro dans la dynamique, pas d'effet tunnel des protons.
 - **Charges qui s'emballent.** Pour quelques géométries (CH₄ plan carré comprimé à 1,07 Å, Ba₂Si, Pm₄ dissocié), la
   fonctionnelle seule donne des anions absurdes ; dxtb aussi. La contrainte des anions les tient à −2,5 e — un ajout

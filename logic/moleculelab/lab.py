@@ -47,8 +47,8 @@ PUBLISH_SECONDS = 1 / 40       # un instantané au plus tous les 25 ms : le clie
 RUNAWAY = ("Le cycle auto-cohérent n'a pas d'état sensé à cette géométrie (une charge hors de toute borne, malgré le "
            "confinement des anions à −2,5 e) : GFN1-xTB ne la décrit pas. Déplacez un atome ou retirez-le.")
 RUNAWAY_STOPPED = ("Arrêt sur le dernier état valide : au pas suivant, le cycle auto-cohérent n'avait plus d'état sensé "
-                   "(une charge hors de toute borne, malgré le confinement des anions à −2,5 e). Refroidissez, relaxez "
-                   "ou déplacez un atome.")
+                   "(une charge hors de toute borne, ou plus aucun point fixe, malgré le confinement des anions à −2,5 e et "
+                   "le recuit). Refroidissez, relaxez ou déplacez un atome.")
 CENSUS_HOLD_FS = 20.0           # une espèce doit durer 20 fs pour être annoncée
 SPARK_RADIUS = 1.8              # Å
 EV = xtb.HARTREE_EV
@@ -302,7 +302,10 @@ class MoleculeLab:
             self.velocities = v
         else:
             self.velocities = np.zeros_like(positions)
+        level = self.calc.level if self.calc is not None else 1.0
         self.calc = xtb.Calculator(numbers, charge=self.charge) if numbers else None
+        if self.calc is not None:
+            self.calc.level = level                # un atome de plus : le palier du recuit reste le bon point de départ
         self.result = None
         self.relaxed = False
         self.fire = None
@@ -377,6 +380,7 @@ class MoleculeLab:
         positions = np.vstack([self.positions, spot])
         self._set_structure(structures.label(numbers), numbers, positions, keep_velocities=True)
         self.dynamics = RELAX if self.dynamics == FREE else self.dynamics
+        self.history.clear()                  # d'autres atomes, une autre énergie : la courbe repart de zéro
         self.status = f"Atome ajouté ({xtb.SYMBOLS[z]}) : la géométrie se recalcule"
 
     def _free_direction(self, a):
@@ -587,7 +591,8 @@ class MoleculeLab:
             self._fire_step()
         else:
             self._verlet_step()
-        if self.result is not None and self.result.unstable and saved[2] is not None and not saved[2].unstable:
+        bad = self.result is not None and (self.result.unstable or not self.result.converged)
+        if bad and saved[2] is not None and not saved[2].unstable and saved[2].converged:
             (self.positions, self.velocities, self.result, self._forces, self._external_parts, self.time_fs,
              self.steps) = saved
             self.paused = True

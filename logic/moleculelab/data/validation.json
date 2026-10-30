@@ -43,5 +43,35 @@
   "2 H₂ + O₂ → 2 H₂O (ΔE)",
   "−9.43 eV",
   "≈ −5.5 eV"
+ ],
+ [
+  "Atomisation de CH₄ (Dₑ)",
+  "25.24 eV",
+  "18.2 eV"
+ ],
+ [
+  "Atomisation de H₂O (Dₑ)",
+  "16.69 eV",
+  "10.1 eV"
+ ],
+ [
+  "Atomisation de O₂ (Dₑ)",
+  "11.29 eV",
+  "5.21 eV"
+ ],
+ [
+  "Atomisation de CO₂ (Dₑ)",
+  "29.91 eV",
+  "16.9 eV"
+ ],
+ [
+  "CH₄ + 2 O₂ : liaison totale (Dₑ)",
+  "47.82 eV",
+  "28.6 eV"
+ ],
+ [
+  "CH₄ + 2 O₂ → CO₂ + 2 H₂O (ΔE)",
+  "−15.46 eV",
+  "≈ −8.5 eV"
  ]
 ]

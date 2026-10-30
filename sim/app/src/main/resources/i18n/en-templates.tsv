@@ -561,3 +561,10 @@ SCHÉMA {0}D	{0}D SKETCH
 cliquer un cercle de la cible ({0}) : une autre orbitale	click a ring of the target ({0}): another orbital
 cliquer un atome : sa carte ({0})	click an atom: its map ({0})
 entre un lobe bleu et un rouge : un nœud, ψ = {0}	between a blue lobe and a red one: a node, ψ = {0}
+GFN1 : liaisons {0} à {1} fois trop fortes (ⓘ)	GFN1: bonds {0} to {1} times too strong (ⓘ)
+GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés : {0} à {1} fois selon la molécule (CH₄ + {2} O₂ : {3} eV au lieu de {4}).	GFN1-xTB overestimates binding energies relative to isolated atoms: {0} to {1} times depending on the molecule (CH₄ + {2} O₂: {3} eV instead of {4}).
+Les énergies de réaction aussi : CH₄ + {0} O₂ → CO₂ + {1} H₂O donne {2} eV au lieu de {3}.	So are reaction energies: CH₄ + {0} O₂ → CO₂ + {1} H₂O gives {2} eV instead of {3}.
+Atomisation de CH₄ (Dₑ)	Atomization of CH₄ (Dₑ)
+Ce qu'elle fait mal : les énergies d'atomisation ({0} à {1} fois trop fortes) et les énergies de réaction ({2} à {3} fois trop fortes pour {4} H₂ + O₂ et CH₄ + {5} O₂)	What it does badly: atomization energies ({0} to {1} times too strong) and reaction energies ({2} to {3} times too strong for {4} H₂ + O₂ and CH₄ + {5} O₂)
+Un nanoréacteur, pas une flamme : environ {0} atm, et O₂ sans barrière de spin.	A nanoreactor, not a flame: about {0} atm, and O₂ with no spin barrier.
+Un nanoréacteur, pas une flamme : environ {0} {1} atm, et O₂ sans barrière de spin.	A nanoreactor, not a flame: about {0} {1} atm, and O₂ with no spin barrier.

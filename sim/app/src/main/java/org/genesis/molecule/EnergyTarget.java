@@ -213,7 +213,7 @@ final class EnergyTarget {
             double e = read.electrons;
             String electrons = e <= .05 ? I18n.text("vide") : Math.abs(e - Math.rint(e)) < .05
                     ? MoleculeFormat.decimal(e, 0) + " " + I18n.text(Math.rint(e) >= 2 ? "électrons" : "électron")
-                    : MoleculeFormat.decimal(e, 2) + " " + I18n.text("électron");
+                    : MoleculeFormat.decimal(e, 2) + " " + I18n.text(e >= 2 ? "électrons" : "électron");
             g.fillText(electrons, cx, cy + 19);
         }
     }

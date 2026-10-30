@@ -135,7 +135,7 @@ AME / Mendeleev : valeur evaluee ; statut mesure/extrapolation non fourni	AME / 
 APPROCHE	APPROACH
 APPROCHE · L'ÉLAN DEVIENT RÉPULSION	APPROACH · MOMENTUM BECOMES REPULSION
 arcs : champ du noyau vers ses liaisons, dévié par son dipôle	arcs: field from the nucleus to its bonds, bent by its dipole
-Arrêt sur le dernier état valide : au pas suivant, le cycle auto-cohérent n'avait plus d'état sensé (une charge hors de toute borne, malgré le confinement des anions à −2,5 e). Refroidissez, relaxez ou déplacez un atome.	Stopped on the last valid state: at the next step, the self-consistent cycle no longer had a sensible state (a charge beyond any bound, despite the anion confinement at −2.5 e). Cool down, relax or move an atom.
+Arrêt sur le dernier état valide : au pas suivant, le cycle auto-cohérent n'avait plus d'état sensé (une charge hors de toute borne, ou plus aucun point fixe, malgré le confinement des anions à −2,5 e et le recuit). Refroidissez, relaxez ou déplacez un atome.	Stopped on the last valid state: at the next step the self-consistent cycle had no sensible state left (a charge out of all bounds, or no fixed point at all, despite the −2.5 e anion constraint and annealing). Cool down, relax or move an atom.
 AUCUN NOYAU NOUVEAU	NO NEW NUCLEUS
 Ac porte déjà une charge négative : il repousse l'électron	Ac already carries a negative charge: it repels the electron
 Afficher	Show
@@ -2929,3 +2929,11 @@ survoler un voisin : ses valeurs	hover over a neighbour: its values
 bleu : ψ > 0 · rouge : ψ < 0 — le signe de l'onde, pas une charge	blue: ψ > 0 · red: ψ < 0 — the sign of the wave, not a charge
 boules et bâtonnets : les noyaux et leurs liaisons	balls and sticks: the nuclei and their bonds
 tous les H	all H
+GFN1 : liaisons 1,3 à 2,2 fois trop fortes (ⓘ)	GFN1: bonds 1.3 to 2.2 times too strong (ⓘ)
+Les géométries sont fiables (voir Méthode & validation).	Geometries are reliable (see Method & validation).
+Un décalage par élément ne le corrigerait pas : une réaction garde ses atomes.	A per-element shift would not fix this: a reaction keeps its atoms.
+Il montre des mécanismes possibles, pas des vitesses réelles.	It shows possible mechanisms, not real rates.
+Atomisation de CH₄ (Dₑ)	Atomization of CH₄ (Dₑ)
+Atomisation de H₂O (Dₑ)	Atomization of H₂O (Dₑ)
+Atomisation de O₂ (Dₑ)	Atomization of O₂ (Dₑ)
+Atomisation de CO₂ (Dₑ)	Atomization of CO₂ (Dₑ)

@@ -72,7 +72,7 @@ final class EnergyBalance {
         }
         double w = canvas.getWidth();
         double balanceEnd = alone ? 46 : TERMS + ROW * (terms.size() - 1) + 18;
-        double height = balanceEnd + (alone ? 0 : 54) + ROW * extra.size() + 22;
+        double height = balanceEnd + (alone ? 0 : 54) + ROW * extra.size() + 22 + (alone ? 0 : 14);
         if (Math.abs(canvas.getHeight() - height) > .5) canvas.setHeight(height);
         GraphicsContext g = canvas.getGraphicsContext2D();
         g.clearRect(0, 0, w, height);
@@ -149,6 +149,11 @@ final class EnergyBalance {
         g.setFont(Font.font("Segoe UI", 9.5));
         g.setFill(Color.web("#6F82A0"));
         g.fillText(I18n.text("énergie potentielle totale") + "  " + MoleculeFormat.energy(s.getEnergy()), 2, y);
+        // La limite du modèle, chiffrée, là où on lit le nombre (voir Méthode & validation).
+        if (!alone) {
+            g.setFill(WEAK.deriveColor(0, .7, .85, 1));
+            g.fillText(I18n.text("GFN1 : liaisons 1,3 à 2,2 fois trop fortes (ⓘ)"), 2, y + 14);
+        }
     }
 
     /**

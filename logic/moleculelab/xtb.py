@@ -56,12 +56,22 @@ RUNAWAY_CHARGE = 3.0                         # e : plus négatif malgré la cont
 # presque rien (Broyden 0,1 : 0 sur 265, puis 0,03 : 48). On passe alors à Newton, amorti : la réponse des charges
 # est calculée, et le pas divisé par deux tant que le résidu ne baisse pas — 265 sur 265, en 4 pas (médiane). En
 # dernier recours (fragments séparés à couches ouvertes, Pm₄ dissocié), un recuit électronique : occupations lissées
-# à 30, 10, 3 fois 300 K, puis 300 K, chaque palier partant du précédent ; si 300 K échoue encore, c'est le palier le
-# plus froid qui a convergé, et le résultat le dit (electronic_temperature).
+# à 50, 20, 10, 3 fois 300 K, puis 300 K, chaque palier partant du précédent, avec un mélange doux ; si 300 K échoue
+# encore, c'est le palier le plus froid qui a convergé, et le résultat le dit (electronic_temperature).
+#
+# Des atomes séparés à couches ouvertes partagent un même niveau de Fermi : un rien fait passer un électron de l'un à
+# l'autre. Mesuré sur 14 à 20 atomes H, O, N épars : à 300 K, rien ne converge ; à 6 000 K, le mélange 0,4 échoue
+# (4 cas sur 9) quand 0,15 réussit (9 sur 9, en 34 diagonalisations). Le palier trouvé est gardé d'un calcul à l'autre
+# (les pas suivants y vont droit, en une trentaine de tours, au lieu de refaire toute l'échelle), et un palier plus
+# froid est retenté tous les SCC_COOLING calculs. Rien ne doit figer le laboratoire : un calcul s'arrête à
+# SCC_EFFORT diagonalisations (il en a coûté jusqu'à 22 000, soit 50 s par pas), résultat marqué non convergé.
 SCC_BROYDEN = (0.4, 40)
 NEWTON_STEPS = 12
-ANNEALING = (30.0, 10.0, 3.0, 1.0)
+ANNEALING = (50.0, 20.0, 10.0, 3.0, 1.0)
 ANNEALING_ITERATIONS = 60
+SCC_SOFT = 0.15
+SCC_COOLING = 40
+SCC_EFFORT = 1200
 SYMBOLS = ["X", "H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P", "S", "Cl", "Ar",
            "K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",
            "Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe",
@@ -488,6 +498,8 @@ class Calculator:
         self.n_beta = (electrons - unpaired) / 2
         self.kt = KB_HARTREE * temperature
         self._charges = None
+        self.level = 1.0                     # le palier du recuit où le dernier calcul a convergé (× 300 K)
+        self._since_cooling = 0
         n = len(self.basis.shells)
         self._diag_shell = self.basis.shell_atom[:, None] == self.basis.shell_atom[None, :]
 
@@ -543,10 +555,12 @@ class Calculator:
         H0 = hcore * S
         gamma, dvec, r2, eta = self._gamma(positions)
         gam3 = b.gam3
+        effort = [0]                                                  # les diagonalisations de ce calcul
 
         def respond(v_shell, constraint, kt):
             """Les orbitales, leurs occupations et les charges qu'elles donnent, pour ce potentiel de couche (Eh) et
             ces multiplicateurs de la contrainte (Eh, un par atome : ils relèvent ses niveaux)."""
+            effort[0] += 1
             v_ao = (v_shell - constraint[b.shell_atom])[b.ao_shell]
             F = H0 - 0.5 * S * (v_ao[:, None] + v_ao[None, :])
             eps, C = eigh(F, S)
@@ -570,6 +584,8 @@ class Calculator:
                 for a in np.flatnonzero((out["qa"] < -ANION_LIMIT - 1e-9) | (constraint > 0)):
                     if constraint[a] == 0 and out["qa"][a] >= -ANION_LIMIT:
                         continue
+                    if effort[0] >= SCC_EFFORT:
+                        return out
 
                     def g(x):
                         trial = constraint.copy()
@@ -611,6 +627,8 @@ class Calculator:
                 if delta < 1e-6 and energy_old is not None and abs(energy - energy_old) < tol:
                     return True, iteration, state["q"], state
                 energy_old = energy
+                if effort[0] >= SCC_EFFORT:
+                    return False, iteration, q, state
                 q = mixer.mix(q, state["q"], iteration)
             return False, count, q, state
 
@@ -653,7 +671,7 @@ class Calculator:
             state = evaluate(q, np.zeros(nat), kt, confine)
             calls, residual = 1, state["q"] - q
             for _ in range(count):
-                if np.max(np.abs(residual)) < 1e-7:
+                if np.max(np.abs(residual)) < 1e-7 or effort[0] >= SCC_EFFORT:
                     break
                 step = np.linalg.lstsq(np.eye(n) - jacobian(state, q), residual, rcond=1e-10)[0]
                 norm, fraction = np.linalg.norm(residual), 1.0
@@ -681,21 +699,51 @@ class Calculator:
         # parfois en passant, ce qui coûterait une recherche de λ à chacun.
         self._charges_were_reused = self._charges is not None and len(self._charges) == len(b.shells)
         guess = self._charges if self._charges_were_reused else np.zeros(len(b.shells))
-        converged, iterations, q, state = solve(guess, False)
-        if not converged or np.min(state["qa"]) < -ANION_LIMIT:
-            converged, n, q, state = solve(guess, True)
-            iterations += n
-        if not converged:
+
+        def anneal(rungs, confine):
+            """Les paliers du recuit, du plus chaud au plus froid, chacun partant du précédent ; on s'arrête au premier
+            qui échoue après un succès. Rend (palier, charges, état) du plus froid qui a convergé, ou None."""
+            nonlocal iterations
             start, coldest = guess.copy(), None
-            for factor in ANNEALING:
-                ok, n, q, state = cycle(start.copy(), self.kt * factor, SCC_BROYDEN[0], ANNEALING_ITERATIONS, True)
+            for factor in rungs:
+                ok, n, q_rung, state_rung = cycle(start.copy(), self.kt * factor, SCC_SOFT, ANNEALING_ITERATIONS, confine)
                 iterations += n
                 if ok:
-                    start, coldest = q, (q, state)
-            converged = coldest is not None
-            if converged:
-                q, state = coldest
+                    start, coldest = q_rung, (factor, q_rung, state_rung)
+                elif coldest is not None:
+                    break
+            return coldest
+
+        def sensible(found):
+            return found is not None and np.min(found[2]["qa"]) >= -ANION_LIMIT
+
+        iterations, found = 0, None
+        # Le palier du calcul précédent d'abord : tout droit, et de temps en temps un cran plus froid.
+        if self.level > 1:
+            self._since_cooling += 1
+            rungs = (self.level,)
+            if self._since_cooling >= SCC_COOLING:
+                self._since_cooling = 0
+                rungs += tuple(f for f in ANNEALING if f < self.level)[:1]
+            found = anneal(rungs, False)
+            if not sensible(found):
+                found = None
+        if found is None:
+            converged, n, q, state = solve(guess, False)
+            iterations += n
+            if converged and np.min(state["qa"]) >= -ANION_LIMIT:
+                found = (1.0, q, state)
+            elif not converged:
+                found = anneal(ANNEALING, False)                      # le recuit libre : peu coûteux, souvent suffisant
+                if not sensible(found):
+                    found = None
+        if found is None:
+            converged, n, q, state = solve(guess, True)               # la contrainte des anions : bien plus coûteuse
+            iterations += n
+            found = (1.0, q, state) if converged else anneal(ANNEALING, True)
+        converged = found is not None
         if converged:
+            self.level, q, state = found
             self._charges = q
         energy_el = state["band"] + state["es2"] + state["es3"] + state["entropy"]
         eps, C, occ, P, v_ao = (state[k] for k in ("orbital_energies", "coefficients", "occupations", "density", "v_ao"))

@@ -157,6 +157,40 @@ class ReferenceTest(unittest.TestCase):
         self.assertGreater(result.electronic_temperature, xtb.ELECTRONIC_TEMPERATURE)
         self.assertLess(np.max(np.abs(result.atom_charges)), 0.5)
 
+    def test_many_separated_open_shell_atoms_stay_cheap(self):
+        # Des atomes H, O, N épars : un même niveau de Fermi, un rien déplace un électron d'un atome à l'autre. Sans
+        # budget ni recuit doux, un seul calcul coûtait jusqu'à 22 000 diagonalisations (50 s) et le laboratoire se
+        # figeait dès 14 atomes. Le palier trouvé sert aux pas suivants, en quelques dizaines de tours.
+        rng = np.random.default_rng(1)
+        numbers = [1, 8, 1, 8, 1, 8, 1, 8, 1, 8, 8, 1, 7, 1, 8, 7, 1, 8, 1, 7]
+        placed = []
+        for _ in numbers:
+            for _ in range(200):
+                p = rng.uniform(-6, 6, 3)
+                if all(np.linalg.norm(p - q) > 2.2 for q in placed):
+                    break
+            placed.append(p)
+        positions = np.array(placed)
+        calc = xtb.Calculator(numbers)
+        original, calls = xtb.eigh, [0]
+
+        def counted(*args, **kwargs):
+            calls[0] += 1
+            return original(*args, **kwargs)
+
+        xtb.eigh = counted
+        try:
+            first = calc.compute(positions)
+            self.assertLessEqual(calls[0], 2 * xtb.SCC_EFFORT + 20)
+            self.assertTrue(first.converged)
+            self.assertLess(np.max(np.abs(first.atom_charges)), 1.0)
+            calls[0] = 0
+            second = calc.compute(positions + 0.002)
+            self.assertTrue(second.converged)
+            self.assertLess(calls[0], 150)
+        finally:
+            xtb.eigh = original
+
     def test_a_broken_bond_shares_nothing(self):
         # Rompue, une liaison garde un indice de Mayer de 1 dans un calcul à couches fermées : ses deux électrons
         # restent appariés d'un fragment à l'autre. Ce que les atomes partagent entre eux, lui, s'éteint.

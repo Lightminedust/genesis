@@ -571,11 +571,19 @@ public final class MoleculeView {
                 symbols, legend);
         return new VBox(10,
                 section("01", "Molécules", presetBox),
-                section("02", "Réacteur", reactionBox, text("Des molécules dans une sphère : chauffer ou lancer une "
-                        + "étincelle pour franchir la barrière d'activation.", 10.5, "#8FA4C2")),
+                section("02", "Réacteur", reactionBox, reactorHint()),
                 section("03", "Établi", paletteBox, table, chosenElement, paletteHint, empty),
                 section("04", "Charge totale", chargeRow),
                 section("05", "Afficher", show));
+    }
+
+    /** Ce qu'est le réacteur, et ce qu'il n'est pas : une enceinte très dense, sans spin, où tout va trop vite. */
+    private static Label reactorHint() {
+        Label hint = text("Des molécules dans une sphère : chauffer ou lancer une étincelle pour franchir la barrière "
+                + "d'activation. Un nanoréacteur, pas une flamme : environ 3 000 atm, et O₂ sans barrière de spin. "
+                + "Il montre des mécanismes possibles, pas des vitesses réelles.", 10.5, "#8FA4C2");
+        hint.setWrapText(true);
+        return hint;
     }
 
     private ToggleButton toggle(String label, boolean on, java.util.function.Consumer<Boolean> set, String tip) {
@@ -620,8 +628,11 @@ public final class MoleculeView {
         VBox energy = section("06", "Bilan énergétique", balance);
         Label info = text("ⓘ", 12, "#8FB3D9");
         info.setCursor(Cursor.HAND);
-        Tooltip limit = I18n.tooltip("GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés "
-                + "(voir Méthode & validation) ; les géométries et les forces sont fiables. La cohésion et sa balance "
+        Tooltip limit = I18n.tooltip("GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés : 1,3 à 2,2 fois "
+                + "selon la molécule (CH₄ + 2 O₂ : 47,8 eV au lieu de 28,6). "
+                + "Les énergies de réaction aussi : CH₄ + 2 O₂ → CO₂ + 2 H₂O donne −15,5 eV au lieu de −8,5. "
+                + "Un décalage par élément ne le corrigerait pas : une réaction garde ses atomes. "
+                + "Les géométries sont fiables (voir Méthode & validation). La cohésion et sa balance "
                 + "sont comptées depuis les atomes isolés et neutres, calculés par le même modèle.");
         limit.setWrapText(true);
         limit.setMaxWidth(320);
@@ -805,7 +816,7 @@ public final class MoleculeView {
                     : viewOrbital < homo ? "HOMO−" + (homo - viewOrbital) : "LUMO+" + (viewOrbital - lumo);
             double occupation = o.getOccupation();
             String electrons = occupation >= 1.95 ? I18n.text("2 électrons") : occupation <= .05 ? I18n.text("vide")
-                    : MoleculeFormat.decimal(occupation, 2) + " " + I18n.text("électron");
+                    : MoleculeFormat.decimal(occupation, 2) + " " + I18n.text(occupation >= 2 ? "électrons" : "électron");
             StringBuilder b = new StringBuilder(name).append("  ·  ψ").append(viewOrbital + 1).append("  ·  ")
                     .append(MoleculeFormat.decimal(o.getEnergyEv(), 2)).append(" eV  ·  ").append(electrons);
             if (!orbitalParts.isEmpty() && partsOrbital == viewOrbital) {
