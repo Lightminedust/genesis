@@ -64,11 +64,11 @@ environment and build the package:
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.0
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.1
 ```
 
 The script tests the standalone engine, then produces `dist/windows/Genesis`
-(portable application), `Genesis-0.4.0-portable.zip` and an `.exe` installer.
+(portable application), `Genesis-0.4.1-portable.zip` and an `.exe` installer.
 The installer puts Genesis in the user profile and adds shortcuts to the Start
 menu and the desktop. For a new version, raise `-Version`; the same install
 identifier allows upgrades.
@@ -107,13 +107,13 @@ On Ubuntu 22.04 (or a compatible build system), install JDK 21, `gradle`,
 `logic/requirements.txt`, `grpcio-tools` and PyInstaller. Then run:
 
 ```bash
-bash packaging/build-linux.sh 0.4.0
+bash packaging/build-linux.sh 0.4.1
 ```
 
 The script freezes the same Python engine, checks its gRPC service and the
 table of 118 elements, builds the JavaFX client, then produces in `dist/linux/`
-an installer `Genesis-0.4.0-linux-x64.deb` and a portable archive
-`Genesis-0.4.0-linux-x64.tar.gz`. A GitHub Actions workflow
+an installer `Genesis-0.4.1-linux-x64.deb` and a portable archive
+`Genesis-0.4.1-linux-x64.tar.gz`. A GitHub Actions workflow
 `.github/workflows/linux-package.yml` runs this build on Ubuntu.
 
 The archive is extracted and started with `Genesis/bin/Genesis`; the `.deb`
@@ -125,11 +125,11 @@ and its cache in `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 ## macOS package (Apple Silicon)
 
 On a Mac with JDK 21 and a Python environment holding `logic/requirements.txt`
-and PyInstaller, run `bash packaging/build-macos.sh 0.4.0`; without a Mac, the
+and PyInstaller, run `bash packaging/build-macos.sh 0.4.1`; without a Mac, the
 GitHub Actions workflow `.github/workflows/macos-package.yml` builds it on an
-Apple Silicon runner. It produces `Genesis-0.4.0-macos-arm64.dmg` and
-`Genesis-0.4.0-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
-version starting with 0, so the bundle carries `1.4.0` internally; the real
+Apple Silicon runner. It produces `Genesis-0.4.1-macos-arm64.dmg` and
+`Genesis-0.4.1-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
+version starting with 0, so the bundle carries `1.4.1` internally; the real
 number is passed as `-Dgenesis.version`, which the update check reads first.
 The app is signed ad hoc and not notarized: on first launch, right-click it
 and choose **Open**. The engine log is in `~/Library/Logs/Genesis/engine.log`.

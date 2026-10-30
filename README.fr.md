@@ -63,11 +63,11 @@ cet environnement puis construire le paquet :
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.0
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.1
 ```
 
 Le script teste le moteur autonome, puis produit `dist/windows/Genesis`
-(application portable), `Genesis-0.4.0-portable.zip` et un installateur `.exe`.
+(application portable), `Genesis-0.4.1-portable.zip` et un installateur `.exe`.
 L'installateur place Genesis dans le profil utilisateur et ajoute les raccourcis
 au menu Démarrer et au bureau. Pour une nouvelle version, augmenter `-Version` ;
 le même identifiant d'installation permet la mise à niveau.
@@ -107,13 +107,13 @@ Sur Ubuntu 22.04 (ou un système de construction compatible), installer JDK 21,
 avec `logic/requirements.txt`, `grpcio-tools` et PyInstaller. Puis lancer :
 
 ```bash
-bash packaging/build-linux.sh 0.4.0
+bash packaging/build-linux.sh 0.4.1
 ```
 
 Le script gèle le même moteur Python, vérifie son service gRPC et la table des
 118 éléments, construit le client JavaFX, puis produit dans `dist/linux/` un
-installateur `Genesis-0.4.0-linux-x64.deb` et une archive portable
-`Genesis-0.4.0-linux-x64.tar.gz`. Un workflow GitHub Actions
+installateur `Genesis-0.4.1-linux-x64.deb` et une archive portable
+`Genesis-0.4.1-linux-x64.tar.gz`. Un workflow GitHub Actions
 `.github/workflows/linux-package.yml` réalise cette construction sur Ubuntu.
 
 L'archive s'extrait puis se lance avec `Genesis/bin/Genesis` ; le `.deb` ajoute
@@ -126,11 +126,11 @@ et son cache dans `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
 Sur un Mac avec un JDK 21 et un environnement Python équipé de
 `logic/requirements.txt` et de PyInstaller, lancer
-`bash packaging/build-macos.sh 0.4.0` ; sans Mac, le workflow GitHub Actions
+`bash packaging/build-macos.sh 0.4.1` ; sans Mac, le workflow GitHub Actions
 `.github/workflows/macos-package.yml` le construit sur une machine Apple
-Silicon. Il produit `Genesis-0.4.0-macos-arm64.dmg` et
-`Genesis-0.4.0-macos-arm64.zip` dans `dist/macos/`. jpackage refuse une version
-macOS qui commence par 0 : le paquet porte `1.4.0` en interne, et le vrai
+Silicon. Il produit `Genesis-0.4.1-macos-arm64.dmg` et
+`Genesis-0.4.1-macos-arm64.zip` dans `dist/macos/`. jpackage refuse une version
+macOS qui commence par 0 : le paquet porte `1.4.1` en interne, et le vrai
 numéro passe par `-Dgenesis.version`, que la vérification des mises à jour lit
 en premier. L'application est signée localement (ad hoc), pas notariée : au
 premier lancement, clic droit puis **Ouvrir**. Le journal du moteur est dans
