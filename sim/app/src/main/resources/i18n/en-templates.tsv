@@ -568,3 +568,5 @@ Atomisation de CH₄ (Dₑ)	Atomization of CH₄ (Dₑ)
 Ce qu'elle fait mal : les énergies d'atomisation ({0} à {1} fois trop fortes) et les énergies de réaction ({2} à {3} fois trop fortes pour {4} H₂ + O₂ et CH₄ + {5} O₂)	What it does badly: atomization energies ({0} to {1} times too strong) and reaction energies ({2} to {3} times too strong for {4} H₂ + O₂ and CH₄ + {5} O₂)
 Un nanoréacteur, pas une flamme : environ {0} atm, et O₂ sans barrière de spin.	A nanoreactor, not a flame: about {0} atm, and O₂ with no spin barrier.
 Un nanoréacteur, pas une flamme : environ {0} {1} atm, et O₂ sans barrière de spin.	A nanoreactor, not a flame: about {0} {1} atm, and O₂ with no spin barrier.
+Assemblage reçu : {0} molécule, posée en {1}D puis relaxée par GFN1-xTB	Assembly received: {0} molecule, placed in {1}D then relaxed by GFN1-xTB
+Assemblage reçu : {0} molécules, posées en {1}D puis relaxées par GFN1-xTB	Assembly received: {0} molecules, placed in {1}D then relaxed by GFN1-xTB

@@ -115,8 +115,7 @@ final class MoleculeSketch {
                 if (size > 0) {
                     angle = Math.PI * (size - 2) / size;
                 } else if (around.size() == 2) {
-                    int su = strokes.getOrDefault(pair(u, j), 1), sv = strokes.getOrDefault(pair(v, j), 1);
-                    if (su == 3 || sv == 3 || (su == 2 && sv == 2)) angle = Math.PI;
+                    if (straight(strokes.getOrDefault(pair(u, j), 1), strokes.getOrDefault(pair(v, j), 1))) angle = Math.PI;
                 }
                 rules.add(new double[]{u, v, 2 * Math.sin(angle / 2), .6});
                 near.add(pair(u, v));
@@ -131,6 +130,70 @@ final class MoleculeSketch {
             }
         }
         return p;
+    }
+
+    /**
+     * Des molécules éloignées (un réacteur, un envoi de l'assembleur) : chacune garde sa forme, et leur disposition est
+     * celle de la vue, mais resserrée jusqu'à ce que les deux plus proches ne soient plus qu'à une liaison environ. Sans cela, le schéma, mis à l'échelle de
+     * l'ensemble, les rendait minuscules.
+     */
+    static void pack(double[][] p, boolean[] drawn, List<int[]> edges) {
+        int n = p.length;
+        int[] group = new int[n];
+        for (int i = 0; i < n; i++) group[i] = i;
+        for (int[] e : edges) {
+            int a = root(group, e[0]), b = root(group, e[1]);
+            if (a != b) group[Math.max(a, b)] = Math.min(a, b);
+        }
+        java.util.Map<Integer, Integer> index = new java.util.HashMap<>();
+        for (int i = 0; i < n; i++) if (drawn[i]) index.putIfAbsent(root(group, i), index.size());
+        int count = index.size();
+        if (count < 2) return;
+        double[][] centre = new double[count][2];
+        double[] size = new double[count], reach = new double[count];
+        for (int i = 0; i < n; i++) {
+            if (!drawn[i]) continue;
+            int g = index.get(root(group, i));
+            centre[g][0] += p[i][0];
+            centre[g][1] += p[i][1];
+            size[g]++;
+        }
+        double[] middle = new double[2];
+        for (int g = 0; g < count; g++) {
+            centre[g][0] /= size[g];
+            centre[g][1] /= size[g];
+            middle[0] += centre[g][0] / count;
+            middle[1] += centre[g][1] / count;
+        }
+        for (int i = 0; i < n; i++) {
+            if (!drawn[i]) continue;
+            int g = index.get(root(group, i));
+            reach[g] = Math.max(reach[g], Math.hypot(p[i][0] - centre[g][0], p[i][1] - centre[g][1]) + .6);
+        }
+        // Une homothétie des centres, autour de leur milieu : la plus forte qui laisse encore 0,9 liaison entre deux
+        // molécules. La disposition reste exactement celle de la vue (l'accord avec la 3D en dépend) ; seuls les vides
+        // rétrécissent.
+        double shrink = 0;
+        for (int g = 0; g < count; g++) for (int h = g + 1; h < count; h++) {
+            double d = Math.hypot(centre[h][0] - centre[g][0], centre[h][1] - centre[g][1]);
+            shrink = Math.max(shrink, (reach[g] + reach[h] + .9) / Math.max(1e-6, d));
+        }
+        if (shrink >= 1) return;
+        double[][] moved = new double[count][];
+        for (int g = 0; g < count; g++) {
+            moved[g] = new double[]{middle[0] + shrink * (centre[g][0] - middle[0]), middle[1] + shrink * (centre[g][1] - middle[1])};
+        }
+        for (int i = 0; i < n; i++) {
+            Integer g = index.get(root(group, i));
+            if (g == null) continue;                  // un hydrogène rassemblé : il suit son atome, placé plus tard
+            p[i][0] += moved[g][0] - centre[g][0];
+            p[i][1] += moved[g][1] - centre[g][1];
+        }
+    }
+
+    private static int root(int[] group, int i) {
+        while (group[i] != i) i = group[i] = group[group[i]];
+        return i;
     }
 
     private static long pair(int a, int b) {
@@ -306,14 +369,12 @@ final class MoleculeSketch {
         int n = scene.positions.length;
         if (folded || n == 0) return;
         List<MoleculeScene.Bond> bonds = scene.bondedBonds();
-        int heavy = 0;
-        for (int v : scene.z) if (v > 1) heavy++;
-        boolean small = heavy <= 2;
+        boolean[] small = small(scene.z, bonds);
         int[] hcount = hydrogens(scene.z, bonds);
         // Les atomes du squelette : les lourds (et tout, pour une petite molécule) ; leur disposition, refaite quand
         // l'enchaînement change.
         boolean[] core = new boolean[n];
-        for (int i = 0; i < n; i++) core[i] = small || scene.z[i] > 1 || hcountParent(i, scene.z, bonds) < 0;
+        for (int i = 0; i < n; i++) core[i] = small[i] || scene.z[i] > 1 || hcountParent(i, scene.z, bonds) < 0;
         List<int[]> edges = new java.util.ArrayList<>();
         StringBuilder signature = new StringBuilder(java.util.Arrays.toString(scene.z));
         for (MoleculeScene.Bond b : bonds) {
@@ -321,10 +382,12 @@ final class MoleculeSketch {
             edges.add(new int[]{b.a(), b.b(), MoleculeScene.strokes(b.order())});
             signature.append(';').append(Math.min(b.a(), b.b())).append('-').append(Math.max(b.a(), b.b()));
         }
+        boolean[] linear = linear(n, edges);
         if (!signature.toString().equals(layoutKey) || sheet.length != n) {
             layoutKey = signature.toString();
             plane(scene.positions, layoutKey);
             sheet = layout(flatten(scene.positions), core, edges);
+            pack(sheet, core, edges);
         }
         // Les hydrogènes rassemblés : leur place au besoin (bouton « H », ou l'un d'eux choisi), dans le plus grand
         // secteur libre autour de leur atome.
@@ -365,8 +428,8 @@ final class MoleculeSketch {
             if (place[i] == null || !(core[i] || shown[i])) continue;
             radius = Math.max(radius, Math.hypot(place[i][0] - cxs, place[i][1] - cys) + (core[i] ? .35 : .2));
         }
-        double top = HEAD + 6, bottom = H - FOOT - 6, left = 10, right2 = W - 10;
-        double scale = Math.min(30, Math.min(right2 - left, bottom - top) / 2 / radius);
+        double top = HEAD + 8, bottom = H - FOOT - 8, left = 14, right2 = W - 14;
+        double scale = Math.min(36, Math.min(right2 - left, bottom - top) / 2 / radius);
         double ox = (left + right2) / 2, oy = (top + bottom) / 2;
         double[][] xy = new double[n][];
         for (int i = 0; i < n; i++) {
@@ -375,7 +438,33 @@ final class MoleculeSketch {
             xy[i] = new double[]{ox + scale * (cos * x - sin * y), oy - scale * (sin * x + cos * y)};
         }
         int selected = scene.selected;
-        // Les liaisons : 1, 2 ou 3 traits ; plus fines vers un hydrogène ; raccourcies devant un atome écrit.
+        // Les étiquettes d'abord (sans les dessiner) : leur boîte coupe les liaisons et écarte les signes δ.
+        Font heavyFont = Font.font("Segoe UI", FontWeight.BOLD, 12), lightFont = Font.font("Segoe UI", FontWeight.BOLD, 10);
+        double[][] boxes = new double[n][];
+        String[] texts = new String[n];
+        int[] folds = new int[n];
+        boolean[] leftward = new boolean[n];
+        for (int i = 0; i < n; i++) {
+            if (!shown[i] || xy[i] == null || !(written(i, scene.z, bonds, core, small, linear) || !core[i])) continue;
+            int folded = explicitH || small[i] ? 0 : hcount[i];
+            if (folded > 0) {
+                double sum = 0;
+                for (int[] e : edges) {
+                    int other = e[0] == i ? e[1] : e[1] == i ? e[0] : -1;
+                    if (other >= 0 && xy[other] != null) sum += xy[other][0] - xy[i][0];
+                }
+                leftward[i] = sum > 0;                                  // le reste de la molécule est à droite
+            }
+            folds[i] = folded;
+            texts[i] = label(i < scene.symbols.length ? scene.symbols[i] : "?", folded, leftward[i]);
+            Font font = scene.z[i] == 1 ? lightFont : heavyFont;
+            double tw = width(texts[i], font), th = scene.z[i] == 1 ? 10 : 12, x = xy[i][0];
+            // Le symbole de l'atome reste centré sur lui ; ses hydrogènes rassemblés partent du côté libre.
+            double symbol = width(i < scene.symbols.length ? scene.symbols[i] : "?", font);
+            double from = folded == 0 ? x - tw / 2 : leftward[i] ? x + symbol / 2 - tw : x - symbol / 2;
+            boxes[i] = new double[]{from - 1.5, xy[i][1] - th / 2 - 1, from + tw + 1.5, xy[i][1] + th / 2 + 1};
+        }
+        // Les liaisons : 1, 2 ou 3 traits ; plus fines vers un hydrogène ; arrêtées au bord de l'étiquette d'un atome écrit.
         g.setLineCap(StrokeLineCap.ROUND);
         for (MoleculeScene.Bond b : bonds) {
             if (b.a() >= n || b.b() >= n || !shown[b.a()] || !shown[b.b()] || xy[b.a()] == null || xy[b.b()] == null) continue;
@@ -384,63 +473,73 @@ final class MoleculeSketch {
             if (len < 1) continue;
             boolean toH = scene.z[b.a()] == 1 || scene.z[b.b()] == 1;
             double ux = dx / len, uy = dy / len;
-            double cutA = written(b.a(), scene.z, bonds, core, small) ? 7 : 0, cutB = written(b.b(), scene.z, bonds, core, small) ? 7 : 0;
+            double cutA = cut(boxes[b.a()], p, ux, uy), cutB = cut(boxes[b.b()], q, -ux, -uy);
+            if (cutA + cutB > len - 6) {
+                // Un dessin serré : les étiquettes mordent un peu sur le trait, mais il en reste toujours un bout.
+                double keep = Math.max(0, len - 6) / (cutA + cutB);
+                cutA *= keep;
+                cutB *= keep;
+            }
             int strokes = toH ? 1 : MoleculeScene.strokes(b.order());
             boolean mine = b.a() == selected || b.b() == selected;
             for (int k = 0; k < strokes; k++) {
-                double offset = strokes == 1 ? 0 : strokes == 2 ? (k - .5) * 3.4 : (k - 1) * 3;
+                double offset = strokes == 1 ? 0 : strokes == 2 ? (k - .5) * 3.6 : (k - 1) * 3.2;
                 boolean dashed = strokes == 2 && k == 1 && MoleculeScene.partial(b.order());
                 g.setStroke(mine ? Color.web("#FFE07A", .95) : LINE.deriveColor(0, 1, toH ? .8 : 1, toH ? .6 : .85));
-                g.setLineWidth(toH ? .9 : 1.3);
+                g.setLineWidth(toH ? 1 : 1.4);
                 if (dashed) g.setLineDashes(2.5, 2.5);
                 g.strokeLine(p[0] + ux * cutA - uy * offset, p[1] + uy * cutA + ux * offset,
                         q[0] - ux * cutB - uy * offset, q[1] - uy * cutB + ux * offset);
                 g.setLineDashes();
             }
             if (mine) {
-                g.setFont(Font.font("Segoe UI", 8));
+                g.setFont(Font.font("Segoe UI", 8.5));
                 g.setTextAlign(TextAlignment.CENTER);
                 g.setFill(Color.web("#FFE07A", .9));
                 g.fillText(MoleculeFormat.decimal(length(scene.positions[b.a()], scene.positions[b.b()]), 2),
-                        (p[0] + q[0]) / 2 + uy * 8, (p[1] + q[1]) / 2 - ux * 8 + 3);
+                        (p[0] + q[0]) / 2 + uy * 9, (p[1] + q[1]) / 2 - ux * 9 + 3);
             }
         }
         // Les atomes : écrits avec leurs hydrogènes (CH₃, OH…) ou en sommet ; la charge forte, le choix, le survol.
+        List<double[]> taken = new ArrayList<>();
+        for (double[] box : boxes) if (box != null) taken.add(box);
         for (int i = 0; i < n; i++) {
             if (!shown[i] || xy[i] == null) continue;
             double x = xy[i][0], y = xy[i][1];
-            boolean write = written(i, scene.z, bonds, core, small) || !core[i];
-            if (write) {
-                int folded = explicitH || small ? 0 : hcount[i];
-                boolean leftward = false;
-                if (folded > 0) {
-                    double sum = 0;
-                    for (int[] e : edges) {
-                        int other = e[0] == i ? e[1] : e[1] == i ? e[0] : -1;
-                        if (other >= 0 && xy[other] != null) sum += xy[other][0] - x;
-                    }
-                    leftward = sum > 0;                                  // le reste de la molécule est à droite
-                }
-                String text = label(i < scene.symbols.length ? scene.symbols[i] : "?", folded, leftward);
-                g.setFont(Font.font("Segoe UI", FontWeight.BOLD, scene.z[i] == 1 ? 9 : 10.5));
-                g.setTextAlign(folded > 0 ? (leftward ? TextAlignment.RIGHT : TextAlignment.LEFT) : TextAlignment.CENTER);
+            if (texts[i] != null) {
+                Font font = scene.z[i] == 1 ? lightFont : heavyFont;
+                g.setFont(font);
+                g.setTextAlign(TextAlignment.LEFT);
                 g.setFill(MoleculeScene.elementColor(scene.z[i]).deriveColor(0, .8, 1.25, 1));
-                double tx = folded > 0 ? (leftward ? x + 4 : x - 4) : x;
-                g.fillText(text, tx, y + 4);
+                g.fillText(texts[i], boxes[i][0] + 1.5, y + (scene.z[i] == 1 ? 3.6 : 4.3));
             }
             hits.add(new double[]{x, y, i});
             double q = i < scene.charges.length ? scene.charges[i] : 0;
-            if (write && scene.z[i] > 1 && Math.abs(q) >= .25) {
+            if (texts[i] != null && scene.z[i] > 1 && Math.abs(q) >= .25) {
+                // Le signe δ dans le plus grand angle libre autour de l'atome (ni sur une liaison, ni sur ses H
+                // rassemblés), juste au-delà de son étiquette et des autres.
+                List<Double> around = new ArrayList<>();
+                for (MoleculeScene.Bond b : bonds) {
+                    int other = b.a() == i ? b.b() : b.b() == i ? b.a() : -1;
+                    if (other >= 0 && other < n && shown[other] && xy[other] != null) {
+                        around.add(Math.atan2(xy[other][1] - y, xy[other][0] - x));
+                    }
+                }
+                if (folds[i] > 0) around.add(leftward[i] ? Math.PI : 0.0);
+                double a = freeAngle(around);
                 float[] c = MoleculeScene.chargeColour(q);
-                g.setFont(Font.font("Segoe UI", 8));
-                g.setTextAlign(TextAlignment.LEFT);
+                Font font = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9);
+                double[] spot = clear(x, y, Math.cos(a), Math.sin(a), width("δ−", font) / 2 + 1, 5.5, taken);
+                taken.add(new double[]{spot[0] - 6, spot[1] - 5.5, spot[0] + 6, spot[1] + 5.5});
+                g.setFont(font);
+                g.setTextAlign(TextAlignment.CENTER);
                 g.setFill(Color.color(c[0], c[1], c[2]));
-                g.fillText(q < 0 ? "δ−" : "δ+", x + 5, y - 6);
+                g.fillText(q < 0 ? "δ−" : "δ+", spot[0], spot[1] + 3.2);
             }
             if (i == selected || i == scene.hovered || i == scene.dragged) {
                 g.setStroke(i == selected ? Color.web("#FFE07A", .9) : Color.web("#FFFFFF", .6));
                 g.setLineWidth(1);
-                g.strokeOval(x - 7.5, y - 7.5, 15, 15);
+                g.strokeOval(x - 8.5, y - 8.5, 17, 17);
             }
         }
         // La force nette de l'atome choisi, telle que la caméra la montre.
@@ -493,16 +592,119 @@ final class MoleculeSketch {
         return -1;
     }
 
-    /** Un atome du squelette s'écrit-il (lettres) plutôt qu'en sommet ? Tout sauf un carbone pris entre deux atomes lourds. */
-    private static boolean written(int i, int[] z, List<MoleculeScene.Bond> bonds, boolean[] core, boolean small) {
+    /**
+     * Un atome du squelette s'écrit-il (lettres) plutôt qu'en sommet ? Tout sauf un carbone pris entre deux atomes
+     * lourds — et pas un carbone en ligne droite (C=C=C, C≡C–C) : un sommet à 180° ne se voit pas, la chaîne y perdrait
+     * un atome.
+     */
+    private static boolean written(int i, int[] z, List<MoleculeScene.Bond> bonds, boolean[] core, boolean[] small,
+                                   boolean[] linear) {
         if (!core[i]) return true;
-        if (small || z[i] != 6) return true;
+        if (small[i] || z[i] != 6 || linear[i]) return true;
         int heavy = 0;
         for (MoleculeScene.Bond b : bonds) {
             int other = b.a() == i ? b.b() : b.b() == i ? b.a() : -1;
             if (other >= 0 && other < z.length && z[other] != 1) heavy++;
         }
         return heavy <= 1;                                             // un méthyle, un carbone seul : CH₃, CH₄
+    }
+
+    /**
+     * Les atomes des petites molécules (deux atomes lourds au plus, chacune pour elle) : écrites en entier, chaque H sur
+     * sa tige — H–O–H, pas OH₂ — même à côté d'une grande.
+     */
+    static boolean[] small(int[] z, List<MoleculeScene.Bond> bonds) {
+        int n = z.length;
+        int[] group = new int[n];
+        for (int i = 0; i < n; i++) group[i] = i;
+        for (MoleculeScene.Bond b : bonds) {
+            if (b.a() >= n || b.b() >= n) continue;
+            int a = root(group, b.a()), c = root(group, b.b());
+            if (a != c) group[Math.max(a, c)] = Math.min(a, c);
+        }
+        int[] heavy = new int[n];
+        for (int i = 0; i < n; i++) if (z[i] > 1) heavy[root(group, i)]++;
+        boolean[] out = new boolean[n];
+        for (int i = 0; i < n; i++) out[i] = heavy[root(group, i)] <= 2;
+        return out;
+    }
+
+    /** Deux liaisons qui font 180° : une triple, ou deux doubles (le carbone central de l'allène, de CO₂). */
+    static boolean straight(int strokesA, int strokesB) {
+        return strokesA == 3 || strokesB == 3 || (strokesA == 2 && strokesB == 2);
+    }
+
+    /** Les atomes à deux voisins en ligne droite (voir straight) : ils s'écrivent, un sommet plat ne se verrait pas. */
+    static boolean[] linear(int n, List<int[]> edges) {
+        int[] degree = new int[n];
+        int[][] strokes = new int[n][2];
+        for (int[] e : edges) {
+            for (int end = 0; end < 2; end++) {
+                int i = e[end];
+                if (degree[i] < 2) strokes[i][degree[i]] = e.length > 2 ? e[2] : 1;
+                degree[i]++;
+            }
+        }
+        boolean[] out = new boolean[n];
+        for (int i = 0; i < n; i++) out[i] = degree[i] == 2 && straight(strokes[i][0], strokes[i][1]);
+        return out;
+    }
+
+    private static javafx.scene.text.Text measure;
+
+    /** La largeur d'un texte dans cette police (px). */
+    static double width(String text, Font font) {
+        if (measure == null) measure = new javafx.scene.text.Text();
+        measure.setFont(font);
+        measure.setText(text);
+        return measure.getLayoutBounds().getWidth();
+    }
+
+    /** Où une liaison partant de p (direction u) sort de l'étiquette `box` de son atome (+1,5 px) ; 0 sans étiquette. */
+    static double cut(double[] box, double[] p, double ux, double uy) {
+        if (box == null) return 0;
+        double t = Double.MAX_VALUE;
+        if (ux > 1e-9) t = Math.min(t, (box[2] - p[0]) / ux);
+        if (ux < -1e-9) t = Math.min(t, (box[0] - p[0]) / ux);
+        if (uy > 1e-9) t = Math.min(t, (box[3] - p[1]) / uy);
+        if (uy < -1e-9) t = Math.min(t, (box[1] - p[1]) / uy);
+        return t == Double.MAX_VALUE ? 0 : Math.max(0, t) + 1.5;
+    }
+
+    /** Le milieu du plus grand angle libre entre ces directions (rad, écran) ; le haut de l'écran à égalité. */
+    static double freeAngle(List<Double> angles) {
+        if (angles.isEmpty()) return -Math.PI / 2;
+        List<Double> sorted = new ArrayList<>(angles);
+        sorted.sort(null);
+        double best = -1, at = -Math.PI / 2;
+        for (int k = 0; k < sorted.size(); k++) {
+            double from = sorted.get(k), to = k + 1 < sorted.size() ? sorted.get(k + 1) : sorted.get(0) + 2 * Math.PI;
+            double middle = (from + to) / 2, score = to - from - .03 * Math.sin(middle);
+            if (score > best) {
+                best = score;
+                at = middle;
+            }
+        }
+        return at;
+    }
+
+    /**
+     * La première place, en partant de (x, y) dans la direction (dx, dy), où une boîte de demi-tailles (hw, hh) ne touche
+     * aucune des boîtes prises : le centre {x, y}.
+     */
+    static double[] clear(double x, double y, double dx, double dy, double hw, double hh, List<double[]> taken) {
+        for (double t = 7; t < 40; t += 1) {
+            double cx = x + dx * t, cy = y + dy * t;
+            boolean free = true;
+            for (double[] b : taken) {
+                if (cx + hw > b[0] - 1 && cx - hw < b[2] + 1 && cy + hh > b[1] - 1 && cy - hh < b[3] + 1) {
+                    free = false;
+                    break;
+                }
+            }
+            if (free) return new double[]{cx, cy};
+        }
+        return new double[]{x + dx * 12, y + dy * 12};
     }
 
     /** La place de chaque hydrogène rassemblé : dans le plus grand secteur libre autour de son atome, à 0,75 liaison. */

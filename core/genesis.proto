@@ -159,6 +159,10 @@ message UserAction {
     MOLECULE_CLEAR = 105;     // établi vide
     MOLECULE_WALL = 106;      // amount = rayon de la paroi (Å), 0 : aucune
     MOLECULE_ISOTOPE = 107;   // value = atome, ou −Z pour tous les atomes de l'élément Z ; amount = nombre de masse A
+    // L'assembleur 2D. Le dessin, en vector : [n, (Z, x, y, charge formelle) × n, m, (a, b, ordre) × m].
+    MOLECULE_BUILD = 108;     // value = charge totale ; amount = 1 : dans une enceinte ; le dessin devient la scène
+    MOLECULE_ASSESS = 109;    // value = numéro de la demande ; amount = 1 : relaxer chaque molécule (GFN1-xTB)
+    MOLECULE_PRESSURE = 110;  // amount = pression imposée (atm) : la paroi devient un piston ; 0 : volume fixe
                               // (0 : le mélange naturel)
   }
   ActionType type = 1;
@@ -1707,4 +1711,56 @@ message MoleculeLabState {
   double band_atoms = 62;
   double coulomb_atoms = 63;
   double entropy_atoms = 64;
+  repeated MoleculeSpecies named = 65;       // les espèces de la scène, nommées par le dictionnaire
+  repeated MoleculeEntry dictionary = 66;    // le dictionnaire (une fois) : les modèles de l'assembleur
+  MoleculeAssessment assessment = 67;        // le verdict de l'assembleur sur le dernier dessin
+  double pressure = 68;                      // atm : la force des atomes sur la paroi / sa surface, moyennée (0 sans paroi)
+  double pressure_target = 69;               // atm : la pression que le piston impose (0 : volume fixe)
+  // La moyenne longue, celle de Z = PV/NkT : depuis le dernier changement (scène, température, paroi), ou depuis que
+  // le piston est à l'équilibre ; sur combien de temps, et combien de chocs d'atomes sur la paroi.
+  double pressure_mean = 70;                 // atm
+  double volume_mean = 71;                   // Å³
+  double pressure_span_fs = 72;
+  int32 wall_hits = 73;
+}
+
+// Une espèce de la scène : ses atomes, et « H₂O · eau » (le nom vient de son graphe, pas de sa formule).
+message MoleculeSpecies {
+  repeated int32 atoms = 1;
+  string label = 2;
+}
+
+// Une entrée du dictionnaire : son nom, sa formule, ses atomes (hydrogènes compris), leurs charges formelles, ses
+// liaisons (a, b, ordre).
+message MoleculeEntry {
+  string name = 1;
+  string formula = 2;
+  repeated int32 numbers = 3;
+  repeated int32 charges = 4;
+  repeated int32 bonds = 5;
+  repeated double xy = 6;                    // un départ de dessin (x, y par atome ; unité : une liaison)
+}
+
+// Ce que le calcul dit d'une molécule du dessin de l'assembleur.
+message MoleculeVerdict {
+  repeated int32 atoms = 1;                  // ses atomes, indices du dessin
+  string formula = 2;
+  string name = 3;                           // le nom du dictionnaire, vide s'il ne la connaît pas
+  int32 charge = 4;
+  int32 unpaired = 5;                        // 1 : un nombre impair d'électrons (un radical)
+  string verdict = 6;                        // « tient », « se réarrange », « se défait », « échec », « atome » ; vide : pas calculé
+  double cohesion_ev = 7;                    // relaxée seule par GFN1-xTB
+  double gap_ev = 8;
+  repeated int32 lost = 9;                   // les liaisons dessinées perdues à la relaxation (a, b)
+  repeated int32 gained = 10;                // les liaisons apparues (a, b)
+  repeated string pieces = 11;               // les espèces après la relaxation
+  repeated string notes = 12;
+}
+
+message MoleculeAssessment {
+  int32 request = 1;
+  bool deep = 2;                             // le verdict relaxé (sinon : les noms et formules seulement)
+  bool done = 3;
+  repeated MoleculeVerdict molecules = 4;
+  string error = 5;
 }

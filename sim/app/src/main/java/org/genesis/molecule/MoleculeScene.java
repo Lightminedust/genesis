@@ -149,9 +149,11 @@ final class MoleculeScene {
     private static final double LOG_LO = Math.log10(1e-4), LOG_HI = Math.log10(8.0);
     private static final double MAP_LEVEL = level(MAP_AU);
     private static final double HARTREE_EV = 27.211386, FINE_SPACING = .22, GAUSS_LINES = 12;
-    static final Color GLASS = Color.web("#8FD3FF"), RICH = Color.web("#FF6FDC"), POOR = Color.web("#62EEFF");
+    static final Color NEUTRAL = Color.web("#D3DCE9"), RICH = Color.web("#FF5FD6"), POOR = Color.web("#3FD2FF");
+    /** La charge (e) à laquelle une bulle prend toute sa teinte δ+ ou δ−. */
+    static final double CHARGE_TINT = .45;
     static final Color BEAM = Color.web("#5FD0FF"), CORE = Color.web("#F4FCFF"), TENSE = Color.web("#E6F8FF");
-    static final Color SQUEEZED = Color.web("#FF7A45"), HELIX = Color.web("#A6E9FF"), DUST = Color.web("#C9EEFF");
+    static final Color SQUEEZED = Color.web("#FF7A45"), DUST = Color.web("#C9EEFF");
     static final Color NUCLEUS = Color.web("#FF6528"), FIELD = Color.web("#A9DCFF"), DOTS = Color.web("#A8DBFF");
     /** Les paires à plusieurs centres : un or pâle, distinct des faisceaux (bleus, blancs ou orangés). */
     static final Color SHARED = Color.web("#FFD98C");
@@ -177,11 +179,24 @@ final class MoleculeScene {
     /** Par élément, deux tailles de l'atome libre (Å) : sa surface à 0,002 e/bohr³ et le maximum de son orbitale p. */
     final Map<Integer, double[]> atomRadii = new HashMap<>();
     double wall;
+    /** La pression mesurée sur la paroi (atm) ; le piston la tient-il (la paroi bouge alors avec elle) ? */
+    double pressure;
+    boolean pistonOn;
+    double pressureTarget;
     int hovered = -1, selected = -1, dragged = -1;
     double[] dragTarget;
     double tetherNewtons;
     boolean showCharges, showOrders, showSymbols = true, showArrows, showHalo = true, showPotential, showField, showBonds = true,
-            showInner = true, showContacts = true, showLegend = true;
+            showInner = true, showContacts = true, showLegend = true, showNames = true;
+    /**
+     * Les espèces que le moteur a reconnues, celles qui ont tenu 20 fs : leurs atomes, « H₂O · eau » (la formule, et le
+     * nom quand le dictionnaire connaît ce graphe) et l'instant où elles se sont formées (−∞ : déjà là).
+     */
+    record Species(int[] atoms, String label, double born) { }
+    final List<Species> species = new ArrayList<>();
+    private int[] speciesZ = new int[0];
+    /** Combien de temps une espèce formée se signale (s). */
+    private static final double FORMED_GLOW = 3.2;
     /** La légende repliée sur son titre (un clic sur le titre la replie ou la déplie), et où est ce titre. */
     boolean legendFolded;
     private double[] legendTitle = new double[4];
@@ -223,6 +238,11 @@ final class MoleculeScene {
     /** Le halo de polarisation, et la taille d'un pixel logique en pixels de l'écran (plus de 1 en haute densité). */
     final MoleculeHalo halo = new MoleculeHalo();
     double pixelScale = 1;
+    /** La bande de gauche que couvre la vignette 2D dépliée (px) : la molécule se centre dans le reste, pas dessous. */
+    double insetLeft, insetTarget;
+    private double lastW, lastH;
+    /** Le cadrage a été demandé avant la première image (taille de l'écran inconnue) : il se refait à la première. */
+    private boolean reframe;
     /** La molécule (composante connexe des liaisons) de chaque atome ; la version change avec les atomes. */
     private int[] fragment = new int[0];
     private long atomsVersion;
@@ -233,6 +253,21 @@ final class MoleculeScene {
     private boolean sharp;
     private final double[] center = new double[3];
     private boolean centered;
+    /**
+     * La navigation. La caméra vise le centre des atomes suivis (`focus` ; vide : tous), plus le décalage que la main lui
+     * a donné (`pan` : le clic droit glissé, le zoom vers le curseur). Le centre suit ces atomes en douceur : la
+     * dynamique peut les emporter, la vue reste sur eux. `panGoal` : un retour en cours (null : aucun).
+     */
+    private int[] focus = new int[0];
+    private final double[] pan = new double[3];
+    private double[] panGoal;
+    /** Le point que la molette rapproche ou éloigne : l'atome sous le curseur (≥ 0), sinon un point de l'espace (Å). */
+    private int zoomAtom = -1;
+    private double[] zoomPoint;
+    /** La vue a été menée à la main (zoom, déplacement, centrage) : un atome ajouté ne la recadre plus. */
+    boolean navigated;
+    /** Quand la main a mené la vue pour la dernière fois (horloge de la scène) : la mire du pivot se montre un moment. */
+    private double handledAt = -10;
     private double clock;
     /** Les arcs de chaque atome, en coordonnées de la bulle (rayon 1), et ce qui les a guidés (voir computeArcs). */
     private final List<List<double[]>> arcs = new ArrayList<>();
@@ -253,6 +288,7 @@ final class MoleculeScene {
         camera.pitch = 0.35;
         camera.yaw = -0.5;
         camera.fovHalfDeg = 22;
+        camera.free = true;                 // une molécule n'a ni haut ni bas : la vue tourne autour des axes de l'écran
     }
 
     double sphere(int atom) {
@@ -263,6 +299,13 @@ final class MoleculeScene {
     /** Après chaque frame : arcs intérieurs, distances topologiques, naissances et ruptures de liaisons. */
     void updateAtoms() {
         int n = positions.length;
+        for (int a : focus) {
+            if (a >= n) {
+                focus = new int[0];             // un atome suivi a été retiré : la vue revient sur tous
+                break;
+            }
+        }
+        if (zoomAtom >= n) zoomAtom = -1;
         computeHops(n);
         fragment = new int[n];
         for (int a = 0; a < n; a++) {
@@ -296,6 +339,36 @@ final class MoleculeScene {
 
     private static long key(int a, int b) {
         return ((long) Math.min(a, b) << 32) | Math.max(a, b);
+    }
+
+    /**
+     * Les espèces de la frame. Celles déjà là gardent leur date ; se signalent celles d'un nom qui gagne un exemplaire
+     * (une eau formée — pas un H passé d'une eau à l'autre, qui ne change pas le compte). Une molécule chargée ou un
+     * atome ajouté ne forment rien : les mêmes atomes seulement.
+     */
+    void species(List<int[]> atoms, List<String> labels) {
+        Map<String, Species> before = new HashMap<>();
+        Map<String, Integer> gained = new HashMap<>();
+        for (Species s : species) {
+            before.put(s.label + Arrays.toString(s.atoms), s);
+            gained.merge(s.label, -1, Integer::sum);
+        }
+        for (String label : labels) gained.merge(label, 1, Integer::sum);
+        boolean reacting = !species.isEmpty() && Arrays.equals(z, speciesZ);
+        List<Species> next = new ArrayList<>();
+        for (int k = 0; k < atoms.size(); k++) {
+            String label = labels.get(k);
+            Species was = before.get(label + Arrays.toString(atoms.get(k)));
+            double born = was != null ? was.born : Double.NEGATIVE_INFINITY;
+            if (was == null && reacting && gained.getOrDefault(label, 0) > 0) {
+                born = clock;
+                gained.merge(label, -1, Integer::sum);
+            }
+            next.add(new Species(atoms.get(k), label, born));
+        }
+        species.clear();
+        species.addAll(next);
+        speciesZ = z.clone();
     }
 
     private void computeHops(int n) {
@@ -665,19 +738,140 @@ final class MoleculeScene {
         return grid;
     }
 
-    /** Recadre la vue sur la molécule (après un changement de molécule). */
+    /** Recadre la vue sur la molécule (une autre scène) : le centre y saute, la main n'a plus rien décalé. */
     void frame() {
         centered = false;
-        double extent = 1.2;
-        double[] c = centroid();
-        for (double[] p : positions) {
-            extent = Math.max(extent, Math.hypot(p[0] - c[0], Math.hypot(p[1] - c[1], p[2] - c[2])));
-        }
-        if (wall > 0) extent = Math.max(extent, wall);
-        // Le cadre englobe le halo (il dépasse les noyaux de 0,5 à 1,3 Å) et les signes δ posés au-delà.
-        camera.flyTo(Math.log10(extent * 2 + (showHalo ? 3.4 : 1.1)));
+        Arrays.fill(pan, 0);
+        showAll();
+    }
+
+    /**
+     * Tout voir : toutes les molécules, cadrées, de face (voir orient) — en douceur, d'où que soit la vue. Le chemin du
+     * retour quand on s'est perdu : double-clic dans le vide, touche F, bouton ⌖.
+     */
+    void showAll() {
+        focus = new int[0];
+        panGoal = new double[3];
+        zoomAtom = -1;
+        zoomPoint = null;
+        navigated = false;
+        double[] box = bounds();
+        double extent = Math.max(1.2, box[3]);
+        if (wall > 0) extent = Math.max(extent, wall + Math.sqrt(box[0] * box[0] + box[1] * box[1] + box[2] * box[2]));
+        // Le cadre englobe le halo (il dépasse les noyaux de 0,5 à 1,3 Å) et les signes δ posés au-delà — en largeur
+        // aussi, quand la place à droite de la vignette est plus étroite que haute.
+        reframe = lastH <= 1;
+        camera.flyTo(Math.log10((extent * 2 + (showHalo ? 5 : 2)) / aspect()));
         orient();
         autoView = true;
+    }
+
+    /** La place libre à droite de la vignette, largeur sur hauteur (1 avant la première image). */
+    private double aspect() {
+        return lastH > 1 ? Math.max(.4, Math.min(1, (lastW - insetTarget) / lastH)) : 1;
+    }
+
+    /**
+     * Centre la vue sur ces atomes et les suit (un atome : le double-clic ; une molécule : sa fiche). Le cadre se
+     * resserre sur eux s'il était plus large : à leur taille (fit), sinon à 7 Å au plus, un atome et ses voisins.
+     */
+    void focusOn(int[] atoms, boolean fit) {
+        int n = positions.length;
+        int[] kept = Arrays.stream(atoms).filter(a -> a >= 0 && a < n).toArray();
+        if (kept.length == 0) return;
+        // Le point visé ne saute pas : le décalage passe dans le centre, qui glisse ensuite jusqu'aux atomes.
+        for (int k = 0; k < 3; k++) {
+            center[k] += pan[k];
+            pan[k] = 0;
+        }
+        panGoal = null;
+        focus = kept;
+        zoomAtom = -1;
+        zoomPoint = null;
+        double size = 7, now = Math.pow(10, camera.zoom);
+        if (fit) {
+            double[] c = anchor();
+            double extent = .8;
+            for (int a : kept) extent = Math.max(extent, Math.hypot(positions[a][0] - c[0],
+                    Math.hypot(positions[a][1] - c[1], positions[a][2] - c[2])));
+            size = (2 * extent + (showHalo ? 5 : 2)) / aspect();
+        }
+        if (fit || now > size) camera.flyTo(Math.log10(fit ? size : Math.min(now, size)));
+        navigated = true;
+        handledAt = clock;
+    }
+
+    /** Combien de molécules (composantes liées) la scène compte. */
+    int molecules() {
+        return (int) Arrays.stream(fragment).distinct().count();
+    }
+
+    /** Les atomes que la vue suit (vide : tous). */
+    int[] focus() {
+        return focus.clone();
+    }
+
+    /** Glisser la vue (px) : ce qui est sous le curseur le suit, à la profondeur du point visé. */
+    void panBy(double dx, double dy) {
+        double[] t = camera.project(camera.targetX, camera.targetY, camera.targetZ);
+        if (t == null) return;
+        double[] r = camera.right(), u = camera.up();
+        for (int k = 0; k < 3; k++) pan[k] += (-dx * r[k] + dy * u[k]) / t[3];
+        panGoal = null;
+        zoomAtom = -1;
+        zoomPoint = null;
+        navigated = true;
+        handledAt = clock;
+    }
+
+    /** La molette : le point sous le curseur (un atome, sinon le plan du point visé) se rapproche et y reste. */
+    void zoomAt(double sx, double sy, double notches) {
+        zoomAtom = pick(sx, sy);
+        zoomPoint = zoomAtom >= 0 ? null : unproject(sx, sy, new double[]{camera.targetX, camera.targetY, camera.targetZ});
+        panGoal = null;
+        camera.scroll(notches);
+        navigated = true;
+        handledAt = clock;
+    }
+
+    /** Tourner la vue à la main : elle est alors à vous, les vues ne la tournent plus. */
+    void rotateBy(double dx, double dy) {
+        camera.drag(dx, dy);
+        autoView = false;
+        navigated = true;
+        handledAt = clock;
+    }
+
+    /**
+     * Le centre de la boîte des atomes, et le rayon qui les englobe tous depuis lui : le cadre de « tout voir ». Pas le
+     * barycentre — une grosse molécule l'attire, et une petite molécule à l'autre bout sortait de l'écran.
+     */
+    private double[] bounds() {
+        if (positions.length == 0) return new double[4];
+        double[] lo = {Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE}, hi = {-Double.MAX_VALUE, -Double.MAX_VALUE, -Double.MAX_VALUE};
+        for (double[] p : positions) {
+            for (int k = 0; k < 3; k++) {
+                lo[k] = Math.min(lo[k], p[k]);
+                hi[k] = Math.max(hi[k], p[k]);
+            }
+        }
+        double[] c = {(lo[0] + hi[0]) / 2, (lo[1] + hi[1]) / 2, (lo[2] + hi[2]) / 2, 0};
+        for (double[] p : positions) c[3] = Math.max(c[3], Math.hypot(p[0] - c[0], Math.hypot(p[1] - c[1], p[2] - c[2])));
+        return c;
+    }
+
+    /** Le centre des atomes suivis ; sans atome suivi, celui de la boîte de tous (voir bounds). */
+    private double[] anchor() {
+        double[] c = new double[3];
+        int count = 0;
+        for (int a : focus) {
+            if (a >= positions.length) continue;
+            for (int k = 0; k < 3; k++) c[k] += positions[a][k];
+            count++;
+        }
+        if (count == 0) return Arrays.copyOf(bounds(), 3);
+        for (int k = 0; k < 3; k++) c[k] /= count;
+        return c;
     }
 
     /**
@@ -836,21 +1030,52 @@ final class MoleculeScene {
 
     // ================================================================== le rendu
     /**
+     * La caméra de l'image : le centre suit les atomes visés, le décalage de la main revient s'il le doit, la molette
+     * garde le point pointé sous le curseur, puis la projection est prête.
+     */
+    void aim(double w, double h, double dt, boolean dragging) {
+        lastW = w;
+        lastH = h;
+        insetLeft += (insetTarget - insetLeft) * Math.min(1, dt * 6);
+        if (reframe) frame();
+        double[] c = anchor();
+        double follow = centered ? Math.min(1, dt * 2.5) : 1;
+        for (int k = 0; k < 3; k++) center[k] += (c[k] - center[k]) * follow;
+        centered = true;
+        if (panGoal != null) {
+            double t = Math.min(1, dt * 4), left = 0;
+            for (int k = 0; k < 3; k++) {
+                pan[k] += (panGoal[k] - pan[k]) * t;
+                left = Math.max(left, Math.abs(panGoal[k] - pan[k]));
+            }
+            if (left < 1e-3) {
+                System.arraycopy(panGoal, 0, pan, 0, 3);
+                panGoal = null;
+            }
+        }
+        double before = camera.zoom;
+        camera.tick(dt, dragging, Math.log10(2.0), Math.log10(Math.max(150, 2.6 * wall + 8)));
+        // La molette : l'œil et le point visé se rapprochent du point pointé dans le même rapport — il reste sous le
+        // curseur, et le pivot de la rotation glisse vers lui.
+        double ratio = Math.pow(10, camera.zoom - before);
+        double[] pointed = zoomAtom >= 0 && zoomAtom < positions.length ? positions[zoomAtom] : zoomPoint;
+        if (ratio != 1 && pointed != null) {
+            for (int k = 0; k < 3; k++) pan[k] += (pointed[k] - center[k] - pan[k]) * (1 - ratio);
+        }
+        camera.targetX = center[0] + pan[0];
+        camera.targetY = center[1] + pan[1];
+        camera.targetZ = center[2] + pan[2];
+        camera.setup(w, h, (w + insetLeft) / 2, h / 2, camera.distance());
+    }
+
+    /**
      * Une image : g est le dessin net ; near et far sont les calques du bloom (la vue les floute, 5 et 22 px, et les
      * ajoute par-dessus) : on n'y dessine que ce qui émet de la lumière.
      */
     void render(GraphicsContext g, GraphicsContext near, GraphicsContext far, double w, double h, double dt,
                 boolean dragging) {
         clock += dt;
-        double[] c = centroid();
-        double follow = centered ? Math.min(1, dt * 2.5) : 1;
-        for (int k = 0; k < 3; k++) center[k] += (c[k] - center[k]) * follow;
-        centered = true;
-        camera.targetX = center[0];
-        camera.targetY = center[1];
-        camera.targetZ = center[2];
-        camera.tick(dt, dragging, Math.log10(2.0), Math.log10(60));
-        camera.setup(w, h, w / 2, h / 2, camera.distance());
+        aim(w, h, dt, dragging);
         for (GraphicsContext layer : new GraphicsContext[]{g, near, far}) {
             layer.setGlobalBlendMode(BlendMode.SRC_OVER);
             layer.setGlobalAlpha(1);
@@ -893,10 +1118,13 @@ final class MoleculeScene {
             drawAtoms(g, near, far, screen);
             drawBursts(g, near);
             if (showArrows) drawArrows(g);
+            if (hovered >= 0 && dragged < 0) drawHover(g, screen);
         } else {
             drawNuclei(g, near, far, screen);
         }
+        if (showNames) drawNames(g, screen, w);
         drawDrag(g);
+        drawPivot(g, dragging);
         if (showLegend) drawLegend(g, w);
         else legendTitle[2] = 0;
         String notice = density ? "" : grid == null ? "Calcul de la grille…"
@@ -1083,9 +1311,9 @@ final class MoleculeScene {
     }
 
     private String key(double w, double h) {
-        return String.format(Locale.ROOT, "%d|%d|%d|%.0f|%.0f|%.4f|%.4f|%.4f|%.3f|%.3f|%.3f", grid.version,
-                System.identityHashCode(field), System.identityHashCode(tint), w, h, camera.yaw, camera.pitch,
-                camera.zoom, center[0], center[1], center[2]);
+        return String.format(Locale.ROOT, "%d|%d|%d|%.0f|%.0f|%s|%.4f|%.3f|%.3f|%.3f", grid.version,
+                System.identityHashCode(field), System.identityHashCode(tint), w, h, camera.orientationKey(),
+                camera.zoom, camera.targetX, camera.targetY, camera.targetZ);
     }
 
     /** Le lancer de rayons : un rayon par pixel, en parallèle sur les lignes, seulement près des atomes. */
@@ -1100,15 +1328,15 @@ final class MoleculeScene {
         Tracer tracer = new Tracer(field, tint, camera, divisor);
         double sx = w / bw, sy = h / bh;
         // La direction d'un rayon est linéaire en (x, y) écran : avant + x·droite − y·haut, à l'échelle 1/focale.
-        double[] f = camera.forward(), right = camera.right(), up = camera.up(), probe = camera.ray(w / 2 + 100, h / 2);
+        double[] f = camera.forward(), right = camera.right(), up = camera.up(), probe = camera.ray(camera.centerX() + 100, camera.centerY());
         double invFocal = (probe[3] * right[0] + probe[4] * right[1] + probe[5] * right[2])
                 / (probe[3] * f[0] + probe[4] * f[1] + probe[5] * f[2]) / 100;
         int[] out = fogPixels;
         IntStream.range(0, bh).parallel().forEach(j -> {
             double[] ray = new double[6], enter = new double[tracer.atoms()], leave = new double[tracer.atoms()];
-            double b = -((j + .5) * sy - h / 2) * invFocal;
+            double b = -((j + .5) * sy - camera.centerY()) * invFocal;
             for (int i = 0; i < bw; i++) {
-                double a = ((i + .5) * sx - w / 2) * invFocal;
+                double a = ((i + .5) * sx - camera.centerX()) * invFocal;
                 double dx = f[0] + a * right[0] + b * up[0], dy = f[1] + a * right[1] + b * up[1], dz = f[2] + a * right[2] + b * up[2];
                 double n = Math.sqrt(dx * dx + dy * dy + dz * dz);
                 ray[3] = dx / n;
@@ -1301,16 +1529,60 @@ final class MoleculeScene {
         return new float[]{(float) (a[0] + (b[0] - a[0]) * f), (float) (a[1] + (b[1] - a[1]) * f), (float) (a[2] + (b[2] - a[2]) * f)};
     }
 
+    /**
+     * La mire du pivot : le point autour duquel la vue tourne et vers lequel elle se recentre, montré pendant le geste
+     * (tourner, glisser, zoomer, centrer) puis effacé en une seconde.
+     */
+    private void drawPivot(GraphicsContext g, boolean held) {
+        double since = clock - handledAt, alpha = held ? .6 : .6 * (1 - since / PIVOT_FADE);
+        if (alpha <= 0 || positions.length == 0) return;
+        double x = camera.centerX(), y = camera.centerY();
+        // Un trait sombre sous le clair : la mire se lit aussi sur une bulle lumineuse.
+        for (int pass = 0; pass < 2; pass++) {
+            g.setStroke(pass == 0 ? Color.web("#050B14", alpha * .7) : Color.web("#E4F0FF", alpha));
+            g.setLineWidth(pass == 0 ? 3.2 : 1.4);
+            for (int k = 0; k < 4; k++) {
+                double a = k * Math.PI / 2, cos = Math.cos(a), sin = Math.sin(a);
+                g.strokeLine(x + 7 * cos, y + 7 * sin, x + 16 * cos, y + 16 * sin);
+            }
+        }
+        g.setFill(Color.web("#E4F0FF", alpha));
+        g.fillOval(x - 1.8, y - 1.8, 3.6, 3.6);
+    }
+
+    /** Combien de temps la mire du pivot reste après le geste (s). */
+    private static final double PIVOT_FADE = 1.2;
+
+    /**
+     * L'enceinte du réacteur : une sphère de verre (un liseré, un reflet le long du bord), en tirets quand sa paroi est
+     * fixe, pleine quand c'est un piston ; au-dessus, la pression que les atomes exercent sur elle.
+     */
     private void drawWall(GraphicsContext g) {
         if (wall <= 0) return;
         double[] p = camera.project(0, 0, 0);
         if (p == null) return;
         double radius = wall * p[3];
-        g.setStroke(Color.web("#7FA6FF", .12));
-        g.setLineWidth(1);
-        g.setLineDashes(2, 9);
+        g.setFill(new RadialGradient(0, 0, p[0], p[1], radius, false, CycleMethod.NO_CYCLE,
+                new Stop(0, Color.web("#7FA6FF", 0)), new Stop(.86, Color.web("#7FA6FF", 0)),
+                new Stop(1, Color.web("#7FA6FF", pistonOn ? .09 : .06))));
+        g.fillOval(p[0] - radius, p[1] - radius, 2 * radius, 2 * radius);
+        g.setStroke(Color.web("#8FB4FF", pistonOn ? .34 : .22));
+        g.setLineWidth(pistonOn ? 1.3 : 1);
+        if (!pistonOn) g.setLineDashes(3, 7);
         g.strokeOval(p[0] - radius, p[1] - radius, 2 * radius, 2 * radius);
         g.setLineDashes();
+        // La consigne et la mesure, côte à côte : le piston y amène la paroi en quelques centaines de femtosecondes.
+        String measured = pressure < 1 ? "≈ 0 atm" : MoleculeFormat.atm(pressure);
+        String text = pistonOn
+                ? I18n.text("piston") + " " + MoleculeFormat.atm(pressureTarget) + " · " + I18n.text("mesurée") + " " + measured
+                : I18n.text("enceinte") + " · " + measured;
+        // En haut à gauche, contre le bord : les signes δ et les noms se posent au-dessus et au-dessous des molécules.
+        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setTextAlign(TextAlignment.RIGHT);
+        g.setFill(Color.web("#A9C2E6", .8));
+        double corner = radius * Math.sqrt(.5);
+        g.fillText(text, p[0] - corner - 2, Math.max(16, p[1] - corner - 4));
+        g.setTextAlign(TextAlignment.LEFT);
     }
 
     private void drawField(GraphicsContext g) {
@@ -1425,6 +1697,28 @@ final class MoleculeScene {
             if (bond.bonded() && !bond.twoCentre() && m.holds(bond.a(), bond.b())) return true;
         }
         return false;
+    }
+
+    /** La liaison calculée entre a et b (null : aucune). */
+    Bond bond(int a, int b) {
+        for (Bond bond : bonds) {
+            if ((bond.a() == a && bond.b() == b) || (bond.a() == b && bond.b() == a)) return bond;
+        }
+        return null;
+    }
+
+    /**
+     * Les atomes de la molécule de `atom`, triés : l'espèce annoncée qui le contient (celle que le moteur nomme), sinon
+     * les atomes reliés à lui par des liaisons.
+     */
+    int[] members(int atom) {
+        for (Species s : species) {
+            for (int a : s.atoms()) if (a == atom) return Arrays.stream(s.atoms()).sorted().toArray();
+        }
+        List<Integer> out = new ArrayList<>();
+        for (int a = 0; a < fragment.length; a++) if (atom < fragment.length && fragment[a] == fragment[atom]) out.add(a);
+        if (out.isEmpty()) out.add(atom);
+        return out.stream().mapToInt(Integer::intValue).toArray();
     }
 
     /** Deux atomes liés au sens du dessin (Bond.bonded), et non seulement par leur indice de Mayer. */
@@ -1546,24 +1840,87 @@ final class MoleculeScene {
             double tension = Math.tanh(tension(bond.a(), bond.b()) / 3);
             Color glow = tension >= 0 ? BEAM.interpolate(TENSE, tension * .8) : BEAM.interpolate(SQUEEZED, -tension);
             Color core = tension >= 0 ? CORE : CORE.interpolate(Color.web("#FFE2CF"), -tension);
-            double width = (.8 + .35 * Math.min(3, bond.order())) * (.45 + .55 * fade);
             double alpha = (.35 + .65 * strength) * fade;
-            piLobes(g, near, bond, sa, u, gap, alpha);           // avant le trait, qui brille à travers eux
-            g.setStroke(glow.deriveColor(0, 1, 1, .28 * alpha));
-            g.setLineWidth(width + 1.8);
-            g.strokeLine(pa[0], pa[1], pb[0], pb[1]);
-            g.setStroke(core.deriveColor(0, 1, 1, Math.min(1, .95 * alpha + flash)));
-            g.setLineWidth(width);
-            g.strokeLine(pa[0], pa[1], pb[0], pb[1]);
-            near.setStroke(glow.deriveColor(0, 1, 1, Math.min(1, .9 * alpha + flash)));
-            near.setLineWidth(width + 2.5 + 4 * flash);
-            near.strokeLine(pa[0], pa[1], pb[0], pb[1]);
-            far.setStroke(glow.deriveColor(0, 1, 1, .55 * alpha + .4 * flash));
-            far.setLineWidth(width + 6);
-            far.strokeLine(pa[0], pa[1], pb[0], pb[1]);
+            // Un brin par paire partagée (indice de Mayer arrondi) : 1, 2, 3. Le second brin d'une liaison conjuguée
+            // (benzène, 1,4) est pâle et en tirets, comme sur le schéma 2D.
+            int count = strokes(bond.order());
+            double[][][] paths = strands(bond, sa, u, gap, count);
+            double width = (count == 1 ? 1.15 : .85) * (.45 + .55 * fade);
+            for (int k = 0; k < count; k++) {
+                double weight = k == 0 ? 1 : Math.max(.3, Math.min(1, bond.order() - k));
+                boolean dashed = count == 2 && k == 1 && partial(bond.order());
+                double[] xs = new double[paths[k].length], ys = new double[paths[k].length];
+                int m = 0;
+                for (double[] point : paths[k]) {
+                    double[] s = camera.project(point[0], point[1], point[2]);
+                    if (s == null) continue;
+                    xs[m] = s[0];
+                    ys[m] = s[1];
+                    m++;
+                }
+                if (m < 2) continue;
+                double a = alpha * weight;
+                if (dashed) g.setLineDashes(4, 3);
+                g.setStroke(glow.deriveColor(0, 1, 1, .28 * a));
+                g.setLineWidth(width + 1.8);
+                g.strokePolyline(xs, ys, m);
+                g.setStroke(core.deriveColor(0, 1, 1, Math.min(1, .95 * a + flash)));
+                g.setLineWidth(width);
+                g.strokePolyline(xs, ys, m);
+                g.setLineDashes();
+                near.setStroke(glow.deriveColor(0, 1, 1, Math.min(1, .9 * a + flash)));
+                near.setLineWidth(width + 2.5 + 4 * flash);
+                near.strokePolyline(xs, ys, m);
+                far.setStroke(glow.deriveColor(0, 1, 1, .55 * a + .4 * flash));
+                far.setLineWidth(width + 5);
+                far.strokePolyline(xs, ys, m);
+            }
             dust(g, near, bond, A, u, length, ra, rb, alpha, fade);
         }
     }
+
+    /** Au-delà de ce rapport entre ses deux parts π, la part π d'une liaison entoure son axe (N₂, C₂H₂, CO₂). */
+    static final double ROUND_PI = .7;
+
+    /**
+     * Les brins d'une liaison, entre les deux bulles (points en Å, `STRAND_POINTS` chacun). Une liaison simple : un brin
+     * droit. Plusieurs : des brins écartés de l'axe, le plus au milieu, d'autant plus que l'orbitale p de ses atomes est
+     * haute (C 0,29 Å) ; leur disposition suit la direction calculée de la part π :
+     * <ul>
+     *   <li>à plat quand la part π a un côté (éthylène : la normale au plan) — la liaison ne tourne pas sur elle-même.
+     *       Les deux brins sont côte à côte perpendiculairement à ce côté, dans le plan des liaisons σ, comme les
+     *       bâtonnets doubles des modèles : une molécule plane vue de face (la vue par défaut) les montre tous deux ;
+     *       écartés le long du π, ils se superposaient à l'écran ;</li>
+     *   <li>torsadés d'un demi-tour quand la part π entoure l'axe (ses deux parts presque égales : triple liaison, CO₂).</li>
+     * </ul>
+     */
+    double[][][] strands(Bond bond, double[] start, double[] u, double gap, int count) {
+        double[][][] paths = new double[count][STRAND_POINTS][];
+        double[] n = bond.piAxis() != null ? bond.piAxis().clone() : perpendicular(u);
+        double along = n[0] * u[0] + n[1] * u[1] + n[2] * u[2];
+        for (int k = 0; k < 3; k++) n[k] -= along * u[k];
+        double nn = norm(n);
+        n = nn < 1e-6 ? perpendicular(u) : new double[]{n[0] / nn, n[1] / nn, n[2] / nn};
+        double[] m = cross(u, n);
+        double[] split = bond.piSplit();
+        boolean round = count == 3 || (split != null && split[0] > 1e-6 && split[1] / split[0] > ROUND_PI);
+        double rp = .5 * (pRadius(bond.a()) + pRadius(bond.b()));
+        double bulge = Math.min(.42 * gap + .05, .55 * (rp > 0 ? rp : .3));
+        for (int k = 0; k < count; k++) {
+            for (int i = 0; i < STRAND_POINTS; i++) {
+                double s = i / (STRAND_POINTS - 1.0), at = s * gap;
+                double offset = count == 1 ? 0 : bulge * (.3 + .7 * Math.sin(Math.PI * s));
+                double phase = count == 2 ? Math.PI * k : 2 * Math.PI * k / 3;
+                if (round && count > 1) phase += Math.PI * s;                 // un demi-tour d'un bout à l'autre
+                double c = Math.cos(phase) * offset, w = Math.sin(phase) * offset;
+                paths[k][i] = new double[]{start[0] + u[0] * at + m[0] * c + n[0] * w,
+                        start[1] + u[1] * at + m[1] * c + n[1] * w, start[2] + u[2] * at + m[2] * c + n[2] * w};
+            }
+        }
+        return paths;
+    }
+
+    static final int STRAND_POINTS = 14;
 
     /** La tension d'une liaison, ½ (F_A − F_B)·u (eV/Å, forces internes : + tirée, − comprimée). */
     private double tension(int a, int b) {
@@ -1578,58 +1935,6 @@ final class MoleculeScene {
             t += .5 * (fa - fb) * u[k] / l;
         }
         return t;
-    }
-
-    /**
-     * La part π : deux lobes de verre de part et d'autre de la liaison, le long de la direction calculée où se tient sa
-     * densité (éthylène, benzène : la normale au plan) ; une seconde paire, d'un quart de tour, quand la part π se
-     * tient aussi de l'autre côté (N₂ : 1 et 1, deux π ; CO₂ : 0,47 et 0,47). Chaque paire de lobes est d'autant plus
-     * nette que sa part π est grande ; leur hauteur suit l'orbitale p des deux atomes, là où elle est la plus dense
-     * (C 0,29 Å, Cl 0,51 Å).
-     */
-    private void piLobes(GraphicsContext g, GraphicsContext near, Bond bond, double[] start, double[] u, double gap,
-                         double alpha) {
-        if (bond.piAxis() == null) return;
-        double rp = .5 * (pRadius(bond.a()) + pRadius(bond.b()));
-        if (rp <= 0) return;
-        double[] centre = {start[0] + u[0] * gap / 2, start[1] + u[1] * gap / 2, start[2] + u[2] * gap / 2};
-        double[] first = bond.piAxis(), second = cross(u, first);
-        for (int k = 0; k < 2; k++) {
-            double part = bond.piSplit()[k];
-            if (part < .12) continue;
-            double[] n = k == 0 ? first : second, across = cross(u, n);
-            double[][] axes = {scaled(u, .5 * gap + .6 * rp), scaled(n, rp), scaled(across, .85 * rp)};
-            for (int side = -1; side <= 1; side += 2) {
-                double h = side * 1.45 * rp;
-                ellipsoid(g, near, new double[]{centre[0] + n[0] * h, centre[1] + n[1] * h, centre[2] + n[2] * h}, axes,
-                        HELIX, Math.min(1, part) * alpha);
-            }
-        }
-    }
-
-    /** Un ellipsoïde de verre (centre et trois demi-axes, Å), dessiné par sa silhouette exacte : bord net, centre clair. */
-    private void ellipsoid(GraphicsContext g, GraphicsContext near, double[] c, double[][] axes, Color colour,
-                           double weight) {
-        double[] p = camera.project(c[0], c[1], c[2]);
-        if (p == null) return;
-        double[] shape = silhouette(axes, camera.right(), camera.up());
-        double rx = Math.max(.6, shape[0] * p[3]), ry = Math.max(.6, shape[1] * p[3]);
-        for (GraphicsContext layer : new GraphicsContext[]{g, near}) {
-            layer.save();
-            layer.translate(p[0], p[1]);
-            layer.rotate(Math.toDegrees(shape[2]));
-            if (layer == g) {
-                layer.setFill(new RadialGradient(0, 0, .5, .5, .5, true, CycleMethod.NO_CYCLE,
-                        new Stop(0, colour.deriveColor(0, 1, 1, .05 * weight)), new Stop(.62, colour.deriveColor(0, 1, 1, .1 * weight)),
-                        new Stop(.9, colour.deriveColor(0, 1, 1, .32 * weight)), new Stop(1, colour.deriveColor(0, 1, 1, 0))));
-                layer.fillOval(-rx, -ry, 2 * rx, 2 * ry);
-            } else {
-                layer.setStroke(colour.deriveColor(0, 1, 1, .22 * weight));
-                layer.setLineWidth(1.2);
-                layer.strokeOval(-rx, -ry, 2 * rx, 2 * ry);
-            }
-            layer.restore();
-        }
     }
 
     /**
@@ -1816,7 +2121,8 @@ final class MoleculeScene {
     /** L'atome lui-même : la bulle, ses arcs, son noyau. */
     private void bubble(GraphicsContext g, GraphicsContext near, GraphicsContext far, int idx, double[] p, double x,
                         double y, double radius) {
-        glass(g, near, far, x, y, radius, rimColour(idx < charges.length ? charges[idx] : 0));
+        double q = idx < charges.length ? charges[idx] : 0;
+        glass(g, near, far, x, y, radius, rimColour(q), Math.abs(chargeTint(q)));
         if (showInner && idx < arcs.size()) drawArcs(g, near, idx, x - p[0], y - p[1], radius);
         nucleus(g, near, far, x, y, radius);
     }
@@ -1888,17 +2194,34 @@ final class MoleculeScene {
         return new double[]{Math.cos(at), Math.sin(at)};
     }
 
-    /** Le liseré : bleu de verre ; vers le magenta si l'atome a gagné des électrons (δ−), vers le cyan s'il en a perdu. */
-    static Color rimColour(double q) {
-        double t = Math.max(-1, Math.min(1, q / .5));
-        return t < 0 ? GLASS.interpolate(RICH, -t * .8) : GLASS.interpolate(POOR, t * .8);
+    /**
+     * La teinte de charge d'une bulle, de −1 (δ− franc) à +1 (δ+ franc) : la charge de Mulliken sur CHARGE_TINT e,
+     * relevée (puissance 0,7) pour qu'une charge de 0,1 e se voie déjà à côté d'un atome neutre.
+     */
+    static double chargeTint(double q) {
+        double t = Math.max(-1, Math.min(1, q / CHARGE_TINT));
+        return Math.signum(t) * Math.pow(Math.abs(t), .7);
     }
 
-    /** La bulle : centre presque transparent, bord de Fresnel net et lumineux, reflet en haut à gauche. */
-    private void glass(GraphicsContext g, GraphicsContext near, GraphicsContext far, double x, double y, double r, Color rim) {
+    /**
+     * Le liseré : verre argenté pour un atome neutre ; vers le magenta s'il a gagné des électrons (δ−), vers le cyan
+     * s'il en a perdu (δ+). Un bleu de verre pour le neutre se confondait avec le cyan des δ+.
+     */
+    static Color rimColour(double q) {
+        double t = chargeTint(q);
+        return t < 0 ? NEUTRAL.interpolate(RICH, -t) : NEUTRAL.interpolate(POOR, t);
+    }
+
+    /**
+     * La bulle : centre presque transparent (teinté par la charge, `tint` de 0 à 1), bord de Fresnel net et lumineux,
+     * reflet en haut à gauche.
+     */
+    private void glass(GraphicsContext g, GraphicsContext near, GraphicsContext far, double x, double y, double r, Color rim,
+                       double tint) {
+        double fill = 1 + 3.5 * tint;
         g.setFill(new RadialGradient(0, 0, x + r * .12, y + r * .15, r, false, CycleMethod.NO_CYCLE,
-                new Stop(0, rim.deriveColor(0, 1, .3, .025)), new Stop(.6, rim.deriveColor(0, 1, .5, .05)),
-                new Stop(.86, rim.deriveColor(0, 1, .8, .13)), new Stop(.965, rim.deriveColor(0, .9, 1, .5)),
+                new Stop(0, rim.deriveColor(0, 1, .3, .025 * fill)), new Stop(.6, rim.deriveColor(0, 1, .5, .05 * fill)),
+                new Stop(.86, rim.deriveColor(0, 1, .8, Math.min(.5, .13 * fill))), new Stop(.965, rim.deriveColor(0, .9, 1, .5)),
                 new Stop(1, rim.deriveColor(0, .8, 1.2, 0))));
         g.fillOval(x - r, y - r, 2 * r, 2 * r);
         g.setStroke(rim.deriveColor(0, .8, 1.15, .85));
@@ -1976,6 +2299,46 @@ final class MoleculeScene {
         far.fillOval(x - core * 2.6, y - core * 2.6, 5.2 * core, 5.2 * core);
     }
 
+    /**
+     * Les forces sur l'atome survolé, sur la scène même (ce que dit sa carte) : une flèche par voisin, partant du bord
+     * de sa bulle dans la direction de la force que la paire exerce sur lui (bleu : elle l'attire, orange : elle le
+     * repousse ; longueur logarithmique), et la force nette en jaune. Le voisin est cerclé de la même couleur.
+     */
+    private void drawHover(GraphicsContext g, double[][] screen) {
+        int i = hovered;
+        if (i >= positions.length || screen[i] == null) return;
+        double x = screen[i][0], y = screen[i][1], r = Math.max(5, sphere(i) * screen[i][3]);
+        double[] right = camera.right(), up = camera.up();
+        List<Pair> near = AtomMap.neighbours(this, i);
+        for (int k = 0; k < Math.min(5, near.size()); k++) {
+            Pair p = near.get(k);
+            int other = p.a() == i ? p.b() : p.a();
+            double[] f = AtomMap.pairForce(this, p, i);
+            Color colour = p.total() >= 0 ? AtomMap.ATTRACT : AtomMap.REPEL;
+            hoverArrow(g, x, y, r, f, right, up, colour, 1.6);
+            if (other < screen.length && screen[other] != null) {
+                double ro = Math.max(5, sphere(other) * screen[other][3]) + 3;
+                g.setStroke(colour.deriveColor(0, 1, 1, .55));
+                g.setLineWidth(1);
+                g.setLineDashes(3, 3);
+                g.strokeOval(screen[other][0] - ro, screen[other][1] - ro, 2 * ro, 2 * ro);
+                g.setLineDashes();
+            }
+        }
+        if (i < netForce.length && netForce[i] != null) hoverArrow(g, x, y, r, netForce[i], right, up, AtomMap.NET, 2.2);
+    }
+
+    private static void hoverArrow(GraphicsContext g, double x, double y, double r, double[] f, double[] right, double[] up,
+                                   Color colour, double width) {
+        double fx = f[0] * right[0] + f[1] * right[1] + f[2] * right[2], fy = -(f[0] * up[0] + f[1] * up[1] + f[2] * up[2]);
+        double screenLength = Math.hypot(fx, fy), magnitude = Math.sqrt(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]);
+        if (magnitude < .02 || screenLength < 1e-9) return;
+        double length = 10 + 26 * Math.min(1, Math.log10(1 + magnitude / .05) / 2.3) * Math.min(1, screenLength / magnitude + .2);
+        double ux = fx / screenLength, uy = fy / screenLength;
+        arrow(g, x + ux * (r + 3), y + uy * (r + 3), x + ux * (r + 3 + length), y + uy * (r + 3 + length),
+                colour.deriveColor(0, 1, 1, .95), width);
+    }
+
     /** Une liaison qui casse : une gerbe de poussière qui s'envole du point de rupture (une seconde). */
     private void drawBursts(GraphicsContext g, GraphicsContext near) {
         bursts.removeIf(b -> clock - b[3] > 1.0);
@@ -1995,6 +2358,92 @@ final class MoleculeScene {
             }
         }
     }
+
+    /**
+     * Le nom de chaque espèce, sous elle : le nom en clair, la formule plus discrète (une espèce sans nom n'a que sa
+     * formule ; un atome seul, son symbole suffit). Une espèce qui vient de se former a un cercle vert qui s'élargit et
+     * s'éteint, et son nom en vert le temps qu'il s'éteigne. Deux étiquettes qui se chevaucheraient se décalent.
+     */
+    private void drawNames(GraphicsContext g, double[][] screen, double w) {
+        Text probe = new Text();
+        Font nameFont = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11.5), formulaFont = Font.font("Segoe UI", 10.5);
+        List<double[]> placed = new ArrayList<>();
+        // Une seule molécule : le titre de la scène la nomme déjà (sauf si elle vient de se former).
+        int named = 0;
+        for (Species s : species) if (s.atoms.length > 1) named++;
+        for (Species s : species) {
+            if (s.atoms.length < 2 || (named == 1 && clock - s.born >= FORMED_GLOW)) continue;
+            double sx = 0, bottom = -1e9, count = 0, cx, cy = 0;
+            double[] centre = new double[3];
+            for (int a : s.atoms) {
+                if (a >= screen.length || screen[a] == null) continue;
+                double[] p = screen[a];
+                double r = mode == DENSITY ? Math.max(5, sphere(a) * p[3]) : 7;
+                sx += p[0];
+                cy += p[1];
+                bottom = Math.max(bottom, p[1] + r);
+                for (int k = 0; k < 3; k++) centre[k] += positions[a][k];
+                count++;
+            }
+            if (count == 0) continue;
+            cx = sx / count;
+            cy /= count;
+            if (cx < 0 || cx > w) continue;             // hors du cadre (vue zoomée ailleurs) : pas d'étiquette collée au bord
+            int dot = s.label.indexOf(" · ");
+            String formula = dot < 0 ? s.label : s.label.substring(0, dot);
+            String name = dot < 0 ? "" : I18n.text(s.label.substring(dot + 3));
+            probe.setFont(nameFont);
+            probe.setText(name);
+            double nameWidth = name.isEmpty() ? 0 : probe.getLayoutBounds().getWidth();
+            probe.setFont(formulaFont);
+            probe.setText(formula);
+            double formulaWidth = probe.getLayoutBounds().getWidth(), gap = name.isEmpty() ? 0 : 6;
+            double width = nameWidth + gap + formulaWidth + 14, height = 18;
+            double x = Math.max(8, Math.min(w - width - 8, cx - width / 2)), y = bottom + 6;
+            for (int tries = 0; tries < 6; tries++) {
+                boolean clash = false;
+                for (double[] r : placed) {
+                    if (x < r[0] + r[2] && r[0] < x + width && y < r[1] + r[3] && r[1] < y + height) {
+                        y = r[1] + r[3] + 2;
+                        clash = true;
+                    }
+                }
+                if (!clash) break;
+            }
+            placed.add(new double[]{x, y, width, height});
+            double age = clock - s.born, glow = age < FORMED_GLOW ? 1 - age / FORMED_GLOW : 0;
+            if (glow > 0) {
+                // Le cercle de la formation : autour des atomes de l'espèce, il s'élargit en s'éteignant.
+                double reach = 0;
+                for (int a : s.atoms) {
+                    if (a >= screen.length || screen[a] == null) continue;
+                    reach = Math.max(reach, Math.hypot(screen[a][0] - cx, screen[a][1] - cy)
+                            + (mode == DENSITY ? Math.max(5, sphere(a) * screen[a][3]) : 7));
+                }
+                double ring = reach + 8 + 14 * (1 - glow);
+                g.setStroke(FORMED.deriveColor(0, 1, 1, .75 * glow));
+                g.setLineWidth(1.4);
+                g.strokeOval(cx - ring, cy - ring, 2 * ring, 2 * ring);
+            }
+            g.setFill(Color.web("#07101C", .62));
+            g.fillRoundRect(x, y, width, height, height, height);
+            g.setStroke(glow > 0 ? FORMED.deriveColor(0, 1, 1, .35 + .5 * glow) : Color.web("#9FC4FF", .18));
+            g.setLineWidth(1);
+            g.strokeRoundRect(x + .5, y + .5, width - 1, height - 1, height, height);
+            g.setTextAlign(TextAlignment.LEFT);
+            double baseline = y + height / 2 + 4;
+            if (!name.isEmpty()) {
+                g.setFont(nameFont);
+                g.setFill(glow > 0 ? Color.web("#E9F5EE").interpolate(FORMED, glow) : Color.web("#E9F1FF", .9));
+                g.fillText(name, x + 7, baseline);
+            }
+            g.setFont(formulaFont);
+            g.setFill(Color.web("#9FB6D4", name.isEmpty() ? .85 : .7));
+            g.fillText(formula, x + 7 + nameWidth + gap, baseline);
+        }
+    }
+
+    private static final Color FORMED = Color.web("#7FE0A0");
 
     /** La répulsion nette que les voisins exercent sur l'atome au-delà de 0,5 eV/Å par paire (eV/Å). */
     double squeeze(int atom) {
@@ -2082,12 +2531,13 @@ final class MoleculeScene {
                 for (Bond bond : bonds) beams |= bond.bonded() && bond.twoCentre();
                 for (Multicentre m : multicentres) stars |= holdsABond(m);
             }
-            lines.add(new String[]{"sphere", "sphère : un atome · bord : sa charge (magenta δ−, cyan δ+)"});
+            lines.add(new String[]{"sphere", "sphère : un atome · teinte : sa charge (argent neutre, cyan δ+, magenta δ−)"});
             lines.add(new String[]{"halo", showPotential ? "potentiel sur ρ = 0,002 u.a. : magenta négatif, cyan positif"
                     : "halo : densité projetée, bord 0,3 e/Å², teinte des charges"});
             if (showInner) lines.add(new String[]{"arcs", "arcs : champ du noyau vers ses liaisons, dévié par son dipôle"});
             if (beams) {
-                lines.add(new String[]{"line", "trait : paire d'électrons sur deux atomes · lobes : part π"});
+                lines.add(new String[]{"line", "brins : 1, 2, 3 paires partagées (simple, double, triple ; tirets : conjuguée)"});
+                lines.add(new String[]{"twist", "à plat : π d'un seul côté, la liaison ne tourne pas · torsadés : π tout autour de l'axe"});
                 lines.add(new String[]{"tension", "bleu : force nulle · blanc : traction · orange : compression"});
             }
             if (beams || stars) lines.add(new String[]{"grains", "grains : la paire, tirée de sa densité le long de la liaison"});
@@ -2132,9 +2582,15 @@ final class MoleculeScene {
             double gy = y + i * step - 4;
             switch (lines.get(i)[0]) {
                 case "sphere" -> {
-                    g.setStroke(RICH.deriveColor(0, 1, 1, .85));
-                    g.setLineWidth(.9);
-                    g.strokeOval(x + 3, gy - 5, 10, 10);
+                    // Trois petites bulles : δ+, neutre, δ−.
+                    Color[] rims = {POOR, NEUTRAL, RICH};
+                    for (int k = 0; k < 3; k++) {
+                        g.setFill(rims[k].deriveColor(0, 1, 1, k == 1 ? .08 : .3));
+                        g.fillOval(x - 1 + k * 6.5, gy - 3.5, 7, 7);
+                        g.setStroke(rims[k].deriveColor(0, 1, 1, .95));
+                        g.setLineWidth(.9);
+                        g.strokeOval(x - 1 + k * 6.5, gy - 3.5, 7, 7);
+                    }
                 }
                 case "halo" -> {
                     float[] a = chargeColour(CHARGE_SCALE), b = chargeColour(-CHARGE_SCALE);
@@ -2149,8 +2605,25 @@ final class MoleculeScene {
                 }
                 case "line" -> {
                     g.setStroke(CORE);
-                    g.setLineWidth(1.2);
-                    g.strokeLine(x, gy, x + 16, gy);
+                    g.setLineWidth(1);
+                    g.strokeLine(x, gy - 3.5, x + 4, gy - 3.5);
+                    for (int k = 0; k < 2; k++) g.strokeLine(x + 6, gy - 1.5 + 3 * k, x + 10, gy - 1.5 + 3 * k);
+                    for (int k = 0; k < 3; k++) g.strokeLine(x + 12, gy - 3 + 3 * k, x + 16, gy - 3 + 3 * k);
+                }
+                case "twist" -> {
+                    // Deux brins à plat, puis deux brins qui se croisent (un demi-tour).
+                    g.setStroke(CORE);
+                    g.setLineWidth(.9);
+                    g.strokeLine(x, gy - 2, x + 6, gy - 2);
+                    g.strokeLine(x, gy + 2, x + 6, gy + 2);
+                    double[] xs = new double[9], up = new double[9], down = new double[9];
+                    for (int k = 0; k < 9; k++) {
+                        xs[k] = x + 9 + k;
+                        up[k] = gy + 2.5 * Math.cos(Math.PI * k / 8);
+                        down[k] = gy - 2.5 * Math.cos(Math.PI * k / 8);
+                    }
+                    g.strokePolyline(xs, up, 9);
+                    g.strokePolyline(xs, down, 9);
                 }
                 case "tension" -> {
                     g.setLineWidth(1.6);
@@ -2307,8 +2780,9 @@ final class MoleculeScene {
         return new double[]{ray[0] + ray[3] * t, ray[1] + ray[4] * t, ray[2] + ray[5] * t};
     }
 
+    /** Le point que la caméra vise (le centre suivi, plus le décalage de la main) : un atome posé dans le vide y va. */
     double[] center() {
-        return center.clone();
+        return new double[]{camera.targetX, camera.targetY, camera.targetZ};
     }
 
     private static double sq(double x) {

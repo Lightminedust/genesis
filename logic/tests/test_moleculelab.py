@@ -514,6 +514,72 @@ def wait(lab, condition, limit=90.0):
 
 
 class LabTest(unittest.TestCase):
+    def test_in_an_enclosure_the_centre_of_mass_is_a_degree_of_freedom(self):
+        # Sans paroi, une molécule libre ne dérive pas : le centre de masse est retiré, du tirage comme du bain. Dans une
+        # enceinte, il s'agite comme le reste (3/2 kT) : sans cela une molécule seule ne touchait jamais la paroi.
+        lab = MoleculeLab(rng_seed=9)
+        lab.close()
+        lab._worker.join()
+        lab._set_structure("H₂", [1, 1], np.array([[0.0, 0.0, -0.37], [0.0, 0.0, 0.37]]))
+        self.assertEqual(lab._dof(), 3)
+        lab.temperature = 1000.0
+        lab.velocities = lab._thermal_velocities(1000.0)
+        for _ in range(50):
+            lab._thermostat(0.25)
+        self.assertAlmostEqual(float(np.linalg.norm(lab.masses @ lab.velocities)), 0.0, places=10)
+        lab._set_wall(5.0)
+        self.assertEqual(lab._dof(), 6)
+        kT, total = analysis.BOLTZMANN_EH * 1000.0, lab.masses.sum()
+        kinetic = [0.5 * total * float(np.sum(((lab.masses @ v) / total) ** 2)) / analysis.ACCELERATION
+                   for v in (lab._thermal_velocities(1000.0) for _ in range(4000))]
+        self.assertAlmostEqual(np.mean(kinetic) / (1.5 * kT), 1.0, delta=0.06)
+
+    def test_the_wall_reads_a_pressure_and_the_piston_follows_it(self):
+        # La pression lue est la force des atomes sur la paroi divisée par sa surface ; le piston agrandit l'enceinte
+        # quand elle dépasse la consigne, la resserre en dessous, et ne touche à rien sans consigne.
+        from moleculelab import lab as lab_module
+        lab = MoleculeLab(rng_seed=8)
+        lab.close()
+        lab._worker.join()
+        # La paroi touche le nuage (surface 0,002 u.a. de l'atome libre : O 1,40 Å), pas le noyau.
+        lab.numbers = [8, 8]
+        lab.reach = np.array([lab_module._surface(8)] * 2)
+        self.assertAlmostEqual(lab.reach[0], 1.40, delta=0.02)
+        lab.positions = np.zeros((2, 3))
+        lab.positions[:, 2] = [3.0 - lab.reach[0] + 0.02, -(3.0 - lab.reach[0] - 0.1)]    # l'un dépasse de 0,02 Å
+        lab.wall = 3.0
+        lab._piston(lab_module.PRESSURE_FS)                                # une moyenne d'un seul coup
+        push = lab_module.WALL * 0.02
+        expected = push / (4 * np.pi * 9.0) * lab_module.ATM_PER_EH_A3
+        force, _, energy, _ = lab._external(lab.positions)
+        self.assertAlmostEqual(force[0, 2], -push, places=9)                # vers le centre
+        self.assertEqual(force[1, 2], 0.0)                                   # l'autre ne touche pas
+        self.assertAlmostEqual(energy, 0.5 * lab_module.WALL * 0.02 ** 2, places=9)
+        self.assertAlmostEqual(lab.pressure, expected, delta=1e-6 * expected)
+        self.assertAlmostEqual(lab_module.ATM_PER_EH_A3, 4.3027e7, delta=1e3)   # 1 Eh/Å³ = 4,36 TPa
+        self.assertEqual(lab.wall, 3.0)                                       # sans consigne, le volume reste
+        lab._do_pressure(expected / 2)
+        lab._piston(lab_module.TIME_STEP_FS)
+        self.assertGreater(lab.wall, 3.0)                                     # poussée plus fort que voulu : elle cède
+        lab.wall = 3.0
+        lab._do_pressure(expected * 2)
+        lab._piston(lab_module.TIME_STEP_FS)
+        self.assertLess(lab.wall, 3.0)
+        # Au plus PISTON_STEP du volume par pas, même pour une consigne très loin de la mesure (bornée à la plage).
+        lab.wall = 3.0
+        lab._do_pressure(1)
+        self.assertEqual(lab.pressure_target, lab_module.PRESSURE_RANGE[0])
+        lab._piston(lab_module.TIME_STEP_FS)
+        self.assertAlmostEqual(lab.wall ** 3 / 27.0, 1 + lab_module.PISTON_STEP, places=9)
+        lab._do_pressure(1e9)
+        self.assertEqual(lab.pressure_target, lab_module.PRESSURE_RANGE[1])
+        # Une consigne sans enceinte en crée une autour des molécules ; zéro rend le volume fixe.
+        lab.wall = 0.0
+        lab._do_pressure(5000)
+        self.assertAlmostEqual(lab.wall, 3.0 + 0.02 + 1.5, places=9)      # autour des nuages, plus 1,5 Å
+        lab._do_pressure(0)
+        self.assertEqual(lab.pressure_target, 0.0)
+
     def test_methane_builds_itself_tetrahedral(self):
         lab = MoleculeLab(rng_seed=3)
         try:

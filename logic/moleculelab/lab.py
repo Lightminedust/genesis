@@ -20,6 +20,7 @@ Les calculs tournent dans un fil à part ; le moteur lit le dernier instantané 
 """
 
 import collections
+import functools
 import math
 import threading
 import time
@@ -27,7 +28,7 @@ import traceback
 
 import numpy as np
 
-from . import analysis, density, structures, validation, xtb
+from . import assembly, dictionary, analysis, density, structures, validation, xtb
 
 TIME_STEP_FS = 0.25
 FIRE_DT_START, FIRE_DT_MAX = 0.25, 1.0
@@ -38,8 +39,29 @@ FIRE_ALPHA, FIRE_N_MIN = 0.1, 5
 FIRE_MASS = 1.008
 RELAXED_FORCE = 1e-3            # Eh/Å : la relaxation s'arrête sous cette force maximale (0,026 eV/Å)
 TETHER = 0.08                   # Eh/Å² : le ressort de la souris
-WALL = 0.05                     # Eh/Å² : la paroi du réacteur
+# La paroi du réacteur : ½ k (r + ρ − R)², ρ le rayon où la densité de l'atome libre tombe à 0,002 e/bohr³ (sa
+# surface, celle des cartes de potentiel) — la paroi touche le nuage, pas le noyau, et la sphère dessinée est le bord
+# des nuages. Raide : à 20 000 atm, un atome n'y entre que de quelques centièmes d'Å (à 0,05 Eh/Å² sur les noyaux,
+# les nuages dépassaient de 2 Å).
+WALL = 0.5                      # Eh/Å²
+# La pression du réacteur : la force des atomes sur la paroi divisée par sa surface (ce que lirait un manomètre),
+# moyennée sur PRESSURE_FS. Le piston : quand une pression est imposée, le volume de la sphère suit dV/V =
+# (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), au plus
+# PISTON_STEP par pas. La plage est celle où les molécules se rencontrent à l'écran : à 1 atm et 1500 K, une rencontre
+# toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm, ~2 ps ; à 10 000 atm, ~25 fs (théorie cinétique, σ 28 Å²).
+PISTON_FS = 100.0
+PRESSURE_FS = 200.0
+PISTON_STEP = 0.01
+PRESSURE_RANGE = (100.0, 20000.0)           # atm
+ATM_PER_EH_A3 = xtb.HARTREE_EV * 1.602176634e-19 / 1e-30 / 101325.0
 THERMOSTAT_FS = 50.0
+# Le bain de chaque atome (Langevin, faible) : le CSVR ne règle que l'énergie totale, en multipliant toutes les
+# vitesses par un même facteur ; il ne redistribue rien. Dans un réacteur de deux ou trois molécules, l'énergie qu'une
+# géométrie de départ rend à ses vibrations était retirée à tout le monde, translations comprises, et seuls les chocs
+# — rares, et peu efficaces entre H₂ et Cl₂ (rapport des masses 35) — pouvaient la rendre : Cl₂ avançait à 0,1–0,5 fois
+# son agitation thermique pendant des picosecondes. Les deux opérations gardent la loi canonique ; le bain ramène
+# chaque degré de liberté à la température en quelques centaines de femtosecondes.
+BATH_FS = 500.0
 HISTORY = 600
 GRID_SECONDS = 0.2
 PUBLISH_SECONDS = 1 / 40       # un instantané au plus tous les 25 ms : le client dessine à 60 images/s
@@ -76,6 +98,28 @@ def atom_energy(z):
     return atom_terms(z)["energy"]
 
 
+def change(before, after):
+    """L'événement d'une réaction, nommé : « formé : H₂O · eau — défait : H₂O₂ · peroxyde d'hydrogène »."""
+    born, gone = collections.Counter(after), collections.Counter(before)
+    born, gone = born - collections.Counter(before), gone - collections.Counter(after)
+
+    def listed(counts):
+        return ", ".join(("" if n == 1 else f"{n} × ") + label for label, n in sorted(counts.items()))
+
+    parts = []
+    if born:
+        parts.append("formé : " + listed(born))
+    if gone:
+        parts.append("défait : " + listed(gone))
+    return "  —  ".join(parts) or "réarrangement"
+
+
+@functools.lru_cache(maxsize=None)
+def _surface(z):
+    """Le rayon (Å) où la densité de valence de l'atome libre tombe à 0,002 e/bohr³ : où son nuage touche la paroi."""
+    return density.atom_radii(int(z))[0]
+
+
 class MoleculeLab:
     def __init__(self, rng_seed=0):
         self.rng = np.random.default_rng(rng_seed)
@@ -100,6 +144,13 @@ class MoleculeLab:
         self.paused = False
         self.drag = None                # (atome, cible Å, centre de masse tenu des autres atomes)
         self.wall = 0.0                 # Å, 0 : pas de paroi
+        self.reach = np.zeros(0)        # Å : le rayon de la surface de chaque atome (voir WALL)
+        self.pressure = 0.0             # atm, mesurée sur la paroi (moyenne glissante)
+        self.pressure_target = 0.0      # atm imposée par le piston ; 0 : volume fixe
+        # La moyenne longue (celle de Z = PV/NkT) : Σ P dt, Σ V dt, Σ dt, et les chocs (un atome qui touche la paroi)
+        # depuis le dernier changement ; avec le piston, depuis qu'il est à l'équilibre. Les atomes au contact.
+        self._mean = [0.0, 0.0, 0.0, 0]
+        self._touching = np.zeros(0, bool)
         self.view = (0, -1)             # (0 densité, 1 déformation, 2 orbitale ; indice d'orbitale, −1 : HOMO)
         self.potential_map = False      # la carte de potentiel est affichée : il lui faut la grille
         self._published = 0.0
@@ -113,6 +164,15 @@ class MoleculeLab:
         self.history = collections.deque(maxlen=HISTORY)
         self.events = collections.deque(maxlen=14)
         self.census = ""
+        self.named = ()
+        # Les espèces annoncées, avec leurs atomes : ce que la scène nomme (elles ont tenu 20 fs, comme le recensement).
+        self.groups = ()
+        self._dictionary = threading.Thread(target=lambda: dictionary.layouts(), name="molecule-dictionary", daemon=True)
+        self._dictionary.start()
+        self._assess_lock = threading.Condition()
+        self._assess_request = None
+        self._assess_thread = None
+        self._assessment = None                       # les espèces, nommées par le dictionnaire (« H₂O · eau »)
         self._candidate = ("", 0.0)
         self.status = "Préparation…"
         self.error = ""
@@ -196,11 +256,57 @@ class MoleculeLab:
     def set_paused(self, paused):
         self._post("pause", paused)
 
+    def dictionary_ready(self):
+        """Les départs de dessin du dictionnaire sont-ils calculés (voir dictionary.layouts) ?"""
+        return not self._dictionary.is_alive()
+
+    def build(self, vector, charge=0, enclosed=False):
+        """Le dessin de l'assembleur (voir assembly.decode) devient la scène : posé en 3D, puis relaxé."""
+        self._post("build", list(vector), int(charge), bool(enclosed))
+
+    def assess(self, request, vector, deep):
+        """Le verdict de l'assembleur sur un dessin : aussitôt les noms et les formules, puis (si `deep`) chaque
+        molécule relaxée par GFN1-xTB, dans un fil à part ; un dessin plus récent annule le calcul en cours."""
+        with self._assess_lock:
+            self._assess_request = (int(request), list(vector), bool(deep))
+            self._assess_lock.notify()
+        if self._assess_thread is None:
+            self._assess_thread = threading.Thread(target=self._assess_loop, name="molecule-assess", daemon=True)
+            self._assess_thread.start()
+
+    def _assess_loop(self):
+        while not self._closed:
+            with self._assess_lock:
+                while self._assess_request is None and not self._closed:
+                    self._assess_lock.wait(0.5)
+                if self._closed:
+                    return
+                request, vector, deep = self._assess_request
+                self._assess_request = None
+            try:
+                numbers, charges, xy, bonds = assembly.decode(vector)
+                if any(not xtb.supported(z) for z in numbers):
+                    raise ValueError("un élément au-delà du radon : GFN1-xTB ne le calcule pas")
+                quick = assembly.quick(numbers, charges, bonds)
+                self._assessment = {"request": request, "deep": False, "done": not deep, "molecules": quick, "error": ""}
+                if deep:
+                    newer = lambda: self._assess_request is not None or self._closed
+                    found = assembly.deep(numbers, charges, xy, bonds, newer)
+                    self._assessment = {"request": request, "deep": True, "done": True, "molecules": found, "error": ""}
+            except assembly.Cancelled:
+                continue
+            except Exception as error:                        # le dessin ne doit jamais arrêter le laboratoire
+                self._assessment = {"request": request, "deep": deep, "done": True, "molecules": [],
+                                    "error": str(error)}
+
     def clear(self):
         self._post("clear")
 
     def set_wall(self, radius):
         self._post("wall", radius)
+
+    def set_pressure(self, atm):
+        self._post("pressure", atm)
 
     def take_dirty(self):
         with self._lock:
@@ -209,7 +315,12 @@ class MoleculeLab:
 
     def snapshot(self):
         with self._lock:
-            return self._snapshot, self._grid
+            snap, grid = self._snapshot, self._grid
+        # Le verdict de l'assembleur vient de son propre fil : il part tel quel, même quand le laboratoire est au repos.
+        if snap is not None and snap.get("assessment") is not self._assessment:
+            snap = dict(snap)
+            snap["assessment"] = self._assessment
+        return snap, grid
 
     def close(self):
         with self._lock:
@@ -292,6 +403,9 @@ class MoleculeLab:
         if len(self.isotopes) != len(numbers):
             self.isotopes = [0] * len(numbers)
         self.masses = np.array([analysis.isotope_mass(z, a) for z, a in zip(numbers, self.isotopes)])
+        self.reach = np.array([_surface(z) for z in numbers])
+        self._mean = [0.0, 0.0, 0.0, 0]
+        self._touching = np.zeros(0, bool)
         if len(numbers):
             positions = positions - (self.masses @ positions) / self.masses.sum()
         self.positions = positions
@@ -320,8 +434,8 @@ class MoleculeLab:
         self.error = ""
         if self.calc is not None:
             self._evaluate()
-        self.census = self._read_census()
-        self._candidate = (self.census, self.time_fs)
+        self.census, self.named, self.groups = self._read_census()
+        self._candidate = ((self.census, self.named), self.time_fs)
 
     def _do_preset(self, index):
         name, numbers, positions = structures.preset(int(min(max(index, 0), len(structures.PRESETS) - 1)))
@@ -330,6 +444,7 @@ class MoleculeLab:
         # relaxation resterait sur un col au lieu de trouver le vrai minimum.
         positions = positions + self.rng.normal(scale=0.02, size=positions.shape)
         self.wall = 0.0
+        self.pressure_target = 0.0          # sans enceinte, pas de piston (le réacteur, lui, garde son réglage)
         self.time_fs = 0.0
         self.history.clear()
         self.events.clear()
@@ -343,12 +458,38 @@ class MoleculeLab:
         self.time_fs = 0.0
         self.history.clear()
         self.events.clear()
-        centered = positions - positions.mean(axis=0)
-        self.wall = float(np.max(np.linalg.norm(centered, axis=1))) + 1.5
         self.dynamics = THERMOSTAT
         self._set_structure(label, numbers, positions)
+        self._set_wall(self._enclosing())
         self.velocities = self._thermal_velocities(self.temperature)
         self.status = f"Réacteur : {label} à {self.temperature:.0f} K"
+
+    def _do_build(self, vector, charge, enclosed):
+        numbers, charges, xy, bonds = assembly.decode(vector)
+        if not numbers:
+            self.error = "Le dessin est vide."
+            return
+        if len(numbers) > MAX_ATOMS:
+            self.error = f"Au plus {MAX_ATOMS} atomes : au-delà, le calcul ne suit plus en temps réel."
+            return
+        if any(not xtb.supported(z) for z in numbers):
+            self.error = "GFN1-xTB n'est paramétré que de l'hydrogène au radon (Z = 1 à 86)."
+            return
+        positions = assembly.embed(numbers, bonds, xy)
+        positions -= positions.mean(axis=0)
+        self.isotopes = []
+        self.time_fs = 0.0
+        self.history.clear()
+        self.events.clear()
+        self.charge = int(min(max(charge, -2), 2))
+        if not enclosed:
+            self.pressure_target = 0.0
+        self.dynamics = RELAX
+        self._set_structure(assembly.label(numbers, charges, bonds), numbers, positions)
+        self._set_wall(self._enclosing() if enclosed else 0.0)
+        count = len(assembly.components(len(numbers), bonds))
+        plural = "s" if count > 1 else ""
+        self.status = f"Assemblage reçu : {count} molécule{plural}, posée{plural} en 3D puis relaxée{plural} par GFN1-xTB"
 
     def _do_clear(self):
         self.isotopes = []
@@ -356,6 +497,7 @@ class MoleculeLab:
         self.history.clear()
         self.events.clear()
         self.wall = 0.0
+        self.pressure_target = 0.0
         self._set_structure("Établi vide", [], np.zeros((0, 3)))
         self.status = "Établi vide : ajoutez un atome"
 
@@ -443,6 +585,7 @@ class MoleculeLab:
         mode = int(mode)
         if mode not in (RELAX, THERMOSTAT, FREE):
             return
+        self._mean = [0.0, 0.0, 0.0, 0]                # une autre température : la moyenne repart
         if temperature is not None and temperature >= 0:
             self.temperature = float(min(max(temperature, 0.0), 6000.0))
         if mode == THERMOSTAT and self.dynamics != THERMOSTAT and np.allclose(self.velocities, 0):
@@ -529,8 +672,62 @@ class MoleculeLab:
         self.paused = bool(paused)
 
     def _do_wall(self, radius):
-        self.wall = float(max(radius, 0.0))
+        self._set_wall(radius)
         self.relaxed = False
+
+    def _do_pressure(self, atm):
+        atm = float(atm)
+        self.pressure_target = 0.0 if atm <= 0 else float(min(max(atm, PRESSURE_RANGE[0]), PRESSURE_RANGE[1]))
+        if self.pressure_target > 0 and self.wall <= 0 and self.numbers:
+            # Pas encore d'enceinte : une sphère autour des molécules, comme celle du réacteur. Le centre de masse devient
+            # un degré de liberté (voir _dof) : il reçoit son agitation thermique.
+            self._set_wall(self._enclosing())
+            if self.dynamics != RELAX and self.temperature > 0:
+                total = self.masses.sum()
+                sigma = math.sqrt(analysis.BOLTZMANN_EH * self.temperature * analysis.ACCELERATION / total)
+                self.velocities = self.velocities + self.rng.normal(size=3) * sigma
+        self.relaxed = False
+
+    def _set_wall(self, radius):
+        """La paroi à ce rayon ; les forces externes suivent aussitôt (le calcul quantique, lui, n'en dépend pas)."""
+        self.wall = float(max(radius, 0.0))
+        self._mean = [0.0, 0.0, 0.0, 0]
+        if self.result is not None:
+            external, e_tether, e_wall, tether = self._external(self.positions)
+            self._forces = -self.result.gradient + external
+            self._external_parts = (external, e_tether, e_wall, tether)
+
+    def _enclosing(self):
+        """Le rayon d'une enceinte autour des molécules : leurs nuages, plus 1,5 Å pour bouger."""
+        if not len(self.numbers):
+            return 0.0
+        return float(np.max(np.linalg.norm(self.positions, axis=1) + self.reach)) + 1.5
+
+    def _piston(self, dt_fs):
+        """La pression sur la paroi (atm, moyennée) et, si une pression est imposée, le piston (voir PISTON_FS)."""
+        if self.wall <= 0 or not len(self.numbers):
+            self.pressure = 0.0
+            return
+        r = np.linalg.norm(self.positions, axis=1)
+        excess = r + self.reach - self.wall
+        push = float(np.sum(WALL * np.clip(excess, 0.0, None)))               # Eh/Å, vers l'extérieur
+        now = push / (4 * np.pi * self.wall ** 2) * ATM_PER_EH_A3
+        self.pressure += min(1.0, dt_fs / PRESSURE_FS) * (now - self.pressure)
+        touching = excess > 0
+        hits = int(np.sum(touching & ~self._touching)) if len(self._touching) == len(touching) else 0
+        self._touching = touching
+        target = self.pressure_target
+        if target > 0 and abs(self.pressure - target) > 0.25 * target:
+            self._mean = [0.0, 0.0, 0.0, 0]            # le piston n'y est pas encore : la moyenne attend
+        else:
+            mean = self._mean
+            mean[0] += now * dt_fs
+            mean[1] += 4 / 3 * np.pi * self.wall ** 3 * dt_fs
+            mean[2] += dt_fs
+            mean[3] += hits
+        if self.pressure_target > 0:
+            change = dt_fs / PISTON_FS * (now - self.pressure_target) / self.pressure_target
+            self.wall *= (1 + min(max(change, -PISTON_STEP), PISTON_STEP)) ** (1 / 3)
 
     # ------------------------------------------------------------------ physique
     def _thermal_velocities(self, kelvin):
@@ -538,8 +735,17 @@ class MoleculeLab:
             return np.zeros((0, 3))
         sigma = np.sqrt(analysis.BOLTZMANN_EH * kelvin * analysis.ACCELERATION / self.masses)
         v = self.rng.normal(size=(len(self.numbers), 3)) * sigma[:, None]
-        v -= (self.masses @ v) / self.masses.sum()
+        if self.wall <= 0:
+            v -= (self.masses @ v) / self.masses.sum()          # une molécule libre ne dérive pas (voir _dof)
         return v
+
+    def _dof(self):
+        """Les degrés de liberté de l'agitation. Sans paroi, le centre de masse est retiré : une molécule libre ne dérive
+        pas. Dans une enceinte, c'en est un comme les autres : la paroi échange de la quantité de mouvement, et sans lui
+        une molécule seule ne bougerait jamais, deux molécules n'auraient que des impulsions opposées — la moitié de la
+        pression d'un gaz (mesuré : H₂ seule à 3 000 K, aucun choc sur la paroi en 10 ps)."""
+        n = len(self.numbers)
+        return max(3 * n if self.wall > 0 else 3 * n - 3, 1)
 
     def _external(self, positions):
         """Forces (Eh/Å) et énergies du ressort de la souris et de la paroi."""
@@ -562,11 +768,11 @@ class MoleculeLab:
                 e_tether += 0.5 * TETHER * float(offset @ offset)
         if self.wall > 0:
             r = np.linalg.norm(positions, axis=1)
-            out = r > self.wall
+            excess = r + self.reach - self.wall
+            out = excess > 0
             if out.any():
-                excess = r[out] - self.wall
-                force[out] -= (WALL * excess / r[out])[:, None] * positions[out]
-                e_wall = 0.5 * WALL * float(np.sum(excess ** 2))
+                force[out] -= (WALL * excess[out] / np.maximum(r[out], 1e-9))[:, None] * positions[out]
+                e_wall = 0.5 * WALL * float(np.sum(excess[out] ** 2))
         return force, e_tether, e_wall, tether
 
     def _evaluate(self):
@@ -599,6 +805,7 @@ class MoleculeLab:
             self.fire = None
             self.error = RUNAWAY_STOPPED
             return
+        self._piston(TIME_STEP_FS)
         self._record()
 
     def _verlet_step(self):
@@ -618,8 +825,7 @@ class MoleculeLab:
 
     def _thermostat(self, dt):
         """CSVR : l'énergie cinétique suit la loi canonique à la température demandée."""
-        n = len(self.numbers)
-        dof = max(3 * n - 3, 1)
+        dof = self._dof()
         kinetic = analysis.kinetic_energy(self.masses, self.velocities)
         target = 0.5 * dof * analysis.BOLTZMANN_EH * self.temperature
         if kinetic <= 1e-14:
@@ -632,6 +838,13 @@ class MoleculeLab:
         new = (kinetic * c + target / dof * (1 - c) * (r1 * r1 + rest)
                + 2 * r1 * math.sqrt(c * (1 - c) * kinetic * target / dof))
         self.velocities *= math.sqrt(max(new, 0.0) / kinetic)
+        # Le bain de chaque atome (voir BATH_FS). Sans paroi, son bruit ne pousse pas la molécule (centre de masse retiré).
+        keep = math.exp(-dt / BATH_FS)
+        sigma = np.sqrt((1 - keep * keep) * analysis.BOLTZMANN_EH * self.temperature * analysis.ACCELERATION / self.masses)
+        noise = self.rng.normal(size=self.velocities.shape) * sigma[:, None]
+        if self.wall <= 0:
+            noise -= (self.masses @ noise) / self.masses.sum()
+        self.velocities = keep * self.velocities + noise
 
     def _fire_step(self):
         if self.fire is None:
@@ -673,19 +886,26 @@ class MoleculeLab:
         kinetic = analysis.kinetic_energy(self.masses, self.velocities) if len(self.numbers) else 0.0
         self.history.append((self.time_fs if self.dynamics != RELAX else float(self.steps),
                              r.energy * EV, kinetic * EV))
-        census = self._read_census()
-        if census != self._candidate[0]:
-            self._candidate = (census, self.time_fs)
-        elif census != self.census and (self.time_fs - self._candidate[1] >= CENSUS_HOLD_FS or self.dynamics == RELAX):
-            text = f"{self.census or '∅'}  →  {census}"
-            self.events.appendleft((self.time_fs, text, r.energy * EV))
-            self.census = census
+        census, named, groups = self._read_census()
+        if (census, named) == (self.census, self.named):
+            # Les mêmes espèces (un H passé d'une eau à l'autre, par exemple) : leurs atomes suivent, sans annonce.
+            self.groups = groups
+        if (census, named) != self._candidate[0]:
+            self._candidate = ((census, named), self.time_fs)
+        elif (census, named) != (self.census, self.named) and (self.time_fs - self._candidate[1] >= CENSUS_HOLD_FS
+                                                                or self.dynamics == RELAX):
+            self.events.appendleft((self.time_fs, change(self.named, named), r.energy * EV))
+            self.census, self.named, self.groups = census, named, groups
 
     def _read_census(self):
+        """Les espèces : la formule de chacune (« 2 H₂O + O₂ »), leurs noms du dictionnaire triés, et les groupes
+        eux-mêmes (atomes, formule, nom)."""
         if self.result is None or not self.numbers:
-            return ""
+            return "", (), ()
         orders = analysis.mayer_bond_orders(self.result)
-        return analysis.census(analysis.fragments(self.numbers, orders, self.result))
+        groups = analysis.species(self.numbers, orders, self.result)
+        return (analysis.census([(m, f) for m, f, _ in groups]), tuple(sorted(label for _, _, label in groups)),
+                tuple(groups))
 
     def _normal_modes(self):
         self.mode_job = False
@@ -760,7 +980,12 @@ class MoleculeLab:
                 "dynamics": self.dynamics, "temperature_target": self.temperature, "paused": self.paused,
                 "time_fs": self.time_fs, "steps": self.steps, "relaxed": self.relaxed, "status": self.status,
                 "error": self.error, "rate": self.rate, "charge": self.charge, "wall": self.wall,
+                "pressure": self.pressure, "pressure_target": self.pressure_target,
+                "pressure_mean": self._mean[0] / self._mean[2] if self._mean[2] > 0 else 0.0,
+                "volume_mean": self._mean[1] / self._mean[2] if self._mean[2] > 0 else 0.0,
+                "pressure_span": self._mean[2], "wall_hits": self._mean[3],
                 "census": self.census, "events": list(self.events), "history": list(self.history),
+                "assessment": self._assessment,
                 "view": self.view, "drag": None if self.drag is None else (self.drag[0], self.drag[1].copy()),
                 "excited": self.excited, "computing_modes": self.mode_job, "validation": self.validation}
         if self.modes is not None:
@@ -797,7 +1022,7 @@ class MoleculeLab:
                 profile = profiles.get((bond[0], bond[1])) if bond[6] >= 0 else None
                 bond[9] = [] if profile is None else profile.tolist()
             kinetic = analysis.kinetic_energy(self.masses, self.velocities)
-            dof = max(3 * n - 3, 1)
+            dof = self._dof()
             reference = sum(atom_energy(z) for z in self.numbers)
             homo = _homo(r)
             polarization = analysis.atomic_dipoles(r)
@@ -846,6 +1071,7 @@ class MoleculeLab:
                 "converged": r.converged, "iterations": r.iterations,
                 "electronic_temperature": r.electronic_temperature, "confined": r.confined.tolist(),
                 "fragments": analysis.fragments(self.numbers, orders, r), "unstable": r.unstable, "pairs": pairs,
+                "species": list(self.groups),
                 "hardness": [xtb.element(z)["gam"] for z in self.numbers], "isotopes": list(self.isotopes),
                 "covalent": [analysis.covalent_radius(z) for z in self.numbers],
                 "masses": self.masses.copy(),

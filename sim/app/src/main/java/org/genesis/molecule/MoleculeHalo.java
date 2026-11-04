@@ -120,7 +120,7 @@ final class MoleculeHalo {
      */
     void render(GraphicsContext g, GraphicsContext glow, LabCamera camera, double w, double h, double deviceScale,
                 double clock, long version, double[][] positions, int[] z, double[] charges, int[] fragment) {
-        String k = version + "|" + w + "|" + h + "|" + deviceScale + "|" + camera.yaw + "|" + camera.pitch + "|"
+        String k = version + "|" + w + "|" + h + "|" + deviceScale + "|" + camera.orientationKey() + "|"
                 + camera.zoom + "|" + camera.targetX + "|" + camera.targetY + "|" + camera.targetZ + "|" + tables.size();
         if (!k.equals(key)) {
             key = k;
@@ -208,11 +208,11 @@ final class MoleculeHalo {
         forward = camera.forward();
         right = camera.right();
         up = camera.up();
-        double[] probe = camera.ray(w / 2 + 100, h / 2);
+        double[] probe = camera.ray(camera.centerX() + 100, camera.centerY());
         invFocal = (probe[3] * right[0] + probe[4] * right[1] + probe[5] * right[2])
                 / (probe[3] * forward[0] + probe[4] * forward[1] + probe[5] * forward[2]) / 100;
-        centerX = w / 2;
-        centerY = h / 2;
+        centerX = camera.centerX();
+        centerY = camera.centerY();
         int n = Math.min(positions.length, Math.min(z.length, Math.min(charges.length, fragment.length)));
         count = n;
         fragmentOf = Arrays.copyOf(fragment, n);

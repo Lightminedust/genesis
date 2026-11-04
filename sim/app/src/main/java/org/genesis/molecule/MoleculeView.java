@@ -14,6 +14,7 @@ import com.studio.genesis.grpc.MoleculeMulticentre;
 import com.studio.genesis.grpc.MoleculeOrbital;
 import com.studio.genesis.grpc.MoleculeOrbitalPart;
 import com.studio.genesis.grpc.MoleculePair;
+import com.studio.genesis.grpc.MoleculeSpecies;
 import com.studio.genesis.grpc.UniverseFrame;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,9 +25,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.GaussianBlur;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
@@ -91,6 +90,15 @@ public final class MoleculeView {
         void isotope(int target, int massNumber);
         void clear();
         void pickElement();
+
+        /** Le dessin de l'assembleur devient la scène (voir MoleculeAssembler.vector). */
+        default void build(double[] vector, int charge, boolean enclosed) {}
+
+        /** La pression imposée par le piston (atm) ; 0 : la paroi ne bouge plus (volume fixe). */
+        default void pressure(double atm) {}
+
+        /** Le verdict du moteur sur un dessin de l'assembleur : noms aussitôt, puis (deep) la relaxation GFN1-xTB. */
+        default void assess(int request, double[] vector, boolean deep) {}
     }
 
     private static final String[] VIEW_NAMES = {"ρ  Densité", "Δρ  Déformation", "ψ  Orbitale"};
@@ -102,11 +110,14 @@ public final class MoleculeView {
     private static final String[] DYNAMICS_TIPS = {
             "Les noyaux descendent vers le minimum d'énergie le plus proche (FIRE) : une géométrie d'équilibre. "
                     + "Pour chercher une forme plus stable, chauffer au thermostat puis relaxer (recuit)",
-            "Dynamique moléculaire à température fixée (ensemble NVT, thermostat CSVR) : la molécule vibre, "
-                    + "tourne, et peut réagir",
+            "Dynamique moléculaire à température fixée (ensemble NVT : thermostat CSVR, et un bain faible sur chaque "
+                    + "atome pour que chaque molécule ait sa part d'agitation) : la molécule vibre, tourne, et peut réagir",
             "Dynamique sans thermostat (ensemble NVE) : l'énergie totale (potentielle + cinétique) se conserve"};
     private final Actions actions;
     private final BorderPane root = new BorderPane();
+    /** L'écran de l'assembleur 2D, posé par-dessus le laboratoire 3D quand il est ouvert. */
+    private final MoleculeAssembler assembler;
+    private final StackPane frame;
     private final StackPane stage = new StackPane();
     private final Pane holder;
     private final Canvas sceneCanvas = new Canvas(), glowNear = new Canvas(), glowFar = new Canvas();
@@ -145,6 +156,13 @@ public final class MoleculeView {
     private final Slider temperature = new Slider(0, 4000, 300), spark = new Slider(1, 30, 8), quanta = new Slider(1, 10, 1);
     private final Label temperatureLabel = text("", 11, "#C6D4E8"), sparkLabel = text("", 11, "#C6D4E8");
     private final Label quantaLabel = text("", 11, "#C6D4E8");
+    /**
+     * Le piston du réacteur : allumé, la paroi suit la pression choisie (100 à 20 000 atm, échelle logarithmique) ; et
+     * ce que l'enceinte mesure (pression sur la paroi, volume, gaz parfait, fréquence des rencontres).
+     */
+    private final ToggleButton piston = new ToggleButton();
+    private final Slider pressure = new Slider(2, Math.log10(20000), Math.log10(3000));
+    private final Label pressureLabel = text("", 11, "#C6D4E8"), enclosure = text("", 10.5, "#A9BCD6");
     private final Button pause = button("Ⅱ", false);
     private final Canvas chart = new Canvas(430, 92), levels = new Canvas(270, 264);
     private final VBox modelBanner = new VBox(8);
@@ -153,7 +171,10 @@ public final class MoleculeView {
     private final List<String> presets = new ArrayList<>(), reactions = new ArrayList<>();
     private final java.util.Set<Integer> supported = new java.util.HashSet<>();
     private final Label chosenElement = text("", 10.5, "#FFD27A");
-    private final Label hoverCard = text("", 11, "#E6EEFA");
+    /** La carte du survol d'un atome (voir AtomCard) et la fiche d'une molécule au clic droit (MoleculeCard). */
+    private final Canvas hoverCard = new Canvas(AtomCard.W, 120);
+    private final MoleculeCard moleculeCard;
+    private final Region dock;
     /**
      * Ce que l'on vient de demander et que le moteur n'a pas encore confirmé. Les frames parties avant l'ordre montrent
      * encore l'ancien état : elles ne doivent pas remettre le bouton en arrière (on cliquait, rien ne semblait se
@@ -165,9 +186,18 @@ public final class MoleculeView {
     private final Map<String, Long> pendingSince = new HashMap<>();
     private MoleculeLabState state;
     private boolean updating, rotating, paused, legendPress;
+    /**
+     * Le clic droit, le milieu ou Maj + clic : glissés, ils déplacent la vue (panning) ; le clic droit sans glisser ouvre
+     * la fiche. freshScene : une autre scène est demandée (molécule, réacteur, établi vide, assemblage) — elle se
+     * recadre entière, alors qu'un atome ajouté laisse la vue où la main l'a menée.
+     */
+    private boolean panPress, panning, freshScene;
+    /** Le bloc de navigation, en bas à droite de la scène : ce que suit la vue, zoom, tout voir. */
+    private final Label viewLine = text("", 10.5, "#A9BCD6");
+    private HBox navigation;
     private double lastX, lastY, pressX, pressY, lastDragSent, hoverX, hoverY;
     private int pressedAtom = -1, dragging = -1, homo, viewKind, viewOrbital = -1;
-    private String framedLabel = "";
+    private String framedLabel = "", titleLabel = "", titleSpecies = "";
     private int framedCount = -1;
     private double[] dragPlane;
     private double[] historyTime = new double[0], historyEnergy = new double[0], historyKinetic = new double[0];
@@ -195,6 +225,10 @@ public final class MoleculeView {
             glow.heightProperty().bind(holder.heightProperty());
         }
         holder.setMinSize(100, 100);
+        javafx.scene.shape.Rectangle bounds = new javafx.scene.shape.Rectangle();
+        bounds.widthProperty().bind(holder.widthProperty());
+        bounds.heightProperty().bind(holder.heightProperty());
+        holder.setClip(bounds);                     // les lobes 3D décalés avec la vue ne débordent pas sur les lectures
         sceneCanvas.widthProperty().bind(holder.widthProperty());
         sceneCanvas.heightProperty().bind(holder.heightProperty());
         holder.setCursor(Cursor.OPEN_HAND);
@@ -215,12 +249,59 @@ public final class MoleculeView {
         hoverCard.setMouseTransparent(true);
         hoverCard.setManaged(false);
         hoverCard.setVisible(false);
-        hoverCard.setStyle(hoverCard.getStyle() + "-fx-background-color:rgba(6,10,22,0.88);-fx-padding:8 10;"
-                + "-fx-background-radius:8;-fx-border-color:rgba(120,200,255,0.25);-fx-border-radius:8;");
         holder.getChildren().add(hoverCard);
-        holder.setOnScroll(e -> scene.camera.scroll(e.getDeltaY() / 40));
-        Region dock = dock();
-        stage.getChildren().addAll(holder, header(), dock, sketchCanvas, modelBanner());
+        moleculeCard = new MoleculeCard(new MoleculeCard.Actions() {
+            @Override public void spark(int atom) { actions.spark(atom, MoleculeView.this.spark.getValue()); }
+            @Override public void removeAtom(int atom) {
+                closeCard();
+                actions.removeAtom(atom);
+            }
+            @Override public void removeMolecule(int[] atoms) {
+                closeCard();
+                // Du plus grand indice au plus petit : retirer un atome ne renumérote que ceux d'après.
+                for (int k = atoms.length - 1; k >= 0; k--) actions.removeAtom(atoms[k]);
+            }
+            @Override public void edit(int[] atoms) {
+                closeCard();
+                assembler.importAtoms(scene, atoms);
+                showAssembler(true);
+            }
+            @Override public void select(int atom) {
+                closeCard();
+                if (scene.selected != atom) MoleculeView.this.select(atom);
+            }
+            @Override public void close() { closeCard(); }
+            @Override public void centre(int[] atoms) {
+                closeCard();
+                scene.focusOn(atoms, true);
+            }
+        });
+        Region card = moleculeCard.getNode();
+        card.setManaged(false);
+        card.setVisible(false);
+        holder.getChildren().add(card);
+        holder.setFocusTraversable(true);
+        holder.setOnKeyPressed(e -> {
+            switch (e.getCode()) {
+                case ESCAPE -> closeCard();
+                case F, HOME -> scene.showAll();
+                default -> { }
+            }
+        });
+        // + et − d'après le caractère tapé : la touche n'est pas la même en AZERTY et en QWERTY.
+        holder.setOnKeyTyped(e -> {
+            if (e.getCharacter().equals("+")) zoomStep(1);
+            if (e.getCharacter().equals("-") || e.getCharacter().equals("−")) zoomStep(-1);
+        });
+        // La molette zoome vers le curseur : ce qui est dessous reste dessous (voir MoleculeScene.zoomAt).
+        holder.setOnScroll(e -> scene.zoomAt(e.getX(), e.getY(), e.getDeltaY() / 40));
+        dock = dock();
+        navigation = navigation();
+        stage.getChildren().addAll(holder, header(), dock, sketchCanvas, navigation, modelBanner());
+        StackPane.setAlignment(navigation, Pos.BOTTOM_RIGHT);
+        dock.heightProperty().addListener((o, a, b) ->
+                StackPane.setMargin(navigation, new Insets(0, 14, b.doubleValue() + 22, 0)));
+        StackPane.setMargin(navigation, new Insets(0, 14, 200, 0));
         // La vignette 2D, en bas à gauche, juste au-dessus du dock (qui change de hauteur avec la ligne d'état).
         StackPane.setAlignment(sketchCanvas, Pos.BOTTOM_LEFT);
         dock.heightProperty().addListener((o, a, b) ->
@@ -285,10 +366,42 @@ public final class MoleculeView {
             int other = atomMap.pick(e.getX(), e.getY());
             if (other >= 0) select(other);
         });
+        assembler = new MoleculeAssembler(new MoleculeAssembler.Host() {
+            @Override public void build(double[] vector, int charge, boolean enclosed) {
+                newScene(() -> actions.build(vector, charge, enclosed));
+                framedLabel = "";                     // la nouvelle scène sera cadrée
+            }
+            @Override public void assess(int request, double[] vector, boolean deep) { actions.assess(request, vector, deep); }
+            @Override public void close() { showAssembler(false); }
+            @Override public void pickElement() { actions.pickElement(); }
+        });
+        assembler.onImport(() -> assembler.importScene(scene));
+        Region drawing = assembler.getNode();
+        drawing.setVisible(false);
+        frame = new StackPane(root, drawing);
     }
 
     public Region getNode() {
-        return root;
+        return frame;
+    }
+
+    /** La colonne des lectures (aperçus). */
+    Region readingsPane() {
+        return (Region) root.getRight();
+    }
+
+    /** Ouvre ou ferme l'assembleur 2D. */
+    void showAssembler(boolean open) {
+        Region drawing = assembler.getNode();
+        drawing.setVisible(open);
+        if (open) {
+            assembler.draw();
+            drawing.requestFocus();
+        }
+    }
+
+    MoleculeAssembler assembler() {
+        return assembler;
     }
 
     static Label text(String value, double size, String color) {
@@ -362,9 +475,12 @@ public final class MoleculeView {
         viewButtons[0].setSelected(true);
         Button model = button("Méthode & validation", false);
         model.setOnAction(e -> modelBanner.setVisible(!modelBanner.isVisible()));
+        Button draw = button("✎  Assembleur 2D", false);
+        draw.setTooltip(I18n.tooltip("Dessiner ses molécules à plat, les vérifier par le calcul, puis les envoyer ici en 3D"));
+        draw.setOnAction(e -> showAssembler(true));
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox controls = new HBox(10, back, segment, gap, model);
+        HBox controls = new HBox(10, back, segment, gap, draw, model);
         controls.setAlignment(Pos.CENTER_LEFT);
         error.setWrapText(true);
         // Le message s'enroule à gauche de la légende de la scène (en haut à droite) au lieu de passer dessous.
@@ -414,7 +530,7 @@ public final class MoleculeView {
         spark.valueProperty().addListener((o, a, b) -> sparkLabel.setText(MoleculeFormat.decimal(b.doubleValue(), 0) + " eV"));
         sparkLabel.setText("8 eV");
         Label sparkName = text("étincelle", 11, "#8FB3D9");
-        Label sparkHint = text("clic droit sur un atome", 10.5, "#8FB3D9");
+        Label sparkHint = text("clic droit sur un atome → ✦ étincelle", 10.5, "#8FB3D9");
         pause.setOnAction(e -> {
             paused = !paused;
             pause.setText(paused ? "▶" : "Ⅱ");
@@ -431,7 +547,7 @@ public final class MoleculeView {
         temperature.setMinWidth(70);
         spark.setMinWidth(56);
         spark.setTooltip(I18n.tooltip("Étincelle : de l'énergie cinétique déposée sur un atome et ses voisins (clic "
-                + "droit sur l'atome), quantité de mouvement conservée"));
+                + "droit sur l'atome, puis ✦ dans sa fiche), quantité de mouvement conservée"));
         sparkHint.managedProperty().bind(sparkHint.visibleProperty());
         sparkHint.visibleProperty().bind(holder.widthProperty().greaterThan(860));
         HBox row = new HBox(10, segment, text("T", 11, "#8FB3D9"), temperature, temperatureLabel, pause,
@@ -501,7 +617,7 @@ public final class MoleculeView {
         table.setOnAction(e -> actions.pickElement());
         chosenElement.setWrapText(true);
         Button empty = button("Établi vide", false);
-        empty.setOnAction(e -> actions.clear());
+        empty.setOnAction(e -> newScene(actions::clear));
         empty.setTooltip(I18n.tooltip("Tout retirer, puis construire une molécule atome par atome"));
         Label paletteHint = text("Choisir un élément, puis cliquer sur un atome pour l'y attacher (ou dans le vide). "
                 + "La géométrie sort du calcul.", 10.5, "#8FA4C2");
@@ -527,12 +643,12 @@ public final class MoleculeView {
         chargeButtons[1].setSelected(true);
         VBox show = new VBox(4);
         ToggleButton bondsToggle = toggle("liaisons", true, v -> scene.showBonds = v,
-                "Les paires d'électrons partagées, localisées (Pipek–Mezey). Une paire sur deux atomes : un trait, éclat "
-                        + "selon l'indice de Mayer, couleur selon la force interne le long de la liaison (bleu nulle, "
-                        + "blanc traction, orange compression), grains tirés de la densité de la paire ; sa part π : deux "
-                        + "lobes de part et d'autre, orientés comme sa densité. Une paire sur trois atomes ou plus "
-                        + "(métaux, pont B–H–B) : une étoile de son barycentre vers ses atomes. Deux ions sans paire "
-                        + "partagée (NaCl) : des pointillés.");
+                "Les paires d'électrons partagées, localisées (Pipek–Mezey). Entre deux atomes : un brin par paire "
+                        + "(indice de Mayer : 1, 2, 3 ; le second en tirets pour une liaison conjuguée), à plat quand la part π "
+                        + "a un côté (la liaison ne tourne pas), torsadés quand elle entoure l'axe ; couleur selon la force "
+                        + "interne le long de la liaison (bleu nulle, blanc traction, orange compression), grains tirés de la "
+                        + "densité de la paire. Une paire sur trois atomes ou plus (métaux, pont B–H–B) : une étoile de son "
+                        + "barycentre vers ses atomes. Deux ions sans paire partagée (NaCl) : des pointillés.");
         ToggleButton arcsToggle = toggle("arcs des atomes", true, v -> scene.showInner = v,
                 "Dans chaque bulle, des arcs partis du noyau, captés par les liaisons et penchés par la déformation du "
                         + "nuage de l'atome (son dipôle calculé)");
@@ -566,12 +682,15 @@ public final class MoleculeView {
         ToggleButton orders = toggle("indices de liaison (Mayer)", false, v -> scene.showOrders = v,
                 "Le nombre de paires d'électrons partagées : ≈ 1 simple, 2 double, 3 triple");
         ToggleButton symbols = toggle("symboles", true, v -> scene.showSymbols = v, "Le symbole de chaque élément");
+        ToggleButton names = toggle("noms des molécules", true, v -> scene.showNames = v,
+                "Le nom de chaque molécule que le dictionnaire reconnaît (d'après qui est lié à qui, et sa charge) ; un "
+                        + "cercle vert quand une espèce vient de se former");
         ToggleButton legend = toggle("légende", true, v -> scene.showLegend = v, "Ce que veut dire chaque signe de la scène");
         show.getChildren().addAll(envelope, bondsToggle, arcsToggle, contacts, potential, lines, arrows, charge, orders,
-                symbols, legend);
+                symbols, names, legend);
         return new VBox(10,
                 section("01", "Molécules", presetBox),
-                section("02", "Réacteur", reactionBox, reactorHint()),
+                section("02", "Réacteur", reactionBox, reactorHint(), pistonRow(), enclosure),
                 section("03", "Établi", paletteBox, table, chosenElement, paletteHint, empty),
                 section("04", "Charge totale", chargeRow),
                 section("05", "Afficher", show));
@@ -579,11 +698,124 @@ public final class MoleculeView {
 
     /** Ce qu'est le réacteur, et ce qu'il n'est pas : une enceinte très dense, sans spin, où tout va trop vite. */
     private static Label reactorHint() {
-        Label hint = text("Des molécules dans une sphère : chauffer ou lancer une étincelle pour franchir la barrière "
-                + "d'activation. Un nanoréacteur, pas une flamme : environ 3 000 atm, et O₂ sans barrière de spin. "
-                + "Il montre des mécanismes possibles, pas des vitesses réelles.", 10.5, "#8FA4C2");
+        Label hint = text("Des molécules dans une sphère : chauffer, lancer une étincelle ou serrer le piston pour "
+                + "franchir la barrière d'activation. Un nanoréacteur, pas une flamme : des centaines à des milliers "
+                + "d'atmosphères, et O₂ sans barrière de spin. Il montre des mécanismes possibles, pas des vitesses réelles.",
+                10.5, "#8FA4C2");
         hint.setWrapText(true);
         return hint;
+    }
+
+    /**
+     * Le piston : allumé, la paroi de l'enceinte suit la pression choisie — elle se resserre tant que les molécules la
+     * poussent moins fort, s'écarte quand elles la poussent plus (voir lab.PISTON_FS). Éteint, le volume ne bouge plus.
+     */
+    private Region pistonRow() {
+        piston.setText(I18n.text("piston"));
+        piston.getStyleClass().add("glass-toggle");
+        piston.setFocusTraversable(false);
+        piston.setMinWidth(Region.USE_PREF_SIZE);          // « piston » en entier, le curseur se resserre
+        piston.setTooltip(I18n.tooltip("Imposer la pression : la paroi devient un piston qui la tient (crée une enceinte "
+                + "autour des molécules s'il n'y en a pas). 100 à 20 000 atm, soit 0,01 à 2 GPa : en dessous, les "
+                + "molécules se rencontreraient trop rarement pour qu'on le voie (à 1 atm, une fois par heure de calcul)"));
+        piston.setOnAction(e -> sendPressure());
+        pressure.setPrefWidth(96);
+        pressure.setMinWidth(40);
+        pressure.setFocusTraversable(false);
+        pressure.valueProperty().addListener((o, a, b) -> {
+            pressureLabel.setText(MoleculeFormat.atm(roundPressure(b.doubleValue())));
+            if (!updating && !pressure.isValueChanging() && piston.isSelected()) sendPressure();
+        });
+        pressure.valueChangingProperty().addListener((o, a, changing) -> {
+            if (!changing && !updating && piston.isSelected()) sendPressure();
+        });
+        pressureLabel.setText(MoleculeFormat.atm(3000));
+        pressureLabel.setMinWidth(Region.USE_PREF_SIZE);
+        enclosure.setWrapText(true);
+        HBox row = new HBox(6, piston, pressure, pressureLabel);
+        row.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(pressure, Priority.ALWAYS);
+        return row;
+    }
+
+    /** La pression du curseur (échelle logarithmique), arrondie à deux chiffres : 3 000, 3 200, 12 000 atm. */
+    private static double roundPressure(double log10) {
+        double atm = Math.pow(10, log10), unit = Math.pow(10, Math.floor(Math.log10(atm)) - 1);
+        return Math.round(atm / unit) * unit;
+    }
+
+    private void sendPressure() {
+        double atm = piston.isSelected() ? roundPressure(pressure.getValue()) : 0;
+        request("pressure", atm);
+        actions.pressure(atm);
+    }
+
+    /**
+     * Ce que mesure l'enceinte : la pression sur sa paroi (la force des atomes divisée par sa surface, moyennée), son
+     * volume, le gaz parfait NkT/V pour comparer (N molécules), et le temps moyen entre deux rencontres d'une molécule
+     * (théorie cinétique : 1 / (√2 n σ v̄), σ = π (3 Å)²) — en temps de calcul et à l'écran, au rythme du moteur.
+     */
+    private void enclosure(MoleculeLabState s) {
+        boolean shown = s.getWall() > 0 && s.getAtomsCount() > 0;
+        enclosure.setVisible(shown);
+        enclosure.setManaged(shown);
+        if (!shown) return;
+        double radius = s.getWall(), volume = 4 / 3.0 * Math.PI * radius * radius * radius;
+        int molecules = Math.max(1, scene.molecules());
+        // La température du gaz : celle du thermostat (la moyenne de l'agitation), sinon l'instantanée.
+        double kelvin = Math.max(1, s.getDynamics() == 1 ? s.getTemperatureTarget() : s.getTemperature()), mass = 0;
+        for (int i = 0; i < s.getAtomsCount(); i++) mass += s.getAtoms(i).getMassU();
+        double ideal = molecules * 1.380649e-23 * kelvin / (volume * 1e-30) / 101325;
+        double speed = Math.sqrt(8 * 1.380649e-23 * kelvin / (Math.PI * mass / molecules * 1.66053907e-27)) * 1e-5;   // Å/fs
+        double between = 1 / (Math.sqrt(2) * molecules / volume * Math.PI * 9 * speed);                                // fs
+        double measured = s.getPressure(), wanted = s.getPressureTarget();
+        StringBuilder b = new StringBuilder();
+        b.append(I18n.text("paroi")).append(" ").append(MoleculeFormat.atm(measured)).append(" ").append(I18n.text("mesurée"));
+        if (wanted > 0) {
+            b.append(" · ").append(I18n.text("consigne du piston")).append(" ").append(MoleculeFormat.atm(wanted))
+                    .append('\n').append(I18n.text(pistonMotion(measured, wanted)));
+        }
+        b.append('\n').append(I18n.text("gaz parfait NkT/V")).append(" ").append(MoleculeFormat.atm(ideal));
+        // Le facteur de compressibilité, l'écart au gaz parfait : sur la moyenne longue du moteur, et seulement quand la
+        // paroi a reçu assez de chocs (30 : ±20 % environ) — en gaz dilué, une moyenne de 200 fs n'en compte qu'un ou
+        // deux. Au-dessus de 1, les molécules se gênent (leur volume propre, leur répulsion) ; en dessous, elles s'attirent.
+        int hits = s.getWallHits();
+        double z = Double.NaN;
+        if (hits >= 30 && s.getPressureMean() > 0 && s.getVolumeMean() > 0) {
+            z = s.getPressureMean() * 101325 * s.getVolumeMean() * 1e-30 / (molecules * 1.380649e-23 * kelvin);
+            b.append('\n').append("Z = PV/NkT = ").append(MoleculeFormat.decimal(z, 2)).append(" ")
+                    .append(I18n.text("sur")).append(" ").append(MoleculeFormat.rough(s.getPressureSpanFs()))
+                    .append(" (").append(hits).append(" ").append(I18n.text("chocs")).append(")").append('\n')
+                    .append(I18n.text(z > 1.15 ? "plus que le gaz parfait : les molécules se gênent (leur volume propre, leur répulsion)"
+                            : z < .85 ? "moins que le gaz parfait : les molécules s'attirent" : "presque le gaz parfait"));
+        } else {
+            b.append('\n').append(I18n.text("Z = PV/NkT : la paroi n'a reçu que")).append(" ").append(hits).append(" ")
+                    .append(I18n.text("chocs, trop peu pour le dire"));
+        }
+        b.append('\n').append("V ").append(MoleculeFormat.decimal(volume, 0)).append(" Å³ (R ").append(MoleculeFormat.decimal(radius, 2))
+                .append(" Å) · ").append(molecules).append(" ").append(I18n.text(molecules > 1 ? "molécules" : "molécule"));
+        // La fréquence des rencontres vient de la théorie des gaz : à densité de liquide (Z > 2), elle n'a plus de sens.
+        boolean dense = !Double.isNaN(z) ? z > 2 : measured > 2 * ideal;
+        if (molecules > 1 && dense) {
+            b.append('\n').append(I18n.text("densité de liquide : les molécules se touchent en permanence"));
+        } else if (molecules > 1) {
+            b.append('\n').append(I18n.text("une rencontre toutes les")).append(" ~").append(MoleculeFormat.rough(between));
+            if (s.getStepsPerSecond() > 0) {
+                double screen = between / (s.getStepsPerSecond() * 0.25);
+                b.append(" (").append(MoleculeFormat.decimal(screen, screen < 10 ? 1 : 0)).append(" ").append(I18n.text("s d'écran")).append(")");
+            }
+        }
+        enclosure.setText(b.toString());
+    }
+
+    /**
+     * Où en est le piston : il rapproche la pression de sa consigne, ou il y est — à 25 % près, car avec deux ou trois
+     * molécules la pression fluctue autour de sa moyenne.
+     */
+    static String pistonMotion(double measured, double wanted) {
+        if (measured < .75 * wanted) return "la paroi se resserre : la pression monte vers la consigne";
+        if (measured > 1.25 * wanted) return "la paroi s'écarte : la pression descend vers la consigne";
+        return "à l'équilibre : la pression fluctue autour de la consigne";
     }
 
     private ToggleButton toggle(String label, boolean on, java.util.function.Consumer<Boolean> set, String tip) {
@@ -662,12 +894,15 @@ public final class MoleculeView {
             return;
         }
         pressedAtom = scene.pick(e.getX(), e.getY());
-        if (e.getButton() == MouseButton.SECONDARY) {
-            if (pressedAtom >= 0) contextMenu(pressedAtom, e);
-            pressedAtom = -1;
-            return;
-        }
-        if (pressedAtom >= 0 && paletteGroup.getSelectedToggle() == null) {
+        holder.requestFocus();
+        // Clic droit, milieu, ou Maj + clic : glissés, ils déplacent la vue ; le clic droit seul ouvrira la fiche.
+        panPress = e.getButton() == MouseButton.SECONDARY || e.getButton() == MouseButton.MIDDLE
+                || (e.getButton() == MouseButton.PRIMARY && e.isShiftDown());
+        panning = false;
+        if (panPress) return;
+        closeCard();
+        // Ctrl : tourner la vue même en partant d'un atome (zoomé de près, les atomes couvrent tout).
+        if (pressedAtom >= 0 && paletteGroup.getSelectedToggle() == null && !e.isShortcutDown()) {
             dragging = pressedAtom;
             double[] p = scene.positions[dragging];
             dragPlane = new double[]{p[0], p[1], p[2]};
@@ -682,6 +917,14 @@ public final class MoleculeView {
         double dx = e.getX() - lastX, dy = e.getY() - lastY;
         lastX = e.getX();
         lastY = e.getY();
+        if (panPress) {
+            if (Math.hypot(e.getX() - pressX, e.getY() - pressY) > 3) panning = true;
+            if (panning) {
+                holder.setCursor(Cursor.MOVE);
+                scene.panBy(dx, dy);
+            }
+            return;
+        }
         if (dragging >= 0) {
             double[] target = scene.unproject(e.getX(), e.getY(), dragPlane);
             if (target == null) return;
@@ -695,21 +938,33 @@ public final class MoleculeView {
             return;
         }
         if (Math.hypot(e.getX() - pressX, e.getY() - pressY) > 3) rotating = true;
-        if (rotating) {
-            scene.camera.drag(dx, dy);
-            scene.autoView = false;                 // la caméra est à vous : les vues ne la tournent plus
-        }
+        if (rotating) scene.rotateBy(dx, dy);       // la caméra est à vous : les vues ne la tournent plus
     }
 
     private void release(MouseEvent e) {
         holder.setCursor(Cursor.OPEN_HAND);
+        // Le geste est fini : la mire s'efface, la vue peut de nouveau glisser vers une vue visée (Tout voir). Sans cela
+        // la mire restait au milieu de la scène jusqu'au clic suivant.
+        rotating = false;
         if (legendPress) {
             legendPress = false;
             return;
         }
         boolean click = Math.hypot(e.getX() - pressX, e.getY() - pressY) <= 3;
+        if (panPress) {
+            panPress = false;
+            if (!panning && e.getButton() == MouseButton.SECONDARY) {
+                if (pressedAtom >= 0) openCard(pressedAtom, e.getX(), e.getY());
+                else closeCard();
+            } else if (!panning && e.getButton() == MouseButton.PRIMARY && pressedAtom >= 0) {
+                select(pressedAtom);                // Maj + clic, sans glisser : un clic ordinaire
+            }
+            panning = false;
+            return;
+        }
         if (dragging >= 0) {
             if (!click) actions.release();
+            else if (e.getClickCount() == 2) centreOn(dragging);
             else select(dragging);
             dragging = -1;
             scene.dragged = -1;
@@ -718,7 +973,11 @@ public final class MoleculeView {
         }
         if (!click || e.getButton() != MouseButton.PRIMARY) return;
         if (e.getClickCount() == 2 && pressedAtom < 0) {
-            scene.frame();
+            scene.showAll();
+            return;
+        }
+        if (e.getClickCount() == 2 && paletteGroup.getSelectedToggle() == null) {
+            centreOn(pressedAtom);                  // Ctrl + double-clic sur un atome
             return;
         }
         ToggleButton element = (ToggleButton) paletteGroup.getSelectedToggle();
@@ -734,12 +993,11 @@ public final class MoleculeView {
 
     private void refreshHover() {
         int i = scene.hovered;
-        if (state == null || i < 0 || i >= state.getAtomsCount() || dragging >= 0) {
+        if (state == null || i < 0 || i >= state.getAtomsCount() || dragging >= 0 || moleculeCard.getNode().isVisible()) {
             hoverCard.setVisible(false);
             return;
         }
-        hoverCard.setText(describe(i, false));
-        hoverCard.autosize();
+        AtomCard.draw(hoverCard, state.getAtoms(i), scene, i, state.getConfinedList().contains(i));
         double x = hoverX + 18, y = hoverY + 14;
         if (x + hoverCard.getWidth() > holder.getWidth() - 8) x = hoverX - hoverCard.getWidth() - 14;
         if (y + hoverCard.getHeight() > holder.getHeight() - 8) y = hoverY - hoverCard.getHeight() - 10;
@@ -751,6 +1009,86 @@ public final class MoleculeView {
         scene.selected = scene.selected == atom ? -1 : atom;
         refreshAtomCard();
         drawSketch();
+    }
+
+    /** Une autre scène est demandée : la vue revient à l'ensemble, et se recadrera sur elle à son arrivée. */
+    private void newScene(Runnable request) {
+        freshScene = true;
+        scene.showAll();
+        request.run();
+    }
+
+    /** Le double-clic sur un atome : il est choisi, la vue se centre sur lui et le suit. */
+    private void centreOn(int atom) {
+        if (atom < 0) return;
+        if (scene.selected != atom) select(atom);
+        scene.focusOn(new int[]{atom}, false);
+    }
+
+    /** Les boutons + et − (et les touches) : un cran de molette, vers le point visé. */
+    private void zoomStep(int notches) {
+        double x = scene.camera.centerX(), y = scene.camera.centerY();
+        scene.zoomAt(x, y, notches * 1.5);
+    }
+
+    /**
+     * Le bloc de navigation : ce que la vue suit (toutes les molécules, un atome, une molécule, ou là où la main l'a
+     * menée), le zoom et le retour à la vue d'ensemble. Ses bulles d'aide disent tous les gestes de la souris.
+     */
+    private HBox navigation() {
+        Button out = button("−", false), in = button("+", false), all = button("⌖  Tout voir", false);
+        for (Button b : new Button[]{out, in}) b.setMinWidth(30);
+        out.setOnAction(e -> zoomStep(-1));
+        in.setOnAction(e -> zoomStep(1));
+        all.setOnAction(e -> scene.showAll());
+        out.setTooltip(I18n.tooltip("S'éloigner (touche −, ou la molette)"));
+        in.setTooltip(I18n.tooltip("Se rapprocher du centre de la vue (touche +, ou la molette : vers le curseur)"));
+        all.setTooltip(I18n.tooltip("Revenir à toutes les molécules, cadrées et de face (touche F, ou double-clic dans le vide)"));
+        Tooltip gestures = I18n.tooltip("Glisser : tourner la vue autour du point visé (la mire) · Ctrl + glisser : tourner "
+                + "même en partant d'un atome · clic droit glissé, ou Maj + glisser : déplacer la vue · molette : zoomer "
+                + "vers le curseur · double-clic sur un atome : le centrer et le suivre · double-clic dans le vide : tout voir");
+        gestures.setWrapText(true);
+        gestures.setMaxWidth(340);
+        viewLine.setMinWidth(Region.USE_PREF_SIZE);
+        HBox box = new HBox(4, viewLine, out, in, all);
+        box.setAlignment(Pos.CENTER_RIGHT);
+        box.setPadding(new Insets(3, 4, 3, 10));
+        box.setStyle("-fx-background-color:rgba(8,16,28,.72);-fx-background-radius:15;-fx-border-color:#24384F;"
+                + "-fx-border-radius:15;");
+        box.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
+        Tooltip.install(box, gestures);             // les boutons gardent la leur
+        return box;
+    }
+
+    /** La ligne du bloc de navigation : ce que la vue suit, et son cadre (la hauteur de vue, en Å). */
+    private void refreshViewLine() {
+        int[] focus = scene.focus();
+        String what;
+        if (focus.length == 1 && focus[0] < scene.symbols.length) {
+            what = I18n.text("centrée sur") + " " + scene.symbols[focus[0]] + (focus[0] + 1);
+        } else if (focus.length > 1) {
+            what = I18n.text("centrée sur une molécule");
+        } else {
+            what = I18n.text(scene.navigated ? "menée à la main" : "toutes les molécules");
+        }
+        double size = Math.pow(10, scene.camera.zoom);
+        String text = "ⓘ " + I18n.text("vue :") + " " + what + " · " + MoleculeFormat.decimal(size, size < 10 ? 1 : 0) + " Å";
+        if (!text.equals(viewLine.getText())) viewLine.setText(text);
+    }
+
+    /** Aperçus : le survol de cet atome (sa carte et ses flèches) ou sa fiche de molécule (clic droit). */
+    void preview(int atom, boolean card) {
+        if (atom < 0 || atom >= scene.positions.length) return;
+        double[] p = scene.positions[atom], s = scene.camera.project(p[0], p[1], p[2]);
+        if (s == null) return;
+        if (card) {
+            openCard(atom, s[0], s[1]);
+            return;
+        }
+        scene.hovered = atom;
+        hoverX = s[0];
+        hoverY = s[1];
+        refreshHover();
     }
 
     /** Aperçus : la vignette avec tous ses hydrogènes. */
@@ -774,19 +1112,49 @@ public final class MoleculeView {
         }
         if (element != null) return I18n.text("cliquer un atome pour y attacher") + " " + element.getText() + I18n.text(", ou dans le vide");
         if (viewKind == 2) return I18n.text("cliquer un cercle de la cible (07) : une autre orbitale");
-        if (!name.isEmpty()) return I18n.text("clic droit sur") + " " + name + I18n.text(" : étincelle ou retirer");
+        if (!name.isEmpty()) return I18n.text("clic droit sur") + " " + name + I18n.text(" : la fiche de sa molécule");
         return I18n.text("cliquer un atome : sa carte (09) · le saisir : le tirer");
     }
 
-    private void contextMenu(int atom, MouseEvent e) {
-        String name = atom < scene.symbols.length ? scene.symbols[atom] + (atom + 1) : "";
-        MenuItem remove = new MenuItem(I18n.text("Retirer") + " " + name);
-        remove.setOnAction(a -> actions.removeAtom(atom));
-        MenuItem fire = new MenuItem(I18n.text("Étincelle") + " · " + MoleculeFormat.decimal(spark.getValue(), 0) + " eV");
-        fire.setOnAction(a -> actions.spark(atom, spark.getValue()));
-        MenuItem pick = new MenuItem(I18n.text("Détails de l'atome"));
-        pick.setOnAction(a -> select(atom));
-        new ContextMenu(fire, remove, pick).show(holder, e.getScreenX(), e.getScreenY());
+    /** La fiche de la molécule de `atom`, posée près du clic (dans le cadre de la scène). */
+    void openCard(int atom, double x, double y) {
+        if (state == null || atom < 0 || atom >= scene.positions.length) return;
+        moleculeCard.show(state, scene, atom);
+        Region card = moleculeCard.getNode();
+        card.applyCss();
+        card.autosize();
+        double w = card.getWidth(), h = card.getHeight();
+        // À côté de la molécule (sa boîte à l'écran), à droite s'il y a la place, sinon à gauche ; au-dessus du dock.
+        double minX = x, maxX = x;
+        for (int a : moleculeCard.atoms()) {
+            double[] p = scene.positions[a], s = scene.camera.project(p[0], p[1], p[2]);
+            if (s == null) continue;
+            double r = scene.sphere(a) * s[3] + 6;
+            minX = Math.min(minX, s[0] - r);
+            maxX = Math.max(maxX, s[0] + r);
+        }
+        double left = maxX + 14 + w <= holder.getWidth() - 8 ? maxX + 14 : minX - 14 - w;
+        if (left < 8) left = Math.max(8, Math.min(holder.getWidth() - w - 8, x + 16));
+        double floor = holder.getHeight() - dock.getHeight() - 26;
+        double top = Math.max(8, Math.min(y - h / 3, floor - h));
+        card.relocate(left, top);
+        card.setVisible(true);
+        hoverCard.setVisible(false);
+    }
+
+    private void closeCard() {
+        moleculeCard.getNode().setVisible(false);
+    }
+
+    /** La fiche suit la frame (charges, distances) ; elle se ferme si ses atomes ne sont plus là. */
+    private void refreshCard(MoleculeLabState s) {
+        if (!moleculeCard.getNode().isVisible()) return;
+        int[] atoms = moleculeCard.atoms();
+        if (atoms.length == 0 || atoms[atoms.length - 1] >= scene.positions.length || moleculeCard.atom() >= scene.positions.length) {
+            closeCard();
+            return;
+        }
+        moleculeCard.refresh(s, scene);
     }
 
     private void pickLevel(int index) {
@@ -838,6 +1206,7 @@ public final class MoleculeView {
     // ================================================================== les frames
     public void applyFrame(UniverseFrame frame) {
         MoleculeLabState s = frame.getMoleculeLab();
+        assembler.update(s);
         if (!s.getActive()) return;
         state = s;
         updating = true;
@@ -881,8 +1250,17 @@ public final class MoleculeView {
                 }
             }
             modeLine();
-            title.setText(s.getLabel());
-            census.setText(s.getCensus().isEmpty() ? "" : I18n.text("Espèces présentes") + " : " + s.getCensus());
+            // Le titre : le nom de ce qu'on a posé, jusqu'à ce qu'une réaction change les espèces ; ensuite, ce qu'il y a.
+            String present = speciesTitle(s);
+            if (!s.getLabel().equals(titleLabel)) {
+                titleLabel = s.getLabel();
+                titleSpecies = present;
+            } else if (titleSpecies.isEmpty()) {
+                titleSpecies = present;
+            }
+            title.setText(MoleculeFormat.names(present.isEmpty() || present.equals(titleSpecies) ? s.getLabel() : present));
+            census.setText(s.getCensus().isEmpty() ? "" : I18n.text("Espèces présentes")
+                    + (I18n.language() == I18n.Language.FR ? " : " : ": ") + s.getCensus());
             error.setText(s.getError());
             error.setVisible(!s.getError().isEmpty());
             error.setManaged(!s.getError().isEmpty());
@@ -890,6 +1268,9 @@ public final class MoleculeView {
             for (int k = 0; k < 3; k++) dynamicsButtons[k].setSelected(dynamics == k);
             long kelvin = shown("temperature", Math.round(s.getTemperatureTarget()));
             if (!temperature.isValueChanging()) temperature.setValue(kelvin);
+            double atm = shown("pressure", s.getPressureTarget());
+            piston.setSelected(atm > 0);
+            if (atm > 0 && !pressure.isValueChanging()) pressure.setValue(Math.log10(atm));
             for (int k = 0; k < 3; k++) chargeButtons[k].setSelected(charge == k - 1);
             paused = shown("pause", s.getPaused());
             pause.setText(paused ? "▶" : "Ⅱ");
@@ -900,6 +1281,7 @@ public final class MoleculeView {
             if (!moving || now - panelsAt >= PANELS_NS) {
                 panelsAt = now;
                 energies(s);
+                enclosure(s);
                 drawLevels();
                 species(s);
                 modes(s);
@@ -907,17 +1289,33 @@ public final class MoleculeView {
                 refreshAtomCard();
                 refreshHover();
                 drawSketch();
+                refreshCard(s);
                 status.setText(statusLine(s));
             }
             if (!s.getLabel().equals(framedLabel) || (s.getWall() > 0 && scene.positions.length != framedCount)
                     || framedCount < 0) {
+                if (!s.getLabel().equals(framedLabel)) closeCard();       // une autre scène : la fiche n'a plus d'objet
+                // Une autre scène se recadre entière ; un atome ajouté ou retiré laisse la vue où la main l'a menée.
+                if (freshScene || framedCount < 0 || !scene.navigated) scene.frame();
+                freshScene = false;
                 framedLabel = s.getLabel();
                 framedCount = scene.positions.length;
-                scene.frame();
             }
         } finally {
             updating = false;
         }
+    }
+
+    /** Les espèces tenues, nommées, dans l'ordre où elles sont : « H₂O · eau + C₃ », « 2 H₃N · ammoniac + … ». */
+    static String speciesTitle(MoleculeLabState s) {
+        Map<String, Integer> counts = new java.util.LinkedHashMap<>();
+        for (MoleculeSpecies named : s.getNamedList()) counts.merge(named.getLabel(), 1, Integer::sum);
+        StringBuilder b = new StringBuilder();
+        for (var e : counts.entrySet()) {
+            if (b.length() > 0) b.append(" + ");
+            b.append(e.getValue() > 1 ? e.getValue() + " " : "").append(e.getKey());
+        }
+        return b.toString();
     }
 
     private void catalog(MoleculeLabState s) {
@@ -929,7 +1327,7 @@ public final class MoleculeView {
             Button b = button(parts[0], false);
             b.setTooltip(I18n.tooltip(parts.length > 1 ? parts[1] : parts[0]));
             final int index = i;
-            b.setOnAction(e -> actions.preset(index));
+            b.setOnAction(e -> newScene(() -> actions.preset(index)));
             presetBox.getChildren().add(b);
         }
         reactions.clear();
@@ -938,7 +1336,7 @@ public final class MoleculeView {
         for (int i = 0; i < reactions.size(); i++) {
             Button b = button(reactions.get(i), false);
             final int index = i;
-            b.setOnAction(e -> actions.reaction(index));
+            b.setOnAction(e -> newScene(() -> actions.reaction(index)));
             reactionBox.getChildren().add(b);
         }
         paletteBox.getChildren().clear();
@@ -947,7 +1345,7 @@ public final class MoleculeView {
         supported.addAll(s.getSupportedList());
     }
 
-    private static String symbolOf(int z) {
+    static String symbolOf(int z) {
         String[] list = ("X H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As "
                 + "Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe").split(" ");
         return z < list.length ? list[z] : "Z" + z;
@@ -1017,8 +1415,18 @@ public final class MoleculeView {
                     m.getCentroidList().stream().mapToDouble(Double::doubleValue).toArray()));
         }
         scene.updateAtoms();
+        List<int[]> members = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        for (MoleculeSpecies named : s.getNamedList()) {
+            members.add(named.getAtomsList().stream().mapToInt(Integer::intValue).toArray());
+            labels.add(named.getLabel());
+        }
+        scene.species(members, labels);
         scene.computeField();
         scene.wall = s.getWall();
+        scene.pressure = s.getPressure();
+        scene.pistonOn = s.getPressureTarget() > 0;
+        scene.pressureTarget = s.getPressureTarget();
         scene.tetherNewtons = s.getTetherForceNn();
         if (scene.selected >= n) scene.selected = -1;
         if (dragging < 0 && s.getDragAtom() >= 0 && s.getDragTargetCount() == 3) {
@@ -1040,7 +1448,7 @@ public final class MoleculeView {
     }
 
     private void species(MoleculeLabState s) {
-        speciesLines.setText(String.join("\n", s.getSpeciesList()));
+        speciesLines.setText(String.join("\n", s.getSpeciesList().stream().map(MoleculeFormat::names).toList()));
         if (s.getDipoleCount() == 3) {
             double mu = Math.sqrt(s.getDipole(0) * s.getDipole(0) + s.getDipole(1) * s.getDipole(1)
                     + s.getDipole(2) * s.getDipole(2));
@@ -1048,7 +1456,7 @@ public final class MoleculeView {
         }
         StringBuilder b = new StringBuilder();
         for (MoleculeEvent e : s.getEventsList()) {
-            b.append(MoleculeFormat.time(e.getTimeFs())).append("  ").append(e.getText()).append('\n');
+            b.append(MoleculeFormat.time(e.getTimeFs())).append("  ").append(MoleculeFormat.names(e.getText())).append('\n');
         }
         eventLines.setText(b.toString().trim());
     }
@@ -1097,6 +1505,11 @@ public final class MoleculeView {
     private String statusLine(MoleculeLabState s) {
         String time = s.getDynamics() == 0 ? s.getSteps() + " " + I18n.text("pas") : MoleculeFormat.time(s.getTimeFs());
         String rate = s.getStepsPerSecond() > 0 ? " · " + MoleculeFormat.decimal(s.getStepsPerSecond(), 0) + " " + I18n.text("pas/s") : "";
+        // Le temps de la simulation face à celui de l'écran : 0,25 fs par pas, quelques dizaines de pas par seconde.
+        if (s.getDynamics() != 0 && s.getStepsPerSecond() > 0) {
+            double fs = s.getStepsPerSecond() * 0.25;
+            rate += " · " + I18n.text("1 s d'écran =") + " " + MoleculeFormat.decimal(fs, fs < 10 ? 1 : 0) + " fs";
+        }
         String scc = " · SCC " + s.getIterations() + " it." + (s.getConverged() ? "" : " " + I18n.text("(non convergé)"));
         // Ce que le cycle a dû faire pour converger, dit tel quel : des occupations lissées (recuit), une charge
         // tenue à −2,5 e (GFN1 seul s'y emballerait).
@@ -1187,94 +1600,6 @@ public final class MoleculeView {
         return b.append(symbol).toString();
     }
 
-    /** Ce que le calcul dit d'un atome : charge, force nette par terme, et ce que chaque voisin lui fait. */
-    private String describe(int i, boolean full) {
-        MoleculeAtom a = state.getAtoms(i);
-        StringBuilder b = new StringBuilder();
-        b.append(a.getSymbol()).append(i + 1).append(a.getMassNumber() > 0 ? " (" + nuclide(a.getSymbol(), a.getMassNumber()) + ")" : "")
-                .append("  ·  ").append(I18n.text("charge"))
-                .append(' ').append(MoleculeFormat.signed(a.getCharge(), 2)).append(" e");
-        b.append(a.getCharge() < -.05 ? "  (δ−)" : a.getCharge() > .05 ? "  (δ+)" : "").append('\n');
-        if (state.getConfinedList().contains(i)) {
-            b.append(I18n.text("Charge tenue à −2,5 e par la contrainte des anions : sans elle, le terme du troisième ordre de "
-                    + "GFN1, qui n'est pas borné, lui donnerait des électrons sans fin.")).append('\n');
-        }
-        if (full) {
-            b.append(MoleculeFormat.decimal(a.getMassU(), 3)).append(" u  ·  ").append(I18n.text("voisins (coordination)"))
-                    .append(' ').append(MoleculeFormat.decimal(a.getCoordination(), 2)).append('\n');
-        }
-        b.append(I18n.text("force nette")).append("  ").append(MoleculeFormat.decimal(norm(a.getForceList()), 2)).append(" eV/Å");
-        b.append("  (").append(I18n.text("électrons")).append(' ').append(MoleculeFormat.decimal(norm(a.getForceElectronicList()), 2))
-                .append(" · ").append(I18n.text("noyaux")).append(' ').append(MoleculeFormat.decimal(norm(a.getForceRepulsionList()), 2));
-        double external = norm(a.getForceExternalList());
-        if (external > .005) b.append(" · ").append(I18n.text("main/paroi")).append(' ').append(MoleculeFormat.decimal(external, 2));
-        b.append(")\n");
-        List<MoleculeScene.Pair> mine = new ArrayList<>();
-        for (MoleculeScene.Pair p : scene.pairs) if (p.a() == i || p.b() == i) mine.add(p);
-        mine.sort((x, y) -> Double.compare(Math.abs(y.total()), Math.abs(x.total())));
-        int shown = 0;
-        for (MoleculeScene.Pair p : mine) {
-            if (shown >= (full ? 8 : 4) || Math.abs(p.total()) < .02) break;
-            int other = p.a() == i ? p.b() : p.a();
-            b.append(p.total() >= 0 ? "← " : "→ ").append(scene.symbols[other]).append(other + 1).append(' ')
-                    .append(I18n.text(p.total() >= 0 ? "l'attire" : "le repousse")).append(' ')
-                    .append(MoleculeFormat.decimal(Math.abs(p.total()), 2)).append(" eV/Å");
-            boolean broken = p.order() >= MoleculeScene.BOND_ORDER && !scene.linked(p.a(), p.b());
-            if (broken) {
-                // L'indice de Mayer d'un calcul à couches fermées reste haut après la rupture ; rien n'est plus partagé.
-                b.append("  · ").append(I18n.text("indice")).append(' ').append(MoleculeFormat.decimal(p.order(), 2))
-                        .append(", ").append(I18n.text("plus rien de partagé entre les noyaux : liaison rompue"));
-            } else if (p.order() >= MoleculeScene.BOND_ORDER) {
-                b.append("  · ").append(I18n.text("liaison")).append(' ').append(MoleculeFormat.decimal(p.order(), 2));
-                String pair = "";
-                for (MoleculeScene.Bond bond : scene.bonds) {
-                    if (bond.a() != p.a() || bond.b() != p.b()) continue;
-                    if (bond.pi() >= .1) {
-                        b.append(" (σ ").append(MoleculeFormat.decimal(bond.sigma(), 2)).append(" + π ")
-                                .append(MoleculeFormat.decimal(bond.pi(), 2)).append(')');
-                    }
-                    if (bond.twoCentre()) {
-                        // La paire de la liaison : la part que garde l'atome qui en tient le plus.
-                        int holder = bond.share() >= .5 ? bond.b() : bond.a();
-                        double part = Math.max(bond.share(), 1 - bond.share());
-                        pair = "\n     " + I18n.text("paire de la liaison") + "  " + MoleculeFormat.decimal(100 * part, 0)
-                                + " % " + I18n.text("chez") + " " + scene.symbols[holder] + (holder + 1);
-                    } else {
-                        // Sans paire à deux centres : une paire étalée sur plusieurs atomes, ou deux ions.
-                        pair = "\n     " + I18n.text("aucune paire partagée : deux ions");
-                        for (MoleculeScene.Multicentre m : scene.multicentres) {
-                            if (!m.holds(bond.a(), bond.b())) continue;
-                            StringBuilder members = new StringBuilder();
-                            for (int atom : m.atoms()) {
-                                if (members.length() > 0) members.append(" · ");
-                                members.append(scene.symbols[atom]).append(atom + 1);
-                            }
-                            pair = "\n     " + I18n.text("paire à " + m.atoms().length + " centres") + "  " + members;
-                            break;
-                        }
-                    }
-                }
-                b.append(", ").append(MoleculeFormat.decimal(p.distance(), 3)).append(" Å").append(pair);
-            } else {
-                b.append("  · ").append(MoleculeFormat.decimal(p.distance(), 2)).append(" Å");
-            }
-            if (full) {
-                b.append("\n     ").append(I18n.text("électrons")).append(' ').append(MoleculeFormat.signed(p.electronic(), 2))
-                        .append(" · ").append(I18n.text("noyaux")).append(' ').append(MoleculeFormat.signed(p.repulsion(), 2))
-                        .append(" · London ").append(MoleculeFormat.signed(p.dispersion(), 3));
-            }
-            b.append('\n');
-            shown++;
-        }
-        return b.toString().trim();
-    }
-
-    private static double norm(List<Double> v) {
-        double s = 0;
-        for (double x : v) s += x * x;
-        return Math.sqrt(s);
-    }
-
     /** Le moteur sait-il calculer cet élément (GFN1-xTB : Z = 1 à 86) ? Vrai tant que la liste n'est pas arrivée. */
     public boolean supports(int z) {
         return supported.isEmpty() || supported.contains(z);
@@ -1282,6 +1607,10 @@ public final class MoleculeView {
 
     /** Un élément choisi dans le tableau périodique : il devient l'élément à poser. */
     public void chooseElement(int z, String symbol) {
+        if (assembler.getNode().isVisible()) {
+            assembler.chooseElement(z, symbol);
+            return;
+        }
         if (!supported.isEmpty() && !supported.contains(z)) {
             chosenElement.setText(symbol + " : " + I18n.text("GFN1-xTB n'est paramétré que de l'hydrogène au radon "
                     + "(Z = 1 à 86) ; au-delà, aucun calcul n'est possible."));
@@ -1407,8 +1736,15 @@ public final class MoleculeView {
         if (w < 2 || h < 2) return;
         javafx.stage.Window window = sceneCanvas.getScene() == null ? null : sceneCanvas.getScene().getWindow();
         scene.pixelScale = window == null ? 1 : Math.max(1, window.getRenderScaleX());
-        scene.render(g, glowNear.getGraphicsContext2D(), glowFar.getGraphicsContext2D(), w, h, dt, rotating);
-        if (orbitalLayer != null) orbitalLayer.update(scene.surface(), scene.camera, scene.positions, scene.bondedBonds());
+        // La vignette dépliée couvre le bas de la bande gauche : la molécule se centre à sa droite (en douceur quand on
+        // la plie), sauf dans une fenêtre trop étroite pour cela.
+        scene.insetTarget = !sketch.folded && sketchCanvas.isVisible() && w > 3 * MoleculeSketch.W ? MoleculeSketch.W + 20 : 0;
+        scene.render(g, glowNear.getGraphicsContext2D(), glowFar.getGraphicsContext2D(), w, h, dt, rotating || panning);
+        refreshViewLine();
+        if (orbitalLayer != null) {
+            orbitalLayer.getNode().setTranslateX(scene.insetLeft / 2);    // les lobes 3D suivent le même centre
+            orbitalLayer.update(scene.surface(), scene.camera, scene.positions, scene.bondedBonds());
+        }
         drawSketch();                                                 // il suit la rotation de la vue, image par image
         drawChart();
     }

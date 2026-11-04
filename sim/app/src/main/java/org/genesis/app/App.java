@@ -369,6 +369,13 @@ public class App extends Application {
             @Override public void pause(boolean paused) { send(ActionType.MOLECULE_PAUSE, paused ? 1 : 0); }
             @Override public void clear() { send(ActionType.MOLECULE_CLEAR); }
             @Override public void pickElement() { openMoleculeTable(); }
+            @Override public void build(double[] vector, int charge, boolean enclosed) {
+                sendVector(ActionType.MOLECULE_BUILD, charge, enclosed ? 1 : 0, vector);
+            }
+            @Override public void assess(int request, double[] vector, boolean deep) {
+                sendVector(ActionType.MOLECULE_ASSESS, request, deep ? 1 : 0, vector);
+            }
+            @Override public void pressure(double atm) { sendBoth(ActionType.MOLECULE_PRESSURE, 0, atm); }
         });
         subatomicView = new SubatomicView(() -> leaveLab(ActionType.SUBATOMIC_STOP, f -> !f.getSubatomic().getActive()),
                 () -> send(ActionType.SUBATOMIC_RESET),

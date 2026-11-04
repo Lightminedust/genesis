@@ -1434,6 +1434,15 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             if kind == Action.MOLECULE_WALL:
                 molecules.set_wall(action.amount)
                 return []
+            if kind == Action.MOLECULE_PRESSURE:
+                molecules.set_pressure(action.amount)
+                return []
+            if kind == Action.MOLECULE_BUILD:
+                molecules.build(action.vector, action.value, action.amount > 0)
+                return []
+            if kind == Action.MOLECULE_ASSESS:
+                molecules.assess(action.value, action.vector, action.amount > 0)
+                return []
         if kind == Action.CHAIN_START:
             return session.start_chain()
         if kind == Action.CHAIN_STOP:

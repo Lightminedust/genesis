@@ -253,4 +253,134 @@ class MoleculeSceneTest {
         law = MoleculeScene.profileLaw(two, .25, .75);                // la tranche 0,2–0,3 n'a que 0,25–0,3 de libre
         assertEquals(1 / 3.0, law[3], 1e-6);
     }
+
+    @Test
+    void multipleBondsAreFlatStrandsOrTwistedOnes() {
+        MoleculeScene scene = new MoleculeScene();
+        scene.z = new int[]{6, 6};
+        scene.positions = new double[][]{{0, 0, 0}, {1.33, 0, 0}};
+        scene.covalent = new double[]{.75, .75};
+        double[] u = {1, 0, 0}, start = {.34, 0, 0};
+        // Éthylène : sa part π d'un seul côté (la normale z) — deux brins à plat, côte à côte dans le plan, sans torsion.
+        MoleculeScene.Bond ethene = new MoleculeScene.Bond(0, 1, 2.0, 1, 1, .5, new double[]{0, 0, 1}, new double[]{1, .03},
+                new float[0], 1);
+        double[][][] flat = scene.strands(ethene, start, u, .65, 2);
+        for (double[][] path : flat) for (double[] q : path) assertEquals(0, q[2], 1e-9);
+        int middle = MoleculeScene.STRAND_POINTS / 2;
+        assertTrue(flat[0][middle][1] * flat[1][middle][1] < 0, "de part et d'autre de l'axe");
+        // Acétylène : sa part π tout autour — trois brins qui font un demi-tour d'un bout à l'autre.
+        MoleculeScene.Bond yne = new MoleculeScene.Bond(0, 1, 3.0, 1, 2, .5, new double[]{0, 0, 1}, new double[]{1, 1},
+                new float[0], 1);
+        double[][][] twisted = scene.strands(yne, start, u, .45, 3);
+        assertEquals(3, twisted.length);
+        for (double[][] path : twisted) {
+            double[] a = path[0], b = path[path.length - 1];
+            assertTrue(a[1] * b[1] + a[2] * b[2] < 0, "un demi-tour : le brin passe de l'autre côté de l'axe");
+        }
+        // Une simple : un brin, sur l'axe.
+        double[][][] single = scene.strands(new MoleculeScene.Bond(0, 1, 1.0, 1, 0, .5), start, u, .7, 1);
+        for (double[] q : single[0]) assertEquals(0, Math.hypot(q[1], q[2]), 1e-12);
+    }
+
+    @Test
+    void aNeutralAtomAndAPositiveOneNoLongerLookAlike() {
+        javafx.scene.paint.Color neutral = MoleculeScene.rimColour(0), plus = MoleculeScene.rimColour(.15),
+                minus = MoleculeScene.rimColour(-.15);
+        // Un neutre presque gris ; δ+ cyan et δ− magenta, nets dès 0,15 e.
+        assertTrue(neutral.getSaturation() < .2, "neutre : argent, pas bleu (" + neutral.getSaturation() + ")");
+        assertTrue(plus.getSaturation() > .25 && plus.getHue() > 170 && plus.getHue() < 210, plus.toString());
+        assertTrue(minus.getSaturation() > .25 && (minus.getHue() > 280 || minus.getHue() < 20), minus.toString());
+        assertEquals(1, MoleculeScene.chargeTint(1), 1e-12);
+        assertEquals(0, MoleculeScene.chargeTint(0), 1e-12);
+    }
+
+    @Test
+    void theFreeCameraTurnsAboutTheScreenAxesAndFollowsTheHand() {
+        // Ce qui est devant la cible (côté œil) suit la main : à droite quand on glisse à droite, en bas vers le bas.
+        for (int axis = 0; axis < 2; axis++) {
+            LabCamera camera = new LabCamera();
+            camera.free = true;
+            camera.setup(800, 600, 400, 300, 10);
+            double[] f = camera.forward(), front = {-.5 * f[0], -.5 * f[1], -.5 * f[2]};
+            camera.drag(axis == 0 ? 40 : 0, axis == 1 ? 40 : 0);
+            camera.setup(800, 600, 400, 300, 10);
+            double[] p = camera.project(front[0], front[1], front[2]);
+            if (axis == 0) assertTrue(p[0] > 401 && Math.abs(p[1] - 300) < 1e-6, "à droite : " + p[0] + ", " + p[1]);
+            else assertTrue(p[1] > 301 && Math.abs(p[0] - 400) < 1e-6, "en bas : " + p[0] + ", " + p[1]);
+        }
+        // Sans butée ni pôle : on passe par-dessous, la base reste orthonormée.
+        LabCamera camera = new LabCamera();
+        camera.free = true;
+        boolean below = false;
+        for (int k = 0; k < 400; k++) {
+            camera.drag(0, 5);
+            camera.setup(800, 600, 400, 300, 10);
+            double[] f = camera.forward(), u = camera.up(), r = camera.right();
+            below |= f[1] > .5;
+            assertEquals(1, Math.sqrt(f[0] * f[0] + f[1] * f[1] + f[2] * f[2]), 1e-9);
+            assertEquals(0, f[0] * u[0] + f[1] * u[1] + f[2] * u[2], 1e-9);
+            assertEquals(0, f[0] * r[0] + f[1] * r[1] + f[2] * r[2], 1e-9);
+        }
+        assertTrue(below, "la vue regarde aussi la molécule par-dessous");
+        // Une vue visée (orient) est rejointe en douceur, comme l'orbite habituelle.
+        camera.orient(.3, .5);
+        for (int k = 0; k < 600; k++) camera.tick(1 / 60.0, false, -5, 5);
+        camera.setup(800, 600, 400, 300, 10);
+        double[] f = camera.forward();
+        assertEquals(-Math.cos(.5) * Math.sin(.3), f[0], 1e-6);
+        assertEquals(-Math.sin(.5), f[1], 1e-6);
+        assertEquals(-Math.cos(.5) * Math.cos(.3), f[2], 1e-6);
+    }
+
+    @Test
+    void theWheelKeepsThePointedAtomUnderTheCursorAndTheViewCanBeMovedCentredAndReset() {
+        MoleculeScene scene = new MoleculeScene();
+        scene.positions = new double[][]{{-3, 0, 0}, {3, 0, 0}, {3, 1.2, 0}};
+        scene.z = new int[]{8, 8, 1};
+        double dt = 1 / 60.0;
+        scene.aim(1000, 800, dt, false);
+        // La molette sur l'atome de droite : il grossit et reste sous le curseur.
+        double[] p = scene.camera.project(3, 0, 0);
+        scene.zoomAt(p[0], p[1], 3);
+        for (int k = 0; k < 120; k++) scene.aim(1000, 800, dt, false);
+        double[] q = scene.camera.project(3, 0, 0);
+        assertEquals(p[0], q[0], .5);
+        assertEquals(p[1], q[1], .5);
+        assertTrue(q[3] > 2 * p[3], "plus près : " + p[3] + " → " + q[3]);
+        // Glisser la vue : ce qui est au point visé suit la main, pixel pour pixel.
+        double[] target = scene.center(), before = scene.camera.project(target[0], target[1], target[2]);
+        scene.panBy(100, -40);
+        scene.aim(1000, 800, 0, false);
+        double[] after = scene.camera.project(target[0], target[1], target[2]);
+        assertEquals(before[0] + 100, after[0], .5);
+        assertEquals(before[1] - 40, after[1], .5);
+        // Centrer un atome : il vient au centre de la vue et y reste quand il bouge.
+        scene.focusOn(new int[]{0}, false);
+        for (int k = 0; k < 300; k++) scene.aim(1000, 800, dt, false);
+        double[] c = scene.camera.project(-3, 0, 0);
+        assertEquals(scene.camera.centerX(), c[0], 1);
+        assertEquals(scene.camera.centerY(), c[1], 1);
+        scene.positions[0] = new double[]{-3, 1, 0};
+        for (int k = 0; k < 300; k++) scene.aim(1000, 800, dt, false);
+        c = scene.camera.project(-3, 1, 0);
+        assertEquals(scene.camera.centerX(), c[0], 1);
+        assertTrue(scene.navigated);
+        // Tout voir : la vue revient sur le centre de la boîte de toutes les molécules (pas leur barycentre).
+        scene.showAll();
+        for (int k = 0; k < 400; k++) scene.aim(1000, 800, dt, false);
+        double[] all = scene.camera.project(0, .6, 0);
+        assertEquals(scene.camera.centerX(), all[0], 1);
+        assertEquals(scene.camera.centerY(), all[1], 1);
+        assertFalse(scene.navigated);
+        assertEquals(0, scene.focus().length);
+    }
+
+    @Test
+    void thePistonSaysWhereItGoesAndWhenItIsThere() {
+        // Loin sous la consigne, la paroi se resserre ; loin au-dessus, elle s'écarte ; à 25 % près, c'est l'équilibre
+        // (deux ou trois molécules : la pression fluctue autour de sa moyenne).
+        assertTrue(MoleculeView.pistonMotion(9000, 20000).contains("resserre"));
+        assertTrue(MoleculeView.pistonMotion(30000, 20000).contains("écarte"));
+        assertTrue(MoleculeView.pistonMotion(17520, 20000).contains("équilibre"));
+    }
 }

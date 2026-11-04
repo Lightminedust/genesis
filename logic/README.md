@@ -35,7 +35,7 @@ Chaque dossier est un paquet Python et a son README.
 | [`fusionlab/`](fusionlab/README.md) | Les laboratoires de fusion : collision, plasma, réacteur, étoile. |
 | [`quantumlab/`](quantumlab/README.md) | Le monde subatomique : Modèle Standard, hadrons, collisions, nucléon, partons. |
 | [`chainlab/`](chainlab/README.md) | La réaction en chaîne : transport des neutrons, masse critique, excursion, bac à sable du rendement (écran masqué). |
-| [`moleculelab/`](moleculelab/README.md) | Le laboratoire moléculaire : GFN1-xTB (électrons, forces), dynamique, réacteur, vibrations. |
+| [`moleculelab/`](moleculelab/README.md) | Le laboratoire moléculaire : GFN1-xTB (électrons, forces), dynamique, réacteur, vibrations, assembleur 2D et dictionnaire des espèces. |
 | [`tools/`](tools/README.md) | Outils en ligne de commande (exporter des frames pour les aperçus du client). |
 | [`tests/`](tests/README.md) | Les tests : chaque règle confrontée à une valeur mesurée. |
 

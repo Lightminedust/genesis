@@ -54,19 +54,82 @@ différences finies de l'énergie.
 | choisir une molécule | coordonnées de départ grossières, puis relaxation FIRE (Bitzek et al. 2006) jusqu'à ce que la force maximale tombe sous 10⁻³ Eh/Å. FIRE est une descente, pas une trajectoire : tous les atomes y ont la même masse fictive (1 u), si bien que l'or descend aussi vite que l'hydrogène (Au₆ construit atome par atome : 307 pas au lieu de 1 396 avec les vraies masses, même minimum). La relaxation trouve le minimum **le plus proche** — comme toute optimisation de géométrie (ORCA, Gaussian) ; pour chercher une forme plus stable, chauffer au thermostat puis relaxer (recuit) |
 | construire atome par atome | l'atome est posé dans la direction la plus libre autour de l'atome choisi (avec quelques degrés de désordre, comme l'agitation thermique), à la somme des rayons covalents ; la relaxation décide du reste. C + 4 H donne le tétraèdre (109,47°) |
 | tirer un atome | un ressort k = 0,08 Eh/Å² entre la souris et l'atome ; l'autre main tient le reste par son centre de masse. La liaison s'étire, l'énergie monte, elle casse |
-| thermostat | dynamique de Verlet (pas de 0,25 fs) et thermostat CSVR (Bussi, Donadio, Parrinello 2007), τ = 50 fs |
+| thermostat | dynamique de Verlet (pas de 0,25 fs) et thermostat CSVR (Bussi, Donadio, Parrinello 2007), τ = 50 fs, plus un bain de Langevin faible sur chaque atome (τ = 500 fs). Le CSVR ne règle que l'énergie totale en multipliant toutes les vitesses par un même facteur : il ne redistribue rien. Dans le réacteur, l'énergie qu'une géométrie de départ rendait à ses vibrations était retirée à tout le monde, translations comprises, et seuls des chocs rares la rendaient — Cl₂ avançait à 0,1–0,5 fois son agitation thermique pendant 4 ps à 1 500 K (4 graines). Avec le bain : 0,46–0,97 sur 2 ps (une seule molécule : ±0,3 attendu). Les deux gardent la loi canonique ; l'énergie totale en dynamique libre tient à 1 meV près sur 2 ps (aucun chauffage numérique). Sans paroi, le bain ne pousse pas la molécule (centre de masse retiré) ; dans une enceinte, le centre de masse est un degré de liberté comme les autres (sans cela, H₂ seule à 3 000 K n'a pas touché la paroi en 10 ps) |
 | libre | Verlet sans thermostat : l'énergie totale se conserve (courbe jaune) |
 | étincelle | de l'énergie cinétique déposée sur un atome et ses voisins à 1,8 Å, quantité de mouvement conservée |
-| réacteur | plusieurs molécules dans une sphère à paroi souple (½ k (r − R)², k = 0,05 Eh/Å²) |
+| réacteur | plusieurs molécules dans une sphère à paroi raide, ½ k (r + ρ − R)², k = 0,5 Eh/Å², ρ le rayon où la densité de l'atome libre tombe à 0,002 e/bohr³ (H 1,24, O 1,40, Cl 1,71 Å) : la paroi touche le nuage, pas le noyau, et la sphère dessinée est le bord des nuages. Sur les noyaux (k = 0,05), les nuages dépassaient de 2,2 Å à 20 000 atm ; désormais de 0,22 Å au plus |
+| pression | celle que lirait un manomètre : la force des atomes sur la paroi, Σ k (r + ρ − R), divisée par sa surface 4πR², en atm (1 Eh/Å³ = 4,30·10⁷ atm) ; affichée moyennée sur 200 fs. L'enceinte la compare au gaz parfait NkT/V (N molécules) par Z = PV/NkT, calculé sur une moyenne longue (depuis le dernier changement, ou depuis que le piston est à l'équilibre) et montré seulement après 30 chocs d'atomes sur la paroi (±20 % environ) : en gaz dilué, 200 fs n'en comptent qu'un ou deux. Z > 1 : les molécules se gênent (leur volume propre — même un gaz parfait de molécules de taille finie donne Z = R/a, a le rayon où leurs centres peuvent aller) ; Z < 1 : elles s'attirent. H₂ + Cl₂ à 1 500 K sous 20 000 atm : Z = 6,1 (densité de liquide, où la fréquence des rencontres, une formule des gaz, n'est plus donnée) ; 2 H₂O à 3 000 K, paroi fixe : Z ≈ 1,1–1,5 |
+| piston | une pression imposée (100 à 20 000 atm, 0,01 à 2 GPa) : le volume de la sphère suit dV/V = (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), τ = 100 fs, au plus 1 % du volume par pas. H₂ + Cl₂ à 1 500 K, consigne 20 000 atm : 19 273 atm mesurés à 900 fs (R 6,0 → 3,1 Å) ; à τ = 250 fs, 9 000 à 11 000 atm à 750 fs — une minute d'écran sans y être. La sphère affiche la consigne et la mesure, le panneau dit si la paroi se resserre, s'écarte ou est à l'équilibre (à 25 % près). Sur 6 ps, la moyenne tient la consigne à 4 % près. Pourquoi pas 1 atm : à 1 500 K, une molécule n'en rencontre une autre que toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm ~2 ps, à 10 000 atm ~25 fs |
 | vibrations | hessienne par différences centrées des forces analytiques (pas de 0,005 Å), pondérée par les masses, sans translations ni rotations ; « exciter » un mode donne n quanta hν, et la dynamique (anharmonique) prend le relais |
 | isotope | un atome (ou tous ceux d'un élément) prend la masse d'un de ses isotopes : les stables, et les radioactifs d'au moins un an de demi-vie (¹H ²H ³H, ¹²C ¹³C ¹⁴C, ¹⁶O ¹⁷O ¹⁸O…), masses de l'AME et abondances IUPAC (base mendeleev). Seule la masse change : la surface d'énergie, la géométrie, les charges restent (Born–Oppenheimer) ; la dynamique et les vibrations changent. H₂O → D₂O : 1 440, 3 677, 3 788 → 1 054, 2 650, 2 779 cm⁻¹, rapports 0,73, 0,72, 0,73 (mesurés : 0,74, 0,73, 0,74) ; HDO découple ses élongations (O–D 2 712, O–H 3 736 cm⁻¹). L'isotope s'écrit en exposant devant le symbole (²H, ¹³C) |
+| assembleur 2D | un dessin à plat, vérifié par le calcul pendant qu'on dessine, puis posé en 3D et relaxé dans le simulateur (voir « L'assembleur 2D et le dictionnaire ») |
 | molécules du vivant | glucose (β-D-glucopyranose), acide laurique (acide gras saturé en C12, un lipide), glycérol, alanine, caféine : les conformères 3D de PubChem (MMFF94), relaxés par GFN1-xTB en 70 à 85 pas sans qu'une liaison casse ; 13 à 38 atomes (au-delà de 40, le calcul ne suit plus en temps réel) |
 
 Les espèces présentes sont lues dans les indices de liaison de Mayer, B_AB = 2 Σ_σ Σ (P^σ S)_μν (P^σ S)_νμ : des
 atomes reliés par B ≥ 0,5 forment une espèce (seuil de lecture pour nommer ; le calcul n'en dépend pas), pourvu
 qu'ils partagent encore des électrons entre eux (partage ≥ 0,09, voir « Liaison rompue, indice resté haut » plus
 bas) : sans cela, deux O₂ séparés de 3 Å, dont l'un garde un indice de 1 avec un atome de l'autre, se liraient O₄.
-Un changement d'espèces qui dure 20 fs est annoncé comme une réaction.
+Un changement d'espèces qui dure 20 fs est annoncé comme une réaction, chaque espèce nommée par le dictionnaire.
+
+## L'assembleur 2D et le dictionnaire
+
+**Le dictionnaire** (`dictionary.py`) : 151 espèces écrites en SMILES (le sous-ensemble organique : hydrogènes
+implicites, atomes entre crochets, liaisons `=` et `#`, branches, fermetures de cycle ; forme de Kekulé), du proton et
+des atomes seuls aux molécules du vivant, avec des ions (OH⁻, H₃O⁺, NH₄⁺), des radicaux (OH, CH₃, HO₂) et des
+isomères (éthanol et éther diméthylique). Une espèce est reconnue par son graphe — qui est lié à qui, hydrogènes
+compris — et sa charge nette : l'empreinte de Weisfeiler–Lehman (quatre tours d'étiquettes des voisins) et la formule.
+Les ordres de liaison n'y entrent pas : le calcul ne les donne pas entiers (Mayer 1,4 dans le benzène). Les 151
+empreintes sont distinctes. La charge d'un fragment est la somme de ses charges de Mulliken, arrondie à l'entier dès
+0,6 e en valeur absolue (OH à −0,9 e : l'ion hydroxyde).
+
+Dans la scène, chaque espèce annoncée (celles du recensement, qui ont tenu 20 fs) est nommée sous elle : le nom et la
+formule, la formule seule hors du dictionnaire ; un atome seul garde son symbole, et une molécule seule est nommée par
+le titre. Une espèce qui gagne un exemplaire — une eau formée, pas un H passé d'une eau à l'autre — est entourée d'un
+cercle vert pendant 3 s, et le journal l'annonce : « formé : H₂O · eau — défait : H · atome d'hydrogène, HO · radical
+hydroxyle ». Option « noms des molécules » (05 Afficher).
+
+**L'assembleur** (« ✎ Assembleur 2D ») est un écran de dessin à plat : des atomes, des liaisons simples, doubles ou
+triples, plusieurs molécules, 40 atomes au plus. Ce qui se décide sans calcul :
+
+- la valence de chaque élément selon sa charge formelle — usuelle (C 4 ; N 3, 4 en N⁺ ; O 2, 3 en O⁺, 1 en O⁻ ;
+  halogènes 1) et maximale (P 5, S 6, Cl, Br et I 7 : les hypervalents ; le néon 0). Une liaison au-delà du maximum
+  est refusée et l'écran dit pourquoi ; ce qui manque à la valence usuelle est marqué de points rouges (« valences
+  libres ») : un radical, une molécule hypothétique se dessinent ;
+- « Compléter les H » (chaque valence libre reçoit un H, dans le plus grand vide), « Mettre au propre » (les
+  contraintes du schéma 2D : liaisons égales, cycles réguliers, 120°), les modèles du dictionnaire (recherche sans
+  accents, formules comprises) et la reprise de la scène 3D, redessinée à plat ;
+- les gestes. Avant de cliquer, l'écran montre ce qui se ferait : l'atome fantôme sous le curseur (le curseur lui-même
+  est un cercle de la couleur de l'élément, avec son symbole ; la gomme, un cercle rouge barré ; la charge, ±), la
+  liaison et l'atome fantômes qui partiraient de l'atome survolé, rouges si ses valences les refusent ; une pastille
+  dit l'atome survolé (« C2 · liaisons 4/4 · neutre ») et ce qu'un clic ferait (« valence pleine : plus de liaison »,
+  « clic : charge +1 »). L'outil Sélection choisit des atomes (clic ; Maj ou Ctrl pour en ajouter ; un cadre tiré dans
+  le vide ; double-clic : toute la molécule ; Ctrl+A : tout) ; une barre posée au-dessus d'eux change leur charge (+1,
+  −1, 0 — un atome dont les liaisons ne tiendraient plus la refuse, et l'écran dit combien), complète leurs H, remet
+  leurs molécules au propre, les duplique (Ctrl+D) ou les efface (Suppr) ; tirer la sélection la déplace ; + − 0 au
+  clavier agissent sur elle ou sur l'atome survolé. Le clic droit ouvre le menu de ce qui est dessous : un atome (sa
+  charge, ses H, toute sa molécule, l'effacer), une liaison (simple, double, triple, l'effacer), le vide (tout
+  sélectionner, mettre au propre, annuler). « Numéros des atomes » montre le numéro que chacun gardera en 3D (C1, O2…).
+
+Le calcul suit le dessin : 0,2 s après un changement, le nom, la formule, la charge et la parité des électrons ;
+1,3 s après, chaque molécule, posée en 3D comme à l'envoi puis relaxée seule par GFN1-xTB (L-BFGS, 400 itérations au
+plus, interrompue si le dessin change), reçoit son verdict :
+
+| Verdict | Ce que dit le calcul |
+|---|---|
+| tient | un minimum où chaque liaison dessinée existe (Mayer ≥ 0,5 et partage ≥ 0,09) et aucune autre ; la cohésion (énergie des atomes isolés moins celle de la molécule) et l'écart HOMO–LUMO |
+| se réarrange | une seule molécule, mais pas celle dessinée : les liaisons rompues en rouge, les formées en tirets verts |
+| se défait | plusieurs morceaux à la relaxation, nommés |
+| échec | aucun état électronique sensé (le cycle auto-cohérent ne converge pas) |
+
+Sous 0,5 eV d'écart, la carte prévient : des couches presque ouvertes, que GFN1 sans spin décrit mal (le verdict est
+moins sûr). L'écart va du plus haut niveau qui porte un électron au plus bas qui a encore une place : nul pour O₂.
+
+**L'envoi** pose chaque molécule en 3D par contraintes : longueurs = somme des rayons covalents de Pyykkö × 1, 0,87
+ou 0,78 (simple, double, triple), angles de 180°, 120° ou 109,47° selon les liaisons π de l'atome, atomes non liés à
+1,9 Å au moins. Chaque molécule garde sa place sur le dessin (la liaison dessinée moyenne vaut 1,4 Å) et les molécules
+restent à 2,5 Å au moins l'une de l'autre ; l'enceinte, en option, est une sphère de rayon le plus éloigné + 1,5 Å.
+Puis le simulateur relaxe, et tout s'applique (dynamique, réacteur, vues, vibrations, isotopes). CH₄ dessiné à plat
+devient un tétraèdre ; OH· et H· dessinés côte à côte deviennent H₂O en 0,8 s de relaxation.
 
 ## Ce qu'on voit
 
@@ -76,19 +139,20 @@ une grandeur calculée :
 
 | À l'écran | Ce que c'est |
 |---|---|
-| la sphère de verre | l'atome : rayon 0,45 × rayon covalent (Pyykkö & Atsumi 2009), donc toujours loin de ses voisins liés (Au₂ à 2,49 Å : sphères de 0,56 Å, 1,4 Å de vide entre elles) ; centre presque transparent, bord de Fresnel bleu, qui tire vers le magenta si l'atome a gagné des électrons (δ−) et vers le cyan s'il en a perdu (δ+) — charges de Mulliken. Deux sphères qui se chevauchent à l'écran sont l'une derrière l'autre : celle de devant voile celle de derrière (70 % de sa lumière arrêtée), comme un verre |
+| la sphère de verre | l'atome : rayon 0,45 × rayon covalent (Pyykkö & Atsumi 2009), donc toujours loin de ses voisins liés (Au₂ à 2,49 Å : sphères de 0,56 Å, 1,4 Å de vide entre elles) ; centre presque transparent et bord de Fresnel, en verre argenté pour un atome neutre, teintés — bord et intérieur — vers le cyan si l'atome a perdu des électrons (δ+) et vers le magenta s'il en a gagné (δ−), charges de Mulliken : pleine teinte à ±0,45 e, déjà nette à 0,1 e (la teinte suit (\|q\|/0,45)^0,7). Le bord était d'abord bleu de verre pour le neutre : il se confondait avec le cyan des δ+. Deux sphères qui se chevauchent à l'écran sont l'une derrière l'autre : celle de devant voile celle de derrière (70 % de sa lumière arrêtée), comme un verre |
 | le halo de polarisation | le nuage des électrons de valence de chaque molécule, vu en transparence : en chaque pixel, la densité projetée σ = ∫ ρ ds, les électrons par Å² que croise le regard ; son bord est le contour σ = 0,3 e/Å², tracé au pixel près, et la traîne du nuage s'éteint au-delà en brume. Voir « Le halo » plus bas. Couleur : la charge des atomes qui apportent leurs électrons au point, moyennée selon leurs parts (Hirshfeld vu en projection) : magenta δ−, violet, bleu neutre, cyan δ+ (saturé à ±0,4 e). Il est fourni autour des atomes qui attirent les électrons (O, Cl), mince autour de ceux qui les cèdent (H) |
 | δ+ / δ− | posés juste au-delà du bord du halo, au milieu du plus grand angle libre entre les liaisons de l'atome (plus loin que son symbole), pour les atomes dont la charge dépasse 0,1 e ; près de l'atome s'il est au cœur de la molécule |
 | le point incandescent | le noyau |
 | les arcs dans la bulle | partis du noyau, ils suivent le champ ρ̂/ρ² + Σ s_b (u_b − ρ)/\|u_b − ρ\|³ + E₀ ê : captés par les points où les liaisons percent la bulle (s_b = 0,55 × indice de Mayer) et penchés dans le sens où le nuage de l'atome est déformé (ê = −d/\|d\|, d le dipôle atomique, E₀ ∝ \|d\|). Un atome libre et symétrique a des rayons droits ; l'oxygène de l'eau penche vers ses paires libres |
-| le trait | une liaison tenue par une paire d'électrons sur deux atomes (voir « Les liaisons » plus bas), d'une bulle à l'autre ; son éclat et son épaisseur suivent l'indice de Mayer et s'éteignent continûment quand il descend de 0,5 à 0,12, ou quand les deux atomes ne partagent plus d'électrons entre eux (partage de 0,15 à 0,03, voir « Liaison rompue, indice resté haut » plus bas) — le calcul n'a pas de seuil « liaison / pas de liaison ». H₂ étiré : trait entier jusqu'à 1,6 Å, à moitié vers 2 Å, éteint à 2,5 Å — alors que son indice reste à 1 jusqu'à 3,2 Å. Gerbe de grains quand il s'éteint, éclair quand il naît |
-| les lobes de verre | la part π de la liaison : deux lobes de part et d'autre de l'axe (quand les deux π sont égales — N₂, P₂, acétylène, CO₂ — leur direction est celle du repère de la liaison, pour qu'ils ne tournent pas au gré du bruit numérique), le long de la direction où se tient sa densité (axes propres de la matrice de Mayer π, voir « σ et π ») — l'éthylène, le benzène, le formaldéhyde : la normale à leur plan ; une seconde paire, d'un quart de tour, quand la part π est aussi de l'autre côté (N₂, acétylène : deux π perpendiculaires ; CO₂ : 0,47 et 0,47). Leur netteté suit la part π de chaque direction ; leur hauteur, l'orbitale p de valence des deux atomes, là où elle est la plus dense le long de son axe (C 0,29 Å, N et O 0,25 Å, Cl 0,51 Å). Une molécule plane vue de face les montre en bout, comme un ovale autour de la liaison |
+| les brins | une liaison tenue par une paire d'électrons sur deux atomes (voir « Les liaisons » plus bas), d'une bulle à l'autre : un brin par paire partagée, l'indice de Mayer arrondi comme sur le schéma 2D (sous 1,3 : un ; jusqu'à 2,3 : deux ; au-delà : trois), le second brin d'une liaison conjuguée (indice sous 1,75 : benzène 1,44) pâle et en tirets ; leur éclat suit l'indice de Mayer et s'éteignent continûment quand il descend de 0,5 à 0,12, ou quand les deux atomes ne partagent plus d'électrons entre eux (partage de 0,15 à 0,03, voir « Liaison rompue, indice resté haut » plus bas) — le calcul n'a pas de seuil « liaison / pas de liaison ». H₂ étiré : trait entier jusqu'à 1,6 Å, à moitié vers 2 Å, éteint à 2,5 Å — alors que son indice reste à 1 jusqu'à 3,2 Å. Gerbe de grains quand il s'éteint, éclair quand il naît |
+| à plat ou torsadés | la disposition des brins d'une liaison multiple suit sa part π calculée (axes propres de la matrice de Mayer π, voir « σ et π ») : à plat quand cette part a un côté — l'éthylène 1,00 / 0,03, le formaldéhyde, le benzène : la normale à leur plan —, et la liaison ne tourne pas sur elle-même ; les brins y sont côte à côte dans le plan des liaisons σ, comme les bâtonnets doubles des modèles. Torsadés d'un demi-tour quand la part π entoure l'axe, ses deux parts presque égales (rapport au-delà de 0,7 : N₂, acétylène, CO₂ à 0,47 et 0,47, C₃) ; une triple l'est toujours. L'écart des brins, le plus grand au milieu, suit l'orbitale p de valence des deux atomes (C 0,29 Å, N et O 0,25 Å, Cl 0,51 Å). Ils remplacent les lobes de verre π, qui disaient la même direction sans dire combien de paires ; écartés d'abord le long du π lui-même, les deux brins de l'éthylène se superposaient dans la vue de face par défaut |
 | la couleur du trait | la force interne le long de la liaison, ½ (F_A − F_B)·u (sans la main ni la paroi) : bleu nulle, blanc en traction, orange en compression ; en dynamique, elle bat avec les vibrations |
 | les grains | les électrons des paires de la liaison — 24 pour une simple, 36 pour une double, 48 pour une triple —, tirés de leur densité le long de l'axe : la densité Σ_k \|φ_k\|² de ses orbitales localisées, intégrée dans chaque tranche perpendiculaire (vingt tranches d'un noyau à l'autre, anneaux jusqu'à 1,6 Å), entre les deux bulles. Chaque grain s'éteint et renaît ailleurs, tiré de la même loi. Ils s'étalent sur toute une liaison covalente (H₂ : profil plat ; C–H : plateau au milieu) et sont plus denses du côté de l'atome qui garde la paire dans une liaison polaire (O–H : 54 % de la densité dans la moitié côté O, maximum près de O ; C=O : croissante vers O) ; Cl–H reste presque centrée, l'orbitale 3p du chlore s'étendant loin vers H. La densité de déformation Δρ ne convient pas : elle est négative tout le long de O–H et de H–Cl (le défaut connu de la référence en atomes sphériques). La part de la paire par atome (populations de Mulliken des orbitales localisées : orbitales localisées de Pipek–Mezey (1989), populations de Mulliken de chaque paire (O–H de l'eau : 66 % côté O ; Cl–H : 61 % côté Cl ; N–H : 59 % ; C=O du formaldéhyde : 63 % côté O ; C–H : 51 %). La fiche de l'atome l'écrit (« paire de la liaison 66 % chez O1 ») |
 | l'étoile | une paire d'électrons étalée sur trois atomes ou plus (liaison multicentre), en notation de Lipscomb : des rayons fins (or pâle) de son barycentre vers ses atomes, d'autant plus nets que l'atome porte une grande part de la paire, et ses grains serrés autour du barycentre. Dans Au₆, trois étoiles, une par triangle de sommet ; dans le diborane, les deux ponts B–H–B. La fiche de l'atome l'écrit (« paire à 3 centres  Au1 · Au4 · Au5 ») |
 | les pointillés | une attraction sans paire partagée (force de la paire > 0,06 eV/Å) entre atomes à au moins quatre liaisons d'écart ou de molécules différentes — liaison hydrogène, van der Waals — ou entre deux ions (NaCl : l'attraction des électrons seule, puisqu'à l'équilibre elle compense exactement la répulsion des cœurs) ; ils glissent vers le milieu |
 | des points orange qui s'écartent | une répulsion nette (< −0,25 eV/Å) entre deux tels atomes, montrée par sa force comme l'attraction mais à l'envers : les points partent de là où les deux nuages se touchent — sur l'axe, où se coupent leurs surfaces (atomes libres à 0,002 e/bohr³ : H 1,24 Å, C 1,48, O 1,40, Cl 1,71 ; Bondi : 1,20, 1,70, 1,52, 1,75) — et s'écartent vers chacun des deux atomes ; leur éclat et leur vitesse suivent la force de la paire, recalculée à chaque pas (une collision s'allume, culmine et s'éteint). Aucune forme dessinée ne la représente : le transfert d'électrons entre les deux atomes change de signe selon les cas (−0,09 e entre deux eaux comprimées, +0,08 e entre un iode radical et O, qui commencent à se lier), et la densité de déformation ne distingue pas une répulsion d'une liaison hydrogène. Un noyau qui tremble : ses voisins le compriment au-delà de 0,5 eV/Å |
-| la fiche au survol | charge, force nette et ses termes, et pour chaque voisin : « l'attire / le repousse de x eV/Å », liaison σ + π, électrons/noyaux/London ; « liaison rompue » quand l'indice reste haut sans rien de partagé entre les noyaux ; « charge tenue à −2,5 e » pour un atome que la contrainte des anions retient |
+| la carte au survol | dessinée plutôt qu'écrite : la tuile de l'élément (numéro atomique, symbole, masse) et la molécule dont l'atome fait partie ; sa charge sur une jauge de −1 à +1 e (« a gagné 0,49 e⁻ ») ; sa force nette dans un cadran tourné comme la vue, et vers quel voisin lié elle tire ; ses voisins, liés d'abord : la liaison en 1, 2, 3 traits (des points sans liaison), la distance, une barre logarithmique de la force que la paire exerce sur lui (bleu : elle l'attire, orange : elle le repousse) ; « charge tenue à −2,5 e » pour un atome que la contrainte des anions retient. Sur la scène, les mêmes forces partent de l'atome en flèches de ces couleurs, la nette en jaune, et ses voisins sont cerclés |
+| la fiche au clic droit | la molécule de l'atome cliqué (l'espèce annoncée qui le contient, sinon ses atomes liés) : son nom du dictionnaire et sa formule ; son dessin à plat (la mise en page du schéma 2D, tous ses H), tourné comme la vue, chaque atome teinté par sa charge ; son moment dipolaire μ = Σ q (r − centre de masse) + les dipôles atomiques du calcul, en debye, en flèche du δ+ vers le δ− (la convention des chimistes) — l'eau seule 2,77 D, le moteur 2,78 D pour la scène entière (C₃ n'y ajoute rien) ; celui d'un ion dépend de l'origine, c'est dit ; sa masse molaire, ses charges atome par atome en barres, ses liaisons par sorte avec leur longueur moyenne. Puis les gestes : étincelle sur l'atome, carte 09, la modifier dans l'assembleur 2D (elle seule y est redessinée, sa charge d'ion gardée), retirer l'atome ou la molécule. Échap, ✕ ou un clic ailleurs la ferment |
 | la légende | en haut à droite, une ligne par signe présent à l'écran ; un clic sur son titre la replie (il n'en reste que le titre) ou la déplie |
 | la vue Δρ | une carte de déformation, en courbes de niveau : voir « Les trois vues » plus bas |
 | la vue ψ | une orbitale moléculaire en nuage de probabilité |ψ|² : voir « Les trois vues » plus bas |
@@ -96,6 +160,18 @@ une grandeur calculée :
 
 La caméra se place face à la molécule : le long de l'axe où ses noyaux s'étalent le moins (la normale d'une molécule
 plane), pour que l'eau se voie coudée et le benzène en hexagone.
+
+**Naviguer.** La vue tourne en trackball : un geste horizontal autour de la verticale de l'écran, un geste vertical
+autour de son horizontale, sans butée ni pôle (on regarde une molécule par-dessous) et sans élan (elle s'arrête où
+on la lâche). Elle tourne autour du point visé, montré par une mire pendant le geste. La molette zoome vers le
+curseur : l'œil et le point visé se rapprochent du point pointé dans le même rapport (une homothétie de centre ce
+point), il reste donc sous le curseur, et le pivot glisse vers lui. Le clic droit glissé (ou le milieu, ou Maj)
+déplace la vue, pixel pour pixel à la profondeur du point visé ; le clic droit seul ouvre la fiche. Ctrl + glisser
+tourne même en partant d'un atome (zoomé de près, les atomes couvrent tout). Le double-clic sur un atome le centre et
+le suit pendant la dynamique ; « Centrer la vue sur elle », dans la fiche, cadre une molécule et la suit. « Tout
+voir » (le bloc en bas à droite, la touche F, le double-clic dans le vide) revient à toutes les molécules, cadrées
+sur le centre de leur boîte et non sur leur barycentre : une grosse molécule l'attirait, et une petite à l'autre bout
+sortait de l'écran. Un atome ajouté ne recadre plus une vue menée à la main ; une autre scène, si.
 
 **Les trois vues.** Chacune ne montre que ce qu'elle dit, dans sa propre langue — la vue choisie décide de ce qui
 est dessiné, pas la dernière grille reçue : une vue ρ gardait sinon, figés, les lobes de la vue précédente (le
@@ -201,8 +277,13 @@ l'instantané qui annonce sa vue, jamais avant.
 - **La vignette « Schéma 2D »** (en bas à gauche de la scène, repliable) : la molécule comme sur une feuille, en
   formule développée et squelettique — les carbones pris dans la chaîne en sommets, les autres atomes écrits à la
   couleur de leur élément avec leurs hydrogènes rassemblés (CH₃ ou H₃C selon le côté, OH, NH₂), ou, bouton « tous les
-  H », chaque hydrogène dessiné sur sa tige ; une petite molécule (deux atomes lourds au plus) écrite en entier — et
-  ses liaisons en un, deux ou trois traits selon l'indice de Mayer, le second en tirets pour une liaison conjuguée.
+  H », chaque hydrogène dessiné sur sa tige ; une petite molécule (deux atomes lourds au plus, comptés molécule par
+  molécule : l'eau à côté de C₃ s'écrit H–O–H, pas OH₂) écrite en entier ; un carbone en ligne droite (C=C=C, C≡C–C)
+  écrit lui aussi, un sommet à 180° ne se voyant pas (C₃ paraissait n'avoir que deux carbones) — et ses liaisons en un,
+  deux ou trois traits selon l'indice de Mayer, le second en tirets pour une liaison conjuguée. Les traits s'arrêtent au
+  bord de l'étiquette de leur atome ; un signe δ se pose dans le plus grand angle libre autour de lui (ni sur une
+  liaison, ni sur ses H rassemblés), au-delà de toutes les étiquettes. Dépliée, la vignette couvre le bas de la bande
+  gauche : la scène 3D se centre à sa droite, et le cadrage tient compte de la largeur qui reste.
   Le dessin est celui d'un manuel, pas une projection : sa disposition, calculée une fois par enchaînement d'atomes
   (refaite seulement quand une liaison se forme ou se rompt), part de la molécule dans son plan moyen puis se règle par
   contraintes — liaisons de même longueur, cycles en polygones réguliers (120° à six chaînons, 108° à cinq), 120° hors
@@ -377,6 +458,14 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
   terme d'énergie de spin (O₂ fermé ou « triplet » : 0,07 eV d'écart, au lieu d'environ 1 eV). Il n'y a donc pas de
   barrière de spin : O₂ réagit trop facilement.
 - **Réacteur.** Une sphère de 4,9 Å pour 9 atomes, c'est environ 3 000 atm à 4 000 K : un nanoréacteur, pas une flamme.
+  La pression est désormais mesurée sur la paroi et réglable (le piston, 100 à 20 000 atm) ; plus bas, rien ne se
+  rencontrerait à l'écran. Avec deux ou trois molécules, ce n'est pas un gaz macroscopique : la pression fluctue, et
+  le piston de Berendsen tient sa moyenne sans donner les fluctuations exactes d'un ensemble NPT. Le temps : 0,25 fs
+  par pas, 30 à 250 pas/s selon la taille, soit 8 à 60 fs par seconde d'écran (la ligne d'état le dit) — une
+  picoseconde prend de 15 s à 2 min, et une collision qui réagit est rare : chauffer, serrer le piston ou lancer une
+  étincelle. Un radical réagit presque sans barrière : H· + Cl₂ → HCl + Cl· en 80 à 90 fs (6 essais, 300 et 1 000 K),
+  quand H₂ + Cl₂ ne réagit pas en 2 ps (4 essais). Mais GFN1, sans spin, garde ensuite Cl· accroché à HCl en Cl–H–Cl
+  symétrique (1,40/1,42 Å à 300 K) : un état de transition réel qu'il prend pour un minimum.
   Six trajectoires de CH₄ + 2 O₂ (4 ps, 2 500 et 4 000 K) : l'abstraction d'un H vers CH₃ + HO₂ ou CH₃ + H, la voie
   radicalaire attendue, apparaît dans quatre d'entre elles ; toutes réagissent en moins de 1 ps, même à 2 500 K, bien
   trop vite (densité, liaisons trop fortes, pas de barrière de spin) ; aucune n'atteint CO₂ + H₂O en 4 ps : elles
@@ -393,6 +482,11 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
   température électronique à l'autre.
 - **Couleurs des charges.** Le potentiel affiché est celui des charges de Mulliken (le modèle électrostatique de
   GFN1), pas le potentiel exact de toute la densité.
+- **Dictionnaire et assembleur.** Les noms viennent du graphe, pas de la géométrie : des stéréo-isomères (cis et
+  trans, énantiomères) portent le même nom, et une espèce absente des 151 n'a que sa formule. « Tient » dit que
+  GFN1-xTB trouve un minimum pour la molécule seule, dans le vide, à 0 K : ni qu'elle existe, ni qu'elle dure à
+  température ambiante ou au contact d'autres (un radical « tient », puis réagit au premier choc) ; sa cohésion est
+  celle de GFN1 (1,3 à 2,2 fois trop forte).
 - **Taille.** Au plus 40 atomes : le calcul est en numpy (≈ 10 ms par pas pour le méthanol, 30 ms pour neuf atomes).
 
 ## Fichiers
@@ -401,7 +495,10 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
 |---|---|
 | `xtb.py` | GFN1-xTB : base, recouvrements, H⁰, électrostatique, répulsion, D3, liaison halogène, cycle auto-cohérent, gradients |
 | `integrals.py` | Recouvrements de gaussiennes et leurs dérivées (Obara–Saika), valeurs des orbitales sur une grille |
-| `analysis.py` | Indices de Mayer, partage des liaisons, espèces, dipôle, modes de vibration |
+| `analysis.py` | Indices de Mayer, partage des liaisons, espèces (nommées), dipôle, modes de vibration |
+| `dictionary.py` | Le dictionnaire : SMILES, empreinte des graphes, noms français et anglais, départs de dessin 2D |
+| `assembly.py` | L'assembleur : le dessin reçu (`MOLECULE_ASSESS`, `MOLECULE_BUILD`), sa pose en 3D, les verdicts |
+| `AtomCard.java`, `MoleculeCard.java` | La carte du survol d'un atome et la fiche d'une molécule au clic droit (client) |
 | `density.py` | ρ, Δρ et ψ sur une grille, et leur codage pour le client |
 | `lab.py` | La session : établi, relaxation, dynamique, traction, étincelle, réacteur, vibrations, dans un fil à part |
 | `structures.py` | Les molécules de départ, les mélanges du réacteur, les noms des espèces |

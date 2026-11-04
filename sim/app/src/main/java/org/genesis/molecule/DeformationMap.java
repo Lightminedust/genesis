@@ -50,7 +50,7 @@ final class DeformationMap {
      * caméra bouge (la dynamique), elle se décale avec lui.
      */
     void render(GraphicsContext g, GraphicsContext near, DensityGrid grid, LabCamera camera, double w, double h) {
-        String view = String.format(Locale.ROOT, "|%.0f|%.0f|%.4f|%.4f|%.4f", w, h, camera.yaw, camera.pitch, camera.zoom);
+        String view = String.format(Locale.ROOT, "|%.0f|%.0f|%s|%.4f", w, h, camera.orientationKey(), camera.zoom);
         String k = grid.version + ":" + System.identityHashCode(grid) + view;
         if (!k.equals(key)) {
             boolean turning = !key.isEmpty() && !key.endsWith(view);

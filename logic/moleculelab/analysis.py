@@ -251,6 +251,30 @@ def fragments(numbers, orders, result=None):
     return groups
 
 
+def species(numbers, orders, result=None):
+    """Les espèces présentes : pour chaque groupe d'atomes liés (comme fragments), (atomes, formule, « H₂O · eau »).
+    Le nom vient du dictionnaire, d'après le graphe du groupe (qui est lié à qui) et sa charge nette arrondie (un ion
+    porte au moins 0,6 e de Mulliken)."""
+    from . import dictionary
+    nat = len(numbers)
+    linked = np.asarray(orders, float).copy()
+    if result is not None:
+        candidates = [(a, b) for a in range(nat) for b in range(a + 1, nat) if linked[a, b] >= FRAGMENT_BOND]
+        for (a, b), value in shared_density(result, candidates).items():
+            if value < SHARED_BOND:
+                linked[a, b] = linked[b, a] = 0.0
+    out = []
+    for members, formula in fragments(numbers, linked):
+        index = {atom: k for k, atom in enumerate(members)}
+        edges = [(index[a], index[b]) for a in members for b in members if a < b and linked[a, b] >= FRAGMENT_BOND]
+        charge = 0
+        if result is not None:
+            total = float(np.sum(result.atom_charges[members]))
+            charge = int(round(total)) if abs(total) >= 0.6 else 0
+        out.append((members, formula, dictionary.describe([numbers[k] for k in members], edges, charge)))
+    return out
+
+
 def census(groups):
     """« 2 H₂O + O₂ » : les espèces présentes, comptées."""
     counts = {}

@@ -83,7 +83,8 @@ public final class MoleculePreview {
                     view.scene.camera.orient(Double.parseDouble(angles[0]), Double.parseDouble(angles[1]));
                 }
                 // La caméra glisse vers son point de vue (quelques secondes) : on la laisse s'y poser.
-                for (int i = 0; i < 160; i++) view.tick(.05);
+                // -Dgenesis.ticks=n : moins d'images après la dernière frame (voir un signal qui s'éteint, une espèce formée).
+                for (int i = 0; i < Integer.getInteger("genesis.ticks", 160); i++) view.tick(.05);
                 view.applyFrame(frame);                               // les panneaux, avec la caméra posée
                 view.scene.awaitSurface(8000);                       // les lobes de verre se construisent à part
                 view.tick(.05);
@@ -97,6 +98,28 @@ public final class MoleculePreview {
                         if (flag.equals("byterm")) view.atomMapMode(AtomMap.BY_TERM);
                         if (flag.equals("bypair")) view.atomMapMode(AtomMap.BY_PAIR);
                         if (flag.equals("allh")) view.sketchAllHydrogens();
+                        // hoverN : le survol de l'atome N (sa carte, ses flèches) ; cardN : la fiche de sa molécule.
+                        if (flag.startsWith("hover")) view.preview(Integer.parseInt(flag.substring(5)), false);
+                        if (flag.startsWith("card")) view.preview(Integer.parseInt(flag.substring(4)), true);
+                        // focusN : la vue centrée sur l'atome N ; molN : sur sa molécule ; wheelN:k : k crans de
+                        // molette sur l'atome N ; pan:dx:dy : la vue glissée ; turn : une rotation, mire visible.
+                        if (flag.startsWith("focus")) view.scene.focusOn(new int[]{Integer.parseInt(flag.substring(5))}, false);
+                        if (flag.startsWith("mol")) view.scene.focusOn(view.scene.members(Integer.parseInt(flag.substring(3))), true);
+                        if (flag.startsWith("wheel")) {
+                            String[] parts = flag.substring(5).split(":");
+                            double[] at = view.scene.positions[Integer.parseInt(parts[0])];
+                            double[] s = view.scene.camera.project(at[0], at[1], at[2]);
+                            view.scene.zoomAt(s[0], s[1], Double.parseDouble(parts[1]));
+                        }
+                        if (flag.startsWith("pan:")) {
+                            String[] parts = flag.split(":");
+                            view.scene.panBy(Double.parseDouble(parts[1]), Double.parseDouble(parts[2]));
+                        }
+                        if (flag.startsWith("focus") || flag.startsWith("mol") || flag.startsWith("wheel")
+                                || flag.startsWith("pan")) {
+                            for (int i = 0; i < 80; i++) view.tick(.05);
+                        }
+                        if (flag.equals("turn")) view.scene.rotateBy(70, 25);
                     }
                     view.tick(.05);                                   // une image de plus, avec ces réglages
                 }
@@ -111,7 +134,7 @@ public final class MoleculePreview {
                     // Le coût d'une image pendant qu'on tourne la vue (le brouillard est recalculé à chaque image).
                     long start = System.nanoTime();
                     for (int i = 0; i < 30; i++) {
-                        view.scene.camera.yaw += .02;
+                        view.scene.rotateBy(3, 0);
                         view.tick(1 / 60.0);
                     }
                     System.out.printf("%.1f ms par image en rotation%n", (System.nanoTime() - start) / 30e6);
@@ -119,8 +142,7 @@ public final class MoleculePreview {
                 write(scene.snapshot(null), args[1]);
                 // -Dgenesis.readings=fichier.png : la colonne des lectures en entier (06 à 10), sans le défilement.
                 if (System.getProperty("genesis.readings") != null) {
-                    javafx.scene.control.ScrollPane right = (javafx.scene.control.ScrollPane)
-                            ((javafx.scene.layout.BorderPane) view.getNode()).getRight();
+                    javafx.scene.control.ScrollPane right = (javafx.scene.control.ScrollPane) view.readingsPane();
                     javafx.scene.SnapshotParameters parameters = new javafx.scene.SnapshotParameters();
                     parameters.setFill(javafx.scene.paint.Color.web("#060A14"));
                     write(right.getContent().snapshot(parameters, null), System.getProperty("genesis.readings"));

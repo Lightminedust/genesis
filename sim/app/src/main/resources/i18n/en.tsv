@@ -2937,3 +2937,338 @@ Atomisation de CH₄ (Dₑ)	Atomization of CH₄ (Dₑ)
 Atomisation de H₂O (Dₑ)	Atomization of H₂O (Dₑ)
 Atomisation de O₂ (Dₑ)	Atomization of O₂ (Dₑ)
 Atomisation de CO₂ (Dₑ)	Atomization of CO₂ (Dₑ)
+Envoyer dans le simulateur 3D  ▶	Send to the 3D simulator  ▶
+← Simulateur 3D	← 3D simulator
+✎  Assembleur 2D	✎  2D assembler
+Assembleur moléculaire	Molecular assembler
+dessiner ses molécules à plat, les vérifier par le calcul, puis les envoyer en 3D	draw molecules flat, check them by computation, then send them to 3D
+Dessiner ses molécules à plat, les vérifier par le calcul, puis les envoyer ici en 3D	Draw molecules flat, check them by computation, then send them here in 3D
+Dessiner	Draw
+Glisser	Move
+Gomme	Eraser
+Charge ±	Charge ±
+Outils	Tools
+Élément	Element
+Liaison	Bond
+Dessin	Drawing
+Envoi	Send
+Modèles du dictionnaire	Dictionary templates
+Molécules du dessin	Molecules in the drawing
+— simple	— single
+= double	= double
+≡ triple	≡ triple
+Cliquer : un atome	Click: an atom
+tirer d'un atome : une liaison	drag from an atom: a bond
+cliquer un atome : prolonger la chaîne	click an atom: extend the chain
+Tirer un atome le déplace ; tirer une liaison déplace toute la molécule	Dragging an atom moves it; dragging a bond moves the whole molecule
+Cliquer un atome ou une liaison l'efface (clic droit aussi, avec tous les outils)	Clicking an atom or a bond erases it (right-click does too, with every tool)
+Cliquer un atome : charge formelle 0 → +1 → −1	Click an atom: formal charge 0 → +1 → −1
+Compléter les H	Complete the H
+Ajoute à chaque atome les hydrogènes de sa valence usuelle (C 4, N 3, O 2…)	Gives each atom the hydrogens of its usual valence (C 4, N 3, O 2…)
+Mettre au propre	Tidy up
+Redessine chaque molécule comme dans un manuel : liaisons égales, cycles réguliers, 120°	Redraws each molecule as in a textbook: equal bonds, regular rings, 120°
+Tout effacer	Clear all
+Reprendre la scène 3D	Bring back the 3D scene
+Les molécules du simulateur 3D, redessinées à plat pour les modifier	The molecules of the 3D simulator, redrawn flat so they can be edited
+chercher : eau, éthanol, benzène…	search: water, ethanol, benzene…
+Cliquer dans le vide : un atome. Tirer d'un atome : une liaison. Cliquer une liaison : simple, double, triple. Clic droit : effacer. Molette : zoom. Ctrl+Z : annuler.	Click empty space: an atom. Drag from an atom: a bond. Click a bond: single, double, triple. Right-click: erase. Wheel: zoom. Ctrl+Z: undo.
+dans une enceinte (le réacteur)	inside an enclosure (the reactor)
+Une sphère autour des molécules : elles restent ensemble et peuvent réagir	A sphere around the molecules: they stay together and can react
+Chaque molécule est posée en 3D d'après ses liaisons (longueurs des rayons covalents, angles d'après les liaisons π), à sa place sur le dessin, puis relaxée par GFN1-xTB : toutes les options du simulateur servent ensuite.	Each molecule is placed in 3D from its bonds (lengths from covalent radii, angles from the π bonds), where it sits in the drawing, then relaxed by GFN1-xTB: every option of the simulator then applies.
+ne peut pas porter une liaison de plus	cannot carry one more bond
+au plus	at most
+cette charge ne laisserait pas la place à ses liaisons	this charge would leave no room for its bonds
+ne peut pas porter les liaisons de	cannot carry the bonds of
+Au plus 40 atomes : au-delà, le calcul ne suit plus en temps réel.	At most 40 atoms: beyond that, the computation no longer keeps up in real time.
+ne peut pas porter cette liaison	cannot carry this bond
+pas de liaison plus forte : les valences de	no stronger bond: the valences of
+sont pleines	are full
+Aucune valence libre : rien à compléter	No free valence: nothing to complete
+hydrogène ajouté	hydrogen added
+hydrogènes ajoutés	hydrogens added
+ajouté au dessin	added to the drawing
+le simulateur 3D est vide	the 3D simulator is empty
+le dessin est vide	the drawing is empty
+le simulateur accepte une charge totale de −2 à +2	the simulator accepts a total charge from −2 to +2
+rien de tel	no match
+atomes	atoms
+Le dessin est vide : choisir un élément et cliquer dans le cadre, ou poser un modèle du dictionnaire.	The drawing is empty: choose an element and click in the frame, or place a dictionary template.
+inconnue du dictionnaire	not in the dictionary
+valence libre	free valence
+valences libres	free valences
+nombre impair d'électrons : un radical	odd number of electrons: a radical
+« Compléter les H » donne à chaque atome sa valence usuelle.	“Complete the H” gives each atom its usual valence.
+calcul GFN1-xTB en cours…	GFN1-xTB computation running…
+tient : un minimum de GFN1-xTB	holds: a GFN1-xTB minimum
+se réarrange à la relaxation	rearranges on relaxation
+rompue	broken
+formée	formed
+se défait à la relaxation, en	falls apart on relaxation, into
+un atome seul	a single atom
+le calcul n'a pas trouvé d'état électronique sensé	the computation found no sensible electronic state
+Choisir un élément à gauche, puis cliquer ici pour poser un atome.	Choose an element on the left, then click here to place an atom.
+Tirer d'un atome pour le lier à un autre, ou poser un modèle du dictionnaire.	Drag from an atom to bond it to another, or place a dictionary template.
+noms des molécules	molecule names
+Le nom de chaque molécule que le dictionnaire reconnaît (d'après qui est lié à qui, et sa charge) ; un cercle vert quand une espèce vient de se former	The name of each molecule the dictionary recognizes (from what is bonded to what, and its charge); a green circle when a species has just formed
+formé	formed
+défait	broken up
+réarrangement	rearrangement
+Le dessin est vide.	The drawing is empty.
+atome de carbone	carbon atom
+atome de fluor	fluorine atom
+atome de chlore	chlorine atom
+atome de brome	bromine atom
+atome d'iode	iodine atom
+atome de soufre	sulfur atom
+atome de phosphore	phosphorus atom
+atome de silicium	silicon atom
+atome de bore	boron atom
+atome de sodium	sodium atom
+atome d'hélium	helium atom
+atome de néon	neon atom
+atome d'argon	argon atom
+proton	proton
+ion hydrure	hydride ion
+ion sodium	sodium ion
+ion chlorure	chloride ion
+ion fluorure	fluoride ion
+ion hydroxyde	hydroxide ion
+ion hydronium	hydronium ion
+ion ammonium	ammonium ion
+difluor	difluorine
+dibrome	dibromine
+diiode	diiodine
+hydrazine	hydrazine
+diazène	diazene
+monoxyde d'azote	nitric oxide
+dioxyde d'azote	nitrogen dioxide
+protoxyde d'azote	nitrous oxide
+acide nitreux	nitrous acid
+acide nitrique	nitric acid
+cyanure d'hydrogène	hydrogen cyanide
+monoxyde de carbone	carbon monoxide
+dioxyde de carbone	carbon dioxide
+acide carbonique	carbonic acid
+sulfure d'hydrogène	hydrogen sulfide
+dioxyde de soufre	sulfur dioxide
+trioxyde de soufre	sulfur trioxide
+acide sulfurique	sulfuric acid
+fluorure d'hydrogène	hydrogen fluoride
+bromure d'hydrogène	hydrogen bromide
+iodure d'hydrogène	hydrogen iodide
+acide hypochloreux	hypochlorous acid
+monoxyde de dichlore	dichlorine monoxide
+chlorure de sodium	sodium chloride
+hydroxyde de sodium	sodium hydroxide
+phosphine	phosphine
+silane	silane
+borane	borane
+diborane	diborane
+disulfure de carbone	carbon disulfide
+sulfure de carbonyle	carbonyl sulfide
+méthylène	methylene
+méthylidyne	methylidyne
+radical éthyle	ethyl radical
+radical vinyle	vinyl radical
+radical éthynyle	ethynyl radical
+propane	propane
+propène	propene
+propyne	propyne
+allène	allene
+cyclopropane	cyclopropane
+butane	butane
+isobutane	isobutane
+buta-1,3-diène	1,3-butadiene
+but-2-ène	2-butene
+cyclobutane	cyclobutane
+pentane	pentane
+cyclopentane	cyclopentane
+hexane	hexane
+cyclohexane	cyclohexane
+toluène	toluene
+naphtalène	naphthalene
+styrène	styrene
+éthanol	ethanol
+éther diméthylique	dimethyl ether
+acétaldéhyde	acetaldehyde
+acétone	acetone
+acide formique	formic acid
+acide acétique	acetic acid
+formiate de méthyle	methyl formate
+propan-1-ol	1-propanol
+propan-2-ol	2-propanol
+éthylène glycol	ethylene glycol
+oxyde d'éthylène	ethylene oxide
+méthanediol	methanediol
+dioxirane	dioxirane
+radical hydroxyméthyle	hydroxymethyl radical
+radical méthoxyle	methoxy radical
+radical formyle	formyl radical
+radical acétyle	acetyl radical
+radical carboxyle	carboxyl radical
+hydroperoxyde de méthyle	methyl hydroperoxide
+radical méthylperoxyle	methylperoxy radical
+acide pyruvique	pyruvic acid
+acide oxalique	oxalic acid
+furane	furan
+phénol	phenol
+glucose	glucose
+méthylamine	methylamine
+acétonitrile	acetonitrile
+formamide	formamide
+urée	urea
+acide isocyanique	isocyanic acid
+acide cyanique	cyanic acid
+nitrométhane	nitromethane
+glycine	glycine
+alanine	alanine
+pyridine	pyridine
+aniline	aniline
+pyrrole	pyrrole
+imidazole	imidazole
+chlorométhane	chloromethane
+dichlorométhane	dichloromethane
+chloroforme	chloroform
+tétrachlorométhane	tetrachloromethane
+fluorométhane	fluoromethane
+tétrafluorométhane	tetrafluoromethane
+bromométhane	bromomethane
+iodométhane	iodomethane
+chloroéthane	chloroethane
+méthanethiol	methanethiol
+sulfure de diméthyle	dimethyl sulfide
+diméthylsulfoxyde	dimethyl sulfoxide
+écart presque nul : couches presque ouvertes, que GFN1 (sans spin) décrit mal ; le verdict est moins sûr	near-zero gap: nearly open shells, which GFN1 (without spin) describes poorly; the verdict is less certain
+presque neutre	almost neutral
+a gagné	gained
+a perdu	lost
+à l'équilibre : les forces s'annulent	at equilibrium: the forces cancel
+charge tenue à −2,5 e (contrainte des anions)	charge held at −2.5 e (anion constraint)
+ce que la paire lui fait (eV/Å)	what the pair does to it (eV/Å)
+clic : sa carte (09) · clic droit : sa molécule	click: its map (09) · right-click: its molecule
+atome seul	lone atom
+atome	atom
+Étincelle sur	Spark on
+Carte de	Map of
+Modifier dans l'assembleur	Edit in the assembler
+La molécule redessinée à plat dans l'assembleur 2D, pour la changer puis la renvoyer	The molecule redrawn flat in the 2D assembler, to change it and send it back
+Retirer la molécule	Remove the molecule
+moment dipolaire	dipole moment
+(un ion : par rapport à son centre de masse)	(an ion: relative to its centre of mass)
+LIAISONS	BONDS
+CHARGES	CHARGES
+simple	single
+double	double
+triple	triple
+tournée comme la vue	turned like the view
+le plus δ−	most δ−
+le plus δ+	most δ+
+: la fiche de sa molécule	: its molecule's card
+clic droit sur un atome → ✦ étincelle	right-click an atom → ✦ spark
+Étincelle : de l'énergie cinétique déposée sur un atome et ses voisins (clic droit sur l'atome, puis ✦ dans sa fiche), quantité de mouvement conservée	Spark: kinetic energy deposited on an atom and its neighbours (right-click the atom, then ✦ in its card), momentum conserved
+Les paires d'électrons partagées, localisées (Pipek–Mezey). Entre deux atomes : un brin par paire (indice de Mayer : 1, 2, 3 ; le second en tirets pour une liaison conjuguée), à plat quand la part π a un côté (la liaison ne tourne pas), torsadés quand elle entoure l'axe ; couleur selon la force interne le long de la liaison (bleu nulle, blanc traction, orange compression), grains tirés de la densité de la paire. Une paire sur trois atomes ou plus (métaux, pont B–H–B) : une étoile de son barycentre vers ses atomes. Deux ions sans paire partagée (NaCl) : des pointillés.	The shared electron pairs, localized (Pipek–Mezey). Between two atoms: one strand per pair (Mayer index: 1, 2, 3; the second dashed for a conjugated bond), flat when the π part has one side (the bond does not rotate), twisted when it surrounds the axis; colour from the internal force along the bond (blue none, white tension, orange compression), grains drawn from the pair's density. A pair on three atoms or more (metals, B–H–B bridge): a star from its barycentre to its atoms. Two ions with no shared pair (NaCl): dotted lines.
+sphère : un atome · teinte : sa charge (argent neutre, cyan δ+, magenta δ−)	sphere: an atom · tint: its charge (silver neutral, cyan δ+, magenta δ−)
+brins : 1, 2, 3 paires partagées (simple, double, triple ; tirets : conjuguée)	strands: 1, 2, 3 shared pairs (single, double, triple; dashed: conjugated)
+à plat : π d'un seul côté, la liaison ne tourne pas · torsadés : π tout autour de l'axe	flat: π on one side, the bond does not rotate · twisted: π all around the axis
+Sélection	Select
+Cliquer un atome le choisit (Maj ou Ctrl : en ajouter) · tirer dans le vide : un cadre · double-clic : toute la molécule · Ctrl+A : tout · tirer la sélection la déplace	Clicking an atom selects it (Shift or Ctrl: add more) · drag in empty space: a box · double-click: the whole molecule · Ctrl+A: everything · dragging the selection moves it
+numéros des atomes	atom numbers
+Le numéro de chaque atome, celui qu'il gardera dans le simulateur 3D (C1, O2…)	Each atom's number, the one it keeps in the 3D simulator (C1, O2…)
+Cliquer dans le vide : un atome. Tirer d'un atome : une liaison. Cliquer une liaison : simple, double, triple. Clic droit : le menu (charge, H, effacer). Sélection : un cadre, Maj ou Ctrl, Ctrl+A ; + − 0 : la charge ; Suppr : effacer ; Ctrl+D : dupliquer. Molette : zoom. Ctrl+Z : annuler.	Click empty space: an atom. Drag from an atom: a bond. Click a bond: single, double, triple. Right-click: the menu (charge, H, erase). Select: a box, Shift or Ctrl, Ctrl+A; + − 0: the charge; Del: erase; Ctrl+D: duplicate. Wheel: zoom. Ctrl+Z: undo.
+atomes gardent leur charge : leurs liaisons ne tiendraient plus	atoms keep their charge: their bonds would no longer fit
+charges changées	charges changed
+Charge +1 pour les atomes choisis (touche +)	Charge +1 for the selected atoms (key +)
+Charge −1 (touche −)	Charge −1 (key −)
+Neutres (touche 0)	Neutral (key 0)
+Compléter leurs hydrogènes	Complete their hydrogens
+Au propre	Tidy
+Redessiner leurs molécules comme dans un manuel	Redraw their molecules as in a textbook
+Dupliquer	Duplicate
+Une copie à côté (Ctrl+D)	A copy beside them (Ctrl+D)
+Effacer	Erase
+Effacer les atomes choisis (Suppr)	Erase the selected atoms (Del)
+Compléter ses H	Complete its H
+Choisir toute la molécule	Select the whole molecule
+Simple	Single
+Effacer la liaison	Erase the bond
+Tout sélectionner	Select all
+clic : devient	click: becomes
+clic : lier un nouvel atome	click: bond a new atom
+valence pleine : plus de liaison	valence full: no more bonds
+clic : charge	click: charge
+refusée	refused
+clic : effacer	click: erase
+double-clic : toute la molécule	double-click: the whole molecule
+tirer : le déplacer	drag: move it
+⌖  Tout voir	⌖  Show all
+Tout voir	Show all
+S'éloigner (touche −, ou la molette)	Zoom out (key −, or the wheel)
+Se rapprocher du centre de la vue (touche +, ou la molette : vers le curseur)	Zoom in on the centre of the view (key +, or the wheel: toward the cursor)
+Revenir à toutes les molécules, cadrées et de face (touche F, ou double-clic dans le vide)	Back to all the molecules, framed and face-on (key F, or double-click empty space)
+Glisser : tourner la vue autour du point visé (la mire) · Ctrl + glisser : tourner même en partant d'un atome · clic droit glissé, ou Maj + glisser : déplacer la vue · molette : zoomer vers le curseur · double-clic sur un atome : le centrer et le suivre · double-clic dans le vide : tout voir	Drag: turn the view around the aimed point (the crosshair) · Ctrl + drag: turn even when starting on an atom · right-drag, or Shift + drag: move the view · wheel: zoom toward the cursor · double-click an atom: centre on it and follow it · double-click empty space: show all
+vue :	view:
+centrée sur	centred on
+centrée sur une molécule	centred on a molecule
+menée à la main	moved by hand
+toutes les molécules	all the molecules
+Centrer la vue sur elle	Centre the view on it
+La vue la cadre et la suit pendant la dynamique (⌖ Tout voir, en bas à droite, pour revenir)	The view frames it and follows it during the dynamics (⌖ Show all, bottom right, to go back)
+Des molécules dans une sphère : chauffer, lancer une étincelle ou serrer le piston pour franchir la barrière d'activation. Un nanoréacteur, pas une flamme : des centaines à des milliers d'atmosphères, et O₂ sans barrière de spin. Il montre des mécanismes possibles, pas des vitesses réelles.	Molecules in a sphere: heat them, fire a spark or tighten the piston to cross the activation barrier. A nanoreactor, not a flame: hundreds to thousands of atmospheres, and O₂ with no spin barrier. It shows possible mechanisms, not real rates.
+piston	piston
+Imposer la pression : la paroi devient un piston qui la tient (crée une enceinte autour des molécules s'il n'y en a pas). 100 à 20 000 atm, soit 0,01 à 2 GPa : en dessous, les molécules se rencontreraient trop rarement pour qu'on le voie (à 1 atm, une fois par heure de calcul)	Impose the pressure: the wall becomes a piston that holds it (creates an enclosure around the molecules if there is none). 100 to 20,000 atm, i.e. 0.01 to 2 GPa: below that, the molecules would meet too rarely to be seen (at 1 atm, once per hour of computation)
+paroi	wall
+gaz parfait NkT/V	ideal gas NkT/V
+molécules	molecules
+molécule	molecule
+une rencontre toutes les	one encounter every
+s d'écran	s on screen
+enceinte	enclosure
+mesurée	measured
+la paroi se resserre : la pression monte vers la consigne	the wall closes in: the pressure rises toward the target
+la paroi s'écarte : la pression descend vers la consigne	the wall opens out: the pressure falls toward the target
+à l'équilibre : la pression fluctue autour de la consigne	at equilibrium: the pressure fluctuates around the target
+plus que le gaz parfait : les molécules se gênent (leur volume propre, leur répulsion)	more than the ideal gas: the molecules get in each other's way (their own volume, their repulsion)
+moins que le gaz parfait : les molécules s'attirent	less than the ideal gas: the molecules attract each other
+presque le gaz parfait	almost the ideal gas
+sur	over
+chocs	hits
+Z = PV/NkT : la paroi n'a reçu que	Z = PV/NkT: the wall has taken only
+chocs, trop peu pour le dire	hits, too few to tell
+densité de liquide : les molécules se touchent en permanence	liquid density: the molecules are always in contact
+1 s d'écran =	1 s on screen =
+Dynamique moléculaire à température fixée (ensemble NVT : thermostat CSVR, et un bain faible sur chaque atome pour que chaque molécule ait sa part d'agitation) : la molécule vibre, tourne, et peut réagir	Molecular dynamics at a set temperature (NVT ensemble: CSVR thermostat, and a weak bath on each atom so that every molecule gets its share of agitation): the molecule vibrates, rotates and can react
+consigne du piston	piston target
+★  Mettre une étoile sur GitHub	★  Star Genesis on GitHub
+La matière, calculée — du noyau à la molécule	Matter, computed — from the nucleus to the molecule
+Genesis est gratuit, et le restera.	Genesis is free, and will stay free.
+Une étoile sur GitHub l'aide à être trouvé par d'autres curieux : un clic, et c'est le meilleur soutien.	A star on GitHub helps other curious people find it: one click, and it is the best support.
+Démarrage du moteur Python…	Starting the Python engine…
+Chargement des données et des modèles de simulation…	Loading the data and the simulation models…
+Connexion au moteur…	Connecting to the engine…
+Moteur prêt · connexion…	Engine ready · connecting…
+Connexion au moteur : nouvel essai…	Connecting to the engine: trying again…
+ · le premier lancement prépare les données, une minute au plus	 · the first launch prepares the data, a minute at most
+hydrogène · orbitale	hydrogen · orbital
+|ψ|² calculé,	|ψ|² computed,
+tirages	samples
+le moteur Python n'a pas répondu en 180 s.	the Python engine did not answer within 180 s.
+STATISTIQUES D'UTILISATION	USAGE STATISTICS
+quand Genesis s'ouvre et se ferme, et combien de temps il a servi (dont au premier plan)	when Genesis opens and closes, and how long it was used (including in the foreground)
+les laboratoires ouverts, et le temps passé dans chacun	the laboratories opened, and the time spent in each
+la version de Genesis, le système, la langue, l'écran, le nombre de cœurs et la mémoire	the Genesis version, the system, the language, the screen, the number of cores and the memory
+un identifiant aléatoire créé à l'installation, sans nom ni e-mail ; l'adresse IP, dont le serveur déduit le pays et la ville sans la garder	a random identifier created at installation, with no name or e-mail; the IP address, from which the server derives the country and the city without keeping it
+Jamais envoyé : ce que tu construis, calcules ou exportes, ni tes fichiers.	Never sent: what you build, compute or export, nor your files.
+D'accord	OK
+Refuser l'envoi	Decline
+Ce qui est envoyé ▾	What is sent ▾
+Ce qui est envoyé ▴	What is sent ▴
+Modifiable à tout moment : ⚙ en haut à droite.	You can change this at any time: ⚙ at the top right.
+Aider à améliorer Genesis	Help improve Genesis
+L'envoi est actif	Sending is on
+L'envoi est coupé	Sending is off
+Genesis envoie au serveur de Gemmie (gemmi-e.com) des mesures d'utilisation : quand il s'ouvre, combien de temps il sert, quels laboratoires. Elles servent uniquement à faire évoluer Genesis. Refuser ne change rien au logiciel : plus rien ne sera envoyé.	Genesis sends usage measurements to Gemmie's server (gemmi-e.com): when it opens, how long it is used, which laboratories. They are used only to improve Genesis. Declining changes nothing in the software: nothing more will be sent.
+Réactiver l'envoi	Turn sending back on
+Couper l'envoi	Turn sending off
+Identifiant de cette installation (pour demander tes données ou leur effacement : nellawassi@gmail.com) :	This installation's identifier (to ask for your data or its deletion: nellawassi@gmail.com):
+Envoyer les statistiques d'utilisation	Send usage statistics
+Quelles données sont envoyées ?	What data is sent?

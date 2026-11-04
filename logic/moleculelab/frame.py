@@ -1,6 +1,6 @@
 """L'instantané du laboratoire moléculaire, recopié dans MoleculeLabState."""
 
-from . import analysis, density, structures, validation, xtb
+from . import analysis, density, dictionary, structures, validation, xtb
 from . import lab as molecule_lab
 
 
@@ -14,6 +14,16 @@ def fill(state, lab, sent):
         state.supported.extend(z for z in range(1, len(xtb.SYMBOLS)) if xtb.supported(z))
         state.model = validation.MODEL
         sent["molecule_catalog"] = True
+    # Le dictionnaire, une fois ses départs de dessin calculés (dans un fil à part : quelques secondes au lancement).
+    if not sent.get("molecule_dictionary") and lab.dictionary_ready():
+        for (name, formula, numbers, charges, bonds), flat in zip(dictionary.entries(), dictionary.layouts()):
+            entry = state.dictionary.add(name=name, formula=structures.pretty(formula))
+            entry.numbers.extend(numbers)
+            entry.charges.extend(charges)
+            for a, b, order in bonds:
+                entry.bonds.extend((a, b, order))
+            entry.xy.extend(float(v) for v in flat.ravel())
+        sent["molecule_dictionary"] = True
     if snap is None:
         state.status = "Préparation du laboratoire…"
         return
@@ -23,6 +33,22 @@ def fill(state, lab, sent):
             state.validation.add(quantity=name, value=computed, meaning=measured)
         sent["molecule_validation"] = True
     state.status = snap["status"]
+    # Le verdict de l'assembleur, quand il change.
+    assessment = snap.get("assessment")
+    if assessment is not None and sent.get("molecule_assessment") is not assessment:
+        sent["molecule_assessment"] = assessment
+        a = state.assessment
+        a.request, a.deep, a.done, a.error = assessment["request"], assessment["deep"], assessment["done"], assessment["error"]
+        for m in assessment["molecules"]:
+            v = a.molecules.add(formula=m["formula"], name=m["name"], charge=m["charge"], unpaired=m["unpaired"],
+                                verdict=m["verdict"], cohesion_ev=m["cohesion"], gap_ev=m["gap"])
+            v.atoms.extend(m["atoms"])
+            for x, y in m["lost"]:
+                v.lost.extend((x, y))
+            for x, y in m["gained"]:
+                v.gained.extend((x, y))
+            v.pieces.extend(m["pieces"])
+            v.notes.extend(m["notes"])
     state.error = snap["error"]
     state.label = snap["label"]
     state.dynamics = snap["dynamics"]
@@ -34,6 +60,12 @@ def fill(state, lab, sent):
     state.steps_per_second = snap["rate"]
     state.charge = snap["charge"]
     state.wall = snap["wall"]
+    state.pressure = snap.get("pressure", 0.0)
+    state.pressure_target = snap.get("pressure_target", 0.0)
+    state.pressure_mean = snap.get("pressure_mean", 0.0)
+    state.volume_mean = snap.get("volume_mean", 0.0)
+    state.pressure_span_fs = snap.get("pressure_span", 0.0)
+    state.wall_hits = snap.get("wall_hits", 0)
     state.census = snap["census"]
     state.view, state.view_orbital = snap["view"]
     state.excited_mode = snap["excited"]
@@ -113,13 +145,13 @@ def fill(state, lab, sent):
     state.unstable = snap["unstable"]
     state.electronic_temperature = snap["electronic_temperature"]
     state.confined.extend(snap["confined"])
+    # Les espèces, nommées par le dictionnaire (d'après leur graphe), et les atomes de chacune (pour la scène).
     counts = {}
-    for members, formula in snap["fragments"]:
-        counts[formula] = counts.get(formula, 0) + 1
-    for formula, count in counts.items():
-        name = structures.NAMES.get(formula)
-        state.species.append(("" if count == 1 else f"{count} × ") + structures.pretty(formula)
-                             + (f" · {name}" if name else ""))
+    for members, formula, label in snap["species"]:
+        counts[label] = counts.get(label, 0) + 1
+        state.named.add(atoms=members, label=label)
+    for label, count in counts.items():
+        state.species.append(("" if count == 1 else f"{count} × ") + label)
     if grid is not None and sent.get("molecule_grid") != grid["version"]:
         g = state.grid
         g.version = grid["version"]
