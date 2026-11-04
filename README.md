@@ -20,6 +20,9 @@ JavaFX (sim/)  --- bidirectional gRPC --->  Python (logic/)  ---> MongoDB
 ## Running
 
 ```bash
+# 0. Once: the database passwords (.env file, never committed)
+cp .env.example .env        # then choose MONGO_ROOT_PASSWORD and GENESIS_DB_PASSWORD
+
 # 1. The engine and the database (--build is required after an update)
 docker compose down
 docker compose up --build
@@ -31,6 +34,16 @@ gradle run
 
 The client connects to `localhost:50051`; for another engine:
 `gradle run -PgenesisHost=192.168.1.20 -PgenesisPort=50052`.
+
+**This machine only.** The gRPC engine has neither encryption nor authentication: `docker-compose.yml` publishes its
+ports (50051 for the engine, 27017 for MongoDB) on `127.0.0.1` only, and `engine.py` run by hand listens on
+`127.0.0.1`; it refuses any other address (`GRPC_HOST=0.0.0.0`, a network IP) unless `GENESIS_ALLOW_REMOTE=1` is set
+on purpose. MongoDB (pinned, `mongo:9.0.4`) requires accounts: the administrator and the engine's, which can only
+read and write `genesis_db` (`db/mongo-init/`). A volume created before this setting has no such accounts: the engine
+then falls back to its in-memory data; `docker compose down -v` once creates them (the database only holds the
+periodic table, re-seeded at start). For an engine on another machine, use an SSH tunnel rather than an open port:
+`ssh -L 50051:127.0.0.1:50051 host`, then `gradle run`. The installed application starts its own engine on
+`127.0.0.1`, without MongoDB.
 A container left on an old image is detected (`protocol_version`).
 
 The application starts in **English** by default. The top bar lets you choose
@@ -56,6 +69,17 @@ venv\Scripts\python engine.py
 The Docker build keeps downloaded packages in a cache: only what changes is
 downloaded again.
 
+## Usage statistics
+
+A packaged Genesis sends usage statistics to Gemmie's server (`https://gemmi-e.com/genesis/stats`) to guide its
+development: when it opens and closes, how long it is used, which laboratories and for how long, its version, the
+system, language and screen, with a random identifier created at installation (no name, no e-mail; the server sees
+the IP address, gets an approximate country and city from Cloudflare and keeps only a salted fingerprint of the
+address). Never what you build or compute. It is on by default;
+the first launch shows a card with **Decline**, and **⚙ → Send usage statistics** turns it off at any time. A build
+run from the sources sends nothing. Details: [`docs/PRIVACY.md`](docs/PRIVACY.md). The receiving end is the
+gemme-stats server (a separate project, `POST /genesis/stats`, with its dashboard at `gemmi-e.com/_stats`).
+
 ## Windows package
 
 On Windows, with JDK 21 (`jpackage`), `gradle` and the `logic/venv` environment
@@ -64,11 +88,11 @@ environment and build the package:
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.5.0
 ```
 
 The script tests the standalone engine, then produces `dist/windows/Genesis`
-(portable application), `Genesis-0.4.1-portable.zip` and an `.exe` installer.
+(portable application), `Genesis-0.5.0-portable.zip` and an `.exe` installer.
 The installer puts Genesis in the user profile and adds shortcuts to the Start
 menu and the desktop. For a new version, raise `-Version`; the same install
 identifier allows upgrades.
@@ -107,13 +131,13 @@ On Ubuntu 22.04 (or a compatible build system), install JDK 21, `gradle`,
 `logic/requirements.txt`, `grpcio-tools` and PyInstaller. Then run:
 
 ```bash
-bash packaging/build-linux.sh 0.4.1
+bash packaging/build-linux.sh 0.5.0
 ```
 
 The script freezes the same Python engine, checks its gRPC service and the
 table of 118 elements, builds the JavaFX client, then produces in `dist/linux/`
-an installer `Genesis-0.4.1-linux-x64.deb` and a portable archive
-`Genesis-0.4.1-linux-x64.tar.gz`. A GitHub Actions workflow
+an installer `Genesis-0.5.0-linux-x64.deb` and a portable archive
+`Genesis-0.5.0-linux-x64.tar.gz`. A GitHub Actions workflow
 `.github/workflows/linux-package.yml` runs this build on Ubuntu.
 
 The archive is extracted and started with `Genesis/bin/Genesis`; the `.deb`
@@ -125,11 +149,11 @@ and its cache in `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 ## macOS package (Apple Silicon)
 
 On a Mac with JDK 21 and a Python environment holding `logic/requirements.txt`
-and PyInstaller, run `bash packaging/build-macos.sh 0.4.1`; without a Mac, the
+and PyInstaller, run `bash packaging/build-macos.sh 0.5.0`; without a Mac, the
 GitHub Actions workflow `.github/workflows/macos-package.yml` builds it on an
-Apple Silicon runner. It produces `Genesis-0.4.1-macos-arm64.dmg` and
-`Genesis-0.4.1-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
-version starting with 0, so the bundle carries `1.4.1` internally; the real
+Apple Silicon runner. It produces `Genesis-0.5.0-macos-arm64.dmg` and
+`Genesis-0.5.0-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
+version starting with 0, so the bundle carries `1.5.0` internally; the real
 number is passed as `-Dgenesis.version`, which the update check reads first.
 The app is signed ad hoc and not notarized: on first launch, right-click it
 and choose **Open**. The engine log is in `~/Library/Logs/Genesis/engine.log`.
@@ -278,10 +302,39 @@ GFN1-xTB gives the energy and the exact force on each nucleus, and geometry, bon
 * **Workbench** — pick an element and click an atom to attach it: C + 4 H relaxes by itself into the tetrahedron
   (109.47°), water comes out bent. Grab an atom and pull: the rest of the molecule is held by its centre of mass, the
   bond stretches, the energy rises, and the bond breaks.
+* **2D molecular assembler** — **✎ 2D assembler** opens a flat drawing screen: place atoms, bond them (single,
+  double, triple), draw several molecules, start from one of the dictionary's templates or bring back the 3D scene.
+  The drawing follows the valence rules (C 4; N 3, 4 as N⁺; O 2; P up to 5, S up to 6…): a bond past the maximum is
+  refused with the reason, missing valences show as red dots, and radicals or hypothetical molecules are allowed.
+  Before you click, a ghost atom or bond shows what would happen (red when the valences refuse it) and a chip names
+  the hovered atom; the Select tool (box, Shift/Ctrl, double-click, Ctrl+A) sets charges, completes H, tidies,
+  duplicates or erases several atoms at once, and right-click opens the menu of what is underneath.
+  While you draw, each molecule is relaxed alone by GFN1-xTB and gets a computed verdict — holds (cohesion and
+  HOMO–LUMO gap), rearranges (bonds broken in red, formed dashed green) or falls apart (into named pieces); a
+  near-zero gap is flagged, since GFN1 has no spin. **Send to the 3D simulator** places each molecule in 3D from its
+  bonds (covalent radii, angles from the π bonds) where it sits in the drawing, optionally inside the reactor's
+  sphere, and every option of the simulator applies: OH· and H· drawn side by side become water on relaxation.
+* **Reading the 3D scene** — atoms are tinted by their computed charge (silver neutral, cyan δ+, magenta δ−); a bond
+  is drawn as one, two or three strands (its Mayer index), flat when its π part has one side (the bond cannot rotate,
+  ethylene) and twisted when the π part surrounds the axis (triple bonds, CO₂). Hovering an atom shows a drawn card
+  (charge gauge, net-force dial, neighbours with the force of each pair) and the same forces as arrows in the scene;
+  right-clicking opens the molecule's card: its name, a flat drawing turned like the view, its dipole moment, molar
+  mass, charges and bonds, with centre, spark, edit-in-the-assembler and remove buttons.
+* **Moving around** — dragging turns the view about the screen axes (a trackball: no pole, no glide) around the
+  aimed point, shown by a crosshair; the wheel zooms toward the cursor (what is under it stays under it); a
+  right-drag (or Shift + drag) moves the view; double-clicking an atom centres on it and follows it through the
+  dynamics; « Show all » (bottom right, key F, double-click in empty space) frames every molecule again.
+* **A dictionary of species** — 151 species (atoms, ions, radicals, inorganic and organic molecules, isomers such as
+  ethanol and dimethyl ether) recognized by their bond graph and net charge (a Weisfeiler–Lehman fingerprint): the
+  scene names each molecule, a green circle marks a species that has just formed, and the log says « formed: H₂O ·
+  water — broken up: H · hydrogen atom, HO · hydroxyl radical ».
 * **Dynamics and reactor** — relaxation (FIRE), molecular dynamics with a thermostat (CSVR) or free (energy
   conserved, 0.25 fs steps); molecules in a sphere (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) that react when heated or hit
-  by a spark that deposits kinetic energy; the species present and each reaction are read from the Mayer bond orders
-  and the shared density. Hot runs keep going: when a bond breaks the self-consistent cycle switches from Broyden
+  by a spark that deposits kinetic energy, or squeezed by a piston (100 to 20,000 atm: the wall follows the
+  imposed pressure); the wall touches the atoms' clouds, not their nuclei; the pressure is measured on it (the
+  atoms' force over its area) and compared with the ideal gas by Z = PV/NkT once the wall has taken enough hits;
+  a weak bath on each atom gives every molecule its share of thermal agitation; the species present and each reaction are read from the Mayer
+  bond orders and the shared density. Hot runs keep going: when a bond breaks the self-consistent cycle switches from Broyden
   mixing to a damped Newton step on the computed charge response (O₄ at 4,000 K: no stop, every step converged at
   300 K), and a strict constraint holds any atom at −2.5 e at most, where GFN1's unbounded third-order term would
   otherwise pile electrons on it (Pm₄ apart: −9 e); the status line says when it acts.
@@ -952,7 +1005,7 @@ File by file:
 | `sim/app/.../fusion/ResultView.java` | The interactive results: floating or detached window; a chosen element brings the view to it |
 | `sim/app/.../fusion/CollisionTimeline.java` | The playback steps (physical time, tunnel, weld, products on the map) |
 | `sim/app/.../fusion/FusionLab.java` | The old 3D laboratory (no longer linked to the interface) |
-| `sim/app/.../common/LabCamera.java` | The camera with inertia and the perspective projection |
+| `sim/app/.../common/LabCamera.java` | The camera with inertia and the perspective projection; a free trackball for the molecular laboratory |
 | `logic/fusionlab/star.py` | The stellar core: REACLIB network, Saha, Fermi–Dirac, energy, fusion window |
 | `sim/app/.../fusion/StarView.java` | The stellar core screen |
 | `sim/app/.../matter/MoleculeCanvas.java` | The molecule: density, Δρ, E(R), orbital diagram |
@@ -964,7 +1017,10 @@ File by file:
 | `sim/app/.../atom/OrbitalCloud.java` | The 3D cloud: |ψ|² projected exactly, dive slices, fleeting measurements |
 | `sim/app/.../atom/NuclearDrop.java` | The drop nucleus: Bohr–Mottelson vibrations, p ↔ n pion exchanges |
 | `sim/app/.../atom/Camera3D.java` | The camera of the 3D views of the atom and the nucleus |
-| `sim/app/.../app/LabLoader.java` | The waiting screen when opening or leaving a laboratory; at start-up, the "Support Genesis" section |
+| `sim/app/.../app/LabLoader.java` | The waiting screen when opening or leaving a laboratory |
+| `sim/app/.../app/StartupScreen.java` | The start-up screen: a computed hydrogen orbital (|ψ|² sampled point by point), the current step, the GitHub star and support links |
+| `sim/app/.../app/Telemetry.java` | Usage statistics: installation identifier, sessions, time per laboratory, offline queue, opt-out |
+| `sim/app/.../app/TelemetryNotice.java` | The first-launch card about usage statistics (OK / Decline), reopened from ⚙ |
 | `sim/app/.../app/UpdateChecker.java` | The latest GitHub release, version comparison, verified download (SHA-256) |
 | `sim/app/.../app/UpdateCard.java` | The "new version available" card |
 | `sim/app/.../app/I18n.java` | Display-time translation (French source → English): reviewed labels, exact sentences, `{0}` templates, segments |

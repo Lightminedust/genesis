@@ -20,6 +20,9 @@ JavaFX (sim/)  --- gRPC bidirectionnel --->  Python (logic/)  ---> MongoDB
 ## Lancer
 
 ```bash
+# 0. Une fois : les mots de passe de la base (fichier .env, jamais versionné)
+cp .env.example .env        # puis choisir MONGO_ROOT_PASSWORD et GENESIS_DB_PASSWORD
+
 # 1. Le moteur et la base (--build est indispensable après une mise à jour)
 docker compose down
 docker compose up --build
@@ -31,6 +34,16 @@ gradle run
 
 Le client vise `localhost:50051` ; pour un autre moteur :
 `gradle run -PgenesisHost=192.168.1.20 -PgenesisPort=50052`.
+
+**Sur cette machine seulement.** Le moteur gRPC n'a ni chiffrement ni authentification : `docker-compose.yml` ne
+publie ses ports (50051 pour le moteur, 27017 pour MongoDB) que sur `127.0.0.1`, et `engine.py` lancé à la main écoute
+sur `127.0.0.1` ; il refuse une autre adresse (`GRPC_HOST=0.0.0.0`, une IP du réseau) sans `GENESIS_ALLOW_REMOTE=1`,
+posé exprès. MongoDB (version fixée, `mongo:9.0.4`) exige un compte : l'administrateur et celui du moteur, qui ne
+peut que lire et écrire `genesis_db` (`db/mongo-init/`). Un volume créé avant ce réglage n'a pas ces comptes : le
+moteur se replie alors sur ses données en mémoire ; `docker compose down -v` une fois les crée (la base ne contient
+que la table périodique, réamorcée au démarrage). Pour un moteur sur une autre machine, un tunnel SSH plutôt qu'un
+port ouvert : `ssh -L 50051:127.0.0.1:50051 machine`, puis `gradle run`. L'application installée, elle, lance son
+propre moteur sur `127.0.0.1`, sans MongoDB.
 Un conteneur resté sur une ancienne image est détecté (`protocol_version`).
 
 L'application démarre en **anglais** par défaut. La barre supérieure permet de
@@ -55,6 +68,18 @@ venv\Scripts\python engine.py
 Le build Docker garde les paquets téléchargés dans un cache : seul ce qui
 change est retéléchargé.
 
+## Statistiques d'utilisation
+
+Genesis installé envoie des statistiques d'utilisation au serveur de Gemmie (`https://gemmi-e.com/genesis/stats`)
+pour guider son évolution : quand il s'ouvre et se ferme, combien de temps il sert, quels laboratoires et combien de
+temps, sa version, le système, la langue et l'écran, avec un identifiant aléatoire créé à l'installation (ni nom ni
+e-mail ; le serveur voit l'adresse IP, reçoit de Cloudflare un pays et une ville approximatifs et n'en garde qu'une
+empreinte salée). Jamais ce que tu construis ou
+calcules. C'est actif par défaut ; le premier lancement montre une carte avec **Refuser l'envoi**, et **⚙ → Envoyer
+les statistiques d'utilisation** le coupe à tout moment. Lancé depuis les sources, Genesis n'envoie rien. Détails :
+[`docs/PRIVACY.md`](docs/PRIVACY.md). Elles arrivent au serveur gemme-stats (un projet à part, `POST /genesis/stats`,
+tableau de bord sur `gemmi-e.com/_stats`).
+
 ## Paquet Windows
 
 Sur Windows, avec un JDK 21 (`jpackage`), `gradle` et l'environnement
@@ -63,11 +88,11 @@ cet environnement puis construire le paquet :
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.4.1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.5.0
 ```
 
 Le script teste le moteur autonome, puis produit `dist/windows/Genesis`
-(application portable), `Genesis-0.4.1-portable.zip` et un installateur `.exe`.
+(application portable), `Genesis-0.5.0-portable.zip` et un installateur `.exe`.
 L'installateur place Genesis dans le profil utilisateur et ajoute les raccourcis
 au menu Démarrer et au bureau. Pour une nouvelle version, augmenter `-Version` ;
 le même identifiant d'installation permet la mise à niveau.
@@ -107,13 +132,13 @@ Sur Ubuntu 22.04 (ou un système de construction compatible), installer JDK 21,
 avec `logic/requirements.txt`, `grpcio-tools` et PyInstaller. Puis lancer :
 
 ```bash
-bash packaging/build-linux.sh 0.4.1
+bash packaging/build-linux.sh 0.5.0
 ```
 
 Le script gèle le même moteur Python, vérifie son service gRPC et la table des
 118 éléments, construit le client JavaFX, puis produit dans `dist/linux/` un
-installateur `Genesis-0.4.1-linux-x64.deb` et une archive portable
-`Genesis-0.4.1-linux-x64.tar.gz`. Un workflow GitHub Actions
+installateur `Genesis-0.5.0-linux-x64.deb` et une archive portable
+`Genesis-0.5.0-linux-x64.tar.gz`. Un workflow GitHub Actions
 `.github/workflows/linux-package.yml` réalise cette construction sur Ubuntu.
 
 L'archive s'extrait puis se lance avec `Genesis/bin/Genesis` ; le `.deb` ajoute
@@ -126,11 +151,11 @@ et son cache dans `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 
 Sur un Mac avec un JDK 21 et un environnement Python équipé de
 `logic/requirements.txt` et de PyInstaller, lancer
-`bash packaging/build-macos.sh 0.4.1` ; sans Mac, le workflow GitHub Actions
+`bash packaging/build-macos.sh 0.5.0` ; sans Mac, le workflow GitHub Actions
 `.github/workflows/macos-package.yml` le construit sur une machine Apple
-Silicon. Il produit `Genesis-0.4.1-macos-arm64.dmg` et
-`Genesis-0.4.1-macos-arm64.zip` dans `dist/macos/`. jpackage refuse une version
-macOS qui commence par 0 : le paquet porte `1.4.1` en interne, et le vrai
+Silicon. Il produit `Genesis-0.5.0-macos-arm64.dmg` et
+`Genesis-0.5.0-macos-arm64.zip` dans `dist/macos/`. jpackage refuse une version
+macOS qui commence par 0 : le paquet porte `1.5.0` en interne, et le vrai
 numéro passe par `-Dgenesis.version`, que la vérification des mises à jour lit
 en premier. L'application est signée localement (ad hoc), pas notariée : au
 premier lancement, clic droit puis **Ouvrir**. Le journal du moteur est dans
@@ -297,9 +322,40 @@ vibrations et les réactions en découlent.
 * **L'établi** — choisir un élément et cliquer sur un atome pour l'y attacher : C + 4 H se relaxe tout seul en
   tétraèdre (109,47°), l'eau sort coudée. Saisir un atome et tirer : le reste de la molécule est tenu par son centre
   de masse, la liaison s'étire, l'énergie monte, et elle casse.
+* **L'assembleur moléculaire 2D** — **✎ Assembleur 2D** ouvre un écran de dessin à plat : poser des atomes, les lier
+  (simple, double, triple), dessiner plusieurs molécules, partir d'un modèle du dictionnaire ou reprendre la scène 3D.
+  Le dessin suit les règles de valence (C 4 ; N 3, 4 en N⁺ ; O 2 ; P jusqu'à 5, S jusqu'à 6…) : une liaison au-delà
+  du maximum est refusée, avec la raison, les valences manquantes sont des points rouges, et radicaux ou molécules
+  hypothétiques restent permis. Avant de cliquer, un atome ou une liaison fantôme montre ce qui se ferait (rouge si les
+  valences le refusent) et une pastille nomme l'atome survolé ; l'outil Sélection (cadre, Maj/Ctrl, double-clic,
+  Ctrl+A) change les charges, complète les H, remet au propre, duplique ou efface plusieurs atomes à la fois, et le clic
+  droit ouvre le menu de ce qui est dessous. Pendant qu'on dessine, chaque molécule est relaxée seule par GFN1-xTB et reçoit un
+  verdict calculé — tient (cohésion et écart HOMO–LUMO), se réarrange (liaisons rompues en rouge, formées en tirets
+  verts) ou se défait (en morceaux nommés) ; un écart presque nul est signalé, GFN1 étant sans spin. **Envoyer dans
+  le simulateur 3D** pose chaque molécule en 3D d'après ses liaisons (rayons covalents, angles d'après les liaisons
+  π), à sa place sur le dessin, dans la sphère du réacteur si on le veut, et toutes les options du simulateur
+  servent : OH· et H· dessinés côte à côte deviennent de l'eau à la relaxation.
+* **Lire la scène 3D** — les atomes sont teintés par leur charge calculée (argent neutre, cyan δ+, magenta δ−) ; une
+  liaison est faite d'un, deux ou trois brins (son indice de Mayer), à plat quand sa part π a un côté (la liaison ne
+  tourne pas, éthylène) et torsadés quand la part π entoure l'axe (triples liaisons, CO₂). Survoler un atome montre une
+  carte dessinée (jauge de charge, cadran de la force nette, voisins avec la force de chaque paire) et ces forces en
+  flèches sur la scène ; le clic droit ouvre la fiche de sa molécule : son nom, son dessin à plat tourné comme la vue,
+  son moment dipolaire, sa masse molaire, ses charges et ses liaisons, avec centrage, étincelle, modification dans
+  l'assembleur et retrait.
+* **Naviguer** — glisser tourne la vue autour des axes de l'écran (un trackball : ni pôle, ni élan) autour du point
+  visé, montré par une mire ; la molette zoome vers le curseur (ce qui est dessous y reste) ; le clic droit glissé
+  (ou Maj + glisser) déplace la vue ; le double-clic sur un atome le centre et le suit pendant la dynamique ; « Tout
+  voir » (en bas à droite, touche F, double-clic dans le vide) recadre toutes les molécules.
+* **Un dictionnaire des espèces** — 151 espèces (atomes, ions, radicaux, molécules minérales et organiques, isomères
+  comme l'éthanol et l'éther diméthylique) reconnues par leur graphe de liaisons et leur charge nette (empreinte de
+  Weisfeiler–Lehman) : la scène nomme chaque molécule, un cercle vert marque une espèce qui vient de se former, et
+  le journal dit « formé : H₂O · eau — défait : H · atome d'hydrogène, HO · radical hydroxyle ».
 * **Dynamique et réacteur** — relaxation (FIRE), dynamique moléculaire avec thermostat (CSVR) ou libre (énergie
   conservée, pas de 0,25 fs) ; des molécules dans une sphère (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) qui réagissent quand
-  on chauffe ou qu'une étincelle dépose de l'énergie cinétique ; les espèces présentes et chaque réaction sont lues
+  on chauffe, qu'une étincelle dépose de l'énergie cinétique ou qu'un piston les serre (100 à 20 000 atm : la paroi
+  suit la pression imposée) ; la paroi touche le nuage des atomes, pas leur noyau ; la pression y est mesurée (la
+  force des atomes sur sa surface) et comparée au gaz parfait par Z = PV/NkT dès que la paroi a reçu assez de chocs ;
+  un bain faible sur chaque atome donne à chaque molécule sa part d'agitation thermique ; les espèces présentes et chaque réaction sont lues
   dans les indices de liaison de Mayer et la densité partagée. La dynamique chaude ne s'arrête plus : quand une
   liaison casse, le cycle auto-cohérent passe du mélange de Broyden à un pas de Newton amorti sur la réponse calculée
   des charges (O₄ à 4 000 K : aucun arrêt, chaque pas convergé à 300 K), et une contrainte stricte tient chaque atome
@@ -991,7 +1047,7 @@ Fichier par fichier :
 | `sim/app/.../fusion/ResultView.java` | Le bilan interactif : flottant ou fenêtre détachée ; un élément choisi y amène la vue |
 | `sim/app/.../fusion/CollisionTimeline.java` | Les étapes de lecture (temps physique, tunnel, soudure, produits sur la carte) |
 | `sim/app/.../fusion/FusionLab.java` | L'ancien laboratoire 3D (plus relié à l'interface) |
-| `sim/app/.../common/LabCamera.java` | La caméra à inertie et la projection en perspective |
+| `sim/app/.../common/LabCamera.java` | La caméra à inertie et la projection en perspective ; un trackball libre pour le laboratoire moléculaire |
 | `logic/fusionlab/star.py` | Le cœur d'étoile : réseau REACLIB, Saha, Fermi-Dirac, énergie, fenêtre de fusions |
 | `sim/app/.../fusion/StarView.java` | L'écran du cœur d'étoile |
 | `sim/app/.../matter/MoleculeCanvas.java` | La molécule : densité, Δρ, E(R), diagramme d'orbitales |
@@ -1003,7 +1059,10 @@ Fichier par fichier :
 | `sim/app/.../atom/OrbitalCloud.java` | Le nuage 3D : |ψ|² projeté exactement, tranches de plongée, mesures fugaces |
 | `sim/app/.../atom/NuclearDrop.java` | Le noyau goutte : vibrations de Bohr–Mottelson, échanges de pions p ↔ n |
 | `sim/app/.../atom/Camera3D.java` | La caméra des vues 3D de l'atome et du noyau |
-| `sim/app/.../app/LabLoader.java` | L'écran d'attente quand on ouvre ou quitte un laboratoire ; au démarrage, le cadre « Soutenir Genesis » |
+| `sim/app/.../app/LabLoader.java` | L'écran d'attente quand on ouvre ou quitte un laboratoire |
+| `sim/app/.../app/StartupScreen.java` | L'écran de démarrage : une orbitale de l'hydrogène calculée (|ψ|² tiré point par point), l'étape en cours, l'étoile GitHub et les liens de soutien |
+| `sim/app/.../app/Telemetry.java` | Les statistiques d'utilisation : identifiant d'installation, sessions, temps par laboratoire, file hors ligne, refus |
+| `sim/app/.../app/TelemetryNotice.java` | La carte du premier lancement sur les statistiques (D'accord / Refuser), rouverte depuis ⚙ |
 | `sim/app/.../app/UpdateChecker.java` | La dernière version sur GitHub, comparaison des numéros, téléchargement vérifié (SHA-256) |
 | `sim/app/.../app/UpdateCard.java` | La carte « nouvelle version disponible » |
 | `sim/app/.../app/I18n.java` | La traduction à l'affichage (source française → anglais) : libellés relus, phrases exactes, gabarits `{0}`, segments |
