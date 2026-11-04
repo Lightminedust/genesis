@@ -157,6 +157,16 @@ public class App extends Application {
     private final LabLoader loader = new LabLoader();
     /** « Une nouvelle version est disponible », en bas à droite. */
     private final UpdateCard updateCard = new UpdateCard();
+    /** L'écran de démarrage : une orbitale calculée, l'étape en cours, le soutien à Genesis (voir StartupScreen). */
+    private final StartupScreen startup = new StartupScreen();
+    /**
+     * Les statistiques d'utilisation (voir Telemetry) et la carte du premier lancement. Rien ne part avant start() :
+     * les aperçus construisent l'écran sans jamais rien envoyer.
+     */
+    private final Telemetry telemetry = Telemetry.create();
+    private final TelemetryNotice telemetryNotice = new TelemetryNotice();
+    private boolean noticeOffered;
+    private Stage window;
     /** Une version plus récente trouvée sur GitHub, proposée dès que l'écran de chargement s'efface. */
     private UpdateChecker.Release pendingUpdate;
     private static final String SKIPPED_VERSION_PREF = "update.skipped";
@@ -222,25 +232,30 @@ public class App extends Application {
             stage.setY(screen.getMinY() + (screen.getHeight() - stage.getHeight()) / 2);
         }
 
+        startup.show(this::openLink, null);
         if (Boolean.getBoolean("genesis.bundled")) {
-            loader.show("Démarrage du moteur Python",
-                    "Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.",
-                    frame -> true, null);
-            loader.withSupport(this::openLink);
             try {
                 bundledEngine = BundledEngine.start();
                 setStatus("Chargement du moteur Python embarqué…", "#FBBF24");
+                startup.status("Chargement des données et des modèles de simulation…");
                 waitForBundledEngine(bundledEngine);
             } catch (IOException error) {
                 simCanvas.setStatusMessage(I18n.text("Moteur embarqué impossible à démarrer : ") + error.getMessage());
                 setStatus(I18n.text("Moteur embarqué impossible à démarrer : ") + error.getMessage(), "#F87171");
-                loader.fail("Démarrage impossible", error.getMessage());
+                startup.fail("Démarrage impossible", error.getMessage());
             }
         } else {
+            startup.status("Connexion au moteur…");
             connect();
         }
 
         checkForUpdates();
+        window = stage;
+        Rectangle2D full = Screen.getPrimary().getBounds();
+        telemetry.context("screen", Math.round(full.getWidth()) + "x" + Math.round(full.getHeight()));
+        telemetry.context("language", I18n.language() == I18n.Language.FR ? "fr" : "en");
+        I18n.onChange(() -> telemetry.context("language", I18n.language() == I18n.Language.FR ? "fr" : "en"));
+        telemetry.start();
 
         new AnimationTimer() {
             private long previous;
@@ -251,8 +266,17 @@ public class App extends Application {
                 clock += delta;
                 releaseHeldFrames();
                 loader.tick(delta);
+                startup.tick(delta);
                 updateCard.tick(delta);
-                if (pendingUpdate != null && !loader.isShowing()) {
+                telemetryNotice.tick(delta);
+                boolean waiting = loader.isShowing() || startup.isShowing();
+                telemetry.tick(waiting ? null : currentLab(), delta, window.isFocused());
+                // La carte des statistiques : une fois, au premier lancement, quand l'écran de démarrage s'est effacé.
+                if (!noticeOffered && !waiting && telemetry.noticeNeeded()) {
+                    noticeOffered = true;
+                    telemetryNotice.show(true, true, telemetry.install(), telemetry::answer);
+                }
+                if (pendingUpdate != null && !waiting) {
                     offerUpdate(pendingUpdate);
                     pendingUpdate = null;
                 }
@@ -439,10 +463,10 @@ public class App extends Application {
         quantumLab.getNode().setVisible(false);
         StackPane laboratories = new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
                 reactorView.getNode(), chainView.getNode(), moleculeView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode(),
-                updateCard.getNode());
+                updateCard.getNode(), telemetryNotice.getNode());
         BorderPane localizedShell = new BorderPane(laboratories);
         localizedShell.setTop(buildLanguageBar());
-        Scene scene = new Scene(localizedShell,
+        Scene scene = new Scene(new StackPane(localizedShell, startup.getNode()),
                 width, height);
         scene.setFill(Color.web("#05070E"));
         scene.getStylesheets().add(stylesheet());
@@ -471,11 +495,45 @@ public class App extends Application {
         };
         I18n.onChange(refresh);
         refresh.run();
-        HBox bar = new HBox(choice);
+        HBox bar = new HBox(6, settingsMenu(), choice);
         bar.setAlignment(Pos.CENTER_RIGHT);
         bar.setPadding(new Insets(3, 12, 3, 12));
         bar.setStyle("-fx-background-color: #070D19; -fx-border-color: #1A2941; -fx-border-width: 0 0 1 0;");
         return bar;
+    }
+
+    /**
+     * ⚙ : l'interrupteur des statistiques d'utilisation, et ce qu'elles contiennent. Absent d'une version de
+     * développement, qui n'envoie rien.
+     */
+    private MenuButton settingsMenu() {
+        MenuButton settings = new MenuButton("⚙");
+        settings.setFocusTraversable(false);
+        settings.setStyle("-fx-background-color: #142139; -fx-text-fill: #E6EDF7; "
+                + "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 2 7;");
+        javafx.scene.control.CheckMenuItem send = new javafx.scene.control.CheckMenuItem("Envoyer les statistiques d'utilisation");
+        MenuItem what = new MenuItem("Quelles données sont envoyées ?");
+        send.setOnAction(event -> telemetry.setEnabled(send.isSelected()));
+        what.setOnAction(event -> telemetryNotice.show(false, telemetry.enabled(), telemetry.install(), telemetry::setEnabled));
+        settings.setOnShowing(event -> send.setSelected(telemetry.enabled()));
+        settings.getItems().addAll(send, what);
+        settings.setVisible(telemetry.available());
+        settings.setManaged(telemetry.available());
+        return settings;
+    }
+
+    /** Le laboratoire montré, pour le décompte du temps passé dans chacun. */
+    private String currentLab() {
+        if (moleculeActive) return "molecule";
+        if (chainActive) return "chain";
+        if (fusionActive) return "fusion";
+        if (reactorActive) return "reactor";
+        if (starActive) return "star";
+        if (subatomicActive) return "subatomic";
+        if (nucleonActive) return partonsActive ? "partons" : "nucleon";
+        if (matterActive) return "matter";
+        if (chemistryActive) return "chemistry";
+        return "atom";
     }
 
     /** Pour les aperçus : une frame du moteur, comme si elle arrivait du réseau. */
@@ -505,7 +563,19 @@ public class App extends Application {
     void previewLoader() {
         loader.show("Démarrage du moteur Python",
                 "Chargement des données et des modèles de simulation. La connexion s'ouvrira automatiquement.", f -> false, null);
-        loader.withSupport(url -> { });
+    }
+
+    /** Pour les aperçus : la carte des statistiques, au premier lancement (firstRun) ou relue depuis ⚙. */
+    void previewTelemetryNotice(boolean firstRun) {
+        startup.onFrame(null);
+        telemetryNotice.show(firstRun, true, "022c26a8-7902-41a2-86c2-92169126fbee", yes -> { });
+    }
+
+    /** Pour les aperçus : l'écran de démarrage, en attente du moteur ou (failed) en échec. */
+    void previewStartup(boolean failed) {
+        if (!startup.isShowing()) startup.show(url -> { }, null);
+        startup.status("Chargement des données et des modèles de simulation…");
+        if (failed) startup.fail("Démarrage impossible", I18n.text("le moteur Python n'a pas répondu en 180 s."));
     }
 
     /** Pour les aperçus : valence seule dans la vue 3D, phase de ψ dans le panneau Orbitale. */
@@ -524,6 +594,7 @@ public class App extends Application {
     /** Pour les aperçus : la carte de mise à jour, avec une version fictive. */
     void previewUpdate() {
         loader.hide();
+        startup.onFrame(null);
         updateCard.offer("0.2.0", "0.3.0", true, new UpdateCard.Actions() {
             @Override public void install() { }
             @Override public void openPage() { }
@@ -610,7 +681,9 @@ public class App extends Application {
         clock += 1 / 60.0;
         releaseHeldFrames();
         loader.tick(1 / 60.0);
+        startup.tick(1 / 60.0);
         updateCard.tick(1 / 60.0);
+        telemetryNotice.tick(1 / 60.0);
         if (genesisShown) {
             genesis.tick(1 / 60.0);
         }
@@ -1096,12 +1169,13 @@ public class App extends Application {
     // Réseau
     // ------------------------------------------------------------------
     private void waitForBundledEngine(BundledEngine engine) {
-        Thread startup = new Thread(() -> {
+        Thread boot = new Thread(() -> {
             try {
                 engine.awaitReady(180);
                 Platform.runLater(() -> {
                     if (!stopping) {
                         setStatus("Moteur Python prêt · connexion en cours…", "#FBBF24");
+                        startup.status("Moteur prêt · connexion…");
                         connect();
                     }
                 });
@@ -1111,14 +1185,15 @@ public class App extends Application {
                 Platform.runLater(() -> {
                     if (!stopping) {
                         loader.fail("Moteur Python indisponible", error.getMessage());
+                        startup.fail("Moteur Python indisponible", error.getMessage());
                         simCanvas.setStatusMessage(error.getMessage());
                         setStatus(error.getMessage(), "#F87171");
                     }
                 });
             }
         }, "genesis-engine-startup");
-        startup.setDaemon(true);
-        startup.start();
+        boot.setDaemon(true);
+        boot.start();
     }
 
     private void connect() {
@@ -1237,6 +1312,7 @@ public class App extends Application {
         simCanvas.applyFrame(frame);
         updateMatter(frame);
         loader.onFrame(frame);
+        startup.onFrame(frame);
         lightPanel.applyFrame(frame);
         nucleusPanel.applyFrame(frame);
         if (frame.getStructureChanged()) {
@@ -1547,12 +1623,16 @@ public class App extends Application {
                 + I18n.text("Arrête-le puis relance :  docker compose up --build");
         simCanvas.setStatusMessage(message);
         setStatus("Version de protocole incompatible - relance docker compose up --build", "#F87171");
-        loader.fail("Moteur obsolète", I18n.text("Le moteur envoie le protocole v") + received + I18n.text(", le client attend v")
-                + EngineClient.PROTOCOL_VERSION + I18n.text(". Arrête-le et relance : docker compose up --build"));
+        String obsolete = I18n.text("Le moteur envoie le protocole v") + received + I18n.text(", le client attend v")
+                + EngineClient.PROTOCOL_VERSION + I18n.text(". Arrête-le et relance : docker compose up --build");
+        loader.fail("Moteur obsolète", obsolete);
+        startup.fail("Moteur obsolète", obsolete);
     }
 
     private void onError(Throwable error) {
         engineConnected = false;
+        // Au démarrage, le moteur n'écoute pas encore : on réessaie, ce n'est pas un échec.
+        startup.status("Connexion au moteur : nouvel essai…");
         if (bundledEngine != null) {
             String detail = I18n.text("Connexion au moteur Python interrompue. Nouvel essai en cours. Journal : ")
                     + bundledEngine.logPath();
@@ -1780,6 +1860,7 @@ public class App extends Application {
     @Override
     public void stop() {
         stopping = true;
+        telemetry.stop(java.time.Duration.ofSeconds(2));    // la fin de la session ; au plus 2 s, la file attend sinon
         if (tableDialog != null) {
             tableDialog.close();
         }
