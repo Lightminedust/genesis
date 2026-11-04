@@ -1,31 +1,50 @@
 version: '3.8'
 
+# Le mode développeur : le moteur Python et sa base, en conteneurs, pour cette machine seulement.
+# Les deux ports ne sont publiés que sur 127.0.0.1 : rien n'est joignable depuis le réseau, même sans pare-feu
+# (Docker contourne celui de Linux). Le moteur gRPC n'a ni chiffrement ni authentification, MongoDB exige un
+# mot de passe. Avant le premier lancement : copie .env.example en .env et choisis les deux mots de passe.
+# Moteur sur une autre machine : un tunnel SSH (ssh -L 50051:127.0.0.1:50051 machine), pas un port ouvert.
+
 services:
-  # La base de données NoSQL
+  # La base de données NoSQL (la table périodique ; le moteur se replie sur ses données en mémoire sans elle)
   db:
-    image: mongo:latest
+    # Une version choisie, pas « latest » : une mise à jour de MongoDB ne doit pas arriver sans qu'on la décide.
+    image: mongo:9.0.4
     container_name: genesis-mongo
     ports:
-      - "27017:27017" # Accessible depuis ton PC pour inspecter la BDD
+      - "127.0.0.1:27017:27017" # Inspecter la base depuis ce PC seulement (mongosh, Compass)
+    environment:
+      # Le compte d'administration, et celui du moteur (lecture-écriture sur genesis_db seulement), créés au
+      # premier démarrage d'un volume vide (db/mongo-init/).
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USER:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:?copie .env.example en .env et choisis MONGO_ROOT_PASSWORD}
+      - GENESIS_DB_USER=${GENESIS_DB_USER:-genesis}
+      - GENESIS_DB_PASSWORD=${GENESIS_DB_PASSWORD:?copie .env.example en .env et choisis GENESIS_DB_PASSWORD}
     volumes:
       - mongo-data:/data/db # Les données persistent même si le conteneur s'arrête
+      - ./db/mongo-init:/docker-entrypoint-initdb.d:ro
     networks:
       - genesis-net
 
   # Le moteur de simulation Python
   logic:
     image: genesis-logic-img
-    build: 
+    build:
       context: ./logic
       dockerfile: Dockerfile
     container_name: genesis-logic
     ports:
-      - "50051:50051" # Le port gRPC exposé à ton client JavaFX
+      - "127.0.0.1:50051:50051" # Le port gRPC du client JavaFX, sur cette machine seulement
     depends_on:
       - db          # Attend que Mongo démarre avant de lancer Python
     environment:
-      - MONGO_URI=mongodb://db:27017/genesis_db
+      - MONGO_URI=mongodb://${GENESIS_DB_USER:-genesis}:${GENESIS_DB_PASSWORD}@db:27017/genesis_db?authSource=genesis_db
       - GENESIS_CHEM_CACHE=/app/chem-cache
+      # Dans le conteneur, le moteur écoute sur son interface interne (sinon Docker ne peut pas le joindre) ;
+      # côté machine, le port n'est publié que sur 127.0.0.1 (ci-dessus). Voir engine.grpc_address.
+      - GRPC_HOST=0.0.0.0
+      - GENESIS_ALLOW_REMOTE=1
     networks:
       - genesis-net
     volumes:

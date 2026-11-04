@@ -5,6 +5,8 @@ logic/molecular/cache/
 logic/venv/
 logic/.venv/
 logic/.env
+# Les mots de passe de docker compose (modèle : .env.example)
+.env
 
 # --- Dossier Java (sim) ---
 sim/.gradle/

@@ -1498,6 +1498,32 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
         return []
 
 
+LOOPBACK_HOSTS = ("127.0.0.1", "localhost", "::1", "[::1]")
+
+
+def grpc_address(environ=os.environ):
+    """L'adresse d'écoute du moteur : 127.0.0.1 par défaut (cette machine seulement).
+
+    Le service gRPC n'a ni chiffrement ni authentification : sur une autre interface, n'importe qui sur le réseau
+    pourrait le piloter. Une adresse qui n'est pas la boucle locale (0.0.0.0, [::], une IP du réseau) n'est donc
+    acceptée qu'avec GENESIS_ALLOW_REMOTE=1, posé exprès — c'est le cas du conteneur Docker, qui doit écouter sur son
+    interface interne, et dont docker-compose ne publie le port que sur 127.0.0.1. Pour un moteur sur une autre
+    machine, un tunnel SSH (ssh -L 50051:127.0.0.1:50051 machine) garde le moteur en local.
+    """
+    port = environ.get("GRPC_PORT", "50051")
+    host = environ.get("GRPC_HOST", "127.0.0.1")
+    if host not in LOOPBACK_HOSTS and environ.get("GENESIS_ALLOW_REMOTE") != "1":
+        raise OSError(
+            f"GRPC_HOST={host} exposerait le moteur au réseau, sans chiffrement ni authentification. "
+            "Garde 127.0.0.1 (et un tunnel SSH pour une autre machine), ou pose GENESIS_ALLOW_REMOTE=1 "
+            "si un pare-feu ou Docker limite déjà l'accès."
+        )
+    if host not in LOOPBACK_HOSTS:
+        print(f"Attention : moteur à l'écoute sur {host}:{port}, en clair et sans authentification "
+              "(GENESIS_ALLOW_REMOTE=1). Que seul un réseau de confiance y accède.")
+    return f"{host}:{port}"
+
+
 def serve():
     # Le journal contient des flèches et des exposants : une console qui ne
     # sait pas les écrire ne doit pas couper la connexion du client.
@@ -1513,12 +1539,11 @@ def serve():
         UniverseEngineServicer(repository), server
     )
 
-    port = os.environ.get("GRPC_PORT", "50051")
-    host = os.environ.get("GRPC_HOST", "[::]")
-    if server.add_insecure_port(f"{host}:{port}") == 0:
-        raise OSError(f"Port gRPC indisponible : {host}:{port}")
+    address = grpc_address()
+    if server.add_insecure_port(address) == 0:
+        raise OSError(f"Port gRPC indisponible : {address}")
     server.start()
-    print(f"Moteur atomique demarre sur le port {port} (protocole v{PROTOCOL_VERSION}).")
+    print(f"Moteur atomique demarre sur {address} (protocole v{PROTOCOL_VERSION}).")
     server.wait_for_termination()
 
 
