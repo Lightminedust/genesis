@@ -78,7 +78,7 @@ the IP address, gets an approximate country and city from Cloudflare and keeps o
 address). Never what you build or compute. It is on by default;
 the first launch shows a card with **Decline**, and **⚙ → Send usage statistics** turns it off at any time. A build
 run from the sources sends nothing. Details: [`docs/PRIVACY.md`](docs/PRIVACY.md). The receiving end is the
-gemme-stats server (a separate project, `POST /genesis/stats`, with its dashboard at `gemmi-e.com/_stats`).
+gemme-stats server (a separate project, `POST /genesis/stats`).
 
 ## Windows package
 
