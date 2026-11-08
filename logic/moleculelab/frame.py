@@ -1,6 +1,6 @@
 """L'instantané du laboratoire moléculaire, recopié dans MoleculeLabState."""
 
-from . import analysis, density, dictionary, structures, validation, xtb
+from . import analysis, density, dictionary, experiments, structures, validation, xtb
 from . import lab as molecule_lab
 
 
@@ -10,6 +10,10 @@ def fill(state, lab, sent):
     if not sent.get("molecule_catalog"):
         state.presets.extend(name for name, _ in structures.PRESETS)
         state.reactions.extend(name for name, _ in structures.REACTIONS)
+        for e in experiments.EXPERIMENTS:
+            entry = state.experiments.add(title=e.title, equation=e.equation, explanation=e.explanation,
+                                          collision_ev=e.collision_ev, limit_fs=e.limit_fs)
+            entry.goal.extend(e.goal)
         state.palette.extend(molecule_lab.PALETTE)
         state.supported.extend(z for z in range(1, len(xtb.SYMBOLS)) if xtb.supported(z))
         state.model = validation.MODEL
@@ -66,6 +70,9 @@ def fill(state, lab, sent):
     state.volume_mean = snap.get("volume_mean", 0.0)
     state.pressure_span_fs = snap.get("pressure_span", 0.0)
     state.wall_hits = snap.get("wall_hits", 0)
+    state.experiment = snap.get("experiment", -1)
+    state.experiment_phase = snap.get("experiment_phase", 0)
+    state.experiment_time_fs = snap.get("experiment_time", 0.0)
     state.census = snap["census"]
     state.view, state.view_orbital = snap["view"]
     state.excited_mode = snap["excited"]

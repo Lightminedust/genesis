@@ -570,3 +570,9 @@ Un nanoréacteur, pas une flamme : environ {0} atm, et O₂ sans barrière de sp
 Un nanoréacteur, pas une flamme : environ {0} {1} atm, et O₂ sans barrière de spin.	A nanoreactor, not a flame: about {0} {1} atm, and O₂ with no spin barrier.
 Assemblage reçu : {0} molécule, posée en {1}D puis relaxée par GFN1-xTB	Assembly received: {0} molecule, placed in {1}D then relaxed by GFN1-xTB
 Assemblage reçu : {0} molécules, posées en {1}D puis relaxées par GFN1-xTB	Assembly received: {0} molecules, placed in {1}D then relaxed by GFN1-xTB
+Expérience lancée : choc à {0} eV	Experiment launched: collision at {0} eV
+Expérience : les réactifs foncent l'un vers l'autre ({0} eV)	Experiment: the reactants rush toward each other ({0} eV)
+Expérience : le gaz autour (thermostat à {0} K) emporte l'énergie du choc	Experiment: the surrounding gas (thermostat at {0} K) carries away the collision energy
+Expérience réussie en {0} fs	Experiment succeeded in {0} fs
+Expérience réussie : les produits attendus se sont formés en {0} fs	Experiment succeeded: the expected products formed in {0} fs
+Expérience manquée : rien ne s'est formé en {0} fs ; relancez, l'agitation change	Experiment missed: nothing formed in {0} fs; run it again, the thermal motion changes

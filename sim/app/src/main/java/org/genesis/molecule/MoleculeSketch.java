@@ -37,7 +37,7 @@ final class MoleculeSketch {
     /** Le bouton « tous les H », dans le titre : x, y, largeur, hauteur. */
     private static final double[] H_BUTTON = {84, 4, 58, 13};
 
-    boolean folded, explicitH;
+    boolean folded = true, explicitH;     // repliée au départ : un clic sur son titre la déplie
     private String key = "", layoutKey = "";
     private double[][] plane;
     private double[] centre = new double[3];

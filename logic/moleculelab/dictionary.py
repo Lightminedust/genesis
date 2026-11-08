@@ -67,7 +67,8 @@ ENTRIES = [
     ("CC(C)C", "isobutane", "isobutane"), ("C=CC=C", "buta-1,3-diène", "1,3-butadiene"),
     ("CC=CC", "but-2-ène", "2-butene"), ("C1CCC1", "cyclobutane", "cyclobutane"),
     ("CCCCC", "pentane", "pentane"), ("C1CCCC1", "cyclopentane", "cyclopentane"), ("CCCCCC", "hexane", "hexane"),
-    ("C1CCCCC1", "cyclohexane", "cyclohexane"), ("C1=CC=CC=C1", "benzène", "benzene"),
+    ("C1CCCCC1", "cyclohexane", "cyclohexane"), ("C1=CCCCC1", "cyclohexène", "cyclohexene"),
+    ("C1=CC=CC=C1", "benzène", "benzene"),
     ("CC1=CC=CC=C1", "toluène", "toluene"), ("C1=CC=C2C=CC=CC2=C1", "naphtalène", "naphthalene"),
     ("C=CC1=CC=CC=C1", "styrène", "styrene"),
     # Composés oxygénés.

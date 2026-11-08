@@ -346,14 +346,21 @@ vibrations et les réactions en découlent.
   visé, montré par une mire ; la molette zoome vers le curseur (ce qui est dessous y reste) ; le clic droit glissé
   (ou Maj + glisser) déplace la vue ; le double-clic sur un atome le centre et le suit pendant la dynamique ; « Tout
   voir » (en bas à droite, touche F, double-clic dans le vide) recadre toutes les molécules.
-* **Un dictionnaire des espèces** — 151 espèces (atomes, ions, radicaux, molécules minérales et organiques, isomères
+* **Un dictionnaire des espèces** — 152 espèces (atomes, ions, radicaux, molécules minérales et organiques, isomères
   comme l'éthanol et l'éther diméthylique) reconnues par leur graphe de liaisons et leur charge nette (empreinte de
   Weisfeiler–Lehman) : la scène nomme chaque molécule, un cercle vert marque une espèce qui vient de se former, et
   le journal dit « formé : H₂O · eau — défait : H · atome d'hydrogène, HO · radical hydroxyle ».
+* **Expériences** — cinq réactions réelles, de la plus exigeante à la plus simple : Diels-Alder (butadiène +
+  éthylène → cyclohexène), SN2 (OH⁻ + CH₃Cl → CH₃OH + Cl⁻, attaque par l'arrière et inversion de Walden), transfert
+  de proton (H₃O⁺ + NH₃), recombinaison de radicaux (2 CH₃· → éthane) et formation de l'eau (OH· + H·). Les réactifs,
+  relaxés chacun par GFN1-xTB, sont posés face à face et lancés l'un vers l'autre avec une énergie de choc exacte ;
+  le thermostat joue ensuite le gaz autour. Le panneau suit les phases et dit, pour chacune, ce que GFN1 donne face
+  à la mesure. Chacune a été réglée par le calcul (plusieurs tirages de l'agitation) et les tests la rejouent.
 * **Dynamique et réacteur** — relaxation (FIRE), dynamique moléculaire avec thermostat (CSVR) ou libre (énergie
   conservée, pas de 0,25 fs) ; des molécules dans une sphère (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) qui réagissent quand
   on chauffe, qu'une étincelle dépose de l'énergie cinétique ou qu'un piston les serre (100 à 20 000 atm : la paroi
-  suit la pression imposée) ; la paroi touche le nuage des atomes, pas leur noyau ; la pression y est mesurée (la
+  suit la pression imposée, lissée sur 200 fs ; la vue reste sur l'enceinte, dont le bord prend la teinte de la
+  pression, et un manomètre montre la mesure, la consigne et ce que fait le piston) ; la paroi touche le nuage des atomes, pas leur noyau ; la pression y est mesurée (la
   force des atomes sur sa surface) et comparée au gaz parfait par Z = PV/NkT dès que la paroi a reçu assez de chocs ;
   un bain faible sur chaque atome donne à chaque molécule sa part d'agitation thermique ; les espèces présentes et chaque réaction sont lues
   dans les indices de liaison de Mayer et la densité partagée. La dynamique chaude ne s'arrête plus : quand une

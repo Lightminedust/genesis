@@ -8,6 +8,7 @@ import com.studio.genesis.grpc.MoleculeBond;
 import com.studio.genesis.grpc.MoleculeCloud;
 import com.studio.genesis.grpc.MoleculeIsotope;
 import com.studio.genesis.grpc.MoleculeEvent;
+import com.studio.genesis.grpc.MoleculeExperiment;
 import com.studio.genesis.grpc.MoleculeLabState;
 import com.studio.genesis.grpc.MoleculeMode;
 import com.studio.genesis.grpc.MoleculeMulticentre;
@@ -97,6 +98,9 @@ public final class MoleculeView {
         /** La pression imposée par le piston (atm) ; 0 : la paroi ne bouge plus (volume fixe). */
         default void pressure(double atm) {}
 
+        /** Une des expériences guidées (MoleculeLabState.experiments) : la scène devient l'expérience. */
+        default void experiment(int index) {}
+
         /** Le verdict du moteur sur un dessin de l'assembleur : noms aussitôt, puis (deep) la relaxation GFN1-xTB. */
         default void assess(int request, double[] vector, boolean deep) {}
     }
@@ -132,6 +136,10 @@ public final class MoleculeView {
     private final ToggleGroup paletteGroup = new ToggleGroup();
     private final FlowPane presetBox = new FlowPane(5, 5), reactionBox = new FlowPane(5, 5), paletteBox = new FlowPane(4, 4);
     private final ToggleButton[] chargeButtons = new ToggleButton[3];
+    /** Les expériences guidées : une ligne chacune (titre, équation), puis ce qui se passe pour celle qui tourne. */
+    private final VBox experimentBox = new VBox(4);
+    private final List<HBox> experimentButtons = new ArrayList<>();
+    private final Label experimentPhase = text("", 11.5, "#C7D6EA"), experimentNote = text("", 10.5, "#8FA4C2");
     private final Label title = text("", 17, "#EAF2FF"), census = text("", 12.5, "#8FD8FF");
     /** Sous les espèces, ce que montre la vue Δρ ou ψ (l'orbitale : nom, énergie, électrons, composition). */
     private final Label modeLine = text("", 12, "#C7D6EA");
@@ -622,6 +630,8 @@ public final class MoleculeView {
         Label paletteHint = text("Choisir un élément, puis cliquer sur un atome pour l'y attacher (ou dans le vide). "
                 + "La géométrie sort du calcul.", 10.5, "#8FA4C2");
         paletteHint.setWrapText(true);
+        experimentNote.setWrapText(true);
+        experimentPhase.setWrapText(true);
         ToggleGroup charges = new ToggleGroup();
         HBox chargeRow = new HBox(0);
         String[] chargeNames = {"−1", "0", "+1"};
@@ -690,10 +700,11 @@ public final class MoleculeView {
                 symbols, names, legend);
         return new VBox(10,
                 section("01", "Molécules", presetBox),
-                section("02", "Réacteur", reactionBox, reactorHint(), pistonRow(), enclosure),
-                section("03", "Établi", paletteBox, table, chosenElement, paletteHint, empty),
-                section("04", "Charge totale", chargeRow),
-                section("05", "Afficher", show));
+                section("02", "Expériences", experimentBox, experimentPhase, experimentNote),
+                section("03", "Réacteur", reactionBox, reactorHint(), pistonRow(), enclosure),
+                section("04", "Établi", paletteBox, table, chosenElement, paletteHint, empty),
+                section("05", "Charge totale", chargeRow),
+                section("06", "Afficher", show));
     }
 
     /** Ce qu'est le réacteur, et ce qu'il n'est pas : une enceinte très dense, sans spin, où tout va trop vite. */
@@ -755,6 +766,47 @@ public final class MoleculeView {
      * volume, le gaz parfait NkT/V pour comparer (N molécules), et le temps moyen entre deux rencontres d'une molécule
      * (théorie cinétique : 1 / (√2 n σ v̄), σ = π (3 Å)²) — en temps de calcul et à l'écran, au rythme du moteur.
      */
+    /** L'expérience en cours : sa ligne allumée, la phase (approche, relais du thermostat, réussie ou manquée), et ce
+     *  qu'on regarde. Sans expérience : ce qu'elles sont. */
+    private void experiment(MoleculeLabState s) {
+        int active = s.getExperiment();
+        for (int i = 0; i < experimentButtons.size(); i++) {
+            var classes = experimentButtons.get(i).getStyleClass();
+            classes.removeAll("glass-primary", "glass-button");
+            classes.add(i == active ? "glass-primary" : "glass-button");
+        }
+        boolean running = active >= 0 && active < s.getExperimentsCount();
+        String phase = "", color = "#C7D6EA";
+        if (running) {
+            MoleculeExperiment x = s.getExperiments(active);
+            String products = x.getGoalList().stream().map(I18n::text).reduce((a, b) -> a + " + " + b).orElse("");
+            switch (s.getExperimentPhase()) {
+                case 2 -> {
+                    phase = "✓ " + I18n.text("réussie") + " · " + products + " · "
+                            + MoleculeFormat.decimal(s.getExperimentTimeFs(), 0) + " fs";
+                    color = "#8CF0B4";
+                }
+                case 3 -> {
+                    phase = "✗ " + I18n.text("manquée : rien ne s'est formé ; relancez, l'agitation change");
+                    color = "#FFB38A";
+                }
+                case 1 -> phase = "● ● ○  " + I18n.text("le thermostat emporte l'énergie du choc") + " · "
+                        + MoleculeFormat.decimal(s.getTimeFs(), 0) + " fs";
+                default -> phase = "● ○ ○  " + I18n.text("les réactifs foncent l'un vers l'autre") + " · "
+                        + MoleculeFormat.decimal(s.getTimeFs(), 0) + " fs";
+            }
+            experimentNote.setText(I18n.text(x.getExplanation()));
+        } else {
+            experimentNote.setText(I18n.text("Cinq réactions réelles, de la plus exigeante à la plus simple : les réactifs, "
+                    + "relaxés chacun par GFN1-xTB, sont lancés l'un vers l'autre ; le thermostat joue ensuite le gaz "
+                    + "autour, qui emporte l'énergie libérée."));
+        }
+        experimentPhase.setText(phase);
+        experimentPhase.setStyle("-fx-text-fill:" + color + ";-fx-font-size:11.5px;");
+        experimentPhase.setVisible(running);
+        experimentPhase.setManaged(running);
+    }
+
     private void enclosure(MoleculeLabState s) {
         boolean shown = s.getWall() > 0 && s.getAtomsCount() > 0;
         enclosure.setVisible(shown);
@@ -857,7 +909,7 @@ public final class MoleculeView {
         HBox quantaRow = new HBox(8, text("énergie donnée", 10.5, "#8FB3D9"), quanta, quantaLabel);
         quantaRow.setAlignment(Pos.CENTER_LEFT);
         // La limite de GFN1 sur les énergies de liaison : sous le ⓘ du bilan, pas dans le panneau.
-        VBox energy = section("06", "Bilan énergétique", balance);
+        VBox energy = section("07", "Bilan énergétique", balance);
         Label info = text("ⓘ", 12, "#8FB3D9");
         info.setCursor(Cursor.HAND);
         Tooltip limit = I18n.tooltip("GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés : 1,3 à 2,2 fois "
@@ -875,10 +927,10 @@ public final class MoleculeView {
         ((HBox) energy.getChildren().get(0)).getChildren().addAll(push, info);
         return new VBox(10,
                 energy,
-                section("07", "Orbitales", levels, levelKey(), orbitalLine),
-                section("08", "Espèces", speciesLines, dipoleLine, eventLines),
-                section("09", "Atome", atomCard, atomCanvas, isotopeRow),
-                section("10", "Vibrations", compute, modeHeader, quantaRow, modeList));
+                section("08", "Orbitales", levels, levelKey(), orbitalLine),
+                section("09", "Espèces", speciesLines, dipoleLine, eventLines),
+                section("10", "Atome", atomCard, atomCanvas, isotopeRow),
+                section("11", "Vibrations", compute, modeHeader, quantaRow, modeList));
     }
 
     // ================================================================== la souris
@@ -1282,6 +1334,7 @@ public final class MoleculeView {
                 panelsAt = now;
                 energies(s);
                 enclosure(s);
+                experiment(s);
                 drawLevels();
                 species(s);
                 modes(s);
@@ -1338,6 +1391,30 @@ public final class MoleculeView {
             final int index = i;
             b.setOnAction(e -> newScene(() -> actions.reaction(index)));
             reactionBox.getChildren().add(b);
+        }
+        experimentBox.getChildren().clear();
+        experimentButtons.clear();
+        for (int i = 0; i < s.getExperimentsCount(); i++) {
+            MoleculeExperiment x = s.getExperiments(i);
+            Label name = text(I18n.text(x.getTitle()), 12, "#EAF2FF"), equation = text(I18n.text(x.getEquation()), 10.5, "#8FD8FF");
+            name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
+            equation.setWrapText(true);
+            Label rank = text(String.valueOf(i + 1), 10, "#36CDF2");
+            rank.setMinWidth(12);
+            // Une ligne cliquable plutôt qu'un bouton : un texte qui passe à la ligne dans le graphique d'un bouton lui
+            // donne une hauteur calculée sans sa largeur (des boutons hauts de 400 px).
+            VBox words = new VBox(1, name, equation);
+            HBox.setHgrow(words, Priority.ALWAYS);
+            HBox row = new HBox(8, rank, words);
+            row.setAlignment(Pos.CENTER_LEFT);
+            row.setPadding(new Insets(6, 10, 6, 8));
+            row.getStyleClass().add("glass-button");
+            row.setCursor(Cursor.HAND);
+            Tooltip.install(row, I18n.tooltip(x.getExplanation()));
+            final int index = i;
+            row.setOnMouseClicked(e -> newScene(() -> actions.experiment(index)));
+            experimentButtons.add(row);
+            experimentBox.getChildren().add(row);
         }
         paletteBox.getChildren().clear();
         for (int z : s.getPaletteList()) paletteBox.getChildren().add(elementChip(z, symbolOf(z)));

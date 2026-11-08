@@ -28,7 +28,7 @@ import traceback
 
 import numpy as np
 
-from . import assembly, dictionary, analysis, density, structures, validation, xtb
+from . import assembly, dictionary, analysis, density, experiments, structures, validation, xtb
 
 TIME_STEP_FS = 0.25
 FIRE_DT_START, FIRE_DT_MAX = 0.25, 1.0
@@ -46,10 +46,11 @@ TETHER = 0.08                   # Eh/Å² : le ressort de la souris
 WALL = 0.5                      # Eh/Å²
 # La pression du réacteur : la force des atomes sur la paroi divisée par sa surface (ce que lirait un manomètre),
 # moyennée sur PRESSURE_FS. Le piston : quand une pression est imposée, le volume de la sphère suit dV/V =
-# (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), au plus
-# PISTON_STEP par pas. La plage est celle où les molécules se rencontrent à l'écran : à 1 atm et 1500 K, une rencontre
+# (dt/τ)(P − P₀)/P₀ avec P cette pression moyennée (Berendsen appliqué à la paroi, pas aux atomes : les molécules
+# gardent leur forme), au plus PISTON_STEP par pas ; τ = PISTON_FS, plus long que la moyenne, pour que la paroi ne
+# rebondisse pas sur son propre retard. La plage est celle où les molécules se rencontrent à l'écran : à 1 atm et 1500 K, une rencontre
 # toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm, ~2 ps ; à 10 000 atm, ~25 fs (théorie cinétique, σ 28 Å²).
-PISTON_FS = 100.0
+PISTON_FS = 300.0
 PRESSURE_FS = 200.0
 PISTON_STEP = 0.01
 PRESSURE_RANGE = (100.0, 20000.0)           # atm
@@ -165,6 +166,7 @@ class MoleculeLab:
         self.events = collections.deque(maxlen=14)
         self.census = ""
         self.named = ()
+        self.experiment = None        # l'expérience guidée en cours : {index, phase, auto, time}
         # Les espèces annoncées, avec leurs atomes : ce que la scène nomme (elles ont tenu 20 fs, comme le recensement).
         self.groups = ()
         self._dictionary = threading.Thread(target=lambda: dictionary.layouts(), name="molecule-dictionary", daemon=True)
@@ -217,6 +219,10 @@ class MoleculeLab:
 
     def load_reaction(self, index):
         self._post("reaction", index)
+
+    def run_experiment(self, index):
+        """Une des expériences guidées (experiments.EXPERIMENTS) : les réactifs posés face à face puis lancés."""
+        self._post("experiment", index)
 
     def add_atom(self, z, anchor=-1, position=None):
         self._post("add", z, anchor, position)
@@ -398,6 +404,7 @@ class MoleculeLab:
         old_velocities = self.velocities
         self.label = label
         self.numbers = numbers
+        self.experiment = None
         # L'isotope de chaque atome (nombre de masse ; 0 : le mélange naturel) suit les atomes ; une nouvelle
         # molécule repart du mélange naturel.
         if len(self.isotopes) != len(numbers):
@@ -463,6 +470,59 @@ class MoleculeLab:
         self._set_wall(self._enclosing())
         self.velocities = self._thermal_velocities(self.temperature)
         self.status = f"Réacteur : {label} à {self.temperature:.0f} K"
+
+    def _do_experiment(self, index):
+        index = int(min(max(index, 0), len(experiments.EXPERIMENTS) - 1))
+        e = experiments.EXPERIMENTS[index]
+        numbers, positions, charge, split = e.build()
+        self.isotopes = []
+        self.time_fs = 0.0
+        self.history.clear()
+        self.events.clear()
+        self.wall = 0.0
+        self.pressure_target = 0.0
+        self.charge = charge
+        self.temperature = e.temperature
+        self._set_structure(e.equation, numbers, positions)
+        # Le choc, le long de la ligne des centres, et l'agitation de chaque réactif à 300 K (sans sa translation :
+        # l'énergie du choc reste celle annoncée).
+        self.velocities = (experiments.launch(numbers, self.positions, split, self.masses, e.collision_ev)
+                           + experiments.internal(self._thermal_velocities(e.temperature), self.masses, split))
+        self.dynamics = FREE
+        self.paused = False
+        self.relaxed = False
+        self.fire = None
+        self.experiment = {"index": index, "phase": experiments.APPROACH, "auto": True, "time": 0.0}
+        self.events.appendleft((0.0, f"Expérience lancée : choc à {e.collision_ev:.1f} eV".replace(".", ","),
+                                self.result.energy * EV if self.result is not None else 0.0))
+        self.status = f"Expérience : les réactifs foncent l'un vers l'autre ({e.collision_ev:.1f} eV)".replace(".", ",")
+
+    def _follow_experiment(self):
+        """Le protocole de l'expérience : le thermostat (le gaz autour) prend le relais au contact, et l'on guette les
+        produits attendus jusqu'à la limite de temps."""
+        x = self.experiment
+        if x is None:
+            return
+        e = experiments.EXPERIMENTS[x["index"]]
+        done = x["phase"] in (experiments.SUCCEEDED, experiments.FAILED)
+        # Le relais a lieu même si les produits sont déjà là (Diels-Alder se referme avant) : ils doivent refroidir.
+        if x["auto"] and self.dynamics == FREE and self.time_fs >= e.cool_fs:
+            self.dynamics = THERMOSTAT
+            self._mean = [0.0, 0.0, 0.0, 0]
+            if not done:
+                x["phase"] = experiments.COOLING
+                self.status = f"Expérience : le gaz autour (thermostat à {e.temperature:.0f} K) emporte l'énergie du choc"
+        if done:
+            return
+        if experiments.reached(self.named, e.goal):
+            x["phase"], x["time"] = experiments.SUCCEEDED, self.time_fs
+            self.events.appendleft((self.time_fs, f"Expérience réussie en {self.time_fs:.0f} fs", self.result.energy * EV))
+            self.status = f"Expérience réussie : les produits attendus se sont formés en {self.time_fs:.0f} fs"
+        elif self.time_fs >= e.limit_fs:
+            x["phase"], x["time"] = experiments.FAILED, self.time_fs
+            self.events.appendleft((self.time_fs, "Expérience manquée : les produits ne se sont pas formés",
+                                    self.result.energy * EV))
+            self.status = f"Expérience manquée : rien ne s'est formé en {e.limit_fs:.0f} fs ; relancez, l'agitation change"
 
     def _do_build(self, vector, charge, enclosed):
         numbers, charges, xy, bonds = assembly.decode(vector)
@@ -586,6 +646,8 @@ class MoleculeLab:
         if mode not in (RELAX, THERMOSTAT, FREE):
             return
         self._mean = [0.0, 0.0, 0.0, 0]                # une autre température : la moyenne repart
+        if self.experiment is not None:
+            self.experiment["auto"] = False
         if temperature is not None and temperature >= 0:
             self.temperature = float(min(max(temperature, 0.0), 6000.0))
         if mode == THERMOSTAT and self.dynamics != THERMOSTAT and np.allclose(self.velocities, 0):
@@ -717,8 +779,8 @@ class MoleculeLab:
         hits = int(np.sum(touching & ~self._touching)) if len(self._touching) == len(touching) else 0
         self._touching = touching
         target = self.pressure_target
-        if target > 0 and abs(self.pressure - target) > 0.25 * target:
-            self._mean = [0.0, 0.0, 0.0, 0]            # le piston n'y est pas encore : la moyenne attend
+        if target > 0 and self._mean[2] == 0 and abs(self.pressure - target) > 0.1 * target:
+            pass                                       # le piston n'y est pas encore : la moyenne attend qu'il y soit
         else:
             mean = self._mean
             mean[0] += now * dt_fs
@@ -726,7 +788,9 @@ class MoleculeLab:
             mean[2] += dt_fs
             mean[3] += hits
         if self.pressure_target > 0:
-            change = dt_fs / PISTON_FS * (now - self.pressure_target) / self.pressure_target
+            # Sur la pression moyennée, pas l'instantanée : celle-ci vaut zéro entre deux chocs puis bondit, et la paroi
+            # tremblait à chaque contact (mesuré : 16 mÅ en 50 fs à 2 000 atm ; 2 mÅ ainsi).
+            change = dt_fs / PISTON_FS * (self.pressure - self.pressure_target) / self.pressure_target
             self.wall *= (1 + min(max(change, -PISTON_STEP), PISTON_STEP)) ** (1 / 3)
 
     # ------------------------------------------------------------------ physique
@@ -807,6 +871,7 @@ class MoleculeLab:
             return
         self._piston(TIME_STEP_FS)
         self._record()
+        self._follow_experiment()
 
     def _verlet_step(self):
         dt = TIME_STEP_FS
@@ -984,6 +1049,9 @@ class MoleculeLab:
                 "pressure_mean": self._mean[0] / self._mean[2] if self._mean[2] > 0 else 0.0,
                 "volume_mean": self._mean[1] / self._mean[2] if self._mean[2] > 0 else 0.0,
                 "pressure_span": self._mean[2], "wall_hits": self._mean[3],
+                "experiment": -1 if self.experiment is None else self.experiment["index"],
+                "experiment_phase": 0 if self.experiment is None else self.experiment["phase"],
+                "experiment_time": 0.0 if self.experiment is None else self.experiment["time"],
                 "census": self.census, "events": list(self.events), "history": list(self.history),
                 "assessment": self._assessment,
                 "view": self.view, "drag": None if self.drag is None else (self.drag[0], self.drag[1].copy()),

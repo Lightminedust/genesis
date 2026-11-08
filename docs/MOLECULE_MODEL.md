@@ -59,10 +59,11 @@ différences finies de l'énergie.
 | étincelle | de l'énergie cinétique déposée sur un atome et ses voisins à 1,8 Å, quantité de mouvement conservée |
 | réacteur | plusieurs molécules dans une sphère à paroi raide, ½ k (r + ρ − R)², k = 0,5 Eh/Å², ρ le rayon où la densité de l'atome libre tombe à 0,002 e/bohr³ (H 1,24, O 1,40, Cl 1,71 Å) : la paroi touche le nuage, pas le noyau, et la sphère dessinée est le bord des nuages. Sur les noyaux (k = 0,05), les nuages dépassaient de 2,2 Å à 20 000 atm ; désormais de 0,22 Å au plus |
 | pression | celle que lirait un manomètre : la force des atomes sur la paroi, Σ k (r + ρ − R), divisée par sa surface 4πR², en atm (1 Eh/Å³ = 4,30·10⁷ atm) ; affichée moyennée sur 200 fs. L'enceinte la compare au gaz parfait NkT/V (N molécules) par Z = PV/NkT, calculé sur une moyenne longue (depuis le dernier changement, ou depuis que le piston est à l'équilibre) et montré seulement après 30 chocs d'atomes sur la paroi (±20 % environ) : en gaz dilué, 200 fs n'en comptent qu'un ou deux. Z > 1 : les molécules se gênent (leur volume propre — même un gaz parfait de molécules de taille finie donne Z = R/a, a le rayon où leurs centres peuvent aller) ; Z < 1 : elles s'attirent. H₂ + Cl₂ à 1 500 K sous 20 000 atm : Z = 6,1 (densité de liquide, où la fréquence des rencontres, une formule des gaz, n'est plus donnée) ; 2 H₂O à 3 000 K, paroi fixe : Z ≈ 1,1–1,5 |
-| piston | une pression imposée (100 à 20 000 atm, 0,01 à 2 GPa) : le volume de la sphère suit dV/V = (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), τ = 100 fs, au plus 1 % du volume par pas. H₂ + Cl₂ à 1 500 K, consigne 20 000 atm : 19 273 atm mesurés à 900 fs (R 6,0 → 3,1 Å) ; à τ = 250 fs, 9 000 à 11 000 atm à 750 fs — une minute d'écran sans y être. La sphère affiche la consigne et la mesure, le panneau dit si la paroi se resserre, s'écarte ou est à l'équilibre (à 25 % près). Sur 6 ps, la moyenne tient la consigne à 4 % près. Pourquoi pas 1 atm : à 1 500 K, une molécule n'en rencontre une autre que toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm ~2 ps, à 10 000 atm ~25 fs |
+| piston | une pression imposée (100 à 20 000 atm, 0,01 à 2 GPa) : le volume de la sphère suit dV/V = (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), P la pression moyennée sur 200 fs, τ = 300 fs, au plus 1 % du volume par pas. Sur la pression instantanée (τ = 100 fs), qui vaut zéro entre deux chocs puis bondit, la paroi tremblait à chaque contact : 16 mÅ en 50 fs à 2 000 atm (H₂ + Cl₂), 2 mÅ ainsi ; la consigne reste tenue à 3–6 % (2 000, 10 000, 20 000 atm). La vue se pose sur le centre de l'enceinte : la sphère ne bouge pas, les molécules bougent dedans. Son bord est teinté par la pression (bleu faible, ambre forte) ; des chevrons y montrent quand le piston serre ou cède ; un manomètre en haut à gauche donne la mesure sur une échelle logarithmique (10 à 30 000 atm), la consigne en doré, et ce que fait le piston (à 25 % près). Sur 6 ps, la moyenne tient la consigne à 4 % près. Pourquoi pas 1 atm : à 1 500 K, une molécule n'en rencontre une autre que toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm ~2 ps, à 10 000 atm ~25 fs |
 | vibrations | hessienne par différences centrées des forces analytiques (pas de 0,005 Å), pondérée par les masses, sans translations ni rotations ; « exciter » un mode donne n quanta hν, et la dynamique (anharmonique) prend le relais |
 | isotope | un atome (ou tous ceux d'un élément) prend la masse d'un de ses isotopes : les stables, et les radioactifs d'au moins un an de demi-vie (¹H ²H ³H, ¹²C ¹³C ¹⁴C, ¹⁶O ¹⁷O ¹⁸O…), masses de l'AME et abondances IUPAC (base mendeleev). Seule la masse change : la surface d'énergie, la géométrie, les charges restent (Born–Oppenheimer) ; la dynamique et les vibrations changent. H₂O → D₂O : 1 440, 3 677, 3 788 → 1 054, 2 650, 2 779 cm⁻¹, rapports 0,73, 0,72, 0,73 (mesurés : 0,74, 0,73, 0,74) ; HDO découple ses élongations (O–D 2 712, O–H 3 736 cm⁻¹). L'isotope s'écrit en exposant devant le symbole (²H, ¹³C) |
 | assembleur 2D | un dessin à plat, vérifié par le calcul pendant qu'on dessine, puis posé en 3D et relaxé dans le simulateur (voir « L'assembleur 2D et le dictionnaire ») |
+| expériences | cinq réactions réelles, de la plus exigeante à la plus simple (`experiments.py`) : Diels-Alder (buta-1,3-diène s-cis + éthylène → cyclohexène), SN2 (OH⁻ + CH₃Cl → CH₃OH + Cl⁻), transfert de proton (H₃O⁺ + NH₃ → H₂O + NH₄⁺), recombinaison de radicaux (2 CH₃· → éthane), formation de l'eau (OH· + H· → H₂O). Chaque réactif est relaxé seul (L-BFGS, GFN1-xTB), les deux sont posés face à face par les atomes qui réagissent (l'OH⁻ à l'opposé du chlore, l'éthylène à plat à 3,2 Å au-dessus des extrémités du diène), puis lancés le long de la ligne de leurs centres avec une énergie de choc exacte (quantité de mouvement nulle), plus l'agitation de chaque réactif à 300 K sans sa translation. Dynamique libre pendant le choc, puis le thermostat prend le relais (le gaz autour, qui emporte l'énergie libérée). Réussie quand le dictionnaire reconnaît les produits ; manquée après une limite de temps. Réglées par le calcul : chacune réussit sur 3 à 6 tirages de l'agitation (tests/test_experiments.py en rejoue un), et les produits tiennent 600 fs après le choc |
 | molécules du vivant | glucose (β-D-glucopyranose), acide laurique (acide gras saturé en C12, un lipide), glycérol, alanine, caféine : les conformères 3D de PubChem (MMFF94), relaxés par GFN1-xTB en 70 à 85 pas sans qu'une liaison casse ; 13 à 38 atomes (au-delà de 40, le calcul ne suit plus en temps réel) |
 
 Les espèces présentes sont lues dans les indices de liaison de Mayer, B_AB = 2 Σ_σ Σ (P^σ S)_μν (P^σ S)_νμ : des
@@ -73,12 +74,12 @@ Un changement d'espèces qui dure 20 fs est annoncé comme une réaction, chaque
 
 ## L'assembleur 2D et le dictionnaire
 
-**Le dictionnaire** (`dictionary.py`) : 151 espèces écrites en SMILES (le sous-ensemble organique : hydrogènes
+**Le dictionnaire** (`dictionary.py`) : 152 espèces écrites en SMILES (le sous-ensemble organique : hydrogènes
 implicites, atomes entre crochets, liaisons `=` et `#`, branches, fermetures de cycle ; forme de Kekulé), du proton et
 des atomes seuls aux molécules du vivant, avec des ions (OH⁻, H₃O⁺, NH₄⁺), des radicaux (OH, CH₃, HO₂) et des
 isomères (éthanol et éther diméthylique). Une espèce est reconnue par son graphe — qui est lié à qui, hydrogènes
 compris — et sa charge nette : l'empreinte de Weisfeiler–Lehman (quatre tours d'étiquettes des voisins) et la formule.
-Les ordres de liaison n'y entrent pas : le calcul ne les donne pas entiers (Mayer 1,4 dans le benzène). Les 151
+Les ordres de liaison n'y entrent pas : le calcul ne les donne pas entiers (Mayer 1,4 dans le benzène). Les 152
 empreintes sont distinctes. La charge d'un fragment est la somme de ses charges de Mulliken, arrondie à l'entier dès
 0,6 e en valeur absolue (OH à −0,9 e : l'ion hydroxyde).
 
@@ -471,6 +472,19 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
   trop vite (densité, liaisons trop fortes, pas de barrière de spin) ; aucune n'atteint CO₂ + H₂O en 4 ps : elles
   finissent en CH₂O₂ + H₂O₂ (quatre) ou en un seul agrégat CH₄O₄ (deux). Le laboratoire montre donc des mécanismes
   possibles, pas des vitesses ni une combustion complète.
+- **Expériences guidées.** Ce que le calcul a appris en les réglant, et que l'interface dit :
+  - *Diels-Alder.* En choc frontal, GFN1-xTB franchit le col entre 0,6 et 1,0 eV (barrière mesurée ≈ 1,2 eV) ; le
+    choc est lancé à 2,5 eV, assez pour passer malgré l'agitation (à 2,0 eV, deux tirages sur six rebondissaient à
+    2,1 Å, au col). ΔE GFN1 −2,7 eV, mesuré ≈ −1,7 eV.
+  - *SN2.* L'attaque doit venir de l'arrière : posé de côté (un premier montage, faux), l'OH⁻ arrachait un proton
+    (CH₂Cl⁻ + H₂O) à toutes les énergies essayées, 0,5 à 3 eV. GFN1 rend cette voie légèrement exothermique
+    (−0,26 eV ; mesurée ≈ +0,3 eV). ΔE SN2 : GFN1 −4,1 eV, mesuré ≈ −2,2 eV.
+  - *Radicaux.* Sans polarisation de spin, GFN1 surestime les liaisons formées entre radicaux : 2 CH₃· → éthane
+    −5,6 eV (mesuré ≈ −3,9), OH· + H· → H₂O −8,1 eV (mesuré ≈ −5,1). Le transfert de proton, entre espèces à couches
+    fermées, est juste : −1,9 eV (mesuré ≈ −1,7).
+  - *Troisième corps.* Seuls, H et OH se rejoignent puis se séparent : trois atomes n'ont nulle part où mettre
+    l'énergie de la liaison (en dynamique libre, l'H repart à 4 Å et revient plusieurs fois). Le thermostat, dès le
+    contact, joue le gaz qui l'emporte (H + OH + M → H₂O + M), comme il le fait pour l'éthane.
 - **Noyaux classiques.** Pas d'énergie de point zéro dans la dynamique, pas d'effet tunnel des protons.
 - **Charges qui s'emballent.** Pour quelques géométries (CH₄ plan carré comprimé à 1,07 Å, Ba₂Si, Pm₄ dissocié), la
   fonctionnelle seule donne des anions absurdes ; dxtb aussi. La contrainte des anions les tient à −2,5 e — un ajout
@@ -483,7 +497,7 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
 - **Couleurs des charges.** Le potentiel affiché est celui des charges de Mulliken (le modèle électrostatique de
   GFN1), pas le potentiel exact de toute la densité.
 - **Dictionnaire et assembleur.** Les noms viennent du graphe, pas de la géométrie : des stéréo-isomères (cis et
-  trans, énantiomères) portent le même nom, et une espèce absente des 151 n'a que sa formule. « Tient » dit que
+  trans, énantiomères) portent le même nom, et une espèce absente des 152 n'a que sa formule. « Tient » dit que
   GFN1-xTB trouve un minimum pour la molécule seule, dans le vide, à 0 K : ni qu'elle existe, ni qu'elle dure à
   température ambiante ou au contact d'autres (un radical « tient », puis réagit au premier choc) ; sa cohésion est
   celle de GFN1 (1,3 à 2,2 fois trop forte).
@@ -496,6 +510,7 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
 | `xtb.py` | GFN1-xTB : base, recouvrements, H⁰, électrostatique, répulsion, D3, liaison halogène, cycle auto-cohérent, gradients |
 | `integrals.py` | Recouvrements de gaussiennes et leurs dérivées (Obara–Saika), valeurs des orbitales sur une grille |
 | `analysis.py` | Indices de Mayer, partage des liaisons, espèces (nommées), dipôle, modes de vibration |
+| `experiments.py` | Les cinq expériences guidées : réactifs relaxés, mise face à face, choc, protocole (`MOLECULE_EXPERIMENT`) |
 | `dictionary.py` | Le dictionnaire : SMILES, empreinte des graphes, noms français et anglais, départs de dessin 2D |
 | `assembly.py` | L'assembleur : le dessin reçu (`MOLECULE_ASSESS`, `MOLECULE_BUILD`), sa pose en 3D, les verdicts |
 | `AtomCard.java`, `MoleculeCard.java` | La carte du survol d'un atome et la fiche d'une molécule au clic droit (client) |

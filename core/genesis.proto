@@ -164,6 +164,7 @@ message UserAction {
     MOLECULE_ASSESS = 109;    // value = numéro de la demande ; amount = 1 : relaxer chaque molécule (GFN1-xTB)
     MOLECULE_PRESSURE = 110;  // amount = pression imposée (atm) : la paroi devient un piston ; 0 : volume fixe
                               // (0 : le mélange naturel)
+    MOLECULE_EXPERIMENT = 111;  // value = indice dans MoleculeLabState.experiments : la scène devient l'expérience
   }
   ActionType type = 1;
   int32 value = 2;
@@ -1722,6 +1723,20 @@ message MoleculeLabState {
   double volume_mean = 71;                   // Å³
   double pressure_span_fs = 72;
   int32 wall_hits = 73;
+  repeated MoleculeExperiment experiments = 74;   // les expériences guidées (envoyées une fois)
+  int32 experiment = 75;                     // l'expérience en cours (−1 : aucune)
+  int32 experiment_phase = 76;               // 0 approche, 1 refroidissement (thermostat), 2 réussie, 3 manquée
+  double experiment_time_fs = 77;            // réussie : quand les produits sont apparus ; manquée : la limite
+}
+
+// Une expérience guidée : des réactifs relaxés posés face à face puis lancés l'un vers l'autre.
+message MoleculeExperiment {
+  string title = 1;
+  string equation = 2;
+  string explanation = 3;                    // ce qu'on regarde, et ce que GFN1-xTB vaut face à la mesure
+  double collision_ev = 4;                   // l'énergie du choc
+  double limit_fs = 5;                       // au-delà : manquée
+  repeated string goal = 6;                  // les produits attendus (noms du dictionnaire)
 }
 
 // Une espèce de la scène : ses atomes, et « H₂O · eau » (le nom vient de son graphe, pas de sa formule).

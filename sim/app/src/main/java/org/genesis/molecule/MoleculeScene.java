@@ -183,6 +183,8 @@ final class MoleculeScene {
     double pressure;
     boolean pistonOn;
     double pressureTarget;
+    /** Ce qui est dessiné : le rayon de la paroi et la pression du manomètre, amenés en douceur vers ceux du moteur. */
+    private double drawnWall, shownPressure;
     int hovered = -1, selected = -1, dragged = -1;
     double[] dragTarget;
     double tetherNewtons;
@@ -198,7 +200,7 @@ final class MoleculeScene {
     /** Combien de temps une espèce formée se signale (s). */
     private static final double FORMED_GLOW = 3.2;
     /** La légende repliée sur son titre (un clic sur le titre la replie ou la déplie), et où est ce titre. */
-    boolean legendFolded;
+    boolean legendFolded = true;          // repliée au départ : la scène d'abord, la légende sur demande
     private double[] legendTitle = new double[4];
     private DensityGrid grid, field, tint, potentialGrid;
     /**
@@ -757,7 +759,11 @@ final class MoleculeScene {
         navigated = false;
         double[] box = bounds();
         double extent = Math.max(1.2, box[3]);
-        if (wall > 0) extent = Math.max(extent, wall + Math.sqrt(box[0] * box[0] + box[1] * box[1] + box[2] * box[2]));
+        // Dans une enceinte, la vue se pose sur son centre (voir anchor) : le cadre est la sphère.
+        if (wall > 0) {
+            extent = wall;
+            for (double[] q : positions) extent = Math.max(extent, Math.hypot(q[0], Math.hypot(q[1], q[2])));
+        }
         // Le cadre englobe le halo (il dépasse les noyaux de 0,5 à 1,3 Å) et les signes δ posés au-delà — en largeur
         // aussi, quand la place à droite de la vignette est plus étroite que haute.
         reframe = lastH <= 1;
@@ -869,7 +875,7 @@ final class MoleculeScene {
             for (int k = 0; k < 3; k++) c[k] += positions[a][k];
             count++;
         }
-        if (count == 0) return Arrays.copyOf(bounds(), 3);
+        if (count == 0) return wall > 0 ? new double[3] : Arrays.copyOf(bounds(), 3);
         for (int k = 0; k < 3; k++) c[k] /= count;
         return c;
     }
@@ -1037,6 +1043,9 @@ final class MoleculeScene {
         lastW = w;
         lastH = h;
         insetLeft += (insetTarget - insetLeft) * Math.min(1, dt * 6);
+        drawnWall = wall <= 0 || drawnWall <= 0 ? wall : drawnWall + (wall - drawnWall) * Math.min(1, dt * 5);
+        shownPressure = shownPressure <= 0 || pressure <= 0 ? pressure
+                : shownPressure + (pressure - shownPressure) * Math.min(1, dt * 4);
         if (reframe) frame();
         double[] c = anchor();
         double follow = centered ? Math.min(1, dt * 2.5) : 1;
@@ -1553,36 +1562,135 @@ final class MoleculeScene {
     /** Combien de temps la mire du pivot reste après le geste (s). */
     private static final double PIVOT_FADE = 1.2;
 
+    /** La place d'une pression sur l'échelle du manomètre : logarithmique, de 10 à 30 000 atm. */
+    static double gaugeFraction(double atm) {
+        if (atm <= 10) return 0;
+        return Math.min(1, (Math.log10(atm) - 1) / (Math.log10(30000) - 1));
+    }
+
+    /** La teinte d'une pression : bleu froid à 10 atm, ambre vers 20 000 atm. */
+    private static Color pressureColor(double atm, double opacity) {
+        return Color.web("#7FA6FF").interpolate(Color.web("#FFB86B"), gaugeFraction(atm)).deriveColor(0, 1, 1, opacity);
+    }
+
     /**
-     * L'enceinte du réacteur : une sphère de verre (un liseré, un reflet le long du bord), en tirets quand sa paroi est
-     * fixe, pleine quand c'est un piston ; au-dessus, la pression que les atomes exercent sur elle.
+     * Ce que fait le piston : −1 il serre (la pression est sous la consigne), +1 il cède (au-dessus), 0 il tient (à 25 %
+     * près : les chocs d'un gaz de quelques molécules ne font pas mieux). Le même seuil que la phrase du panneau.
+     */
+    static int pistonDirection(double measured, double wanted) {
+        if (wanted <= 0) return 0;
+        return measured < .75 * wanted ? -1 : measured > 1.25 * wanted ? 1 : 0;
+    }
+
+    /**
+     * L'enceinte du réacteur : une sphère de verre posée au centre de la vue (elle ne bouge pas : ce sont les molécules
+     * qui bougent dedans), son bord teinté par la pression mesurée (bleu faible, ambre forte), en tirets quand sa paroi
+     * est fixe. Quand le piston serre ou cède, des chevrons sur le bord le montrent ; le manomètre dit de combien.
      */
     private void drawWall(GraphicsContext g) {
-        if (wall <= 0) return;
+        if (drawnWall <= 0) return;
         double[] p = camera.project(0, 0, 0);
         if (p == null) return;
-        double radius = wall * p[3];
-        g.setFill(new RadialGradient(0, 0, p[0], p[1], radius, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#7FA6FF", 0)), new Stop(.86, Color.web("#7FA6FF", 0)),
-                new Stop(1, Color.web("#7FA6FF", pistonOn ? .09 : .06))));
-        g.fillOval(p[0] - radius, p[1] - radius, 2 * radius, 2 * radius);
-        g.setStroke(Color.web("#8FB4FF", pistonOn ? .34 : .22));
-        g.setLineWidth(pistonOn ? 1.3 : 1);
+        double radius = drawnWall * p[3], x = p[0], y = p[1];
+        double atm = shownPressure;
+        // Le verre : transparent au cœur, une teinte qui s'épaissit vers le bord, un reflet en haut à gauche.
+        g.setFill(new RadialGradient(0, 0, x, y, radius, false, CycleMethod.NO_CYCLE,
+                new Stop(0, pressureColor(atm, 0)), new Stop(.72, pressureColor(atm, .015)),
+                new Stop(.94, pressureColor(atm, pistonOn ? .07 : .05)), new Stop(1, pressureColor(atm, pistonOn ? .12 : .08))));
+        g.fillOval(x - radius, y - radius, 2 * radius, 2 * radius);
+        g.setStroke(pressureColor(atm, pistonOn ? .5 : .3));
+        g.setLineWidth(pistonOn ? 1.4 : 1);
         if (!pistonOn) g.setLineDashes(3, 7);
-        g.strokeOval(p[0] - radius, p[1] - radius, 2 * radius, 2 * radius);
+        g.strokeOval(x - radius, y - radius, 2 * radius, 2 * radius);
         g.setLineDashes();
-        // La consigne et la mesure, côte à côte : le piston y amène la paroi en quelques centaines de femtosecondes.
-        String measured = pressure < 1 ? "≈ 0 atm" : MoleculeFormat.atm(pressure);
-        String text = pistonOn
-                ? I18n.text("piston") + " " + MoleculeFormat.atm(pressureTarget) + " · " + I18n.text("mesurée") + " " + measured
-                : I18n.text("enceinte") + " · " + measured;
-        // En haut à gauche, contre le bord : les signes δ et les noms se posent au-dessus et au-dessous des molécules.
-        g.setFont(Font.font("Segoe UI", 10.5));
-        g.setTextAlign(TextAlignment.RIGHT);
-        g.setFill(Color.web("#A9C2E6", .8));
-        double corner = radius * Math.sqrt(.5);
-        g.fillText(text, p[0] - corner - 2, Math.max(16, p[1] - corner - 4));
+        g.setLineCap(StrokeLineCap.ROUND);
+        g.setStroke(Color.web("#FFFFFF", .16));
+        g.setLineWidth(2.2);
+        double inner = radius * .93;
+        g.strokeArc(x - inner, y - inner, 2 * inner, 2 * inner, 112, 46, ArcType.OPEN);
+        g.setStroke(Color.web("#FFFFFF", .07));
+        g.strokeArc(x - inner, y - inner, 2 * inner, 2 * inner, 164, 12, ArcType.OPEN);
+        // Le piston en marche : douze chevrons sur le bord, vers l'intérieur s'il serre, vers l'extérieur s'il cède ;
+        // ils glissent de quelques pixels dans ce sens.
+        int direction = pistonOn ? pistonDirection(pressure, pressureTarget) : 0;
+        if (direction != 0 && radius > 24) {
+            double swing = 3 * Math.sin(clock * 5), size = Math.min(10, radius * .07);
+            g.setStroke(pressureColor(atm, .85));
+            g.setLineWidth(1.9);
+            for (int k = 0; k < 12; k++) {
+                double a = k * Math.PI / 6 + Math.PI / 12, ux = Math.cos(a), uy = Math.sin(a);
+                double r = radius + 8 + direction * swing;
+                double tipX = x + ux * (r + direction * size), tipY = y + uy * (r + direction * size);
+                double baseX = x + ux * r, baseY = y + uy * r, ox = -uy * size * .8, oy = ux * size * .8;
+                g.strokePolyline(new double[]{baseX + ox, tipX, baseX - ox}, new double[]{baseY + oy, tipY, baseY - oy}, 3);
+            }
+        }
+        g.setLineCap(StrokeLineCap.BUTT);
+        drawGauge(g);
+    }
+
+    /**
+     * Le manomètre, en haut à gauche de la vue, sous le titre : un cadran logarithmique (10 à 30 000 atm) dont l'arc suit la pression
+     * mesurée (moyennée sur 200 fs), un trait doré à la consigne du piston, la valeur au centre ; à côté, ce que fait le
+     * piston. Une pression qui change se voit : l'arc s'allonge ou recule, et les chevrons de la sphère le confirment.
+     */
+    private void drawGauge(GraphicsContext g) {
+        if (lastH < 200) return;
+        double r = 25, cx = insetLeft + 26 + r, cy = 94 + 10 + r;
+        double atm = shownPressure, start = 225, sweep = 270, width = 2 * r + 20 + 168;
+        g.setFill(Color.web("#081222", .8));
+        g.fillRoundRect(cx - r - 10, cy - r - 10, width, 2 * r + 20, 14, 14);
+        g.setStroke(Color.web("#2E4C73", .5));
+        g.setLineWidth(1);
+        g.strokeRoundRect(cx - r - 10, cy - r - 10, width, 2 * r + 20, 14, 14);
+        g.setLineCap(StrokeLineCap.ROUND);
+        g.setStroke(Color.web("#FFFFFF", .08));
+        g.setLineWidth(4);
+        g.strokeArc(cx - r, cy - r, 2 * r, 2 * r, start, -sweep, ArcType.OPEN);
+        // Les graduations : 100, 1 000, 10 000 atm.
+        g.setLineWidth(1);
+        g.setStroke(Color.web("#8FB3D9", .4));
+        for (double tick : new double[]{100, 1000, 10000}) {
+            double a = Math.toRadians(start - sweep * gaugeFraction(tick));
+            g.strokeLine(cx + Math.cos(a) * (r - 8), cy - Math.sin(a) * (r - 8), cx + Math.cos(a) * (r - 4), cy - Math.sin(a) * (r - 4));
+        }
+        double f = gaugeFraction(atm);
+        if (f > 0) {
+            g.setStroke(pressureColor(atm, .95));
+            g.setLineWidth(4);
+            g.strokeArc(cx - r, cy - r, 2 * r, 2 * r, start, -sweep * f, ArcType.OPEN);
+        }
+        if (pistonOn) {
+            double a = Math.toRadians(start - sweep * gaugeFraction(pressureTarget));
+            g.setStroke(Color.web("#FFD27A"));
+            g.setLineWidth(2);
+            g.strokeLine(cx + Math.cos(a) * (r - 6), cy - Math.sin(a) * (r - 6), cx + Math.cos(a) * (r + 5), cy - Math.sin(a) * (r + 5));
+        }
+        g.setLineCap(StrokeLineCap.BUTT);
+        g.setTextAlign(TextAlignment.CENTER);
+        g.setFill(Color.web("#EAF2FF"));
+        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, atm >= 10000 ? 10.5 : 12));
+        g.fillText(atm < 1 ? "≈ 0" : MoleculeFormat.atm(atm).replace(" atm", ""), cx, cy + 3);
+        g.setFont(Font.font("Segoe UI", 9));
+        g.setFill(Color.web("#8FA4C2"));
+        g.fillText("atm", cx, cy + 15);
         g.setTextAlign(TextAlignment.LEFT);
+        double tx = cx + r + 14;
+        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
+        g.setFill(Color.web("#A9C2E6"));
+        g.fillText(I18n.text("pression sur la paroi"), tx, cy - 11);
+        g.setFont(Font.font("Segoe UI", 10.5));
+        if (pistonOn) {
+            g.setFill(Color.web("#FFD27A"));
+            g.fillText(I18n.text("consigne du piston") + " " + MoleculeFormat.atm(pressureTarget), tx, cy + 4);
+            int direction = pistonDirection(pressure, pressureTarget);
+            g.setFill(direction == 0 ? Color.web("#8CF0B4") : pressureColor(atm, 1));
+            g.fillText((direction < 0 ? "↘ " : direction > 0 ? "↗ " : "● ") + I18n.text(direction < 0 ? "le piston serre"
+                    : direction > 0 ? "le piston cède" : "consigne tenue"), tx, cy + 19);
+        } else {
+            g.setFill(Color.web("#8FA4C2"));
+            g.fillText(I18n.text("paroi fixe : volume constant"), tx, cy + 4);
+        }
     }
 
     private void drawField(GraphicsContext g) {

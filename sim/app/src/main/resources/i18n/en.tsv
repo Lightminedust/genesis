@@ -3272,3 +3272,28 @@ Couper l'envoi	Turn sending off
 Identifiant de cette installation (pour demander tes données ou leur effacement : nellawassi@gmail.com) :	This installation's identifier (to ask for your data or its deletion: nellawassi@gmail.com):
 Envoyer les statistiques d'utilisation	Send usage statistics
 Quelles données sont envoyées ?	What data is sent?
+Expériences	Experiments
+buta-1,3-diène + éthylène → cyclohexène	buta-1,3-diene + ethylene → cyclohexene
+2 CH₃· → éthane	2 CH₃· → ethane
+cyclohexène	cyclohexene
+réussie	succeeded
+manquée : rien ne s'est formé ; relancez, l'agitation change	missed: nothing formed; run it again, the thermal motion changes
+le thermostat emporte l'énergie du choc	the thermostat carries away the collision energy
+les réactifs foncent l'un vers l'autre	the reactants rush toward each other
+Cinq réactions réelles, de la plus exigeante à la plus simple : les réactifs, relaxés chacun par GFN1-xTB, sont lancés l'un vers l'autre ; le thermostat joue ensuite le gaz autour, qui emporte l'énergie libérée.	Five real reactions, from the most demanding to the simplest: the reactants, each relaxed by GFN1-xTB, are launched at each other; the thermostat then plays the surrounding gas, which carries away the energy released.
+pression sur la paroi	pressure on the wall
+le piston serre	the piston closes in
+le piston cède	the piston gives way
+consigne tenue	target held
+paroi fixe : volume constant	fixed wall: constant volume
+Expérience manquée : les produits ne se sont pas formés	Experiment missed: the products did not form
+Diels-Alder	Diels-Alder
+Une cycloaddition : les deux extrémités du butadiène (replié en s-cis) se referment sur la double liaison de l'éthylène, deux liaisons C–C naissent ensemble et un cycle à six atomes se forme. Il faut franchir un col : en choc frontal, GFN1-xTB le place entre 0,6 et 1,0 eV (barrière mesurée ≈ 1,2 eV) ; à 2,5 eV, le choc passe malgré l'agitation. ΔE : GFN1 −2,7 eV, mesuré ≈ −1,7 eV.	A cycloaddition: the two ends of butadiene (folded s-cis) close onto the double bond of ethylene, two C–C bonds form together and a six-membered ring appears. A pass has to be crossed: in a head-on collision, GFN1-xTB puts it between 0.6 and 1.0 eV (measured barrier ≈ 1.2 eV); at 2.5 eV, the collision gets through despite the thermal motion. ΔE: GFN1 −2.7 eV, measured ≈ −1.7 eV.
+Substitution SN2	SN2 substitution
+L'ion hydroxyde attaque le carbone par l'arrière, à l'opposé du chlore : la liaison C–O se forme pendant que C–Cl se rompt, et les trois hydrogènes se retournent comme un parapluie (inversion de Walden). De côté, l'OH⁻ arracherait plutôt un proton. ΔE : GFN1 −4,1 eV, mesuré ≈ −2,2 eV.	The hydroxide ion attacks the carbon from behind, opposite the chlorine: the C–O bond forms while C–Cl breaks, and the three hydrogens flip like an umbrella (Walden inversion). From the side, OH⁻ would rather pull off a proton. ΔE: GFN1 −4.1 eV, measured ≈ −2.2 eV.
+Transfert de proton	Proton transfer
+Un acide et une base : l'ammoniac, plus basique que l'eau, arrache un proton à l'ion hydronium, sans col à franchir. ΔE : GFN1 −1,9 eV, mesuré ≈ −1,7 eV (affinités protoniques 204 et 165 kcal/mol).	An acid and a base: ammonia, more basic than water, pulls a proton off the hydronium ion, with no pass to cross. ΔE: GFN1 −1.9 eV, measured ≈ −1.7 eV (proton affinities 204 and 165 kcal/mol).
+Recombinaison de radicaux	Radical recombination
+Deux radicaux méthyle, chacun avec un électron non apparié, les mettent en commun : la liaison C–C naît sans col. Le thermostat joue le gaz autour, qui emporte l'énergie libérée. ΔE : GFN1 −5,6 eV, mesuré ≈ −3,9 eV (GFN1 ne polarise pas les spins : il surestime les liaisons entre radicaux).	Two methyl radicals, each with one unpaired electron, share them: the C–C bond forms with no pass. The thermostat plays the surrounding gas, which carries away the energy released. ΔE: GFN1 −5.6 eV, measured ≈ −3.9 eV (GFN1 does not polarize spins: it overestimates bonds between radicals).
+Formation de l'eau	Water formation
+Le plus simple : un atome d'hydrogène s'unit au radical hydroxyle. Seuls, ils rebondiraient — trois atomes ne savent pas où mettre l'énergie de la liaison ; le thermostat joue le troisième corps du gaz (H + OH + M). ΔE : GFN1 −8,1 eV, mesuré ≈ −5,1 eV (spins non polarisés, comme pour CH₃·).	The simplest: a hydrogen atom joins the hydroxyl radical. On their own they would bounce apart — three atoms have nowhere to put the energy of the bond; the thermostat plays the third body of the gas (H + OH + M). ΔE: GFN1 −8.1 eV, measured ≈ −5.1 eV (spins not polarized, as for CH₃·).

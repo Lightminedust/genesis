@@ -400,6 +400,7 @@ public class App extends Application {
                 sendVector(ActionType.MOLECULE_ASSESS, request, deep ? 1 : 0, vector);
             }
             @Override public void pressure(double atm) { sendBoth(ActionType.MOLECULE_PRESSURE, 0, atm); }
+            @Override public void experiment(int index) { send(ActionType.MOLECULE_EXPERIMENT, index); }
         });
         subatomicView = new SubatomicView(() -> leaveLab(ActionType.SUBATOMIC_STOP, f -> !f.getSubatomic().getActive()),
                 () -> send(ActionType.SUBATOMIC_RESET),

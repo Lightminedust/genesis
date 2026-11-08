@@ -382,5 +382,38 @@ class MoleculeSceneTest {
         assertTrue(MoleculeView.pistonMotion(9000, 20000).contains("resserre"));
         assertTrue(MoleculeView.pistonMotion(30000, 20000).contains("écarte"));
         assertTrue(MoleculeView.pistonMotion(17520, 20000).contains("équilibre"));
+        // Le manomètre et les chevrons de la sphère disent la même chose que la phrase.
+        assertEquals(-1, MoleculeScene.pistonDirection(9000, 20000));
+        assertEquals(1, MoleculeScene.pistonDirection(30000, 20000));
+        assertEquals(0, MoleculeScene.pistonDirection(17520, 20000));
+        assertEquals(0, MoleculeScene.pistonDirection(500, 0));                  // pas de piston : rien ne bouge
+        // L'échelle du cadran : logarithmique, 10 à 30 000 atm ; chaque décade y prend la même place.
+        assertEquals(0, MoleculeScene.gaugeFraction(5), 1e-12);
+        assertEquals(1, MoleculeScene.gaugeFraction(30000), 1e-12);
+        assertEquals(MoleculeScene.gaugeFraction(1000) - MoleculeScene.gaugeFraction(100),
+                MoleculeScene.gaugeFraction(10000) - MoleculeScene.gaugeFraction(1000), 1e-12);
+    }
+
+    @Test
+    void theEnclosureStaysStillWhileTheMoleculesMoveInsideIt() {
+        // Dans une enceinte, la vue se pose sur son centre (l'origine, où est la paroi) : quand les molécules se
+        // déplacent dedans, la sphère ne bouge pas à l'écran. Sans paroi, la vue suit les molécules.
+        MoleculeScene scene = new MoleculeScene();
+        scene.positions = new double[][]{{2, 0, 0}, {3, 0, 0}};
+        scene.z = new int[]{1, 1};
+        scene.wall = 5;
+        double dt = 1 / 60.0;
+        for (int k = 0; k < 200; k++) scene.aim(1000, 800, dt, false);
+        double[] before = scene.camera.project(0, 0, 0);
+        scene.positions = new double[][]{{-3, 1, 0}, {-2, 1, 0}};
+        for (int k = 0; k < 200; k++) scene.aim(1000, 800, dt, false);
+        double[] after = scene.camera.project(0, 0, 0);
+        assertEquals(before[0], after[0], .5);
+        assertEquals(before[1], after[1], .5);
+        assertEquals(scene.camera.centerX(), after[0], 1);
+        scene.wall = 0;
+        for (int k = 0; k < 300; k++) scene.aim(1000, 800, dt, false);
+        double[] middle = scene.camera.project(-2.5, 1, 0);
+        assertEquals(scene.camera.centerX(), middle[0], 1);
     }
 }

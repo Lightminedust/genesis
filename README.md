@@ -324,14 +324,21 @@ GFN1-xTB gives the energy and the exact force on each nucleus, and geometry, bon
   aimed point, shown by a crosshair; the wheel zooms toward the cursor (what is under it stays under it); a
   right-drag (or Shift + drag) moves the view; double-clicking an atom centres on it and follows it through the
   dynamics; « Show all » (bottom right, key F, double-click in empty space) frames every molecule again.
-* **A dictionary of species** — 151 species (atoms, ions, radicals, inorganic and organic molecules, isomers such as
+* **A dictionary of species** — 152 species (atoms, ions, radicals, inorganic and organic molecules, isomers such as
   ethanol and dimethyl ether) recognized by their bond graph and net charge (a Weisfeiler–Lehman fingerprint): the
   scene names each molecule, a green circle marks a species that has just formed, and the log says « formed: H₂O ·
   water — broken up: H · hydrogen atom, HO · hydroxyl radical ».
+* **Experiments** — five real reactions, from the most demanding to the simplest: Diels-Alder (butadiene + ethylene →
+  cyclohexene), SN2 (OH⁻ + CH₃Cl → CH₃OH + Cl⁻, backside attack and Walden inversion), proton transfer (H₃O⁺ + NH₃),
+  radical recombination (2 CH₃· → ethane) and water formation (OH· + H·). The reactants, each relaxed by GFN1-xTB,
+  are set face to face and launched at each other with an exact collision energy; the thermostat then plays the
+  surrounding gas. The panel follows the phases and says, for each one, what GFN1 gives against the measured value.
+  Each one was tuned by computation (several draws of the thermal motion) and is replayed by the tests.
 * **Dynamics and reactor** — relaxation (FIRE), molecular dynamics with a thermostat (CSVR) or free (energy
   conserved, 0.25 fs steps); molecules in a sphere (2 H₂ + O₂, H₂ + Cl₂, CH₄ + 2 O₂…) that react when heated or hit
   by a spark that deposits kinetic energy, or squeezed by a piston (100 to 20,000 atm: the wall follows the
-  imposed pressure); the wall touches the atoms' clouds, not their nuclei; the pressure is measured on it (the
+  imposed pressure, smoothed over 200 fs; the view stays on the enclosure, whose rim is tinted by the pressure, and
+  a gauge shows the measured pressure, the target and what the piston is doing); the wall touches the atoms' clouds, not their nuclei; the pressure is measured on it (the
   atoms' force over its area) and compared with the ideal gas by Z = PV/NkT once the wall has taken enough hits;
   a weak bath on each atom gives every molecule its share of thermal agitation; the species present and each reaction are read from the Mayer
   bond orders and the shared density. Hot runs keep going: when a bond breaks the self-consistent cycle switches from Broyden

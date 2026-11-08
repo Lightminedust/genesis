@@ -1437,6 +1437,9 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             if kind == Action.MOLECULE_PRESSURE:
                 molecules.set_pressure(action.amount)
                 return []
+            if kind == Action.MOLECULE_EXPERIMENT:
+                molecules.run_experiment(action.value)
+                return []
             if kind == Action.MOLECULE_BUILD:
                 molecules.build(action.vector, action.value, action.amount > 0)
                 return []
