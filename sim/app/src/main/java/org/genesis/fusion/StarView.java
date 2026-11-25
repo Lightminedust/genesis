@@ -73,8 +73,8 @@ public class StarView {
     private static final Color NEUTRINO = Color.web("#A5B4FC");
     private static final Color GAMMA = Color.web("#FDE047");
     private static final Color POSITRON = Color.web("#F472B6");
-    private static final String UI = "Segoe UI";
-    private static final String MONO = "Consolas";
+    private static final String UI = org.genesis.common.Plan.SANS;
+    private static final String MONO = org.genesis.common.Plan.MONO;
 
     private static final double PANEL = 410;
     private static final double HEADER = 74;
@@ -198,7 +198,7 @@ public class StarView {
         });
         for (Label label : new Label[]{temperatureLabel, densityLabel}) {
             label.setMinWidth(118);
-            label.setStyle("-fx-text-fill: #FCD34D; -fx-font-family: Consolas; -fx-font-size: 12px;");
+            label.setStyle("-fx-text-fill: #FCD34D; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 12px;");
         }
         speeds.setPrefWidth(200);
         speeds.setOnAction(event -> {
@@ -689,10 +689,10 @@ public class StarView {
         gc.setFill(new RadialGradient(0, 0, winX + winW / 2, winY + winH / 2, Math.max(winW, winH) * 0.7, false,
                 CycleMethod.NO_CYCLE, new Stop(0, glow.deriveColor(0, 1, 0.35 + 0.25 * heat, 0.55)),
                 new Stop(1, Color.web("#06070B"))));
-        gc.fillRoundRect(winX, winY, winW, winH, 18, 18);
+        gc.fillRect(winX, winY, winW, winH);
         gc.setStroke(Color.web("#2B3346"));
         gc.setLineWidth(1.2);
-        gc.strokeRoundRect(winX, winY, winW, winH, 18, 18);
+        gc.strokeRect(winX, winY, winW, winH);
 
         gc.save();
         gc.beginPath();
@@ -849,10 +849,10 @@ public class StarView {
         double bx = Math.max(winX + 6, Math.min(winX + winW - w - 6, x - w / 2));
         double by = y - 64 < winY + 6 ? y + 26 : y - 64;
         gc.setFill(Color.web("#0B0E15", 0.86));
-        gc.fillRoundRect(bx, by, w, 42, 10, 10);
+        gc.fillRect(bx, by, w, 42);
         gc.setStroke(GOLD.deriveColor(0, 1, 1, 0.55));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(bx, by, w, 42, 10, 10);
+        gc.strokeRect(bx, by, w, 42);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFill(TEXT);
         I18n.fillText(gc, line, bx + w / 2, by + 17);
@@ -937,7 +937,7 @@ public class StarView {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(MONO, 11));
         gc.setFill(Color.web("#0B0E15", 0.8));
-        gc.fillRoundRect(x - 8, y - 32, 380, 40, 8, 8);
+        gc.fillRect(x - 8, y - 32, 380, 40);
         gc.setFill(SOFT);
         I18n.fillText(gc, I18n.text("hauteur de la fenêtre : ") + Visuals.formatLength(side)
                 + " · " + state.getParticlesCount() + I18n.text(" noyaux (agrandis)"), x, y - 16);
@@ -978,7 +978,7 @@ public class StarView {
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#0B0E15", 0.8));
         double w = text.length() * 6.6 + 18;
-        gc.fillRoundRect(winX + 10, winY + 10, w, 24, 8, 8);
+        gc.fillRect(winX + 10, winY + 10, w, 24);
         gc.setFill(GOLD);
         I18n.fillText(gc, text, winX + 19, winY + 27);
     }
@@ -1041,12 +1041,12 @@ public class StarView {
     // =================================================================
     private void card(double x, double y, double w, double h, String title, Color accent) {
         gc.setFill(CARD);
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, h, 14, 14);
+        gc.strokeRect(x, y, w, h);
         gc.setFill(accent);
-        gc.fillRoundRect(x + 14, y + 13, 3, 12, 2, 2);
+        gc.fillRect(x + 14, y + 13, 3, 12);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
@@ -1075,7 +1075,7 @@ public class StarView {
         double high = 14;
         gc.setFill(new LinearGradient(left, 0, right, 0, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#1E293B")), new Stop(0.5, Color.web("#B45309")), new Stop(1, Color.web("#FDE047"))));
-        gc.fillRoundRect(left, top, right - left, 10, 5, 5);
+        gc.fillRect(left, top, right - left, 10);
         double[][] marks = {{-2.77, 0}, {0.05, 1}, {12.3, 2}};
         String[] names = {"cœur du Soleil", "corps humain", "réacteur D-T"};
         gc.setFont(Font.font(UI, 10));
@@ -1159,7 +1159,7 @@ public class StarView {
         for (String badge : badges) {
             double bw = badge.length() * 5.5 + 14;
             gc.setFill(Color.web("#1E2433"));
-            gc.fillRoundRect(bx, y + h - 22, bw, 16, 8, 8);
+            gc.fillRect(bx, y + h - 22, bw, 16);
             gc.setFill(Color.web("#C7D2FE"));
             I18n.fillText(gc, badge, bx + 7, y + h - 10);
             bx += bw + 6;
@@ -1203,9 +1203,9 @@ public class StarView {
             double frac = Math.max(-14, Math.log10(Math.max(species.getMassFraction(), 1e-16)));
             double barW = (frac + 14) / 14 * (barRight - barLeft);
             gc.setFill(Color.web("#1A2030"));
-            gc.fillRoundRect(barLeft, row - 9, barRight - barLeft, 9, 4, 4);
+            gc.fillRect(barLeft, row - 9, barRight - barLeft, 9);
             gc.setFill(color.deriveColor(0, 1, 0.9, 0.9));
-            gc.fillRoundRect(barLeft, row - 9, Math.max(2, barW), 9, 4, 4);
+            gc.fillRect(barLeft, row - 9, Math.max(2, barW), 9);
             if (species.getInitialMassFraction() > 0) {
                 double ix = barLeft + (Math.log10(species.getInitialMassFraction()) + 14) / 14 * (barRight - barLeft);
                 gc.setStroke(Color.WHITE);

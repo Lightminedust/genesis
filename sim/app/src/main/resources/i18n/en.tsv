@@ -3297,3 +3297,682 @@ Recombinaison de radicaux	Radical recombination
 Deux radicaux méthyle, chacun avec un électron non apparié, les mettent en commun : la liaison C–C naît sans col. Le thermostat joue le gaz autour, qui emporte l'énergie libérée. ΔE : GFN1 −5,6 eV, mesuré ≈ −3,9 eV (GFN1 ne polarise pas les spins : il surestime les liaisons entre radicaux).	Two methyl radicals, each with one unpaired electron, share them: the C–C bond forms with no pass. The thermostat plays the surrounding gas, which carries away the energy released. ΔE: GFN1 −5.6 eV, measured ≈ −3.9 eV (GFN1 does not polarize spins: it overestimates bonds between radicals).
 Formation de l'eau	Water formation
 Le plus simple : un atome d'hydrogène s'unit au radical hydroxyle. Seuls, ils rebondiraient — trois atomes ne savent pas où mettre l'énergie de la liaison ; le thermostat joue le troisième corps du gaz (H + OH + M). ΔE : GFN1 −8,1 eV, mesuré ≈ −5,1 eV (spins non polarisés, comme pour CH₃·).	The simplest: a hydrogen atom joins the hydroxyl radical. On their own they would bounce apart — three atoms have nowhere to put the energy of the bond; the thermostat plays the third body of the gas (H + OH + M). ΔE: GFN1 −8.1 eV, measured ≈ −5.1 eV (spins not polarized, as for CH₃·).
+MOLÉCULES	MOLECULES
+EXPÉRIENCES	EXPERIMENTS
+RÉACTEUR	REACTOR
+ÉTABLI	WORKBENCH
+BILAN ÉNERGÉTIQUE	ENERGY BALANCE
+ESPÈCES	SPECIES
+Réglages	Settings
+l'atome : son nuage, son noyau, la lumière · touche 1	the atom: its cloud, its nucleus, light · key 1
+deux noyaux qui se rencontrent : fusion, fission, transmutation	two nuclei meeting: fusion, fission, transmutation
+des molécules calculées par la chimie quantique (GFN1-xTB)	molecules computed by quantum chemistry (GFN1-xTB)
+le nucléon de l'intérieur : collisions, hadrons, partons	the nucleon from the inside: collisions, hadrons, partons
+la méthode de calcul de ce laboratoire, ses sources et ses limites	this laboratory's computing method, its sources and its limits
+Un neutron lent	A slow neutron
+Une particule α	An α particle
+un neutron thermique (0,0253 eV) vers le noyau : capture, fission · touche B	a thermal neutron (0.0253 eV) toward the nucleus: capture, fission · key B
+une α de 5 MeV vers le noyau : le laboratoire de fusion calcule la collision	a 5 MeV α toward the nucleus: the fusion laboratory computes the collision
+la longueur d'onde du laser · dans l'onglet Lumière, un clic sur une raie l'accorde exactement	the laser wavelength · in the Light tab, clicking a line tunes it exactly
+Aucun événement pour l'instant.	No event yet.
+Calculer la collision	Compute the collision
+Jusqu'à la transmutation	Until transmutation
+Atelier de hadrons	Hadron workshop
+‹ Étape	‹ Step
+Étape ›	Step ›
+densité de liquide	liquid density
+CONSTRUIRE	BUILD
+TIRER	FIRE
+ORBITALES	ORBITALS
+Assembleur 2D	2D assembler
+CHARGE TOTALE	TOTAL CHARGE
+AFFICHER	DISPLAY
+ÉLÉMENT	ELEMENT
+Choisir un laboratoire	Choose a laboratory
+Chaque laboratoire calcule ce qu'il montre : rien n'est scénarisé.	Every laboratory computes what it shows: nothing is scripted.
+1 · 2 · 3 · 4 : ouvrir un laboratoire	1 · 2 · 3 · 4: open a laboratory
+l'accueil : choisir un laboratoire	home: choose a laboratory
+10⁻¹⁰ m · l'atome	10⁻¹⁰ m · the atom
+10⁻¹⁴ m · deux noyaux	10⁻¹⁴ m · two nuclei
+10⁻¹⁰ m · la liaison	10⁻¹⁰ m · the bond
+10⁻¹⁵ m · le nucléon	10⁻¹⁵ m · the nucleon
+Le nuage d'électrons, le noyau, la lumière absorbée et émise, les désintégrations.	The electron cloud, the nucleus, the light absorbed and emitted, the decays.
+Deux noyaux se rencontrent : barrière de Coulomb, effet tunnel, fusion ou rebond.	Two nuclei meet: Coulomb barrier, tunnelling, fusion or rebound.
+Des atomes qui se lient : orbitales, forces et réactions, calculées par la chimie quantique.	Atoms that bond: orbitals, forces and reactions, computed by quantum chemistry.
+Le nucléon de l'intérieur : quarks, gluons, et ce qu'en voit un électron qui le frappe.	The nucleon from the inside: quarks, gluons, and what an electron that strikes it sees.
+Subatomique	Subatomic
+SUBATOMIQUE	SUBATOMIC
+Sa trace : le chemin de son centre.	Its track: the path of its centre.
+le projectile	the projectile
+Sans charge, il ne laisse aucune trace : son chemin est en pointillé.	With no charge it leaves no track: its path is dotted.
+En ligne droite jusqu'au choc : à cette énergie, le champ du nucléon le dévie à peine.	A straight line up to the collision: at this energy the nucleon's field barely deflects it.
+Comment le Δ se défait : la probabilité qu'en sorte le pion à chaque angle.	How the Δ falls apart: the probability that the pion leaves at each angle.
+La probabilité de repartir à chaque angle, posée au sol : plus la courbe va loin, plus cet angle est fréquent.	The probability of leaving at each angle, laid on the floor: the further the curve reaches, the more frequent that angle.
+angle tiré par dσ/dΩ	angle drawn from dσ/dΩ
+La visée du prochain tir	The aim of the next shot
+La couleur dit l'énergie : bleu faible, rouge forte.	The colour gives the energy: blue low, red high.
+Le pointillé : la direction de sortie demandée.	The dashed line: the requested exit direction.
+Lancer : le moteur calcule les cas possibles et en tire un.	Fire: the engine computes the possible cases and draws one.
+Un pion : un quark et un antiquark, le plus léger des hadrons.	A pion: a quark and an antiquark, the lightest hadron.
+Un kaon : un méson qui porte un quark étrange.	A kaon: a meson carrying a strange quark.
+Un proton : trois quarks (u u d), stable.	A proton: three quarks (u u d), stable.
+Un neutron : trois quarks (u d d).	A neutron: three quarks (u d d).
+Le Δ(1232) : un nucléon excité, ses trois spins alignés ; il se défait en nucléon + pion en ~10⁻²³ s.	The Δ(1232): an excited nucleon, its three spins aligned; it falls apart into a nucleon + pion in ~10⁻²³ s.
+Le boson W : il porte l'interaction faible et change la saveur d'un quark.	The W boson: it carries the weak interaction and changes a quark's flavour.
+Le photon virtuel : il emporte l'énergie ν et l'impulsion q du projectile vers le nucléon.	The virtual photon: it carries the energy ν and momentum q from the projectile to the nucleon.
+Le tube de gluons entre quarks : son énergie croît avec sa longueur, jusqu'à se rompre.	The gluon tube between quarks: its energy grows with its length, until it breaks.
+Une paire quark–antiquark née de la rupture de la corde.	A quark–antiquark pair born from the string breaking.
+Le choc entre les deux hadrons.	The collision between the two hadrons.
+Le champ électrique du nucléon, vu par une particule chargée.	The nucleon's electric field, as a charged particle sees it.
+Le quark qui a reçu le choc.	The quark that took the hit.
+Un neutrino : sans charge, il ne laisse pas de trace et n'interagit que par la force faible.	A neutrino: with no charge it leaves no track and interacts only through the weak force.
+Un lepton : il ne ressent pas la force forte, seulement le photon (ou le W).	A lepton: it does not feel the strong force, only the photon (or the W).
+Réaction	Reaction
+Faire réagir  →	React  →
+Arrêter	Stop
+arrêtée	stopped
+Les réactions sans barrière ou presque : des radicaux qui se lient, des ions qui s'attirent	Reactions with little or no barrier: radicals that bond, ions that attract
+Des barrières de quelques dixièmes d'eV : transferts d'atomes, réarrangements faciles	Barriers of a few tenths of an eV: atom transfers, easy rearrangements
+Presque tout se casse : les fragments, et ce qu'ils reforment en se recombinant	Almost everything breaks: the fragments, and what they form again as they recombine
+Les molécules du dessin, chacune relaxée seule, rapprochées au contact dans une sphère et agitées ensemble à la température choisie : 3 essais de 600 fs, puis chaque espèce présente relaxée seule	The molecules of the drawing, each relaxed alone, brought into contact inside a sphere and shaken together at the chosen temperature: 3 trials of 600 fs, then each species present relaxed alone
+GFN1-xTB, sans spin : ΔE trop négatif quand des radicaux se lient ; une issue absente peut exister.	GFN1-xTB, without spin: ΔE too negative when radicals bond; an outcome that does not show up may still exist.
+Méthode : le nanoréacteur (Wang et al., Nat. Chem. 2014). Les molécules du dessin, chacune relaxée seule, sont rapprochées au contact (2,8 Å entre leurs atomes les plus proches) dans une sphère posée sur leurs nuages, et agitées à la température choisie (thermostat CSVR) pendant 600 fs, en 3 essais aux vitesses de départ différentes ; puis refroidies 120 fs à 300 K, et chaque espèce présente est relaxée seule. ΔE = Σ E(produits seuls) − Σ E(réactifs seuls), énergies GFN1-xTB à 0 K, sans énergie de point zéro. Limites : pas de polarisation de spin — les liaisons formées entre radicaux sont trop fortes (OH + H → H₂O : −8,1 eV calculés, −5,1 eV mesurés, −5,4 eV sans l'énergie de point zéro), O₂ n'a pas de barrière de spin ; quelques centaines de femtosecondes à haute température : une issue qui n'apparaît pas peut exister, et la fréquence d'une issue n'est ni une vitesse ni un rendement réels.	Method: the nanoreactor (Wang et al., Nat. Chem. 2014). The molecules of the drawing, each relaxed alone, are brought into contact (2.8 Å between their closest atoms) inside a sphere resting on their clouds, and shaken at the chosen temperature (CSVR thermostat) for 600 fs, in 3 trials with different starting velocities; then cooled for 120 fs at 300 K, and each species present is relaxed alone. ΔE = Σ E(products alone) − Σ E(reactants alone), GFN1-xTB energies at 0 K, without zero-point energy. Limits: no spin polarisation — bonds formed between radicals are too strong (OH + H → H₂O: −8.1 eV computed, −5.1 eV measured, −5.4 eV without zero-point energy), O₂ has no spin barrier; a few hundred femtoseconds at high temperature: an outcome that does not show up may exist, and how often an outcome appears is neither a real rate nor a real yield.
+les réactifs se relaxent, chacun seul…	the reactants relax, each on its own…
+Ce que deviennent les molécules du dessin, chauffées ensemble.	What the molecules of the drawing become, heated together.
+rien ne réagit : les réactifs restent	nothing reacts: the reactants remain
+ΔE = Σ E(produits seuls) − Σ E(réactifs seuls), GFN1-xTB : négatif, la réaction libère de l'énergie	ΔE = Σ E(products alone) − Σ E(reactants alone), GFN1-xTB: negative, the reaction releases energy
+Les produits remplacent le dessin (Ctrl+Z : revenir)	The products replace the drawing (Ctrl+Z: go back)
+Les produits dans le simulateur 3D (le dessin ne change pas)	The products in the 3D simulator (the drawing stays as it is)
+En 3D  ▶	In 3D  ▶
+les produits remplacent le dessin (Ctrl+Z : revenir)	the products replace the drawing (Ctrl+Z: go back)
+au plus 30 atomes pour chercher une réaction : un essai coûterait plusieurs minutes	at most 30 atoms to search for a reaction: one trial would take several minutes
+au plus 30 atomes pour chercher une réaction (un essai coûterait plusieurs minutes)	at most 30 atoms to search for a reaction (one trial would take several minutes)
+un élément au-delà du radon : GFN1-xTB ne le calcule pas	an element beyond radon: GFN1-xTB does not compute it
+Combien d'essais mènent à cette issue	How many trials lead to this outcome
+Réglages : langue, statistiques d'utilisation	Settings: language, usage statistics
+Guide de ce laboratoire     H	Guide to this laboratory     H
+Accueil et liens de Genesis	Home and Genesis links
+Le guide de ce laboratoire : par où commencer, ce que montre chaque zone · H	This laboratory's guide: where to start, what each area shows · H
+Enregistrer une image de la scène · Ctrl+S	Save an image of the scene · Ctrl+S
+Montrer ou cacher les panneaux, pour laisser toute la place à la scène · Tab	Show or hide the panels, to give the scene all the room · Tab
+Plein écran · F11	Full screen · F11
+Comment ce laboratoire calcule : le modèle, ses sources, ses limites	How this laboratory computes: the model, its sources, its limits
+L'accueil : les laboratoires, Genesis, les liens · Échap deux fois	Home: the laboratories, Genesis, links · Esc
+Image enregistrée	Image saved
+Ouvrir le dossier	Open the folder
+Image impossible à enregistrer : 	Could not save the image: 
+La table périodique arrive du moteur, un instant…	The periodic table is coming from the engine, one moment…
+Par où commencer	Where to start
+Touches	Keys
+Compris	Got it
+H rouvre ce guide	H opens this guide again
+cacher les panneaux	hide the panels
+image de la scène	image of the scene
+plein écran	full screen
+Échap	Esc
+accueil	home
+Préparer	Prepare
+Mesurer	Measure
+La scène	The scene
+Le temps	Time
+Les échelles	The scales
+Les vues	The views
+Deux lectures	Two readings
+Trois ateliers	Three workshops
+L'histoire	The story
+Composer	Compose
+L'établi	The bench
+Un atome au choix : son nuage d'électrons, la lumière qu'il absorbe et émet, son noyau qui se désintègre avec le temps.	Any atom: its electron cloud, the light it absorbs and emits, its nucleus decaying over time.
+Choisir un élément (la table périodique, touche T) ou le construire proton par proton.	Pick an element (the periodic table, key T) or build it proton by proton.
+Envoyer un photon : s'il a l'énergie d'une raie, un électron change d'orbitale.	Send a photon: if it has the energy of a line, an electron changes orbital.
+Accélérer le temps, en bas : un noyau radioactif se transforme, étape par étape.	Speed up time, at the bottom: a radioactive nucleus transforms, step by step.
+L'atome, son noyau, un nucléon ; le gouffre montre les deux ensemble.	The atom, its nucleus, a nucleon; the gulf shows both together.
+L'élément, ce qui le compose, la lumière et les projectiles.	The element, what it is made of, the light and the projectiles.
+Glisser pour tourner, molette pour zoomer, double-clic pour centrer.	Drag to rotate, wheel to zoom, double-click to centre.
+Le spectre, l'orbitale de l'électron, le noyau ; et le journal de ce qui arrive.	The spectrum, the electron's orbital, the nucleus; and the log of what happens.
+Sa vitesse, la chaîne des désintégrations ; une station : y aller.	Its speed, the decay chain; a station: go there.
+envoyer un photon	send a photon
+un proton, neutron, électron de plus	one more proton, neutron, electron
+… de moins	… one fewer
+pause	pause
+événement suivant	next event
+échelles	scales
+le gouffre	the gulf
+Changer d'élément : la table périodique · T	Change element: the periodic table · T
+Composition	Composition
+Autres projectiles	Other projectiles
+Protons	Protons
+Neutrons	Neutrons
+Électrons	Electrons
+Les protons font l'élément · P, Maj+P	Protons make the element · P, Shift+P
+Les neutrons font l'isotope · N, Maj+N	Neutrons make the isotope · N, Shift+N
+Les électrons font l'ion · E, Maj+E	Electrons make the ion · E, Shift+E
+La longueur d'onde du laser. Dans le spectre, à droite, un clic sur une raie l'accorde exactement.	The laser's wavelength. In the spectrum, on the right, clicking a line tunes it exactly.
+Envoyer un photon	Send a photon
+Un photon de cette longueur d'onde vers l'atome. S'il a l'énergie d'une raie, un électron change d'orbitale · L	A photon of this wavelength toward the atom. If it has the energy of a line, an electron changes orbital · L
+Des chocs avec un gaz chaud excitent l'atome, comme dans une flamme ; il se désexcite en émettant ses raies · F	Collisions with a hot gas excite the atom, as in a flame; it de-excites by emitting its lines · F
+Neutron lent	Slow neutron
+Particule α	Alpha particle
+Un neutron thermique (0,0253 eV) vers le noyau : capture, ou fission d'un noyau lourd · B	A thermal neutron (0.0253 eV) toward the nucleus: capture, or fission of a heavy nucleus · B
+Une particule α de 5 MeV vers le noyau : le laboratoire de fusion calcule la collision	A 5 MeV alpha particle toward the nucleus: the fusion laboratory computes the collision
+Glisser fait tourner l'atome	Dragging rotates the atom
+Glisser déplace la vue (aussi : clic droit glissé)	Dragging moves the view (also: right-drag)
+Recentrer : l'atome au milieu, vu de trois quarts · double-clic sur la scène : centrer ce point	Recentre: the atom in the middle, seen three-quarter · double-click the scene: centre that point
+Des vues toutes faites : de face, de dessus, de côté, de trois quarts	Ready-made views: front, top, side, three-quarter
+Vue	View
+L'atome tourne lentement sur lui-même	The atom slowly spins on itself
+Dézoomer · touche −	Zoom out · key −
+Zoomer · touche + (ou la molette)	Zoom in · key + (or the wheel)
+Journal	Log
+Spectre	Spectrum
+Chambre vide	Empty chamber
+ion	ion
+radioactif	radioactive
+Limites du modèle	Limits of the model
+Faire couler le temps, ou l'arrêter · Espace	Let time flow, or stop it · Space
+Événement suivant	Next event
+Avance le temps jusqu'au prochain événement, tiré au hasard · →	Advance time to the next event, drawn at random · →
+Le temps s'arrête après chaque événement, le temps de le lire · A	Time stops after each event, to read it · A
+Vitesse du temps	Speed of time
+Temps simulé	Simulated time
+ (accélérer pour le voir)	 (speed up to see it)
+La matière, calculée.	Matter, computed.
+Quatre laboratoires, de la molécule au cœur du proton. Chaque image y est un calcul : rien n'est animé à la main.	Four laboratories, from the molecule to the heart of the proton. Every image is a calculation: nothing is animated by hand.
+Des atomes qui se lient, se cassent et réagissent, calculés par la chimie quantique.	Atoms that bond, break and react, computed by quantum chemistry.
+Chimie quantique semi-empirique GFN1-xTB, recodée pour Genesis ; dynamique moléculaire.	Semi-empirical quantum chemistry GFN1-xTB, rewritten for Genesis; molecular dynamics.
+Un atome au choix : son nuage d'électrons, la lumière qu'il échange, son noyau qui se désintègre.	Any atom: its electron cloud, the light it exchanges, its nucleus that decays.
+Orbitales de Slater, raies du NIST, désintégrations de NUBASE2020.	Slater orbitals, NIST lines, NUBASE2020 decays.
+Deux noyaux lancés l'un vers l'autre : la barrière, l'effet tunnel, la fusion ou le rebond.	Two nuclei thrown at each other: the barrier, tunnelling, fusion or rebound.
+Potentiel de Woods–Saxon, effet tunnel (WKB), critère de Lawson pour le plasma.	Woods–Saxon potential, tunnelling (WKB), Lawson criterion for the plasma.
+L'intérieur d'un proton : ses quarks, ses gluons, et ce qu'en voit une particule qui le frappe.	Inside a proton: its quarks, its gluons, and what a particle striking it sees.
+Facteurs de forme (Rosenbluth), fonctions de structure (DGLAP), modèle des quarks.	Form factors (Rosenbluth), structure functions (DGLAP), quark model.
+≈ 0,5 nm · une molécule	≈ 0.5 nm · a molecule
+≈ 0,1 nm · un atome	≈ 0.1 nm · an atom
+≈ 10 fm · deux noyaux	≈ 10 fm · two nuclei
+≈ 1 fm · un nucléon	≈ 1 fm · a nucleon
+ouvert	open
+Le code sur GitHub	The code on GitHub
+La communauté, r/gemmie	The community, r/gemmie
+Écrire à l'auteur	Write to the author
+Liens	Links
+Application	Application
+Un simulateur libre et gratuit de la matière. Chaque laboratoire calcule ce qu'il montre — mécanique quantique, physique nucléaire, chimie — et dit sa méthode et ses limites (bouton Méthode). Le guide de chaque laboratoire s'ouvre avec H.	A free and open simulator of matter. Each laboratory computes what it shows — quantum mechanics, nuclear physics, chemistry — and states its method and its limits (Method button). Each laboratory's guide opens with H.
+1 à 4 : ouvrir · H : guide · F11 : plein écran	1 to 4: open · H: guide · F11: full screen
+Version de développement	Development version
+Version	Version
+disponible	available
+plus petit	smaller
+le noyau : 10 000 à 100 000 fois plus petit que son atome	the nucleus: 10,000 to 100,000 times smaller than its atom
+Une étoile sur GitHub	A star on GitHub
+Contact	Contact
+Genesis est libre et gratuit. Une étoile sur GitHub l'aide à être trouvé par d'autres curieux.	Genesis is free and open. A star on GitHub helps other curious people find it.
+hydrogène, orbitale	hydrogen, orbital
+tiré point par point	drawn point by point
+Statistiques d'utilisation	Usage statistics
+Modifiable à tout moment : Réglages, en haut à droite.	Can be changed at any time: Settings, top right.
+Mise à jour	Update
+Deux noyaux lancés l'un vers l'autre. Le moteur calcule leur rencontre : la répulsion électrique, l'effet tunnel, la fusion ou le rebond, puis ce qui en sort.	Two nuclei thrown at each other. The engine computes their encounter: the electric repulsion, tunnelling, fusion or rebound, then what comes out.
+Choisir les deux noyaux (deutérium et tritium au départ).	Pick the two nuclei (deuterium and tritium to start).
+Régler l'énergie du choc : au-dessus de la barrière ça passe ; en dessous, seulement par effet tunnel.	Set the collision energy: above the barrier they meet; below it, only by tunnelling.
+Calculer la collision, puis la revoir au ralenti avec la barre du bas.	Compute the collision, then replay it in slow motion with the bottom bar.
+Essentiel : la loi de l'instant et trois mesures. Complet : toutes les mesures et les calques.	Essential: the law of the moment and three measurements. Complete: every measurement and the layers.
+Les deux noyaux, l'énergie, la visée, le champ magnétique ; le plasma plus bas.	The two nuclei, the energy, the aim, the magnetic field; the plasma further down.
+Glisser pour tourner, molette pour zoomer. Le tableau suit chaque instant du choc.	Drag to rotate, wheel to zoom. The board follows every moment of the collision.
+Lecture, retour, ralenti. Boucle rejoue ; Nouveaux tirs relance à chaque fin.	Play, rewind, slow motion. Loop replays; New shots fires again at each end.
+Noyaux	Nuclei
+Le choc	The collision
+Plasma · Lawson	Plasma · Lawson
+Champ magnétique	Magnetic field
+Au-dessus	Above
+Une énergie un peu au-dessus de la barrière de Coulomb : la fusion devient probable	An energy slightly above the Coulomb barrier: fusion becomes likely
+Énergie du choc	Collision energy
+L'énergie des deux noyaux dans leur centre de masse : c'est elle qui se mesure à la barrière de Coulomb. On peut la taper, ou glisser le curseur.	The energy of the two nuclei in their centre of mass: this is what compares with the Coulomb barrier. Type it, or drag the slider.
+Un faisceau : un noyau lancé sur l'autre, à l'énergie choisie	A beam: one nucleus thrown at the other, at the chosen energy
+Un plasma : l'énergie du choc tirée de la température (Maxwell–Boltzmann)	A plasma: the collision energy drawn from the temperature (Maxwell–Boltzmann)
+Lire ou arrêter la collision	Play or stop the collision
+Revoir depuis le début	Replay from the start
+Aller à l'instant où les noyaux sont au plus près	Go to the moment the nuclei are closest
+Aller à l'issue : ce qui sort du choc	Go to the outcome: what comes out of the collision
+Vitesse	Speed
+Barrière : 	Barrier: 
+La barrière de Coulomb : l'énergie qu'il faudrait pour que les deux noyaux se touchent malgré leur répulsion électrique. En dessous, ils ne se rencontrent que par effet tunnel.	The Coulomb barrier: the energy needed for the two nuclei to touch despite their electric repulsion. Below it, they only meet by tunnelling.
+estimé	estimated
+ protons, 	 protons, 
+ neutrons · charge +	 neutrons · charge +
+Rayon ≈ 	Radius ≈ 
+Spin 	Spin 
+moment magnétique 	magnetic moment 
+inconnu	unknown
+Masse 	Mass 
+demi-vie	half-life
+stable	stable
+Des atomes et des molécules calculés par la chimie quantique : leurs électrons, leurs liaisons, leurs forces et leurs réactions.	Atoms and molecules computed by quantum chemistry: their electrons, their bonds, their forces and their reactions.
+Choisir une molécule, une expérience guidée ou un mélange du réacteur.	Pick a molecule, a guided experiment or a reactor mixture.
+Choisir la dynamique, en bas : relaxer, chauffer (thermostat) ou laisser libre.	Pick the dynamics, at the bottom: relax, heat (thermostat) or leave free.
+Cliquer un atome : ses forces. Clic droit sur une molécule : sa fiche. L'assembleur 2D dessine les vôtres.	Click an atom: its forces. Right-click a molecule: its card. The 2D assembler draws your own.
+La densité d'électrons, sa déformation par les liaisons, une orbitale ; l'assembleur 2D.	The electron density, its deformation by the bonds, an orbital; the 2D assembler.
+Molécules, expériences, réacteur, établi : ce qu'on met dans la scène.	Molecules, experiments, reactor, bench: what goes into the scene.
+Glisser : tourner · molette : zoomer · tirer un atome : le déplacer · double-clic : centrer.	Drag: rotate · wheel: zoom · pull an atom: move it · double-click: centre.
+L'énergie et ce qui la compose, les orbitales, les espèces, l'atome choisi.	The energy and what makes it up, the orbitals, the species, the chosen atom.
+Relaxation, thermostat ou dynamique libre, la température, une étincelle.	Relaxation, thermostat or free dynamics, the temperature, a spark.
+Choisir un élément, puis cliquer un atome pour l'y attacher (ou dans le vide).	Pick an element, then click an atom to attach it there (or in empty space).
+Des molécules serrées dans une sphère : chauffer, une étincelle ou le piston pour qu'elles réagissent.	Molecules packed in a sphere: heat, a spark or the piston to make them react.
+Deux réactifs relaxés, lancés l'un vers l'autre ; le dictionnaire reconnaît les produits.	Two relaxed reactants thrown at each other; the dictionary recognises the products.
+Des molécules toutes faites, relaxées par le calcul	Ready-made molecules, relaxed by the calculation
+Cinq réactions réelles, lancées et suivies pas à pas	Five real reactions, launched and followed step by step
+Des mélanges dans une enceinte, le piston	Mixtures in an enclosure, the piston
+Construire atome par atome, n'importe quel élément de H à Rn	Build atom by atom, any element from H to Rn
+Calques de la scène	Scene layers
+Ce que vaut ce bilan	How far to trust this balance
+GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés : 1,3 à 2,2 fois selon la molécule (CH₄ + 2 O₂ : 47,8 eV au lieu de 28,6). Les énergies de réaction aussi : CH₄ + 2 O₂ → CO₂ + 2 H₂O donne −15,5 eV au lieu de −8,5. Un décalage par élément ne le corrigerait pas : une réaction garde ses atomes. Les géométries sont fiables (voir Méthode). La cohésion et sa balance sont comptées depuis les atomes isolés et neutres, calculés par le même modèle.	GFN1-xTB overestimates binding energies relative to isolated atoms: 1.3 to 2.2 times depending on the molecule (CH₄ + 2 O₂: 47.8 eV instead of 28.6). Reaction energies too: CH₄ + 2 O₂ → CO₂ + 2 H₂O gives −15.5 eV instead of −8.5. A per-element shift would not fix it: a reaction keeps its atoms. Geometries are reliable (see Method). Cohesion and its balance are counted from isolated neutral atoms, computed by the same model.
+Niveaux d'énergie	Energy levels
+L'atome choisi	The chosen atom
+Modes de vibration	Vibration modes
+Un proton ou un neutron vu de l'intérieur. On le frappe avec une particule, et le moteur calcule ce qui peut arriver, cas par cas.	A proton or a neutron seen from the inside. Strike it with a particle, and the engine computes what can happen, case by case.
+Poser des quarks dans le moule : trois pour un baryon, un quark et un antiquark pour un méson.	Place quarks in the mould: three for a baryon, a quark and an antiquark for a meson.
+Tester : le moteur dit si l'objet existe, sa masse, sa charge, son spin, et comment il se désintègre.	Test: the engine says whether the object exists, its mass, charge, spin, and how it decays.
+La collision, l'atelier de hadrons, la mer de partons.	The collision, the hadron workshop, the parton sea.
+Le moule, les essais, les hadrons célèbres en un clic.	The mould, the tests, famous hadrons in one click.
+Tirer un quark pour étirer son tube de gluons ; il casse en créant une paire.	Pull a quark to stretch its gluon tube; it breaks by creating a pair.
+Choisir le projectile (un électron au départ) et la cible.	Pick the projectile (an electron to start) and the target.
+Régler l'énergie : basse, le nucléon rebondit entier ; haute, on voit ses quarks.	Set the energy: low, the nucleon bounces off whole; high, you see its quarks.
+Lancer, puis suivre l'histoire étape par étape, en bas.	Fire, then follow the story step by step, at the bottom.
+La collision, l'atelier de hadrons (composer des quarks), la mer de partons.	The collision, the hadron workshop (compose quarks), the parton sea.
+Le projectile, la cible, l'énergie et l'angle ; les cas possibles et leurs probabilités.	The projectile, the target, the energy and the angle; the possible cases and their probabilities.
+Glisser : tourner · molette : zoomer · survoler un objet ou une trace : sa fiche.	Drag: rotate · wheel: zoom · hover an object or a track: its card.
+Les étapes de l'événement, au ralenti : revenir, avancer, changer la vitesse.	The steps of the event, in slow motion: go back, go forward, change the speed.
+Lire ou arrêter l'histoire · Espace	Play or stop the story · Space
+Étape 	Step 
+En savoir plus	Learn more
+Le projectile	The projectile
+La cible	The target
+Le tir	The shot
+Les cas possibles	The possible cases
+Plus petit x résolu	Smallest x resolved
+118 éléments · un clic pour voir leurs isotopes	118 elements · click one to see its isotopes
+Événement suivant : avance le temps jusqu'au prochain, tiré au hasard	Next event: moves time forward to the next one, drawn at random
+Deutérium	Deuterium
+Schéma de réaction	Reaction scheme
+Dessiner un schéma en plusieurs étapes (réactifs sur les flèches, flèches courbes) : Genesis calcule le chemin 3D de chaque étape	Draw a multistep scheme (reagents on the arrows, curly arrows): Genesis computes the 3D path of each step
+Dessinez un schéma, ou ouvrez un exemple, puis Calculer.	Draw a scheme, or open an example, then Compute.
+Calculer le schéma	Compute the scheme
+Revenir à la scène 3D du laboratoire	Back to the laboratory's 3D scene
+Dessiner les étapes comme sur papier : Genesis les calcule et les rejoue en 3D	Draw the steps as on paper: Genesis computes them and replays them in 3D
+Tirer d'un atome ou du vide : une liaison ; cliquer une liaison : simple → double → triple	Drag from an atom or from empty space: a bond; click a bond: single → double → triple
+Dans le vide : un cycle ; sur un atome : accroché ; sur une liaison : accolé	In empty space: a ring; on an atom: attached; on a bond: fused
+Cliquer un atome change son élément (ou survoler et taper C, N, O, S…)	Clicking an atom changes its element (or hover and type C, N, O, S…)
+Clic : +1 ; clic droit : −1 (ou survoler et taper + ou −)	Click: +1; right click: −1 (or hover and type + or −)
+Une abréviation (Me, Ph, OMe, TMS…) à la place d'un atome	An abbreviation (Me, Ph, OMe, TMS…) in place of an atom
+Tirer une molécule ou une flèche ; Maj : un seul atome	Drag a molecule or an arrow; Shift: a single atom
+Cliquer un atome, une liaison, une flèche	Click an atom, a bond, an arrow
+Cycle	Ring
+Charge	Charge
+Groupe	Group
+Benzène	Benzene
+Flèche	Arrow
+Flèche courbe	Curly arrow
+Flèches	Arrows
+Cycles	Rings
+Éléments	Elements
+Double	Double
+Triple	Triple
+Tirer de la queue à la pointe, puis écrire les réactifs au-dessus (MeI, CsF, Co2(CO)8, un nom, un SMILES) et les conditions au-dessous	Drag from tail to head, then write the reagents above (MeI, CsF, Co2(CO)8, a name, a SMILES) and the conditions below
+Une paire d'électrons : tirer d'un atome (son doublet) ou d'une liaison vers un atome, une liaison, ou l'atome avec lequel une liaison se forme	An electron pair: drag from an atom (its lone pair) or a bond to an atom, a bond, or the atom a new bond forms with
+Les hydrogènes sont implicites. Survoler un atome puis taper C N O S F P I B H, L (Cl), R (Br) ; + et − pour la charge ; Suppr efface ; Ctrl+Z annule. Clic droit tiré : déplacer la vue.	Hydrogens are implicit. Hover an atom then type C N O S F P I B H, L (Cl), R (Br); + and − for the charge; Delete erases; Ctrl+Z undoes. Right-drag: move the view.
+Groupes abrégés	Abbreviated groups
+Depuis un SMILES	From a SMILES
+Ajouter	Add
+Molécule ajoutée	Molecule added
+Tracez au moins une flèche, des réactifs vers les produits (outil Flèche).	Draw at least one arrow, from reactants to products (Arrow tool).
+Envoyé au moteur…	Sent to the engine…
+étapes	steps
+Profil d'énergie	Energy profile
+kJ/mol, par rapport au départ	kJ/mol, relative to the start
+par vos flèches courbes	by your curly arrows
+atomes appariés par le calcul	atoms matched by the computation
+Énergie de réaction ΔE	Reaction energy ΔE
+Barrière du chemin	Path barrier
+Limites et remarques	Limits and remarks
+Voir le chemin en 3D	See the path in 3D
+Une flèche courbe va vers un atome ou une liaison.	A curly arrow goes to an atom or a bond.
+au-dessus : MeI, CsF, Co2(CO)8, un SMILES…	above: MeI, CsF, Co2(CO)8, a SMILES…
+au-dessous : THF, 25 °C…	below: THF, 25 °C…
+Réactifs et conditions de la flèche	The arrow's reagents and conditions
+Tirez des liaisons, posez des cycles, puis une flèche vers le produit — ou ouvrez un exemple.	Drag bonds, place rings, then an arrow to the product — or open an example.
+Jouer le chemin calculé	Play the computed path
+Étape précédente	Previous step
+Étape suivante	Next step
+Schéma	Scheme
+Revenir à l'éditeur de schémas	Back to the scheme editor
+Fermer le chemin : la scène reste, libre (chauffer, relaxer, tirer un atome)	Close the path: the scene stays, free (heat, relax, pull an atom)
+se forme	forms
+se rompt	breaks
+Ordre	Order
+Mayer, maintenant	Mayer, now
+Exemples	Examples
+Effacer tout	Clear all
+Simulateur 3D	3D simulator
+Le calcul	The computation
+Schéma calculé	Scheme computed
+Lecture du schéma…	Reading the scheme…
+le calcul confirme : les liaisons attendues tiennent une fois la contrainte ôtée	the computation confirms: the expected bonds hold once the restraint is removed
+des ions : sans solvant, GFN1-xTB les décrit en phase gazeuse (énergies d'ions isolés)	ions: without a solvent, GFN1-xTB describes them in the gas phase (energies of isolated ions)
+un métal de transition : GFN1-xTB est fait pour ses géométries (Co–Co et Co–C à quelques centièmes d'Å près), pas pour ses énergies de liaison métal–ligand, souvent fausses de plus d'un électronvolt	a transition metal: GFN1-xTB is made for its geometries (Co–Co and Co–C within a few hundredths of an Å), not for its metal–ligand bond energies, often off by more than an electronvolt
+un nombre impair d'électrons : un radical, que GFN1-xTB sans spin décrit mal	an odd number of electrons: a radical, which spin-free GFN1-xTB describes poorly
+aucune liaison ne change : le produit dessiné est le réactif	no bond changes: the drawn product is the reactant
+les flèches courbes mènent à une autre structure que le produit dessiné : le calcul suit le produit dessiné	the curly arrows lead to another structure than the drawn product: the computation follows the drawn product
+le chauffage n'est pas simulé : le chemin est calculé à 0 K	heating is not simulated: the path is computed at 0 K
+lumière : GFN1-xTB ne décrit que l'état fondamental, pas une photochimie	light: GFN1-xTB only describes the ground state, not photochemistry
+aucune flèche de réaction : tracez une flèche des réactifs vers les produits	no reaction arrow: draw an arrow from the reactants to the products
+aucune molécule derrière la queue de la flèche	no molecule behind the arrow's tail
+aucune molécule devant la pointe de la flèche	no molecule in front of the arrow's head
+Cette étape n'a pas de chemin calculé.	This step has no computed path.
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; phase gazeuse, 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); gas phase, 0 K
+le calcul confirme : chaque produit tient seul (un minimum de GFN1-xTB), et le chemin le relie aux réactifs	the computation confirms: each product holds on its own (a GFN1-xTB minimum), and the path links it to the reactants
+les réactifs rapprochés réagissent déjà en se relaxant (sans barrière, pour GFN1-xTB)	the reactants, brought together, already react while relaxing (no barrier, for GFN1-xTB)
+des ions : sans solvant, GFN1-xTB les décrit en phase gazeuse, où une réaction qui sépare des charges (Menshutkin) est bien plus coûteuse qu'en solution	ions: without a solvent, GFN1-xTB describes them in the gas phase, where a reaction that separates charges (Menshutkin) costs far more than in solution
+les ions formés sont comptés ensemble, en paire d'ions (phase gazeuse, sans solvant)	the ions formed are counted together, as an ion pair (gas phase, no solvent)
+Les produits se posent ensemble…	The products are placed together…
+Milieu	Medium
+Dans le vide	In vacuum
+éther	ether
+acétate d'éthyle	ethyl acetate
+hexadécane	hexadecane
+benzaldéhyde	benzaldehyde
+octanol humide	wet octanol
+Le milieu : le vide, ou un solvant implicite (ALPB de GFN1-xTB, ses paramètres publiés) — un continuum diélectrique qui écrante les charges, avec la cavité et les liaisons hydrogène à la surface ; les électrons y répondent	The medium: vacuum, or an implicit solvent (GFN1-xTB's ALPB, its published parameters) — a dielectric continuum that screens charges, with the cavity and hydrogen bonds at the surface; the electrons respond to it
+L'énergie libre de solvatation calculée : polaire (Born généralisé), liaisons hydrogène, cavité et dispersion, décalage du solvant	The computed solvation free energy: polar (generalised Born), hydrogen bonds, cavity and dispersion, solvent shift
+Milieu : le vide (aucun solvant écrit sous la flèche)	Medium: vacuum (no solvent written under the arrow)
+Milieu : 	Medium: 
+ (solvant implicite ALPB)	 (ALPB implicit solvent)
+ · GFN1-xTB	 · GFN1-xTB
+des ions se forment ou disparaissent : GFN1-xTB se trompe de plusieurs électronvolts sur l'énergie des ions eux-mêmes (affinité électronique du chlore : 9,8 eV calculés, 3,6 mesurés ; NMe₃ + MeI → NMe₄⁺ + I⁻ ≈ 5 eV trop haut), solvant ou non — ΔE n'en dit que le sens	ions form or vanish: GFN1-xTB is off by several electronvolts on the energy of the ions themselves (chlorine's electron affinity: 9.8 eV computed, 3.6 measured; NMe₃ + MeI → NMe₄⁺ + I⁻ ≈ 5 eV too high), solvent or not — ΔE only tells the direction
+Dans eau : solvant implicite ALPB, la molécule se relaxe	In water: ALPB implicit solvent, the molecule relaxes
+dans eau : le solvant implicite ALPB de GFN1-xTB (ε = 80.2), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in water: GFN1-xTB's ALPB implicit solvent (ε = 80.2), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans eau (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in water (ALPB implicit solvent), 0 K
+Dans méthanol : solvant implicite ALPB, la molécule se relaxe	In methanol: ALPB implicit solvent, the molecule relaxes
+dans méthanol : le solvant implicite ALPB de GFN1-xTB (ε = 32.7), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in methanol: GFN1-xTB's ALPB implicit solvent (ε = 32.7), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans méthanol (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in methanol (ALPB implicit solvent), 0 K
+Dans éthanol : solvant implicite ALPB, la molécule se relaxe	In ethanol: ALPB implicit solvent, the molecule relaxes
+dans éthanol : le solvant implicite ALPB de GFN1-xTB (ε = 25.3), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in ethanol: GFN1-xTB's ALPB implicit solvent (ε = 25.3), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans éthanol (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in ethanol (ALPB implicit solvent), 0 K
+Dans acétonitrile : solvant implicite ALPB, la molécule se relaxe	In acetonitrile: ALPB implicit solvent, the molecule relaxes
+dans acétonitrile : le solvant implicite ALPB de GFN1-xTB (ε = 37.5), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in acetonitrile: GFN1-xTB's ALPB implicit solvent (ε = 37.5), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans acétonitrile (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in acetonitrile (ALPB implicit solvent), 0 K
+Dans DMSO : solvant implicite ALPB, la molécule se relaxe	In DMSO: ALPB implicit solvent, the molecule relaxes
+dans DMSO : le solvant implicite ALPB de GFN1-xTB (ε = 46.68), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in DMSO: GFN1-xTB's ALPB implicit solvent (ε = 46.68), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans DMSO (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in DMSO (ALPB implicit solvent), 0 K
+Dans DMF : solvant implicite ALPB, la molécule se relaxe	In DMF: ALPB implicit solvent, the molecule relaxes
+dans DMF : le solvant implicite ALPB de GFN1-xTB (ε = 37), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in DMF: GFN1-xTB's ALPB implicit solvent (ε = 37), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans DMF (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in DMF (ALPB implicit solvent), 0 K
+Dans acétone : solvant implicite ALPB, la molécule se relaxe	In acetone: ALPB implicit solvent, the molecule relaxes
+dans acétone : le solvant implicite ALPB de GFN1-xTB (ε = 20.7), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in acetone: GFN1-xTB's ALPB implicit solvent (ε = 20.7), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans acétone (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in acetone (ALPB implicit solvent), 0 K
+Dans THF : solvant implicite ALPB, la molécule se relaxe	In THF: ALPB implicit solvent, the molecule relaxes
+dans THF : le solvant implicite ALPB de GFN1-xTB (ε = 7.6), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in THF: GFN1-xTB's ALPB implicit solvent (ε = 7.6), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans THF (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in THF (ALPB implicit solvent), 0 K
+Dans dichlorométhane : solvant implicite ALPB, la molécule se relaxe	In dichloromethane: ALPB implicit solvent, the molecule relaxes
+dans dichlorométhane : le solvant implicite ALPB de GFN1-xTB (ε = 8.93), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in dichloromethane: GFN1-xTB's ALPB implicit solvent (ε = 8.93), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans dichlorométhane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in dichloromethane (ALPB implicit solvent), 0 K
+Dans chloroforme : solvant implicite ALPB, la molécule se relaxe	In chloroform: ALPB implicit solvent, the molecule relaxes
+dans chloroforme : le solvant implicite ALPB de GFN1-xTB (ε = 4.81), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in chloroform: GFN1-xTB's ALPB implicit solvent (ε = 4.81), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans chloroforme (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in chloroform (ALPB implicit solvent), 0 K
+Dans éther : solvant implicite ALPB, la molécule se relaxe	In ether: ALPB implicit solvent, the molecule relaxes
+dans éther : le solvant implicite ALPB de GFN1-xTB (ε = 4.33), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in ether: GFN1-xTB's ALPB implicit solvent (ε = 4.33), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans éther (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in ether (ALPB implicit solvent), 0 K
+Dans acétate d'éthyle : solvant implicite ALPB, la molécule se relaxe	In ethyl acetate: ALPB implicit solvent, the molecule relaxes
+dans acétate d'éthyle : le solvant implicite ALPB de GFN1-xTB (ε = 6.02), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in ethyl acetate: GFN1-xTB's ALPB implicit solvent (ε = 6.02), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans acétate d'éthyle (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in ethyl acetate (ALPB implicit solvent), 0 K
+Dans dioxane : solvant implicite ALPB, la molécule se relaxe	In dioxane: ALPB implicit solvent, the molecule relaxes
+dans dioxane : le solvant implicite ALPB de GFN1-xTB (ε = 2.21), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in dioxane: GFN1-xTB's ALPB implicit solvent (ε = 2.21), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans dioxane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in dioxane (ALPB implicit solvent), 0 K
+Dans nitrométhane : solvant implicite ALPB, la molécule se relaxe	In nitromethane: ALPB implicit solvent, the molecule relaxes
+dans nitrométhane : le solvant implicite ALPB de GFN1-xTB (ε = 36.56), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in nitromethane: GFN1-xTB's ALPB implicit solvent (ε = 36.56), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans nitrométhane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in nitromethane (ALPB implicit solvent), 0 K
+Dans toluène : solvant implicite ALPB, la molécule se relaxe	In toluene: ALPB implicit solvent, the molecule relaxes
+dans toluène : le solvant implicite ALPB de GFN1-xTB (ε = 2.374), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in toluene: GFN1-xTB's ALPB implicit solvent (ε = 2.374), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans toluène (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in toluene (ALPB implicit solvent), 0 K
+Dans benzène : solvant implicite ALPB, la molécule se relaxe	In benzene: ALPB implicit solvent, the molecule relaxes
+dans benzène : le solvant implicite ALPB de GFN1-xTB (ε = 7), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in benzene: GFN1-xTB's ALPB implicit solvent (ε = 7), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans benzène (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in benzene (ALPB implicit solvent), 0 K
+Dans hexane : solvant implicite ALPB, la molécule se relaxe	In hexane: ALPB implicit solvent, the molecule relaxes
+dans hexane : le solvant implicite ALPB de GFN1-xTB (ε = 1.88), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in hexane: GFN1-xTB's ALPB implicit solvent (ε = 1.88), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans hexane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in hexane (ALPB implicit solvent), 0 K
+Dans hexadécane : solvant implicite ALPB, la molécule se relaxe	In hexadecane: ALPB implicit solvent, the molecule relaxes
+dans hexadécane : le solvant implicite ALPB de GFN1-xTB (ε = 1.88), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in hexadecane: GFN1-xTB's ALPB implicit solvent (ε = 1.88), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans hexadécane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in hexadecane (ALPB implicit solvent), 0 K
+Dans CS₂ : solvant implicite ALPB, la molécule se relaxe	In CS₂: ALPB implicit solvent, the molecule relaxes
+dans CS₂ : le solvant implicite ALPB de GFN1-xTB (ε = 2.64), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in CS₂: GFN1-xTB's ALPB implicit solvent (ε = 2.64), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans CS₂ (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in CS₂ (ALPB implicit solvent), 0 K
+Dans aniline : solvant implicite ALPB, la molécule se relaxe	In aniline: ALPB implicit solvent, the molecule relaxes
+dans aniline : le solvant implicite ALPB de GFN1-xTB (ε = 6.888), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in aniline: GFN1-xTB's ALPB implicit solvent (ε = 6.888), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans aniline (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in aniline (ALPB implicit solvent), 0 K
+Dans benzaldéhyde : solvant implicite ALPB, la molécule se relaxe	In benzaldehyde: ALPB implicit solvent, the molecule relaxes
+dans benzaldéhyde : le solvant implicite ALPB de GFN1-xTB (ε = 18.22), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in benzaldehyde: GFN1-xTB's ALPB implicit solvent (ε = 18.22), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans benzaldéhyde (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in benzaldehyde (ALPB implicit solvent), 0 K
+Dans phénol : solvant implicite ALPB, la molécule se relaxe	In phenol: ALPB implicit solvent, the molecule relaxes
+dans phénol : le solvant implicite ALPB de GFN1-xTB (ε = 12.4), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in phenol: GFN1-xTB's ALPB implicit solvent (ε = 12.4), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans phénol (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in phenol (ALPB implicit solvent), 0 K
+Dans furane : solvant implicite ALPB, la molécule se relaxe	In furan: ALPB implicit solvent, the molecule relaxes
+dans furane : le solvant implicite ALPB de GFN1-xTB (ε = 2.94), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in furan: GFN1-xTB's ALPB implicit solvent (ε = 2.94), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans furane (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in furan (ALPB implicit solvent), 0 K
+Dans octanol : solvant implicite ALPB, la molécule se relaxe	In octanol: ALPB implicit solvent, the molecule relaxes
+dans octanol : le solvant implicite ALPB de GFN1-xTB (ε = 9.863), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in octanol: GFN1-xTB's ALPB implicit solvent (ε = 9.863), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans octanol (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in octanol (ALPB implicit solvent), 0 K
+Dans octanol humide : solvant implicite ALPB, la molécule se relaxe	In wet octanol: ALPB implicit solvent, the molecule relaxes
+dans octanol humide : le solvant implicite ALPB de GFN1-xTB (ε = 9.863), un continuum — pas de molécule de solvant qui participe, ni de liaison hydrogène dirigée	in wet octanol: GFN1-xTB's ALPB implicit solvent (ε = 9.863), a continuum — no solvent molecule takes part, no directed hydrogen bond
+chemin imposé (distances tirées dans les deux sens, les images reliées les plus basses gardées), pas un état de transition cherché : sa plus haute énergie estime la barrière selon ce chemin ; GFN1-xTB sous-estime souvent les barrières (Diels–Alder butadiène + éthylène : 0,35 eV calculés, ≈ 1,2 eV mesurés) ; dans octanol humide (solvant implicite ALPB), 0 K	imposed path (distances pulled both ways, the lowest connected images kept), not a searched transition state: its highest energy estimates the barrier along this path; GFN1-xTB often underestimates barriers (Diels–Alder butadiene + ethylene: 0.35 eV computed, ≈ 1.2 eV measured); in wet octanol (ALPB implicit solvent), 0 K
+Diels–Alder : butadiène + éthylène	Diels–Alder: butadiene + ethylene
+Menshutkin : triméthylamine + iodométhane	Menshutkin: trimethylamine + iodomethane
+Complexe alcyne–dicobalt : but-2-yne + Co₂(CO)₈	Alkyne–dicobalt complex: but-2-yne + Co₂(CO)₈
+Diène silylé : Diels–Alder, Menshutkin, élimination 1,4 par le fluorure, Diels–Alder	Silylated diene: Diels–Alder, Menshutkin, fluoride-induced 1,4-elimination, Diels–Alder
+Annulation de Robinson : cétone de Wieland–Miescher (Michael, aldol, déshydratation)	Robinson annulation: Wieland–Miescher ketone (Michael, aldol, dehydration)
+Wittig : ylure de phosphore + benzaldéhyde → oxaphosphétane → styrène + Ph₃PO	Wittig: phosphorus ylide + benzaldehyde → oxaphosphetane → styrene + Ph₃PO
+Réarrangement de Claisen aromatique : éther d'allyle et de phényle → 2-allylphénol	Aromatic Claisen rearrangement: allyl phenyl ether → 2-allylphenol
+Aldolisation-crotonisation dans l'eau : benzaldéhyde + acétone → benzalacétone	Aldol condensation in water: benzaldehyde + acetone → benzalacetone
+Diels–Alder du cyclopentadiène et de l'anhydride maléique, puis hydrolyse en diacide	Diels–Alder of cyclopentadiene and maleic anhydride, then hydrolysis to the diacid
+Le calcul en direct	The computation, live
+calculs GFN1-xTB	GFN1-xTB calculations
+Calcul terminé	Computation finished
+Replier l'écran de calcul (le calcul continue)	Fold the computation screen (the computation goes on)
+Aucun calcul en cours	No computation running
+Le chemin imposé, palier par palier	The imposed path, point by point
+réactifs	reactants
+produits	products
+Il se remplit quand le chemin commence	It fills in once the path starts
+à rebours	backwards
+à l'endroit	forwards
+Journal du calcul	Computation log
+Replier le journal	Fold the log
+Revoir l'écran du calcul : chaque relaxation, chaque palier du chemin, leurs énergies	Review the computation: each relaxation, each point of the path, their energies
+schéma lu	scheme read
+réactif repris de l'étape précédente	reactant carried over from the previous step
+réactif relaxé seul	reactant relaxed alone
+produit relaxé seul, il tient	product relaxed alone: it holds
+produit relaxé seul, il ne tient pas : autre départ	product relaxed alone: it does not hold, another start
+produit relaxé seul, il ne tient pas	product relaxed alone: it does not hold
+produits posés ensemble	products placed together
+réactifs posés ensemble, relaxés	reactants placed together, relaxed
+réactifs posés ensemble	reactants placed together
+étape calculée	step computed
+étape non calculée	step not computed
+schéma calculé	scheme computed
+réactif seul	reactant alone
+produit seul	product alone
+Jouer le chemin calculé (Espace)	Play the computed path (Space)
+Étiqueter tous les atomes (sinon, ceux qui réagissent)	Label every atom (otherwise, those that react)
+Colorer les atomes par leur charge de Mulliken, calculée à cette géométrie	Colour the atoms by their Mulliken charge, computed at this geometry
+Les flèches courbes du dessin, posées sur les atomes calculés	The curly arrows of the drawing, set on the computed atoms
+La trajectoire des atomes qui réagissent : un point par image calculée du chemin	The trajectory of the reacting atoms: one dot per computed image of the path
+Montrer les hydrogènes qui ne réagissent pas	Show the hydrogens that do not react
+Revenir à l'éditeur de schémas (Échap)	Back to the scheme editor (Esc)
+Étapes	Steps
+La vue calculée : le long de l'axe le plus mince des atomes qui réagissent, un peu inclinée (double-clic, R)	The computed view: along the thinnest axis of the reacting atoms, slightly tilted (double-click, R)
+L'indice de Mayer de chaque liaison qui change, image par image (calculé)	The Mayer index of each bond that changes, image by image (computed)
+La longueur de chaque liaison qui change, image par image (Å, mesurée sur les images calculées)	The length of each bond that changes, image by image (Å, measured on the computed images)
+La charge de Mulliken de chaque atome qui réagit, image par image (e, calculée)	The Mulliken charge of each reacting atom, image by image (e, computed)
+Énergie le long du chemin	Energy along the path
+À cette géométrie	At this geometry
+Barrière de ce chemin	Barrier of this path
+Image par image	Image by image
+images du chemin par seconde	images of the path per second
+image du chemin par seconde	image of the path per second
+— chaque géométrie montrée est calculée	— every geometry shown is computed
+le chemin calculé	the computed path
+La courbe passe par les images calculées du chemin ; le point, par l'énergie calculée à la géométrie montrée. ΔE compare les produits et les réactifs relaxés chacun seul.	The curve goes through the computed images of the path; the dot, through the energy computed at the geometry shown. ΔE compares the products and the reactants, each relaxed alone.
+En tirets : un saut de branche, où deux images voisines ne sont pas reliées (rien n'est calculé entre elles).	Dashed: a branch jump, where two neighbouring images are not connected (nothing is computed between them).
+Aucun chemin joué	No path playing
+chemin imposé	imposed path
+départ	departure
+barrière	barrier
+indice de Mayer	Mayer index
+Vert : se forme ; orange : se rompt ; bleu : son ordre change. Calculé à chaque image, et au point montré.	Green: forms; orange: breaks; blue: its order changes. Computed at each image, and at the dot shown.
+Mesurées sur les images calculées ; le point, sur la géométrie montrée.	Measured on the computed images; the dot, on the geometry shown.
+Charges de Mulliken des atomes qui réagissent : où les électrons vont pendant la réaction (δ− : en gagne, δ+ : en perd).	Mulliken charges of the reacting atoms: where the electrons go during the reaction (δ−: gains some, δ+: loses some).
+Aucune liaison ne change dans cette étape	No bond changes in this step
+Le dessin	The drawing
+Aucune liaison ne change	No bond changes
+Le moteur pose la première image du chemin…	The engine is setting the first image of the path…
+Saut de branche : ces deux images calculées ne sont pas reliées (le chemin imposé passe d'un sens de calcul à l'autre) ; rien n'est montré entre elles.	Branch jump: these two computed images are not connected (the imposed path switches from one direction of computation to the other); nothing is shown between them.
+sa longueur · son indice de Mayer, ici et maintenant	its length · its Mayer index, here and now
+son ordre change (le dessin) : bâtonnets teintés de bleu	its order changes (the drawing): sticks tinted blue
+flèche courbe du dessin : un doublet d'électrons (votre hypothèse)	curly arrow of the drawing: an electron pair (your hypothesis)
+trajectoire : un point par image calculée du chemin	trajectory: one dot per computed image of the path
+charge de Mulliken calculée ici : δ+ cyan, δ− magenta	Mulliken charge computed here: δ+ cyan, δ− magenta
+à la profondeur du centre	at the depth of the centre
+au départ	at the start
+charge de Mulliken	Mulliken charge
+le dessin : ordre	the drawing: order
+Le même chemin dans sa vue 2.5D de lecture : légende, courbes image par image, liaisons qui changent	The same path in its 2.5D reading view: legend, image-by-image curves, bonds that change
+son ordre change	its order changes
+Lente	Slow
+Normale	Normal
+Rapide	Fast
+Liaisons	Bonds
+Dessiner les étapes comme sur papier : Genesis les calcule et rejoue leur chemin	Draw the steps as on paper: Genesis computes them and replays their path
+Voir le chemin	See the path
+Le chemin calculé de cette étape, rejoué en 2.5D : chaque géométrie montrée est calculée ; légende, énergie, liaisons et charges image par image	The computed path of this step, replayed in 2.5D: each geometry shown is computed; legend, energy, bonds and charges image by image
+barrière de ce chemin	barrier of this path
+ΔE, produits − réactifs	ΔE, products − reactants
+L'énergie le long du chemin	The energy along the path
+Liaisons qui changent	Bonds that change
+gagne	gains
+en perd	loses
+, du début à la fin du chemin	, from the start to the end of the path
+liaison : 1 à 3 bâtonnets (Mayer)	bond: 1 to 3 sticks (Mayer)
+flèche courbe du dessin	curly arrow of the drawing
+verre et reflets : décor	glass and highlights: decoration only
+trajectoire calculée	computed trajectory
+se forme : éclat selon Mayer	forms: glow follows Mayer
+se rompt : éclat selon Mayer	breaks: glow follows Mayer
+sur le chemin, depuis le départ	along the path, since the start
+Calculée par GFN1-xTB à chaque image du chemin (la courbe, les points), depuis la première image ; entre deux images, interpolée (le point qui avance). La barrière : la plus haute image du chemin imposé moins son départ — un chemin imposé, pas un état de transition cherché. ΔE (le trait pointillé) : les produits et les réactifs relaxés chacun seul ; la dernière image du chemin, elle, garde les molécules formées côte à côte. En tirets : un saut de branche, où rien n'est calculé entre deux images. Un clic place le chemin là.	Computed by GFN1-xTB at each image of the path (the curve, the dots), since the first image; between two images, interpolated (the moving dot). The barrier: the highest image of the imposed path minus its start — an imposed path, not a searched transition state. ΔE (the dotted line): products and reactants each relaxed alone; the last image of the path keeps the molecules formed side by side. Dashed: a branch jump, where nothing is computed between two images. A click places the path there.
+Pour ce qui réagit, à chaque image calculée du chemin : l'indice de Mayer et la longueur de chaque liaison qui change (vert : se forme ; orange : se rompt ; bleu : son ordre change), la charge de Mulliken de chaque atome (δ− en gagne, δ+ en perd). Le point : la valeur à la position montrée. Au survol, les valeurs de l'image. Dessous, ce qui a le plus changé du début à la fin.	For what reacts, at each computed image of the path: the Mayer index and the length of each bond that changes (green: forms; orange: breaks; blue: its order changes), the Mulliken charge of each atom (δ− gains, δ+ loses). The dot: the value at the position shown. On hover, the values of that image. Below, what changed most from start to end.
+À la position montrée : la longueur et l'indice de Mayer (calculés aux images, interpolés entre elles) de chaque liaison que le dessin forme, rompt, ou dont il change l'ordre.	At the position shown: the length and the Mayer index (computed at the images, interpolated between them) of each bond the drawing forms, breaks, or changes the order of.
+appr.	appr.
+Cette étape se calcule encore…	This step is still being computed…
+Le calcul tourne sur ce dessin : il se modifie une fois le calcul fini (ou arrêté).	The computation is running on this drawing: it can be edited once the computation is done (or stopped).
+Réactifs écrits	Written reagents
+Conditions	Conditions
+Réactifs écrits : 	Written reagents: 
+Conditions : 	Conditions: 
+Le calcul est fini	The computation is done
+calculés aux images du chemin, interpolés entre elles	computed at the path's images, interpolated between them
+Saut	Jump
+bouge d'un coup de	moves at once by
+passage non calculé, montré en fondu	the passage is not computed, shown as a fade
+La matière, calculée sous vos yeux.	Matter, computed before your eyes.
+Tout le schéma	Whole scheme
+Les étapes jouées à la suite : chacune commence où la précédente finit (mêmes atomes, mêmes numéros), reliées par un relais ; le profil d'énergie de tout le schéma et son bilan	The steps played one after another: each starts where the previous one ended (same atoms, same numbers), joined by a relay; the energy profile of the whole scheme and its summary
+depuis les réactifs du départ	from the starting reactants
+ΔE de tout le schéma	ΔE of the whole scheme
+plus haute barrière	highest barrier
+Le profil de tout le schéma	The profile of the whole scheme
+Chaque étape à sa hauteur : l'énergie de chacune de ses images (calculée par GFN1-xTB), comptée depuis les réactifs du départ relaxés chacun seul, les molécules qui ne réagissent pas encore — ou plus — loin de celles qui réagissent. Entre deux étapes, le palier : les produits de l'une relaxés chacun seul, l'intermédiaire (ΔE de l'étape) ; s'ils changent de milieu (du toluène à l'eau), ce que coûte ce passage. En pointillés : le relais, où rien n'est calculé entre la dernière image d'une étape et la première de la suivante. Un clic place la lecture là.	Each step at its own height: the energy of each of its images (computed by GFN1-xTB), counted from the starting reactants each relaxed alone, with the molecules that do not react yet — or any more — far from those that do. Between two steps, the plateau: the products of one relaxed each alone, the intermediate (the step's ΔE); if they change medium (from toluene to water), what that move costs. Dotted: the relay, where nothing is computed between the last image of a step and the first of the next. A click puts the playback there.
+Les étapes	The steps
+Bilan du schéma	Scheme summary
+Le bilan	The summary
+Ce qui se forme et se rompt du début à la fin du schéma (les atomes gardent leur numéro d'une étape à l'autre) ; ce qui entre en route (écrit sur les flèches) et ce qui sort (les sous-produits déduits) ; l'étape à la plus haute barrière, et son temps de demi-réaction (Eyring, à la température écrite sur sa flèche, sinon 300 K).	What forms and breaks from the start to the end of the scheme (atoms keep their number from one step to the next); what comes in along the way (written on the arrows) and what goes out (the deduced by-products); the step with the highest barrier, and its half-reaction time (Eyring, at the temperature written on its arrow, otherwise 300 K).
+Calculée par GFN1-xTB à chaque image du chemin (la courbe, les points), depuis la première image ; entre deux images, interpolée (le point qui avance). La barrière : la plus haute image du chemin imposé moins son départ — un chemin imposé, pas un état de transition cherché. ΔE (le trait pointillé) : les produits et les réactifs relaxés chacun seul ; la dernière image du chemin, elle, garde les molécules formées côte à côte. En tirets : un saut de branche, où rien n'est calculé entre deux images. Un clic place le chemin là. Le temps de demi-réaction : la formule d'Eyring, k = (k_B T / h) · e^(−E / k_B T), avec la barrière prise pour l'enthalpie libre d'activation — un ordre de grandeur : GFN1-xTB sous-estime souvent les barrières, un chemin imposé les surestime.	Computed by GFN1-xTB at each image of the path (the curve, the dots), from the first image; between two images, interpolated (the moving dot). The barrier: the highest image of the imposed path minus its start — an imposed path, not a searched transition state. ΔE (the dotted line): products and reactants each relaxed alone; the last image of the path keeps the formed molecules side by side. Dashed: a branch jump, where nothing is computed between two images. A click puts the path there. The half-reaction time: the Eyring formula, k = (k_B T / h) · e^(−E / k_B T), with the barrier taken as the activation free energy — an order of magnitude: GFN1-xTB often underestimates barriers, an imposed path overestimates them.
+barrière de ce chemin imposé	barrier of this imposed path
+relais	relay
+Relais	Relay
+relais : rien n'y est calculé	relay: nothing is computed there
+passage non calculé : la fin de l'une glisse vers le début de l'autre	not computed: the end of one glides to the start of the next
+Trop lent pour se faire : sans catalyseur, ce chemin imposé ne mène nulle part. La réaction réelle en prend un autre (catalyse acide ou basique, relais de proton) — dessinez ses étapes.	Too slow to happen: without a catalyst, this imposed path leads nowhere. The real reaction takes another one (acid or base catalysis, proton relay) — draw its steps.
+demi-réaction (Eyring)	half-reaction (Eyring)
+moins d'une milliseconde	less than a millisecond
+plus que l'âge de l'Univers	longer than the age of the Universe
+Entrent en route	Added along the way
+Sortent	Released
+La plus haute barrière	Highest barrier
+Confirmées par le calcul	Confirmed by computation
+Se forment	Formed
+Se rompent	Broken
+Changent d'ordre	Change order
+non calculée	not computed
+Ouvrir cette étape : son chemin, image par image	Open this step: its path, image by image
+Scène 3D…	3D scene…
+Relief	Relief
+Relief : aucun. Un clic : anaglyphe rouge-cyan (des lunettes rouge à gauche, cyan à droite)	Relief: none. One click: red-cyan anaglyph (glasses red on the left, cyan on the right)
+Relief : anaglyphe rouge-cyan — l'œil gauche en gris dans le rouge, l'œil droit en couleur. Un clic : côte à côte (visiocasque, écran 3D, vision parallèle)	Relief: red-cyan anaglyph — the left eye in grey through red, the right eye in colour. One click: side by side (headset, 3D screen, parallel viewing)
+Relief : côte à côte — l'œil gauche à gauche. Un clic : sans relief	Relief: side by side — the left eye on the left. One click: no relief
+Tout le schéma, à la suite	Whole scheme, in sequence
+Les étapes calculées rejouées l'une après l'autre : mêmes atomes, mêmes numéros, l'étape 2 reprend la molécule là où l'étape 1 l'a laissée ; le profil d'énergie de tout le schéma et son bilan	The computed steps replayed one after another: same atoms, same numbers, step 2 picks the molecule up where step 1 left it; the energy profile of the whole scheme and its summary
+Coller	Paste
+Coller ce que ChemDraw ou MarvinSketch a copié (Ctrl+V sur le dessin) : MOL, SDF, RXN, CDXML, MRV, SMILES ou SMILES de réaction	Paste what ChemDraw or MarvinSketch copied (Ctrl+V on the drawing): MOL, SDF, RXN, CDXML, MRV, SMILES or reaction SMILES
+Ouvrir un fichier…	Open a file…
+Un fichier de ChemDraw ou de MarvinSketch (.cdxml, .mrv, .mol, .sdf, .rxn, .smi) : ses molécules et ses flèches s'ajoutent au dessin — on peut aussi le glisser sur le dessin	A ChemDraw or MarvinSketch file (.cdxml, .mrv, .mol, .sdf, .rxn, .smi): its molecules and arrows are added to the drawing — it can also be dropped onto the drawing
+Depuis un SMILES ou un autre logiciel	From a SMILES or another program
+Lecture…	Reading…
+Rien à coller : copier une structure dans ChemDraw ou MarvinSketch (Copier comme MOL, SMILES ou CDXML)	Nothing to paste: copy a structure in ChemDraw or MarvinSketch (Copy As MOL, SMILES or CDXML)
+Ouvrir une structure ou un schéma	Open a structure or a scheme
+ChemDraw, MarvinSketch, MDL	ChemDraw, MarvinSketch, MDL
+Tous les fichiers	All files
+Fichier trop gros pour un schéma (plus de 8 Mo)	File too big for a scheme (over 8 MB)
+Un .cdx (ChemDraw binaire) ne se lit pas : l'enregistrer en .cdxml dans ChemDraw	A .cdx (binary ChemDraw) cannot be read: save it as .cdxml in ChemDraw
+Fichier illisible : 	Unreadable file: 
+Molécules ajoutées	Molecules added
+Schéma importé	Scheme imported
+flèche	arrow
+flèches	arrows
+SMILES de réaction	reaction SMILES
+Illisible : rien à lire	Unreadable: nothing to read
+Illisible : bloc MOL illisible	Unreadable: MOL block cannot be read
+Illisible : bloc RXN illisible	Unreadable: RXN block cannot be read
+Illisible : MRV illisible	Unreadable: MRV cannot be read
+Illisible : CDXML sans molécule lisible	Unreadable: CDXML without a readable molecule
+réactif repris de l'étape précédente, relaxé dans son nouveau milieu	reactant taken from the previous step, relaxed in its new medium
+réactif repris, dans son nouveau milieu	reactant taken over, in its new medium
+repris tel qu'il a été laissé	resumed as it was left
+Les molécules de la scène, le schéma calculé et ses chemins sont gardés d'un laboratoire à l'autre.	The molecules of the scene, the computed scheme and its paths are kept from one laboratory to another.
+Aldolisation catalysée par OH⁻ dans l'eau : énolate, addition, reprotonation	OH⁻-catalysed aldol addition in water: enolate, addition, reprotonation
+énergie d'atomisation · GFN1-xTB la surestime	atomization energy · overestimated by GFN1-xTB
+4-hydroxy-4-phénylbutan-2-one	4-hydroxy-4-phenylbutan-2-one
+benzalacétone	benzalacetone
+méthylvinylcétone	methyl vinyl ketone
+acrylate de méthyle	methyl acrylate
+2-méthylcyclohexane-1,3-dione	2-methylcyclohexane-1,3-dione
+cétone de Wieland–Miescher	Wieland–Miescher ketone
+éther d'allyle et de phényle	allyl phenyl ether
+2-allylphénol	2-allylphenol
+cyclopentadiène	cyclopentadiene
+anhydride maléique	maleic anhydride
+N-phénylmaléimide	N-phenylmaleimide
+méthylènetriphénylphosphorane	methylenetriphenylphosphorane
+oxyde de triphénylphosphine	triphenylphosphine oxide
+chaque produit tient seul (un minimum de GFN1-xTB), mais au bout du chemin imposé GFN1-xTB finit sur un autre produit (voir les remarques)	each product holds alone (a GFN1-xTB minimum), but at the end of the imposed path GFN1-xTB ends on another product (see the remarks)
+au bout du chemin, un autre produit	at the end of the path, another product
+−TΔS estimé (translations, rotations, 1 bar)	estimated −TΔS (translations, rotations, 1 bar)
+−TΔS estimé	estimated −TΔS
+L'entropie de translation et de rotation de chaque molécule relaxée seule (gaz parfait à 1 bar, rotor rigide), à la température de l'étape. Ni vibrations, ni symétrie, ni solvant : un ordre de grandeur	The translational and rotational entropy of each molecule relaxed alone (ideal gas at 1 bar, rigid rotor), at the step's temperature. No vibrations, no symmetry, no solvent: an order of magnitude
+demi-réaction (Eyring, barrière GFN1)	half-reaction (Eyring, GFN1 barrier)
+Trop lent pour se faire : ce chemin imposé fait tout à la fois, ce n'est sans doute pas le vrai mécanisme — découpez-le en étapes, dans l'ordre où les liaisons se font et se défont.	Too slow to happen: this imposed path does everything at once, it is probably not the real mechanism — split it into steps, in the order in which bonds form and break.
+GFN1-xTB sous-estime souvent les barrières (Diels–Alder : 0,35 eV calculés, ≈ 1,2 eV mesurés) : la vraie réaction est sans doute plus lente.	GFN1-xTB often underestimates barriers (Diels–Alder: 0.35 eV computed, ≈ 1.2 eV measured): the real reaction is probably slower.
+Détails ▾	Details ▾
+Détails ▴	Details ▴
+L'ordre de la liaison dans le dessin, avant → après (un complexe d'alcyne se dessine en simple liaison C–C) ; l'indice de Mayer, lui, est calculé	The bond order in the drawing, before → after (an alkyne complex is drawn with a single C–C bond); the Mayer index is computed
+depuis le produit	from the product
+Le calcul s'est arrêté : voir l'étape refusée	The computation stopped: see the refused step
+ non calculée : 	 not computed: 
+un C des réactifs porte 5 liaisons, au plus 4 neutre : une liaison en trop, ou une charge oubliée ?	a C of the reactants carries 5 bonds, at most 4 when neutral: one bond too many, or a forgotten charge?

@@ -107,6 +107,11 @@ public final class AssemblerPreview {
                     view.getNode().layout();
                     assembler.draw();
                 }
+                // La réaction de la frame, montrée telle quelle (une recherche finie ou en cours).
+                if (frame.getMoleculeLab().hasReaction()) {
+                    assembler.reaction().preview(frame.getMoleculeLab().getReaction());
+                    view.getNode().layout();
+                }
                 assembler.draw();
                 WritableImage image = scene.snapshot(null);
                 BufferedImage out = new BufferedImage((int) image.getWidth(), (int) image.getHeight(), BufferedImage.TYPE_INT_ARGB);

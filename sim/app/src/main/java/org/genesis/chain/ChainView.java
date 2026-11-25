@@ -79,7 +79,7 @@ public final class ChainView {
             {"Fe-56", "26056"}, {"Fe-60", "26060"}, {"Ni-62", "28062"}, {"Pb-208", "82208"}, {"C-12", "6012"},
             {"He-4", "2004"}, {"Li-6", "3006"}, {"H-2", "1002"}, {"H-3", "1003"}};
     private final Actions actions;
-    private final BorderPane root = new BorderPane();
+    private final BorderPane root = new BorderPane(); 
     private final StackPane stage = new StackPane();
     private final Pane holder;
     private final Canvas sceneCanvas = new Canvas(), overlayCanvas = new Canvas();
@@ -125,7 +125,7 @@ public final class ChainView {
     public ChainView(Actions actions) {
         this.actions = actions;
         root.getStyleClass().addAll("fusion-lab", "chain-lab");
-        root.setStyle("-fx-background-color:#04070D;-fx-font-family:'Segoe UI';");
+        root.setStyle("-fx-background-color:#04070D;-fx-font-family:'IBM Plex Sans';");
         holder = new Pane(sceneCanvas, overlayCanvas);
         holder.setMinSize(100, 100);
         for (Canvas c : new Canvas[]{sceneCanvas, overlayCanvas}) {
@@ -939,7 +939,7 @@ public final class ChainView {
                 gc.strokeLine(x - 4, y - 4, x + 4, y + 4);
                 gc.strokeLine(x - 4, y + 4, x + 4, y - 4);
             }
-            gc.setFont(Font.font("Segoe UI Semibold", 10));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
             gc.setFill(c.deriveColor(0, 1, 1, reached ? 1 : .6));
             gc.fillText(count > 12 ? ChainFormat.number(Math.round(count)) : String.valueOf(Math.round(count)), x, y + 16);
             if (g < n - 1) {
@@ -963,7 +963,7 @@ public final class ChainView {
             double track = boardHeight * boardHeight / height;
             double at = boardTop + (boardHeight - track) * boardScroll / (height - boardHeight);
             over.setFill(Color.color(1, 1, 1, .18));
-            over.fillRoundRect(boardLeft + ChainBoard.WIDTH + 3, at, 3, track, 3, 3);
+            over.fillRect(boardLeft + ChainBoard.WIDTH + 3, at, 3, track);
         }
     }
 
@@ -1062,7 +1062,7 @@ public final class ChainView {
     private void excursionPanel(GraphicsContext gc, double x, double y, double w, double h) {
         ChainBoard.glass(gc, x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(ChainBoard.LABEL);
         gc.fillText(ChainBoard.spaced("EXCURSION · NEUTRONS N(t) ET TEMPÉRATURE"), x + 14, y + 20);
         double left = x + 44, right = x + w - 16, top = y + 32, bottom = y + h - 44;
@@ -1074,7 +1074,7 @@ public final class ChainView {
         for (double v : temperature) tMax = Math.max(tMax, v);
         gc.setFill(Color.color(1, 1, 1, .03));
         gc.fillRect(left, top, right - left, bottom - top);
-        gc.setFont(Font.font("Segoe UI", 8.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         gc.setFill(ChainBoard.DIM);
         gc.setTextAlign(TextAlignment.RIGHT);
         for (int e = 0; e <= nMax; e += Math.max(1, (int) Math.ceil(nMax / 5))) {
@@ -1106,7 +1106,7 @@ public final class ChainView {
             gc.setLineWidth(1);
             gc.strokeLine(cx, top, cx, bottom);
         }
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(ChainBoard.DIM);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.fillText(ChainFormat.time(Math.pow(10, t0)), left, bottom + 12);
@@ -1123,11 +1123,11 @@ public final class ChainView {
         Color[] colors = {ChainBoard.TEAL, ChainBoard.INK, ChainBoard.AMBER, ChainBoard.CORAL, ChainBoard.INK};
         double vx = x + 14;
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         for (int i = 0; i < values.length; i++) {
             gc.setFill(colors[i]);
             gc.fillText(values[i], vx, y + h - 12);
-            vx += ChainBoard.width(values[i], Font.font("Segoe UI Semibold", 11)) + 16;
+            vx += ChainBoard.width(values[i], Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11)) + 16;
         }
     }
 }

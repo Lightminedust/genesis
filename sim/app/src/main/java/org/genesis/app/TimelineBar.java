@@ -1,5 +1,7 @@
 package org.genesis.app;
 
+import org.genesis.common.Icons;
+import org.genesis.common.Plan;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.ChainLink;
@@ -59,13 +61,13 @@ public final class TimelineBar {
         void stepMode(boolean on);
     }
 
-    private static final String UI = "Segoe UI";
+    private static final String UI = org.genesis.common.Plan.SANS;
     private static final double YEAR_S = 365.25 * 86400;
-    private static final Color AMBER = Color.web("#F2B84B");
-    private static final Color TEXT = Color.web("#E6EDF7");
-    private static final Color SOFT = Color.web("#8B9BB8");
-    private static final Color MUTED = Color.web("#5B6B86");
-    private static final Color LINE = Color.web("#2A3956");
+    private static final Color AMBER = Plan.MARK;
+    private static final Color TEXT = Plan.INK;
+    private static final Color SOFT = Plan.INK2;
+    private static final Color MUTED = Plan.INK3;
+    private static final Color LINE = Color.web("#FFFFFF", 0.12);
 
     /** Un noyau déjà vécu. */
     private record Past(String nuclide, double lived, String mode) {
@@ -77,7 +79,7 @@ public final class TimelineBar {
 
     private final Actions actions;
     private final VBox root = new VBox();
-    private final Button play = new Button("▶");
+    private final Button play = new Button();
     private final ToggleButton step = new ToggleButton("Pas à pas");
     private final Slider speed = new Slider(0, 9, 0);
     private final Label speedLabel = new Label();
@@ -100,25 +102,26 @@ public final class TimelineBar {
     TimelineBar(Actions actions) {
         this.actions = actions;
         play.getStyleClass().add("tl-play");
+        play.setGraphic(Icons.path("play", 14));
         play.setFocusTraversable(false);
-        play.setTooltip(I18n.tooltip("faire couler le temps, ou l'arrêter · Espace"));
+        play.setTooltip(Plan.tooltip("Faire couler le temps, ou l'arrêter · Espace"));
         play.setOnAction(event -> actions.togglePause());
 
-        Button next = new Button("⏭  Événement suivant");
-        next.getStyleClass().add("dash-button");
-        next.setFocusTraversable(false);
-        next.setTooltip(I18n.tooltip("avance le temps jusqu'au prochain événement, tiré au hasard · touche →"));
+        // Une icône (son nom au survol) : la barre tient dans une fenêtre étroite.
+        Button next = Plan.icon("step-forward", null, "Événement suivant : avance le temps jusqu'au prochain, tiré au hasard · →");
         next.setOnAction(event -> actions.next());
 
         step.getStyleClass().add("tl-toggle");
+        step.setMinWidth(Region.USE_PREF_SIZE);
         step.setFocusTraversable(false);
-        step.setTooltip(I18n.tooltip("le temps s'arrête après chaque événement, pour le lire · touche A"));
+        step.setTooltip(Plan.tooltip("Le temps s'arrête après chaque événement, le temps de le lire · A"));
         step.setOnAction(event -> actions.stepMode(step.isSelected()));
 
-        Label speedTitle = new Label("VITESSE DU TEMPS");
-        speedTitle.getStyleClass().add("dash-label");
+        Label speedTitle = new Label("Vitesse du temps");
+        speedTitle.getStyleClass().add("plan-label");
         speed.getStyleClass().add("tl-speed");
-        speed.setPrefWidth(230);
+        speed.setPrefWidth(170);
+        speed.setMinWidth(56);
         speed.setMajorTickUnit(1);
         speed.setMinorTickCount(0);
         speed.setSnapToTicks(true);
@@ -134,22 +137,25 @@ public final class TimelineBar {
                 actions.speed((int) Math.round(speed.getValue()));
             }
         });
-        speedLabel.getStyleClass().add("dash-value");
-        speedLabel.setMinWidth(250);
-        VBox speedBox = new VBox(2, speedTitle, new HBox(12, speed, speedLabel));
+        Plan.filled(speed);
+        speedLabel.getStyleClass().add("plan-value");
+        speedLabel.setMinWidth(0);
+        VBox speedBox = new VBox(3, speedTitle, new HBox(12, speed, speedLabel));
         ((HBox) speedBox.getChildren().get(1)).setAlignment(Pos.CENTER_LEFT);
 
-        clock.getStyleClass().add("dash-value");
-        Label clockTitle = new Label("TEMPS SIMULÉ");
-        clockTitle.getStyleClass().add("dash-label");
-        VBox clockBox = new VBox(2, clockTitle, clock);
+        clock.getStyleClass().add("plan-metric");
+        clock.setStyle("-fx-font-size: 18px;");
+        Label clockTitle = new Label("Temps simulé");
+        clockTitle.getStyleClass().add("plan-label");
+        VBox clockBox = new VBox(0, clockTitle, clock);
         clockBox.setAlignment(Pos.CENTER_RIGHT);
+        clockBox.setMinWidth(Region.USE_PREF_SIZE);
 
         Region grow = new Region();
         HBox.setHgrow(grow, Priority.ALWAYS);
-        HBox controls = new HBox(12, play, next, step, separator(), speedBox, grow, clockBox);
+        HBox controls = new HBox(8, play, next, step, separator(), speedBox, grow, clockBox);
         controls.setAlignment(Pos.CENTER_LEFT);
-        controls.setPadding(new Insets(8, 18, 2, 14));
+        controls.setPadding(new Insets(10, 18, 2, 14));
 
         Pane holder = new Pane(line);
         line.widthProperty().bind(holder.widthProperty());
@@ -177,7 +183,9 @@ public final class TimelineBar {
     private static Region separator() {
         Region region = new Region();
         region.getStyleClass().add("view-sep");
-        region.setPrefHeight(34);
+        region.setPrefHeight(30);
+        region.setMaxHeight(30);
+        HBox.setMargin(region, new Insets(0, 6, 0, 6));
         return region;
     }
 
@@ -240,7 +248,11 @@ public final class TimelineBar {
         }
         step.setSelected(incoming.getStepMode());
         updating = false;
-        play.setText(incoming.getPaused() ? "▶" : "⏸");
+        boolean paused = incoming.getPaused();
+        if (!Boolean.valueOf(paused).equals(play.getProperties().get("paused"))) {
+            play.getProperties().put("paused", paused);
+            play.setGraphic(Icons.path(paused ? "play" : "pause", 14));
+        }
         speedLabel.setText(speedText(incoming));
 
         // « Avancer jusqu'à » : un événement après l'autre, tant que la station n'est pas atteinte.
@@ -330,19 +342,20 @@ public final class TimelineBar {
         double x0 = left;
         double xNow = left + pastShown * spacing;
         double xEnd = left + (total - 1) * spacing;
-        g.setStroke(Color.web("#3A4560"));
-        g.setLineWidth(3);
+        g.setStroke(Color.web("#FFFFFF", 0.10));
+        g.setLineWidth(2);
         g.setLineDashes(2, 5);
         g.strokeLine(x0, y, xNow, y);
         g.setLineDashes((double[]) null);
         g.setStroke(LINE);
+        g.setLineWidth(2);
         g.strokeLine(xNow, y, xEnd, y);
 
         // Le passé vécu
         for (int i = 0; i < pastShown; i++) {
             Past past = history.get(history.size() - pastShown + i);
             double x = left + i * spacing;
-            node(g, x, y, 11, past.nuclide(), Color.web("#334155"), Color.web("#94A3B8"));
+            node(g, x, y, 11, past.nuclide(), Color.web("#2A2F38"), Plan.INK2);
             text(g, x, y + 27, past.nuclide(), MUTED, 10.5, true);
             text(g, x, y + 41, I18n.text("vécu ") + compact(past.lived()), MUTED, 10, true);
             text(g, x + spacing / 2, y - 9, past.mode(), MUTED, 11, true);
@@ -372,8 +385,8 @@ public final class TimelineBar {
             stations.add(station);
             boolean hovered = !current && mouseX >= 0 && Math.hypot(mouseX - x, mouseY - y) <= r + 4;
             if (link.getStable()) {
-                g.setStroke(Color.web("#E6EDF7", 0.85));
-                g.setLineWidth(2);
+                g.setStroke(Color.web("#ECEFF3", 0.75));
+                g.setLineWidth(1.5);
                 g.strokeOval(x - r - 4, y - r - 4, (r + 4) * 2, (r + 4) * 2);
             }
             node(g, x, y, r, link.getNuclide(), colour.deriveColor(0, 1, current ? 1 : 0.75, 1),
@@ -381,8 +394,8 @@ public final class TimelineBar {
             if (current && !link.getStable() && link.getHalfLifeS() > 0) {
                 // Probabilité qu'il se soit déjà désintégré : P = 1 − e^(−t/τ).
                 double p = 1 - Math.exp(-elapsed / meanLife(link));
-                g.setStroke(Color.web("#2A3550"));
-                g.setLineWidth(3);
+                g.setStroke(Color.web("#FFFFFF", 0.10));
+                g.setLineWidth(2.5);
                 g.strokeOval(x - r - 5, y - r - 5, (r + 5) * 2, (r + 5) * 2);
                 g.setStroke(AMBER);
                 g.strokeArc(x - r - 5, y - r - 5, (r + 5) * 2, (r + 5) * 2, 90, -360 * p, ArcType.OPEN);
@@ -448,7 +461,7 @@ public final class TimelineBar {
         if (frame.getSpeed() > 0) {
             text.append(realWait(tau));
         }
-        text.append(" · déjà fait : ").append(String.format(I18n.locale(), "%.0f", 100 * p)).append(" %");
+        if (p >= .01) text.append(" · déjà fait : ").append(String.format(I18n.locale(), "%.0f", 100 * p)).append(" %");
         if (now.getEstimated()) {
             text.append(" · demi-vie estimée");
         }
@@ -467,7 +480,7 @@ public final class TimelineBar {
         if (seconds < 7200) {
             return String.format(I18n.locale(), I18n.text(" (≈ %.0f min réelles à cette vitesse)"), seconds / 60);
         }
-        return " (trop long à cette vitesse : accélère)";
+        return " (accélérer pour le voir)";
     }
 
     private Station stationAt(double x, double y) {
@@ -486,12 +499,12 @@ public final class TimelineBar {
     private static void node(GraphicsContext g, double x, double y, double r, String nuclide, Color fill, Color ink) {
         g.setFill(fill);
         g.fillOval(x - r, y - r, r * 2, r * 2);
-        g.setStroke(Color.web("#0A0F1C"));
+        g.setStroke(Plan.PAPER);
         g.setLineWidth(2);
         g.strokeOval(x - r, y - r, r * 2, r * 2);
         String symbol = nuclide.contains("-") ? nuclide.substring(0, nuclide.indexOf('-')) : nuclide;
-        g.setFill(Color.web("#0A0F1C"));
-        g.setFont(Font.font(UI, FontWeight.BOLD, r > 13 ? 12 : 10.5));
+        g.setFill(Plan.PAPER);
+        g.setFont(Font.font(Plan.SANS_SEMIBOLD, r > 13 ? 12 : 10.5));
         g.setTextAlign(TextAlignment.CENTER);
         g.setTextBaseline(VPos.CENTER);
         I18n.fillText(g, symbol, x, y);

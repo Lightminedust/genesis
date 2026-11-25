@@ -49,6 +49,36 @@ DXTB = {
 }
 
 
+class DispersionTest(unittest.TestCase):
+    def test_the_gradient_stays_finite_far_from_the_references(self):
+        # Cs au milieu de douze F à 3 Å : son nombre de coordination (≈ 11) est loin de toutes ses références D3, ses
+        # poids gaussiens tombent vers 1e-200, et leur carré s'annulait (une dérivée 0/0 : un gradient NaN, chaque pas
+        # d'une relaxation refusé — l'élimination par CsF de l'exemple du diène silylé restait figée).
+        golden = (1 + 5 ** 0.5) / 2
+        shell = []
+        for a, b in ((1, golden), (-1, golden), (1, -golden), (-1, -golden)):
+            shell += [(0, a, b), (a, b, 0), (b, 0, a)]
+        shell = np.array(shell, float)
+        positions = np.vstack([[0, 0, 0], 3.0 * shell / np.linalg.norm(shell[0])])
+        basis = xtb.Basis([55] + [9] * 12)
+        bohr = positions / xtb.BOHR_ANGSTROM
+        cn, dcn, _ = xtb.coordination(basis, bohr, derivative=True)
+        self.assertGreater(cn[0], 8)
+        energy, grad, _, _ = xtb.dispersion(basis, bohr, cn, dcn)
+        self.assertTrue(np.all(np.isfinite(grad)))
+        rng = np.random.default_rng(3)
+        d = rng.normal(size=bohr.shape)
+        d /= np.linalg.norm(d)
+        h = 1e-4
+
+        def at(x):
+            c = xtb.coordination(basis, x)[0]
+            return xtb.dispersion(basis, x, c)[0]
+
+        slope = (at(bohr + h * d) - at(bohr - h * d)) / (2 * h)
+        self.assertAlmostEqual(slope, float(np.sum(grad * d)), delta=1e-6 + 1e-4 * abs(slope))
+
+
 class ReferenceTest(unittest.TestCase):
     def test_energies_and_gradients_match_dxtb(self):
         for name, (numbers, positions, energy, gradient) in DXTB.items():

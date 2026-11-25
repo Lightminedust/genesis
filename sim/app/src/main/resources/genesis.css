@@ -1,549 +1,708 @@
 /*
- * Thème sombre de Genesis.
+ * Genesis — la feuille de style.
  *
- * Ne contient que ce que les styles en ligne ne peuvent pas atteindre :
- * les sous-parties internes des contrôles JavaFX (séparateur de SplitPane,
- * ascenseurs, viewport des ScrollPane), qui restent sinon en clair et
- * tranchent violemment sur le fond.
+ * La scène est le sujet ; l'interface est le boîtier de l'instrument : un graphite neutre, plus clair que l'espace des
+ * scènes et sans teinte à lui, pour que chaque scène garde ses couleurs. Les groupes se lisent par l'espace et par leur
+ * titre, pas par des cadres. Les commandes sont des surfaces douces (pas de contours) ; le choix en cours est en relief.
+ *
+ *   fond      #0C0E12 (application)   #111419 (panneaux)   #181C23 (cartes, menus)   #07090C (derrière les scènes)
+ *   surface   blanc à 6 % (commande)   9,5 % (survol)   13 % (enfoncée)   #2B313B (segment choisi)
+ *   encre     #ECEFF3 · #A2ABB8 · #6B7483 · #4B525D        trait  blanc à 7 %
+ *   accent    un par laboratoire : atome #7CC4FF · fusion #FF9F66 · molécules #4FD1A9 · subatomique #B39DFF
+ *             (l'action principale, ce qui est allumé, le focus au clavier — rien d'autre)
+ *   alerte    #F2C14E (une seule couleur d'attention)     tient #6CD09A     échoue #F2766B
+ *
+ *   caractères  IBM Plex Sans : Light (grands nombres), Regular (texte), Medm (commandes, valeurs), SmBld (titres)
+ *   rayons      7 (commandes), 8 (boutons d'action), 10 (cartes, menus) ; aucun pour les panneaux posés au bord
+ *
+ * L'accent se lit par -accent et -accent-soft (couleurs « look-up » de JavaFX), redéfinies sur la racine de chaque
+ * laboratoire (.lab-atom, .lab-fusion, .lab-molecule, .lab-subatomic). Les couleurs des canevas : common/Plan.java.
  */
 
+@font-face { font-family: 'IBM Plex Sans'; src: url('fonts/IBMPlexSans-Regular.ttf'); }
+@font-face { font-family: 'IBM Plex Sans'; src: url('fonts/IBMPlexSans-Bold.ttf'); }
+@font-face { font-family: 'IBM Plex Sans Light'; src: url('fonts/IBMPlexSans-Light.ttf'); }
+@font-face { font-family: 'IBM Plex Sans Medm'; src: url('fonts/IBMPlexSans-Medium.ttf'); }
+@font-face { font-family: 'IBM Plex Sans SmBld'; src: url('fonts/IBMPlexSans-SemiBold.ttf'); }
+
 .root {
-    -fx-background-color: #060913;
-    -fx-font-family: "Segoe UI", "Inter", sans-serif;
-}
-
-/* Laboratoire de fusion : verre fumé — panneaux sombres translucides, liserés froids, accents cyan → ambre. */
-.fusion-lab .slider .track {
-    -fx-background-color: rgba(255,255,255,0.14);
-    -fx-pref-height: 3px;
-    -fx-background-radius: 3;
-}
-.fusion-lab .slider .thumb {
-    -fx-background-color: #E8EEF7;
-    -fx-background-radius: 8;
-    -fx-padding: 6;
-}
-.fusion-lab .slider:hover .thumb { -fx-background-color: #3DD6C6; }
-.fusion-lab .glass-side {
-    -fx-background-color: #090D14;
-    -fx-border-color: transparent rgba(255,255,255,0.07) transparent transparent;
-}
-.fusion-lab .glass-section {
-    -fx-background-color: transparent;
-    -fx-border-color: transparent transparent rgba(255,255,255,0.07) transparent;
-    -fx-padding: 6 4 14 4;
-}
-.fusion-lab .glass-button {
-    -fx-background-color: rgba(255,255,255,0.04);
-    -fx-background-radius: 7;
-    -fx-border-color: rgba(255,255,255,0.12);
-    -fx-border-radius: 7;
-    -fx-text-fill: #DCE8F7;
-    -fx-font-size: 11px;
-    -fx-padding: 6 11;
-    -fx-cursor: hand;
-}
-.fusion-lab .glass-button:hover { -fx-background-color: rgba(120,200,255,0.12); -fx-border-color: rgba(150,210,255,0.45); }
-.fusion-lab .glass-button:pressed { -fx-background-color: rgba(120,200,255,0.22); }
-.fusion-lab .glass-primary {
-    -fx-background-color: #1FA89B;
-    -fx-background-radius: 8;
-    -fx-text-fill: #04110F;
+    -accent: #DCE2EA;
+    -accent-soft: rgba(220,226,234,0.12);
+    -accent-ink: #0C0E12;
+    -fx-background-color: #0C0E12;
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 12.5px;
-    -fx-font-weight: bold;
-    -fx-padding: 9 12;
-    -fx-cursor: hand;
+    -fx-focus-color: -accent;
+    -fx-faint-focus-color: transparent;
 }
-.fusion-lab .glass-primary:hover { -fx-background-color: #2BC4B5; }
-.fusion-lab .glass-primary:pressed { -fx-background-color: #178F84; }
-.fusion-lab .glass-amber {
-    -fx-background-color: rgba(255,178,74,0.07);
-    -fx-background-radius: 10;
-    -fx-border-color: rgba(255,178,74,0.55);
-    -fx-border-radius: 10;
-    -fx-text-fill: #FFD49A;
-    -fx-font-size: 11.5px;
-    -fx-font-weight: bold;
-    -fx-padding: 8 12;
-    -fx-cursor: hand;
+.label { -fx-text-fill: #ECEFF3; }
+
+/* ---------------------------------------------------------------- les variantes : une couleur par laboratoire */
+.lab-atom { -accent: #7CC4FF; -accent-soft: rgba(124,196,255,0.15); }
+.lab-fusion { -accent: #FF9F66; -accent-soft: rgba(255,159,102,0.15); }
+.lab-molecule { -accent: #4FD1A9; -accent-soft: rgba(79,209,169,0.15); }
+.lab-subatomic { -accent: #B39DFF; -accent-soft: rgba(179,157,255,0.15); }
+
+/* ---------------------------------------------------------------- les panneaux et les barres */
+.plan-side, .glass-side, .scroll-pane.plan-side { -fx-background-color: #111419; }
+.plan-side.left, .glass-side, .scroll-pane.plan-side.left {
+    -fx-border-color: transparent rgba(255,255,255,0.06) transparent transparent;
+    -fx-border-width: 0 1 0 0;
 }
-.fusion-lab .glass-amber:hover { -fx-background-color: rgba(255,178,74,0.16); }
-.fusion-lab .glass-primary:disabled, .fusion-lab .glass-amber:disabled { -fx-opacity: 0.45; }
-.fusion-lab .nucleus-card:hover { -fx-border-color: rgba(255,255,255,0.3); }
-.fusion-lab .text-field {
-    -fx-background-color: rgba(255,255,255,0.055);
-    -fx-background-radius: 8;
-    -fx-border-color: rgba(150,200,255,0.22);
-    -fx-border-radius: 8;
-    -fx-text-fill: #F1F7FF;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-prompt-text-fill: #6F86A3;
+.plan-side.right, .scroll-pane.plan-side.right {
+    -fx-border-color: transparent transparent transparent rgba(255,255,255,0.06);
+    -fx-border-width: 0 0 0 1;
 }
-.fusion-lab .text-field:focused { -fx-border-color: #36CDF2; -fx-effect: dropshadow(gaussian, rgba(54,205,242,0.35), 8, 0.1, 0, 0); }
-.fusion-lab .combo-box .list-cell {
-    -fx-text-fill: #DFEAFE;
-    -fx-background-color: #18243A;
+.plan-bar, .dash-bar, .doc-head {
+    -fx-background-color: #111419;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.06) transparent;
+    -fx-border-width: 0 0 1 0;
 }
-.fusion-lab .combo-box-popup .list-view,
-.fusion-lab .combo-box-popup .list-cell {
-    -fx-background-color: #18243A;
-    -fx-text-fill: #DFEAFE;
+.plan-foot, .dash-foot, .doc-bar {
+    -fx-background-color: #111419;
+    -fx-border-color: rgba(255,255,255,0.06) transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
 }
-.fusion-lab .separator .line { -fx-border-color: #233149; -fx-border-width: 1 0 0 0; }
-.fusion-lab .toggle-button:selected { -fx-border-color: #477992; -fx-border-radius: 8; }
-/* Les calques de l'en-tête et les bascules : éteints en verre, allumés en cyan. */
-.fusion-lab .glass-toggle {
-    -fx-background-color: rgba(10,18,30,0.62);
-    -fx-background-radius: 9;
-    -fx-border-color: rgba(150,200,255,0.18);
-    -fx-border-radius: 9;
-    -fx-text-fill: #7F93AE;
-    -fx-font-size: 11px;
-    -fx-font-weight: normal;
-    -fx-padding: 6 11;
-    -fx-cursor: hand;
+.plan-scene { -fx-background-color: #07090C; }
+.fusion-lab, .doc-lab, .molecule-lab, .chain-lab { -fx-background-color: #0C0E12; }
+/* L'action d'une colonne, posée en bas d'elle. */
+/* Une section posée au pied d'une colonne (les calques), sous un trait. */
+.plan-dock-top { -fx-border-color: rgba(255,255,255,0.06) transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.plan-dock {
+    -fx-background-color: #111419;
+    -fx-border-color: rgba(255,255,255,0.06) transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 12 16 14 16;
 }
-.fusion-lab .glass-toggle:hover { -fx-border-color: rgba(150,210,255,0.45); }
-.fusion-lab .glass-toggle:selected {
-    -fx-background-color: rgba(54,205,242,0.15);
-    -fx-border-color: rgba(54,205,242,0.6);
-    -fx-border-radius: 9;
-    -fx-text-fill: #E6F8FF;
-}
-/* Les commandes segmentées (faisceau | plasma, onglets du bilan, échelles d'énergie). */
-.fusion-lab .segment {
+
+/* Une section : un titre court, son contenu ; l'espace la sépare de la suivante. */
+.plan-section, .glass-section { -fx-background-color: transparent; -fx-border-color: transparent; -fx-padding: 0 0 20 0; }
+.plan-section.folded { -fx-padding: 0 0 12 0; }
+.plan-section-title { -fx-padding: 0 0 0 0; -fx-min-height: 20; }
+.fold-head { -fx-cursor: hand; }
+.fold-mark .icon { -fx-stroke: #6B7483; }
+.fold-head:hover .fold-mark .icon { -fx-stroke: #ECEFF3; }
+.plan-title { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 12.5px; }
+.plan-index { -fx-text-fill: #6B7483; -fx-font-size: 11px; }
+.plan-label, .dash-label, .doc-caption { -fx-text-fill: #A2ABB8; -fx-font-size: 12px; }
+.plan-value, .dash-value, .doc-value { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 12.5px; }
+.plan-note, .dash-note { -fx-text-fill: #A2ABB8; -fx-font-size: 12px; }
+.plan-quiet-note { -fx-text-fill: #6B7483; -fx-font-size: 11.5px; }
+.plan-heading, .doc-title { -fx-text-fill: #ECEFF3; -fx-font-size: 15px; -fx-font-family: "IBM Plex Sans SmBld"; }
+.plan-metric { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Light"; -fx-font-size: 24px; }
+.plan-unit { -fx-text-fill: #A2ABB8; -fx-font-size: 12px; }
+.plan-alert { -fx-text-fill: #F2C14E; }
+/* Une fiche de faits (le projectile, la cible) : une surface douce, l'encre secondaire. */
+.plan-fact {
     -fx-background-color: rgba(255,255,255,0.04);
-    -fx-background-radius: 0;
-    -fx-border-color: rgba(150,200,255,0.18);
-    -fx-border-width: 1 0 1 1;
-    -fx-border-radius: 0;
-    -fx-text-fill: #8EA3BE;
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-padding: 6 10;
+    -fx-background-radius: 8;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-size: 11.5px;
+    -fx-padding: 8 11;
+    -fx-line-spacing: 1;
+}
+.plan-good { -fx-text-fill: #6CD09A; }
+.plan-bad { -fx-text-fill: #F2766B; }
+
+/* Le « ? » d'une explication : un petit rond discret ; sa fiche s'ouvre au survol. */
+.why {
+    -fx-text-fill: #6B7483;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 9.5px;
+    -fx-alignment: center;
+    -fx-min-width: 15; -fx-min-height: 15; -fx-pref-width: 15; -fx-pref-height: 15;
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 100;
     -fx-cursor: hand;
 }
-.fusion-lab .segment.left { -fx-background-radius: 9 0 0 9; -fx-border-radius: 9 0 0 9; }
-.fusion-lab .segment.right { -fx-background-radius: 0 9 9 0; -fx-border-radius: 0 9 9 0; -fx-border-width: 1; }
-.fusion-lab .segment:hover { -fx-background-color: rgba(120,200,255,0.1); }
-.fusion-lab .segment:selected, .fusion-lab .segment.on {
-    -fx-background-color: linear-gradient(to bottom, rgba(54,205,242,0.38), rgba(45,116,201,0.32));
-    -fx-text-fill: #FFFFFF;
-    -fx-border-color: rgba(54,205,242,0.65);
-}
+.why:hover { -fx-text-fill: #ECEFF3; -fx-background-color: rgba(255,255,255,0.12); }
 
-/* ---- SplitPane : le séparateur ressortait en barre blanche ---- */
-.split-pane {
-    -fx-background-color: #060913;
-    -fx-padding: 0;
+/* ---------------------------------------------------------------- icônes */
+.icon {
+    -fx-fill: transparent;
+    -fx-stroke: #A2ABB8;
+    -fx-stroke-width: 1.5;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
 }
+.icon.solid { -fx-fill: #A2ABB8; -fx-stroke: transparent; }
 
-.split-pane > .split-pane-divider {
-    -fx-background-color: #1E293B;
-    -fx-border-color: transparent;
-    -fx-padding: 0 0 0 1;
-    -fx-pref-height: 3px;
-}
-
-.split-pane > .split-pane-divider:hover {
-    -fx-background-color: #334155;
-}
-
-/* ---- ScrollPane et ascenseurs ---- */
-.scroll-pane {
-    -fx-background-color: transparent;
+/* ---------------------------------------------------------------- boutons */
+.button, .toggle-button, .menu-button,
+.glass-button, .doc-button, .dash-button, .dash-menu, .plan-button, .update-primary {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 7;
     -fx-background-insets: 0;
-    -fx-padding: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-text-fill: #ECEFF3;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+    -fx-effect: null;
 }
+.button:hover, .toggle-button:hover, .menu-button:hover, .menu-button:showing,
+.glass-button:hover, .doc-button:hover, .dash-button:hover, .dash-menu:hover, .plan-button:hover, .update-primary:hover {
+    -fx-background-color: rgba(255,255,255,0.095);
+}
+.button:pressed, .toggle-button:pressed { -fx-background-color: rgba(255,255,255,0.13); }
+.button:disabled, .toggle-button:disabled, .menu-button:disabled { -fx-opacity: 0.38; }
+.button:focus-visible, .toggle-button:focus-visible, .menu-button:focus-visible {
+    -fx-border-color: -accent; -fx-border-width: 1; -fx-border-radius: 7;
+}
+.toggle-button:selected, .doc-button:selected {
+    -fx-background-color: -accent-soft;
+    -fx-text-fill: -accent;
+}
+.toggle-button:selected .icon { -fx-stroke: -accent; }
+.button .icon, .toggle-button .icon, .menu-button .icon { -fx-stroke: #A2ABB8; }
+.button:hover .icon, .toggle-button:hover .icon, .menu-button:hover .icon, .menu-button:showing .icon { -fx-stroke: #ECEFF3; }
+.button .icon.solid, .toggle-button .icon.solid { -fx-fill: #ECEFF3; -fx-stroke: transparent; }
+.menu-button .label, .dash-menu .label { -fx-text-fill: #ECEFF3; }
+.menu-button > .arrow-button { -fx-padding: 0 0 0 6; }
+.menu-button .arrow, .dash-menu .arrow { -fx-background-color: #6B7483; -fx-padding: 2 3.5; }
 
-.scroll-pane > .viewport {
+/* L'action principale d'une colonne : pleine, dans la couleur du laboratoire. Une seule par colonne. */
+.plan-primary, .glass-primary, .doc-primary, .dash-fire {
+    -fx-background-color: -accent;
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-text-fill: -accent-ink;
+    -fx-font-family: "IBM Plex Sans SmBld";
+    -fx-font-size: 12.5px;
+    -fx-font-weight: normal;
+    -fx-padding: 9 14;
+    -fx-cursor: hand;
+}
+.plan-primary:hover, .glass-primary:hover, .doc-primary:hover, .dash-fire:hover { -fx-background-color: derive(-accent, 14%); }
+.plan-primary:pressed, .glass-primary:pressed, .doc-primary:pressed, .dash-fire:pressed { -fx-background-color: derive(-accent, -10%); }
+.plan-primary:disabled, .glass-primary:disabled, .doc-primary:disabled { -fx-opacity: 0.4; }
+.plan-primary .icon { -fx-stroke: -accent-ink; }
+.plan-primary .icon.solid { -fx-fill: -accent-ink; }
+
+/* Forcer le calcul (jusqu'à la fusion) : la couleur d'alerte, au trait. */
+.glass-amber, .plan-mark {
     -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(242,193,78,0.42);
+    -fx-border-radius: 8;
+    -fx-border-width: 1;
+    -fx-text-fill: #F2C14E;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-padding: 8 14;
+    -fx-cursor: hand;
 }
+.glass-amber:hover, .plan-mark:hover { -fx-background-color: rgba(242,193,78,0.10); }
+.glass-amber:disabled { -fx-opacity: 0.4; }
 
-.scroll-bar:vertical,
-.scroll-bar:horizontal {
+/* Un bouton discret : du texte, un fond seulement au survol. */
+.plan-quiet, .view-button, .step-button {
     -fx-background-color: transparent;
-    -fx-padding: 2;
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12px;
+    -fx-padding: 6 9;
+    -fx-cursor: hand;
 }
-
-.scroll-bar > .thumb {
-    -fx-background-color: #1E293B;
-    -fx-background-radius: 4;
+.plan-quiet:hover, .plan-quiet:showing, .view-button:hover, .step-button:hover {
+    -fx-text-fill: #ECEFF3; -fx-background-color: rgba(255,255,255,0.07);
 }
+.plan-quiet .label, .view-button > .label, .view-button .label { -fx-text-fill: #A2ABB8; }
+.plan-quiet:hover .label, .plan-quiet:showing .label, .view-button:hover .label { -fx-text-fill: #ECEFF3; }
+.plan-quiet .arrow, .view-button .arrow { -fx-background-color: #6B7483; }
 
-.scroll-bar > .thumb:hover {
-    -fx-background-color: #3B4A63;
+/* Un bouton d'icône : sans fond, l'icône s'éclaire au survol ; allumé, l'icône prend l'accent. */
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 7;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12px;
+    -fx-padding: 6 9 6 7;
+    -fx-graphic-text-gap: 7;
 }
+.icon-button.only { -fx-padding: 6; }
+.icon-button:hover { -fx-background-color: rgba(255,255,255,0.07); -fx-text-fill: #ECEFF3; }
+.icon-button:selected { -fx-background-color: -accent-soft; -fx-text-fill: -accent; }
+.icon-button:selected .icon { -fx-stroke: -accent; }
 
-/* Les flèches d'extrémité n'ont pas leur place sur ce thème. */
-.scroll-bar > .increment-button,
-.scroll-bar > .decrement-button {
-    -fx-opacity: 0;
+/* Les bascules d'affichage : des pastilles douces ; allumées, teintées de l'accent. */
+.glass-toggle, .view-toggle, .tl-toggle, .log-chip, .chip, .plan-toggle {
+    -fx-background-color: rgba(255,255,255,0.05);
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11.5px;
+    -fx-font-weight: normal;
+    -fx-padding: 5 10;
+    -fx-cursor: hand;
+}
+.glass-toggle:hover, .view-toggle:hover, .tl-toggle:hover, .log-chip:hover, .chip:hover, .plan-toggle:hover {
+    -fx-background-color: rgba(255,255,255,0.09);
+    -fx-text-fill: #ECEFF3;
+}
+.glass-toggle:selected, .view-toggle:selected, .tl-toggle:selected, .log-chip:selected, .chip:selected, .plan-toggle:selected {
+    -fx-background-color: -accent-soft;
+    -fx-text-fill: -accent;
+}
+.log-chip { -fx-padding: 3 8; -fx-font-size: 11px; }
+
+/* Les commandes segmentées : une piste, le segment choisi en relief (comme un sélecteur matériel). */
+.segment, .doc-segment {
+    -fx-background-color: rgba(255,255,255,0.055);
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11.5px;
+    -fx-font-weight: normal;
+    -fx-padding: 6 12;
+    -fx-cursor: hand;
+}
+.segment.left, .doc-segment.left { -fx-background-radius: 8 0 0 8; }
+.segment.right, .doc-segment.right { -fx-background-radius: 0 8 8 0; }
+.segment.single { -fx-background-radius: 8; }
+.segment:hover, .doc-segment:hover { -fx-text-fill: #ECEFF3; -fx-background-color: rgba(255,255,255,0.075); }
+.segment:selected, .segment.on, .doc-segment:selected {
+    -fx-background-color: rgba(255,255,255,0.055), #2B313B;
+    -fx-background-insets: 0, 2;
+    -fx-background-radius: 0, 6;
+    -fx-text-fill: #ECEFF3;
+    -fx-effect: null;
+}
+.segment.left:selected, .segment.left.on, .doc-segment.left:selected { -fx-background-radius: 8 0 0 8, 6; }
+.segment.right:selected, .segment.right.on, .doc-segment.right:selected { -fx-background-radius: 0 8 8 0, 6; }
+.segment.single:selected { -fx-background-radius: 8, 6; }
+
+/* ---------------------------------------------------------------- la barre du haut */
+.plan-brand, .dash-brand { -fx-text-fill: #A2ABB8; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 13px; }
+.plan-home {
+    -fx-background-color: transparent;
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-padding: 5 8 5 6;
+    -fx-cursor: hand;
+}
+.plan-home:hover { -fx-background-color: rgba(255,255,255,0.06); }
+.plan-home:hover .plan-brand { -fx-text-fill: #ECEFF3; }
+/* Le logotype GENESIS_ (assets/brand) : un peu retenu, entier au survol. */
+.plan-logotype { -fx-opacity: 0.84; }
+.plan-home:hover .plan-logotype { -fx-opacity: 1; }
+.plan-crumb { -fx-text-fill: #4B525D; -fx-font-size: 14px; }
+.plan-lab { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 13px; }
+.plan-lab-dot { -fx-fill: -accent; }
+.plan-scale { -fx-text-fill: #6B7483; -fx-font-size: 11.5px; }
+.plan-rule { -fx-background-color: rgba(255,255,255,0.08); -fx-min-width: 1; -fx-pref-width: 1; -fx-max-width: 1; }
+/* Le menu des réglages : une icône seule, sans sa flèche. */
+.plan-settings > .arrow-button { -fx-padding: 0; }
+.plan-settings > .arrow-button > .arrow { -fx-padding: 0; -fx-shape: null; -fx-background-color: transparent; }
+.plan-status {
+    -fx-background-color: rgba(242,193,78,0.12);
+    -fx-background-radius: 100;
+    -fx-text-fill: #F2C14E;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11.5px;
+    -fx-padding: 3 10;
+}
+.plan-status.bad { -fx-background-color: rgba(242,118,107,0.13); -fx-text-fill: #F2766B; }
+.doc-tab, .plan-tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-text-fill: #6B7483;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12px;
+    -fx-padding: 9 2 7 2;
+    -fx-cursor: hand;
+}
+.doc-tab:hover, .plan-tab:hover { -fx-text-fill: #ECEFF3; -fx-background-color: transparent; -fx-border-color: transparent; }
+.plan-tabs { -fx-border-color: transparent transparent rgba(255,255,255,0.06) transparent; -fx-border-width: 0 0 1 0; -fx-min-height: 42; }
+.plan-tabs .plan-tab { -fx-padding: 12 1 9 1; }
+.plan-tabs.compact { -fx-spacing: 12; }
+.plan-tabs.compact .plan-tab { -fx-font-size: 11.5px; }
+.tab-page, .tab-page > .viewport { -fx-background-color: transparent; }
+.doc-tab:selected, .plan-tab:selected { -fx-background-color: transparent; -fx-text-fill: #ECEFF3; -fx-border-color: transparent transparent -accent transparent; }
+
+/* ---------------------------------------------------------------- l'accueil */
+.home { -fx-background-color: #0C0E12; }
+.home-headline { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Light"; -fx-font-size: 34px; }
+.home-lead { -fx-text-fill: #A2ABB8; -fx-font-size: 14px; }
+.home-card {
+    -fx-background-color: #111419;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.06);
+    -fx-border-radius: 12;
+    -fx-cursor: hand;
+}
+.home-card:hover { -fx-background-color: #151920; -fx-border-color: -accent; }
+.home-card.current { -fx-border-color: rgba(255,255,255,0.18); }
+.home-name { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 16px; }
+.home-scale { -fx-text-fill: -accent; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 11.5px; }
+.home-text { -fx-text-fill: #A2ABB8; -fx-font-size: 12.5px; }
+.home-meta { -fx-text-fill: #6B7483; -fx-font-size: 11.5px; }
+.home-key {
+    -fx-text-fill: #6B7483;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 10.5px;
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 5;
+    -fx-padding: 1 6;
+}
+.home-badge {
+    -fx-text-fill: -accent;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 10.5px;
+    -fx-background-color: -accent-soft;
+    -fx-background-radius: 100;
+    -fx-padding: 1 8;
+}
+.home-foot { -fx-border-color: rgba(255,255,255,0.06) transparent transparent transparent; -fx-border-width: 1 0 0 0; }
+.home-heading { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 12.5px; }
+.home-about { -fx-text-fill: #A2ABB8; -fx-font-size: 12.5px; }
+.home-link {
+    -fx-background-color: transparent;
+    -fx-background-radius: 6;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 12.5px;
+    -fx-padding: 3 6 3 4;
+    -fx-graphic-text-gap: 8;
+    -fx-cursor: hand;
+}
+.home-link:hover { -fx-background-color: rgba(255,255,255,0.06); -fx-text-fill: #ECEFF3; }
+.home-link:hover .icon { -fx-stroke: #ECEFF3; }
+.home-link.star .icon { -fx-stroke: #F2C14E; }
+.home-version { -fx-text-fill: #6B7483; -fx-font-size: 11.5px; }
+
+/* ---------------------------------------------------------------- posées sur la scène */
+.view-bar, .plan-overlay {
+    -fx-background-color: rgba(17,20,25,0.86);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(255,255,255,0.07);
+    -fx-border-radius: 10;
+    -fx-padding: 3;
+}
+.view-sep { -fx-background-color: rgba(255,255,255,0.09); -fx-min-width: 1; -fx-pref-width: 1; -fx-max-width: 1; }
+.view-bar .icon-button { -fx-padding: 6 8; }
+.scene-caption { -fx-text-fill: #A2ABB8; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 11.5px; }
+.scene-title { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Light"; -fx-font-size: 22px; }
+.scene-line { -fx-text-fill: #A2ABB8; -fx-font-size: 12.5px; }
+
+/* ---------------------------------------------------------------- l'élément de l'atome */
+.element-card { -fx-padding: 10 12 10 10; -fx-background-radius: 12; }
+.element-card:disabled { -fx-opacity: 1; }
+.element-card .icon { -fx-stroke: #6B7483; }
+.element-card:hover .icon { -fx-stroke: #ECEFF3; }
+.element-name { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 15px; }
+.element-meta { -fx-text-fill: #A2ABB8; -fx-font-size: 12px; }
+.stepper-name { -fx-text-fill: #ECEFF3; -fx-font-size: 12.5px; }
+.stepper-symbol { -fx-text-fill: #6B7483; -fx-font-size: 11.5px; }
+.stepper-value { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 13px; }
+.slider.spectrum .track { -fx-background-radius: 3; -fx-padding: 3 0; }
+.nucleus-tile { -fx-background-radius: 11; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 14px; -fx-text-fill: #ECEFF3; }
+.nucleus-card { -fx-padding: 9 12 9 9; }
+/* Une case d'élément (le choix d'un noyau) : une surface douce, qui s'éclaire au survol. */
+.element-tile { -fx-background-color: rgba(255,255,255,0.045); -fx-background-radius: 6; -fx-border-color: transparent; -fx-padding: 0; -fx-cursor: hand; }
+.element-tile:hover { -fx-background-color: rgba(255,255,255,0.11); }
+.element-tile.on { -fx-background-color: -accent-soft; -fx-border-color: -accent; -fx-border-radius: 6; }
+
+/* ---------------------------------------------------------------- compteurs, élément, temps */
+.stepper { -fx-background-color: transparent; -fx-padding: 0; }
+.stepper .step-button {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 100;
+    -fx-text-fill: #ECEFF3;
+    -fx-font-size: 14px;
     -fx-padding: 0;
+    -fx-min-width: 26; -fx-min-height: 26; -fx-pref-width: 26; -fx-pref-height: 26; -fx-max-width: 26; -fx-max-height: 26;
 }
-
-.scroll-bar > .increment-button > .increment-arrow,
-.scroll-bar > .decrement-button > .decrement-arrow {
+.stepper .step-button:hover { -fx-background-color: rgba(255,255,255,0.12); }
+.dash-chip, .nucleus-card {
+    -fx-background-color: rgba(255,255,255,0.045);
+    -fx-background-radius: 10;
+    -fx-border-color: transparent;
+    -fx-padding: 10 12 10 10;
+    -fx-cursor: hand;
+}
+.dash-chip:hover, .nucleus-card:hover { -fx-background-color: rgba(255,255,255,0.075); }
+.dash-logo { -fx-background-color: transparent; }
+.tl-play {
+    -fx-background-color: -accent;
+    -fx-background-radius: 100;
+    -fx-border-color: transparent;
+    -fx-text-fill: -accent-ink;
+    -fx-font-size: 12px;
+    -fx-min-width: 34; -fx-min-height: 34; -fx-max-width: 34; -fx-max-height: 34;
     -fx-padding: 0;
-    -fx-shape: null;
+    -fx-cursor: hand;
+}
+.tl-play:hover { -fx-background-color: derive(-accent, 14%); }
+.tl-play .icon { -fx-stroke: -accent-ink; }
+.tl-play .icon.solid { -fx-fill: -accent-ink; }
+
+/* ---------------------------------------------------------------- curseurs */
+.slider .track {
+    -fx-background-color: rgba(255,255,255,0.13);
+    -fx-background-radius: 2;
+    -fx-background-insets: 0;
+    -fx-padding: 2 0;
+}
+.slider:vertical .track { -fx-padding: 0 2; }
+.slider .thumb {
+    -fx-background-color: #ECEFF3;
+    -fx-background-insets: 0;
+    -fx-background-radius: 100;
+    -fx-border-color: transparent;
+    -fx-padding: 6.5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 4, 0, 0, 1);
+}
+.slider:hover .thumb { -fx-background-color: #FFFFFF; }
+.slider:focus-visible .thumb { -fx-background-color: -accent; }
+.slider .axis { -fx-tick-label-fill: #6B7483; -fx-font-size: 9.5px; }
+.slider .axis-tick-mark, .slider .axis-minor-tick-mark { -fx-stroke: rgba(255,255,255,0.14); }
+.tl-speed .axis { -fx-tick-label-fill: transparent; }
+
+/* ---------------------------------------------------------------- champs, listes, cases */
+.text-field {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 7;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-text-fill: #ECEFF3;
+    -fx-font-family: "IBM Plex Sans";
+    -fx-font-size: 12.5px;
+    -fx-prompt-text-fill: #6B7483;
+    -fx-highlight-fill: -accent-soft;
+    -fx-highlight-text-fill: #ECEFF3;
+    -fx-padding: 6 9;
+    -fx-effect: null;
+}
+.text-field:focused { -fx-border-color: -accent; -fx-background-color: rgba(255,255,255,0.075); }
+.combo-box, .doc-combo {
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+.combo-box:hover, .doc-combo:hover { -fx-background-color: rgba(255,255,255,0.095); }
+.combo-box > .list-cell, .doc-combo .list-cell { -fx-text-fill: #ECEFF3; -fx-background-color: transparent; -fx-padding: 4 9; }
+.combo-box > .arrow-button, .doc-combo > .arrow-button { -fx-background-color: transparent; }
+.combo-box > .arrow-button > .arrow, .doc-combo .arrow { -fx-background-color: #6B7483; }
+.combo-box-popup > .list-view, .doc-combo .list-view {
+    -fx-background-color: #1A1E25; -fx-background-radius: 10; -fx-border-color: rgba(255,255,255,0.08); -fx-border-radius: 10;
+    -fx-padding: 4;
+}
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: transparent; -fx-text-fill: #ECEFF3; -fx-background-radius: 6; -fx-padding: 6 10;
+}
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:hover,
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:selected,
+.doc-combo .list-view .list-cell:filled:hover, .doc-combo .list-view .list-cell:filled:selected {
+    -fx-background-color: rgba(255,255,255,0.08);
 }
 
-/* ---- Fenêtre de la table périodique ---- */
-.tooltip {
-    -fx-background-color: #111C33;
-    -fx-text-fill: #E2E8F0;
+/* Les cases à cocher : des interrupteurs (une piste, un bouton rond qui passe à droite quand c'est allumé). */
+.check-box { -fx-text-fill: #ECEFF3; -fx-label-padding: 0 0 0 9; -fx-font-size: 12px; -fx-cursor: hand; }
+.check-box > .box {
+    -fx-background-color: rgba(255,255,255,0.18);
+    -fx-background-radius: 100;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 3 13 3 3;
 }
+.check-box:hover > .box { -fx-background-color: rgba(255,255,255,0.25); }
+.check-box > .box > .mark {
+    -fx-shape: "M0 5 A5 5 0 1 0 10 5 A5 5 0 1 0 0 5 Z";
+    -fx-scale-shape: true;
+    -fx-background-color: #ECEFF3;
+    -fx-background-insets: 0;
+    -fx-padding: 5;
+}
+.check-box:selected > .box { -fx-background-color: -accent; -fx-padding: 3 3 3 13; }
+.check-box:selected > .box > .mark { -fx-background-color: #FFFFFF; }
+.check-box:focus-visible > .box { -fx-border-color: -accent; -fx-border-width: 1; -fx-border-radius: 100; }
+.separator .line { -fx-border-color: rgba(255,255,255,0.06); -fx-border-width: 1 0 0 0; }
 
-/* ---- Onglets : sombres, l'onglet actif souligné ---- */
+/* ---------------------------------------------------------------- onglets */
 .tab-pane > .tab-header-area > .tab-header-background {
-    -fx-background-color: #0B1120;
+    -fx-background-color: #111419;
+    -fx-border-color: transparent transparent rgba(255,255,255,0.06) transparent;
 }
-
-.tab-pane > .tab-header-area {
-    -fx-padding: 6 8 0 8;
-}
-
+.tab-pane > .tab-header-area { -fx-padding: 0 10 0 10; }
 .tab-pane .tab {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
-    -fx-padding: 6 14 6 14;
-    -fx-border-color: transparent transparent transparent transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 10 6 8 6;
+    -fx-border-color: transparent;
     -fx-border-width: 0 0 2 0;
 }
+.tab-pane .tab:selected { -fx-border-color: transparent transparent -accent transparent; }
+.tab-pane .tab .tab-label { -fx-text-fill: #6B7483; -fx-font-family: "IBM Plex Sans Medm"; -fx-font-size: 12px; }
+.tab-pane .tab:hover .tab-label { -fx-text-fill: #A2ABB8; }
+.tab-pane .tab:selected .tab-label { -fx-text-fill: #ECEFF3; }
+.tab-pane .tab:selected .focus-indicator { -fx-border-color: transparent; }
+.tab-pane > .tab-content-area { -fx-background-color: #111419; }
 
-.tab-pane .tab:selected {
-    -fx-border-color: transparent transparent #7DD3FC transparent;
-}
+/* ---------------------------------------------------------------- séparateurs et ascenseurs */
+.split-pane { -fx-background-color: #111419; -fx-padding: 0; }
+.split-pane > .split-pane-divider { -fx-background-color: rgba(255,255,255,0.06); -fx-border-color: transparent; -fx-padding: 0 0 1 0; }
+.split-pane > .split-pane-divider:hover { -fx-background-color: rgba(255,255,255,0.2); }
+/* Transparent par défaut ; une colonne (.scroll-pane.plan-side, plus précise) garde son fond. */
+.scroll-pane { -fx-background-color: transparent; -fx-background-insets: 0; -fx-padding: 0; }
+.scroll-pane > .viewport { -fx-background-color: transparent; }
+.scroll-bar:vertical, .scroll-bar:horizontal { -fx-background-color: transparent; -fx-padding: 2; }
+.scroll-bar > .thumb { -fx-background-color: rgba(255,255,255,0.18); -fx-background-radius: 100; }
+.scroll-bar > .thumb:hover { -fx-background-color: rgba(255,255,255,0.32); }
+.scroll-bar > .increment-button, .scroll-bar > .decrement-button { -fx-opacity: 0; -fx-padding: 0; }
+.scroll-bar > .increment-button > .increment-arrow, .scroll-bar > .decrement-button > .decrement-arrow { -fx-padding: 0; -fx-shape: null; }
 
-.tab-pane .tab .tab-label {
-    -fx-text-fill: #64748B;
+/* ---------------------------------------------------------------- bulles, fiches, menus, fenêtres */
+.tooltip {
+    -fx-background-color: #1C2129;
+    -fx-background-radius: 8;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-radius: 8;
+    -fx-text-fill: #ECEFF3;
+    -fx-font-family: "IBM Plex Sans";
     -fx-font-size: 12px;
-    -fx-font-weight: bold;
+    -fx-padding: 7 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 16, 0, 0, 6);
+}
+.tooltip.explain { -fx-padding: 10 12 11 12; }
+.explain-title { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 12.5px; }
+.explain-body { -fx-text-fill: #A2ABB8; -fx-font-size: 12px; }
+.explain-formula {
+    -fx-text-fill: #ECEFF3;
+    -fx-font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+    -fx-font-size: 14px;
+    -fx-padding: 2 0 0 0;
+}
+.context-menu {
+    -fx-background-color: #1A1E25;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 18, 0, 0, 6);
+}
+.context-menu .menu-item { -fx-background-radius: 6; -fx-padding: 7 12; }
+.context-menu .menu-item .label { -fx-text-fill: #ECEFF3; -fx-font-size: 12.5px; }
+.context-menu .menu-item:focused { -fx-background-color: rgba(255,255,255,0.08); }
+.context-menu .menu-item:disabled .label { -fx-text-fill: #6B7483; }
+.context-menu .separator { -fx-padding: 4 6; }
+.context-menu .separator .line { -fx-border-color: rgba(255,255,255,0.07); }
+.context-menu .menu-item .icon { -fx-stroke: #A2ABB8; }
+.check-menu-item:checked .mark, .radio-menu-item:checked .mark { -fx-background-color: -accent; }
+.menu-heading { -fx-text-fill: #6B7483; -fx-font-size: 11px; }
+.light-popup, .update-card, .plan-card {
+    -fx-background-color: #181C23;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.08);
+    -fx-border-radius: 12;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 24, 0, 0, 8);
 }
 
-.tab-pane .tab:selected .tab-label {
-    -fx-text-fill: #E6EDF7;
-}
-
-.tab-pane .tab:selected .focus-indicator {
+/* Une ligne choisie dans une liste (l'expérience en cours) : le fond teinté de l'accent. */
+.plan-row-on {
+    -fx-background-color: -accent-soft;
+    -fx-background-radius: 8;
     -fx-border-color: transparent;
 }
 
-.tab-pane > .tab-content-area {
-    -fx-background-color: #05070F;
+/* ---------------------------------------------------------------- le guide */
+.guide-shade { -fx-background-color: rgba(5,6,9,0.66); }
+.guide-ring { -fx-fill: transparent; -fx-stroke: -accent; -fx-stroke-width: 1.5; -fx-stroke-type: inside; -fx-opacity: 0.9; }
+.guide-card {
+    -fx-background-color: #181C23;
+    -fx-background-radius: 12;
+    -fx-border-color: rgba(255,255,255,0.10);
+    -fx-border-radius: 12;
+    -fx-padding: 14 16 15 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.6), 24, 0, 0, 8);
+}
+.guide-card.lead { -fx-padding: 20 22 20 22; }
+.guide-number {
+    -fx-text-fill: -accent-ink;
+    -fx-background-color: -accent;
+    -fx-background-radius: 100;
+    -fx-font-family: "IBM Plex Sans SmBld";
+    -fx-font-size: 11px;
+    -fx-alignment: center;
+    -fx-min-width: 20; -fx-min-height: 20; -fx-pref-width: 20; -fx-pref-height: 20;
+}
+.guide-title { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans SmBld"; -fx-font-size: 13px; }
+.guide-text { -fx-text-fill: #A2ABB8; -fx-font-size: 12.5px; }
+.guide-headline { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Light"; -fx-font-size: 24px; }
+.guide-key {
+    -fx-text-fill: #ECEFF3;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11px;
+    -fx-background-color: rgba(255,255,255,0.08);
+    -fx-background-radius: 5;
+    -fx-padding: 1 6;
+    -fx-min-width: 22;
+    -fx-alignment: center;
 }
 
-/* ---- Liste des vitesses ---- */
-.combo-box {
-    -fx-background-color: #111C33;
-    -fx-background-radius: 6;
-    -fx-border-color: #22304A;
-    -fx-border-radius: 6;
-}
-
-.combo-box > .list-cell {
-    -fx-text-fill: #E6EDF7;
-    -fx-font-size: 12px;
-}
-
-.combo-box > .arrow-button > .arrow {
-    -fx-background-color: #A9B6CB;
-}
-
-.combo-box-popup > .list-view {
-    -fx-background-color: #0C1324;
-    -fx-border-color: #22304A;
-}
-
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
-    -fx-background-color: #0C1324;
-    -fx-text-fill: #E6EDF7;
-}
-
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:hover,
-.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:selected {
-    -fx-background-color: #1E3A5F;
-}
-
-/* ---- Curseur du laser ---- */
-.slider .track {
-    -fx-background-color: #22304A;
-    -fx-background-radius: 3;
-    -fx-pref-height: 5;
-}
-
-.slider .thumb {
-    -fx-background-color: #E6EDF7;
-    -fx-background-radius: 8;
-    -fx-padding: 7;
-}
-
-/* ---- Bouton pas à pas ---- */
-.toggle-button {
-    -fx-background-color: #111C33;
-    -fx-text-fill: #A9B6CB;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-background-radius: 6;
-    -fx-padding: 6 10 6 10;
-    -fx-cursor: hand;
-}
-
-.toggle-button:selected {
-    -fx-background-color: #3B2F0B;
-    -fx-text-fill: #FCD34D;
-}
-
-/* ---- Le monde subatomique : le style de la chambre de collision (verre fumé, liserés froids, accents cyan → ambre) ---- */
-.doc-lab { -fx-background-color: #04070D; }
-.doc-lab .doc-head { -fx-background-color: #090D14; -fx-border-color: transparent transparent rgba(255,255,255,0.07) transparent; }
-.doc-lab .doc-bar { -fx-background-color: linear-gradient(to bottom, rgba(10,18,30,0.8), rgba(5,9,16,0.93)); -fx-border-color: rgba(150,200,255,0.12) transparent; }
-.doc-lab .doc-title { -fx-text-fill: #DCE8F7; -fx-font-size: 13px; -fx-font-weight: bold; }
-.doc-lab .doc-caption { -fx-text-fill: #8FB3D9; -fx-font-size: 9.5px; -fx-font-weight: bold; }
-.doc-lab .doc-value { -fx-text-fill: #FCD34D; -fx-font-size: 12px; -fx-font-weight: bold; }
-.doc-lab .doc-tab {
-    -fx-background-color: transparent; -fx-text-fill: #7F93AE; -fx-font-size: 11px; -fx-font-weight: bold;
-    -fx-padding: 8 14; -fx-border-color: transparent; -fx-border-width: 0 0 2 0; -fx-cursor: hand;
-}
-.doc-lab .doc-tab:hover { -fx-text-fill: #DCE8F7; }
-.doc-lab .doc-tab:selected { -fx-text-fill: #E6F8FF; -fx-border-color: transparent transparent #36CDF2 transparent; }
-.doc-lab .doc-button {
-    -fx-background-color: rgba(255,255,255,0.04); -fx-background-radius: 7; -fx-border-color: rgba(255,255,255,0.12);
-    -fx-border-radius: 7; -fx-text-fill: #DCE8F7; -fx-font-size: 11px; -fx-padding: 6 11; -fx-cursor: hand;
-}
-.doc-lab .doc-button:hover { -fx-background-color: rgba(120,200,255,0.12); -fx-border-color: rgba(150,210,255,0.45); }
-.doc-lab .doc-button:pressed, .doc-lab .doc-button:selected { -fx-background-color: rgba(54,205,242,0.15); -fx-border-color: rgba(54,205,242,0.6); }
-.doc-lab .doc-primary {
-    -fx-background-color: #1FA89B; -fx-background-radius: 8; -fx-text-fill: #04110F;
-    -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 8 14; -fx-cursor: hand;
-}
-.doc-lab .doc-primary:hover { -fx-background-color: #2BC4B5; }
-.doc-lab .doc-segment {
-    -fx-background-color: rgba(255,255,255,0.04); -fx-text-fill: #8EA3BE; -fx-font-size: 11px; -fx-font-weight: bold;
-    -fx-padding: 6 10; -fx-border-color: rgba(150,200,255,0.18); -fx-border-width: 1 0 1 1; -fx-background-radius: 0; -fx-border-radius: 0;
-    -fx-cursor: hand;
-}
-.doc-lab .doc-segment.left { -fx-background-radius: 9 0 0 9; -fx-border-radius: 9 0 0 9; }
-.doc-lab .doc-segment.right { -fx-background-radius: 0 9 9 0; -fx-border-radius: 0 9 9 0; -fx-border-width: 1; }
-.doc-lab .doc-segment:selected {
-    -fx-background-color: linear-gradient(to bottom, rgba(54,205,242,0.38), rgba(45,116,201,0.32)); -fx-text-fill: #FFFFFF;
-    -fx-border-color: rgba(54,205,242,0.65);
-}
-.doc-lab .slider .track { -fx-background-color: rgba(255,255,255,0.14); -fx-pref-height: 3px; -fx-background-radius: 3; }
-.doc-lab .slider .thumb { -fx-background-color: #E8EEF7; -fx-background-radius: 8; -fx-padding: 6; }
-.doc-lab .slider:hover .thumb { -fx-background-color: #3DD6C6; }
-.doc-lab .tooltip { -fx-background-color: #0A0F1C; -fx-text-fill: #DCE8F7; }
-
-.doc-lab .doc-combo {
-    -fx-background-color: rgba(255,255,255,0.08); -fx-background-radius: 16; -fx-border-color: rgba(191,227,255,0.45);
-    -fx-border-radius: 16; -fx-font-size: 11px; -fx-cursor: hand;
-}
-.doc-lab .doc-combo .list-cell { -fx-text-fill: #EAF6FF; -fx-background-color: transparent; -fx-padding: 4 10; }
-.doc-lab .doc-combo .arrow { -fx-background-color: #BFE3FF; }
-.doc-lab .doc-combo .list-view { -fx-background-color: #0E3354; -fx-border-color: rgba(191,227,255,0.45); }
-.doc-lab .doc-combo .list-view .list-cell:filled:hover, .doc-lab .doc-combo .list-view .list-cell:filled:selected {
-    -fx-background-color: rgba(143,227,255,0.25);
-}
-
-/* ======================================================================
- * Tableau de bord de l'atome (refonte) : une barre du haut, une barre de vue
- * flottante, une timeline en bas. Sobre : fonds pleins, liserés fins, un seul
- * accent par action.
- * ====================================================================== */
-.dash-bar {
-    -fx-background-color: #0A0F1C;
-    -fx-border-color: transparent transparent #1A2336 transparent;
-    -fx-border-width: 0 0 1 0;
-}
-.dash-foot {
-    -fx-background-color: #0A0F1C;
-    -fx-border-color: #1A2336 transparent transparent transparent;
-    -fx-border-width: 1 0 0 0;
-}
-.dash-brand { -fx-text-fill: #8B9BB8; -fx-font-size: 11px; -fx-font-weight: bold; }
-.dash-logo { -fx-background-color: #FFFFFF; -fx-background-radius: 100; }
-.dash-label { -fx-text-fill: #5B6B86; -fx-font-size: 10px; -fx-font-weight: bold; }
-.dash-value { -fx-text-fill: #E6EDF7; -fx-font-size: 13px; -fx-font-weight: bold; -fx-font-family: "Consolas", monospace; }
-.dash-note { -fx-text-fill: #8B9BB8; -fx-font-size: 11.5px; }
-.dash-button, .dash-menu {
-    -fx-background-color: #121A2B;
-    -fx-background-radius: 8;
-    -fx-border-color: #22304A;
-    -fx-border-radius: 8;
-    -fx-text-fill: #D7E0EE;
-    -fx-font-size: 12px;
-    -fx-padding: 6 12;
-    -fx-cursor: hand;
-}
-.dash-button:hover, .dash-menu:hover { -fx-background-color: #1A2540; -fx-border-color: #34507A; }
-.dash-button:pressed { -fx-background-color: #22304F; }
-.dash-menu .label { -fx-text-fill: #D7E0EE; }
-.dash-menu .arrow { -fx-background-color: #8B9BB8; }
-.dash-chip {
-    -fx-background-color: #121A2B;
+/* Le message bref (une image enregistrée…) en bas de l'écran. */
+.toast {
+    -fx-background-color: #1C2129;
     -fx-background-radius: 10;
-    -fx-border-color: #22304A;
+    -fx-border-color: rgba(255,255,255,0.08);
     -fx-border-radius: 10;
-    -fx-padding: 4 12 4 6;
-    -fx-cursor: hand;
+    -fx-padding: 8 8 8 14;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 18, 0, 0, 6);
 }
-.dash-chip:hover { -fx-border-color: #4C6A9A; -fx-background-color: #16203A; }
-.dash-fire {
-    -fx-background-color: #F2B84B;
-    -fx-background-radius: 8;
-    -fx-text-fill: #1A1204;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-padding: 6 14;
-    -fx-cursor: hand;
-}
-.dash-fire:hover { -fx-background-color: #FFCB66; }
-.dash-fire:pressed { -fx-background-color: #D99E33; }
-.step-button {
+.toast .label { -fx-text-fill: #ECEFF3; -fx-font-size: 12.5px; }
+
+/* ---------------------------------------------------------------- démarrage, mise à jour, soutien */
+/* Le fond de la nuit de la marque (assets/brand : #07070c), avec la lueur violette de l'icône. */
+.startup { -fx-background-color: radial-gradient(center 50% 46%, radius 75%, #100E1D 0%, #0A0912 50%, #07070C 100%); }
+.startup-title { -fx-text-fill: #ECEFF3; -fx-font-family: "IBM Plex Sans Light"; -fx-font-size: 30px; }
+.startup-step { -fx-text-fill: #A2ABB8; -fx-font-size: 12.5px; }
+.startup-tagline { -fx-text-fill: #9C98AD; -fx-font-size: 15px; }
+.startup-caption { -fx-text-fill: #4B525D; -fx-font-size: 11px; }
+.update-primary:disabled { -fx-opacity: 0.5; }
+.update-quiet, .startup-link {
     -fx-background-color: transparent;
-    -fx-background-radius: 6;
-    -fx-text-fill: #8B9BB8;
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-padding: 1 7;
-    -fx-cursor: hand;
-}
-.step-button:hover { -fx-background-color: #1E2A44; -fx-text-fill: #FFFFFF; }
-.stepper {
-    -fx-background-color: #0F1626;
-    -fx-background-radius: 9;
-    -fx-border-color: #1E2A40;
-    -fx-border-radius: 9;
+    -fx-border-color: transparent;
+    -fx-text-fill: #6B7483;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11.5px;
     -fx-padding: 2 4;
-}
-/* Barre de vue flottante sur la scène */
-.view-bar {
-    -fx-background-color: rgba(10,15,28,0.88);
-    -fx-background-radius: 12;
-    -fx-border-color: #22304A;
-    -fx-border-radius: 12;
-    -fx-padding: 4;
-}
-.view-toggle, .view-button {
-    -fx-background-color: transparent;
-    -fx-background-radius: 8;
-    -fx-text-fill: #9AA8C0;
-    -fx-font-size: 11.5px;
-    -fx-padding: 5 10;
     -fx-cursor: hand;
 }
-.view-toggle:hover, .view-button:hover { -fx-background-color: #1A2540; -fx-text-fill: #FFFFFF; }
-.view-toggle:selected { -fx-background-color: #24365A; -fx-text-fill: #FFFFFF; }
-.view-sep { -fx-background-color: #22304A; -fx-min-width: 1; -fx-pref-width: 1; -fx-max-width: 1; }
-/* Timeline */
-.tl-play {
-    -fx-background-color: #E6EDF7;
-    -fx-background-radius: 20;
-    -fx-text-fill: #0A0F1C;
-    -fx-font-size: 14px;
-    -fx-min-width: 38; -fx-min-height: 38; -fx-max-width: 38; -fx-max-height: 38;
-    -fx-cursor: hand;
-}
-.tl-play:hover { -fx-background-color: #FFFFFF; }
-.tl-toggle {
-    -fx-background-color: transparent;
-    -fx-background-radius: 8;
-    -fx-border-color: #22304A;
-    -fx-border-radius: 8;
-    -fx-text-fill: #8B9BB8;
-    -fx-font-size: 11.5px;
-    -fx-padding: 5 10;
-    -fx-cursor: hand;
-}
-.tl-toggle:selected { -fx-background-color: #1B2B48; -fx-border-color: #4C6A9A; -fx-text-fill: #E6EDF7; }
-.tl-speed .track { -fx-background-color: #1E2A40; -fx-pref-height: 4px; -fx-background-radius: 3; }
-.tl-speed .thumb { -fx-background-color: #F2B84B; -fx-background-radius: 9; -fx-padding: 7; }
-.tl-speed .axis { -fx-tick-label-fill: transparent; }
-.tl-speed .axis-tick-mark, .tl-speed .axis-minor-tick-mark { -fx-stroke: #34425E; }
-/* Menus (laboratoires, vues) */
-.context-menu { -fx-background-color: #101828; -fx-border-color: #26344F; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 4; }
-.context-menu .menu-item { -fx-background-radius: 6; -fx-padding: 7 14; }
-.context-menu .menu-item .label { -fx-text-fill: #D7E0EE; -fx-font-size: 12px; }
-.context-menu .menu-item:focused { -fx-background-color: #1C2A46; }
-.context-menu .separator .line { -fx-border-color: #26344F; }
-.light-popup {
-    -fx-background-color: #0E1524;
-    -fx-background-radius: 12;
-    -fx-border-color: #26344F;
-    -fx-border-radius: 12;
-    -fx-padding: 14;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 18, 0.2, 0, 6);
-}
-
-.view-button > .label, .view-button .label { -fx-text-fill: #9AA8C0; }
-.view-button:hover > .label { -fx-text-fill: #FFFFFF; }
-.view-button .arrow { -fx-background-color: #9AA8C0; }
-
-/* Journal : filtres */
-.log-chip {
-    -fx-background-color: transparent;
-    -fx-background-radius: 10;
-    -fx-border-color: #1E2A40;
-    -fx-border-radius: 10;
-    -fx-text-fill: #7C8BA6;
-    -fx-font-size: 10.5px;
-    -fx-padding: 2 8;
-    -fx-cursor: hand;
-}
-.log-chip:hover { -fx-border-color: #34507A; -fx-text-fill: #D7E0EE; }
-.log-chip:selected { -fx-background-color: #1B2B48; -fx-border-color: #4C6A9A; -fx-text-fill: #E6EDF7; }
-
-/* Mise à jour et soutien : discrets, pour ne pas fatiguer. */
-.update-card {
-    -fx-background-color: rgba(14, 21, 36, 0.96);
-    -fx-background-radius: 14;
-    -fx-border-color: #26344F;
-    -fx-border-radius: 14;
-    -fx-padding: 14 16 12 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.55), 24, 0.15, 0, 8);
-}
-.update-primary {
-    -fx-background-color: #1D3A5C;
-    -fx-background-radius: 8;
-    -fx-border-color: #2E5888;
-    -fx-border-radius: 8;
-    -fx-text-fill: #DCEBFF;
-    -fx-font-size: 12px;
-    -fx-font-weight: bold;
-    -fx-padding: 6 12;
-    -fx-cursor: hand;
-}
-.update-primary:hover { -fx-background-color: #24476F; -fx-border-color: #3B6DA6; }
-.update-primary:disabled { -fx-opacity: 0.55; }
-.update-quiet {
-    -fx-background-color: transparent;
-    -fx-text-fill: #5B6B86;
-    -fx-font-size: 10.5px;
-    -fx-padding: 0 2;
-    -fx-cursor: hand;
-}
-.update-quiet:hover { -fx-text-fill: #8B9BB8; -fx-underline: true; }
-.update-progress .bar { -fx-background-color: #3B82C4; -fx-background-radius: 3; -fx-background-insets: 0; -fx-padding: 2; }
-.update-progress .track { -fx-background-color: #16203A; -fx-background-radius: 3; }
+.update-quiet:hover, .startup-link:hover { -fx-text-fill: #ECEFF3; -fx-background-color: transparent; }
+.startup-link .icon { -fx-stroke: #6B7483; }
+.startup-link:hover .icon { -fx-stroke: #ECEFF3; }
+.update-progress .bar { -fx-background-color: -accent; -fx-background-radius: 2; -fx-background-insets: 0; -fx-padding: 2; }
+.update-progress .track { -fx-background-color: rgba(255,255,255,0.10); -fx-background-radius: 2; }
 .support-link {
-    -fx-background-color: transparent;
-    -fx-background-radius: 12;
-    -fx-border-color: #24324D;
-    -fx-border-radius: 12;
-    -fx-text-fill: #A9B8D0;
-    -fx-font-size: 11px;
-    -fx-padding: 3 10;
+    -fx-background-color: rgba(255,255,255,0.06);
+    -fx-background-radius: 7;
+    -fx-border-color: transparent;
+    -fx-text-fill: #A2ABB8;
+    -fx-font-family: "IBM Plex Sans Medm";
+    -fx-font-size: 11.5px;
+    -fx-padding: 4 10;
     -fx-cursor: hand;
 }
-.support-link:hover { -fx-border-color: #3B5B8C; -fx-text-fill: #E6EDF7; -fx-background-color: rgba(59,91,140,0.12); }
-
-/* L'écran de démarrage : les liens discrets sous le bouton GitHub. */
-.startup-link {
-    -fx-background-color: transparent;
-    -fx-text-fill: #8FA4C2;
-    -fx-font-size: 11px;
-    -fx-padding: 2 6;
-    -fx-cursor: hand;
-}
-.startup-link:hover { -fx-text-fill: #E6EDF7; -fx-underline: true; }
+.support-link:hover { -fx-background-color: rgba(255,255,255,0.1); -fx-text-fill: #ECEFF3; }

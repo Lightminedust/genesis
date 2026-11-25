@@ -87,8 +87,8 @@ public class FusionLab {
     private static final Color STRONG = Color.web("#34D399");
     private static final Color TUNNEL = Color.web("#C4B5FD");
     private static final Color GAMMA = Color.web("#FDE047");
-    private static final String UI = "Segoe UI";
-    private static final String MONO = "Consolas";
+    private static final String UI = org.genesis.common.Plan.SANS;
+    private static final String MONO = org.genesis.common.Plan.MONO;
 
     // La scène (unités arbitraires) : B à droite, A arrive de la gauche.
     private static final double B_X = 42;
@@ -462,7 +462,7 @@ public class FusionLab {
             }
         });
         energyValue.setMinWidth(Region.USE_PREF_SIZE);
-        energyValue.setStyle("-fx-text-fill: #FCD34D; -fx-font-family: Consolas; -fx-font-size: 15px; -fx-font-weight: bold;");
+        energyValue.setStyle("-fx-text-fill: #FCD34D; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 15px; -fx-font-weight: bold;");
         temperature.setMinWidth(Region.USE_PREF_SIZE);
         temperature.setStyle("-fx-text-fill: #8B95AD; -fx-font-size: 10.5px;");
         VBox readout = new VBox(0, energyValue, temperature);
@@ -683,7 +683,7 @@ public class FusionLab {
             for (LabFact fact : state.getFactsList()) {
                 Label quantity = small(fact.getQuantity().toUpperCase());
                 Label value = new Label(fact.getValue());
-                value.setStyle("-fx-text-fill: #FCD34D; -fx-font-family: Consolas; -fx-font-size: 15px; -fx-font-weight: bold;");
+                value.setStyle("-fx-text-fill: #FCD34D; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 15px; -fx-font-weight: bold;");
                 Label meaning = new Label(fact.getMeaning());
                 meaning.setWrapText(true);
                 meaning.setStyle("-fx-text-fill: #C7D2FE; -fx-font-size: 12px;");
@@ -703,7 +703,7 @@ public class FusionLab {
         for (String line : state.getExpertList()) {
             Label label = new Label(line);
             label.setWrapText(true);
-            label.setStyle("-fx-text-fill: #A5B0C6; -fx-font-family: Consolas; -fx-font-size: 10.5px;");
+            label.setStyle("-fx-text-fill: #A5B0C6; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 10.5px;");
             drawerContent.getChildren().add(label);
         }
         if (state.getChannelsCount() > 0) {
@@ -712,7 +712,7 @@ public class FusionLab {
                 Label label = new Label(Visuals.format(100 * channel.getShare()) + " %  " + channel.getLabel()
                         + "  (Q = " + Visuals.format(channel.getQMev()) + " MeV)");
                 label.setWrapText(true);
-                label.setStyle("-fx-text-fill: #EEF2FF; -fx-font-family: Consolas; -fx-font-size: 10.5px;");
+                label.setStyle("-fx-text-fill: #EEF2FF; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 10.5px;");
                 drawerContent.getChildren().add(label);
             }
         }
@@ -721,7 +721,7 @@ public class FusionLab {
             for (LabProduct product : state.getProductsList()) {
                 Label label = new Label(product.getLabel() + " · " + Visuals.format(product.getKineticMev()) + " MeV · "
                         + Visuals.format(100 * product.getSpeedC()) + " % de c");
-                label.setStyle("-fx-text-fill: #EEF2FF; -fx-font-family: Consolas; -fx-font-size: 10.5px;");
+                label.setStyle("-fx-text-fill: #EEF2FF; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 10.5px;");
                 drawerContent.getChildren().add(label);
             }
         }
@@ -2324,7 +2324,7 @@ public class FusionLab {
         double w = 304;
         double h = 482;
         gc.setFill(Color.web("#0A0F1C", 0.84));
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);
@@ -2364,9 +2364,9 @@ public class FusionLab {
             I18n.fillText(gc, forceText(values[i]), x + w - 14, row);
             double t = values[i] > 0 ? Math.max(0, Math.min(1, (Math.log10(values[i]) + 40) / 44)) : 0;
             gc.setFill(Color.web("#1A2238"));
-            gc.fillRoundRect(x + 14, row + 5, w - 28, 5, 3, 3);
+            gc.fillRect(x + 14, row + 5, w - 28, 5);
             gc.setFill(colors[i]);
-            gc.fillRoundRect(x + 14, row + 5, Math.max(3, (w - 28) * t), 5, 3, 3);
+            gc.fillRect(x + 14, row + 5, Math.max(3, (w - 28) * t), 5);
             if (i >= 2 && values[0] > 0) {
                 double ratio = values[i] / values[0];
                 gc.setTextAlign(TextAlignment.LEFT);
@@ -2406,9 +2406,9 @@ public class FusionLab {
         gc.setFill(TEXT);
         I18n.fillText(gc, value, x + w - 14, y);
         gc.setFill(Color.web("#1A2238"));
-        gc.fillRoundRect(x + 14, y + 7, w - 28, 7, 4, 4);
+        gc.fillRect(x + 14, y + 7, w - 28, 7);
         gc.setFill(color);
-        gc.fillRoundRect(x + 14, y + 7, Math.max(3, (w - 28) * Math.max(0, Math.min(1, fill))), 7, 4, 4);
+        gc.fillRect(x + 14, y + 7, Math.max(3, (w - 28) * Math.max(0, Math.min(1, fill))), 7);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, 10));
         gc.setFill(MUTED);
@@ -2861,11 +2861,11 @@ public class FusionLab {
         double y = pa[1] + ra * pa[3] * 1.6 + 14;
         double share = Math.min(1, repulsion / total);
         gc.setFill(Color.web("#0A0F1C", 0.85));
-        gc.fillRoundRect(x - 8, y - 4, width + 16, 40, 10, 10);
+        gc.fillRect(x - 8, y - 4, width + 16, 40);
         gc.setFill(GOLD);
-        gc.fillRoundRect(x, y, width * (1 - share), 9, 4, 4);
+        gc.fillRect(x, y, width * (1 - share), 9);
         gc.setFill(tunnelling ? TUNNEL : REPULSION);
-        gc.fillRoundRect(x + width * (1 - share), y, width * share, 9, 4, 4);
+        gc.fillRect(x + width * (1 - share), y, width * share, 9);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(GOLD);
@@ -3594,10 +3594,10 @@ public class FusionLab {
 
     private void resultCard(double x, double y, double w, double h, String title) {
         gc.setFill(Color.web("#0A0F1C", 0.78));
-        gc.fillRoundRect(x, y, w, h, 16, 16);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(Color.web("#1B2438"));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, h, 16, 16);
+        gc.strokeRect(x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
@@ -3699,16 +3699,16 @@ public class FusionLab {
         double wBefore = bw * Math.max(0, 1 - (big - before) / scale);
         double wAfter = bw * Math.max(0, 1 - (big - after) / scale);
         gc.setFill(Color.web("#334155"));
-        gc.fillRoundRect(bx, y + 40, wBefore, 12, 6, 6);
-        gc.fillRoundRect(bx, y + 64, wAfter, 12, 6, 6);
+        gc.fillRect(bx, y + 40, wBefore, 12);
+        gc.fillRect(bx, y + 64, wAfter, 12);
         gc.setFont(Font.font(UI, 10));
         if (lost > 0) {
             gc.setFill(GOLD);
-            gc.fillRoundRect(bx + wAfter, y + 64, wBefore - wAfter, 12, 6, 6);
+            gc.fillRect(bx + wAfter, y + 64, wBefore - wAfter, 12);
             I18n.fillText(gc, "disparu : " + Visuals.fixed(lost, 6) + " u", bx + wAfter - 40, y + 92);
         } else if (lost < 0) {
             gc.setFill(REPULSION);
-            gc.fillRoundRect(bx + wBefore, y + 40, wAfter - wBefore, 12, 6, 6);
+            gc.fillRect(bx + wBefore, y + 40, wAfter - wBefore, 12);
             I18n.fillText(gc, I18n.text("gagné : ") + Visuals.fixed(-lost, 6) + I18n.text(" u (pris sur l'énergie du choc)"), bx + wBefore - 120, y + 92);
         }
         gc.setFont(Font.font(MONO, FontWeight.BOLD, 20));
@@ -3921,7 +3921,7 @@ public class FusionLab {
         double w = text.length() * size * 0.56 + 22;
         x = Math.max(w / 2 + 10, Math.min(canvas.getWidth() - w / 2 - 10, x));
         gc.setFill(Color.web("#070B16", 0.82));
-        gc.fillRoundRect(x - w / 2, y - size, w, size * 2, size * 2, size * 2);
+        gc.fillRect(x - w / 2, y - size, w, size * 2);
         gc.setFill(color);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
@@ -3965,7 +3965,7 @@ public class FusionLab {
         }
         double h = 22 + rows * 17 + (headline.isEmpty() ? 0 : 8);
         gc.setFill(Color.web("#0A0F1C", 0.82));
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         double row = y + 24;
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 13.5));
@@ -3993,7 +3993,7 @@ public class FusionLab {
         double y = 124;
         double w = 270;
         gc.setFill(Color.web("#0A0F1C", 0.78));
-        gc.fillRoundRect(x, y, w, 238, 14, 14);
+        gc.fillRect(x, y, w, 238);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(SOFT);

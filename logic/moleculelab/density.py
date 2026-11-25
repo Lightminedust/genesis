@@ -80,11 +80,14 @@ def basis_values(basis, positions_bohr, points_bohr):
     """φ_μ aux points : (nao, m), en simple précision (assez pour l'image, deux fois plus rapide)."""
     points = points_bohr.astype(np.float32)
     values = np.empty((basis.nao, len(points)), np.float32)
+    atom, offsets = None, None
     for shell, data in enumerate(basis.shells):
         start = basis.shell_offset[shell]
         center = positions_bohr[data["atom"]].astype(np.float32)
+        if data["atom"] != atom:                     # les couches d'un atome se suivent : ses distances, une fois
+            atom, offsets = data["atom"], integrals.point_offsets(points, center)
         values[start:start + 2 * data["l"] + 1] = integrals.gaussian_values(
-            data["l"], points, center, data["alpha"].astype(np.float32), data["coeff"].astype(np.float32))
+            data["l"], points, center, data["alpha"].astype(np.float32), data["coeff"].astype(np.float32), offsets)
     return values
 
 

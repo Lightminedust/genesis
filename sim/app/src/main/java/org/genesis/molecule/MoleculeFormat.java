@@ -17,6 +17,10 @@ final class MoleculeFormat {
      */
     static String names(String text) {
         if (I18n.language() == I18n.Language.FR || text.isEmpty()) return text;
+        // Le titre d'un chemin joué dans la scène : « Étape 1 · C₇H₆O · benzaldéhyde + … → … ». « Étape 1 » restait en
+        // français, et son « · » faisait prendre « Étape 1 · C₇H₆O » pour une formule et son nom.
+        java.util.regex.Matcher stepped = java.util.regex.Pattern.compile("^Étape (\\d+) · ").matcher(text);
+        if (stepped.find()) return I18n.text("Étape ") + stepped.group(1) + " · " + names(text.substring(stepped.end()));
         if (!text.contains(" · ")) return I18n.text(text);
         StringBuilder out = new StringBuilder();
         String[] clauses = text.split("  —  ", -1);
@@ -28,7 +32,9 @@ final class MoleculeFormat {
                 out.append(I18n.text(clause.substring(0, colon))).append(": ");
                 clause = clause.substring(colon + 3);
             }
-            java.util.regex.Matcher between = java.util.regex.Pattern.compile(", | \\+ ").matcher(clause);
+            // Entre deux espèces : une virgule, un « + », ou la flèche d'une réaction (« … · acétone → C₁₀H₁₂O₂ · … » : sans
+            // elle, « acétone → C₁₀H₁₂O₂ » était un seul nom, que la traduction mêlait).
+            java.util.regex.Matcher between = java.util.regex.Pattern.compile(", | \\+ | +→ +").matcher(clause);
             int last = 0;
             while (true) {
                 boolean found = between.find();
@@ -63,6 +69,54 @@ final class MoleculeFormat {
         if (z < 1 || z > elements.length) return MoleculeView.symbolOf(z);
         String name = I18n.text(elements[z - 1]);
         return I18n.language() == I18n.Language.FR ? name.toLowerCase(Locale.FRENCH) : name.toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Une formule écrite par le moteur (« C₁₀H₇NO₂ + C₁₁H₂₃NSi → C₂₁H₃₀N₂O₂Si ») en texte riche : les indices (₀–₉, ₊ ₋)
+     * et les exposants (⁰–⁹, ⁺ ⁻) redevenus des chiffres de la police, plus petits (74 %) et abaissés ou levés. Les
+     * glyphes Unicode des indices sont minuscules dans IBM Plex Sans (et parfois pris d'une autre police) : une formule
+     * de six chiffres s'y lisait mal.
+     */
+    static javafx.scene.text.TextFlow formula(String text, javafx.scene.text.Font font, javafx.scene.paint.Color ink) {
+        javafx.scene.text.TextFlow flow = new javafx.scene.text.TextFlow();
+        javafx.scene.text.Font small = javafx.scene.text.Font.font(font.getFamily(), font.getSize() * .74);
+        StringBuilder run = new StringBuilder();
+        int kind = 0;                                   // 0 : texte, 1 : indice, 2 : exposant
+        for (int i = 0; i <= text.length(); i++) {
+            char c = i < text.length() ? text.charAt(i) : 0;
+            int k;
+            char shown;
+            if (c >= '\u2080' && c <= '\u2089') {
+                k = 1;
+                shown = (char) ('0' + (c - '\u2080'));
+            } else if (c == '\u208A' || c == '\u208B') {
+                k = 1;
+                shown = c == '\u208A' ? '+' : '−';
+            } else if ("⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c) >= 0) {
+                k = 2;
+                shown = (char) ('0' + "⁰¹²³⁴⁵⁶⁷⁸⁹".indexOf(c));
+            } else if (c == '⁺' || c == '⁻') {
+                k = 2;
+                shown = c == '⁺' ? '+' : '−';
+            } else {
+                k = 0;
+                shown = c;
+            }
+            if (i == text.length() || k != kind) {
+                if (run.length() > 0) {
+                    javafx.scene.text.Text t = new javafx.scene.text.Text(run.toString());
+                    t.setFill(ink);
+                    t.setFont(kind == 0 ? font : small);
+                    if (kind == 1) t.setTranslateY(font.getSize() * .2);
+                    if (kind == 2) t.setTranslateY(-font.getSize() * .38);
+                    flow.getChildren().add(t);
+                }
+                run.setLength(0);
+                kind = k;
+            }
+            if (i < text.length()) run.append(shown);
+        }
+        return flow;
     }
 
     static String decimal(double value, int digits) {

@@ -25,22 +25,22 @@ public final class CollisionPicker {
 
     CollisionPicker(List<LabElement> catalog,int z,int a,String side,IntConsumer consumer) {
         dialog.setTitle(I18n.text("Noyau ")+side+I18n.text(" · tableau périodique et isotopes"));
-        dialog.getDialogPane().getStyleClass().add("fusion-lab");
+        dialog.getDialogPane().getStyleClass().addAll("fusion-lab", "lab-fusion");
         var css=CollisionPicker.class.getResource("/genesis.css");
         if(css!=null)dialog.getDialogPane().getStylesheets().add(css.toExternalForm());
-        dialog.getDialogPane().setStyle("-fx-background-color:#0B1422;");
+        dialog.getDialogPane().getStyleClass().add("plan-side");
         dialog.getDialogPane().getButtonTypes().addAll(use,ButtonType.CANCEL);
         TextField search=new TextField();search.setPromptText("Rechercher un nom, un symbole ou un numéro atomique…");
         search.setId("collision-element-search");
-        Label heading=new Label("118 ÉLÉMENTS  /  ISOTOPES DU CATALOGUE");heading.setStyle("-fx-text-fill:#95ACCA;-fx-font-size:11px;");
+        Label heading=new Label("118 éléments · un clic pour voir leurs isotopes");heading.getStyleClass().add("plan-label");
         table.setHgap(3);table.setVgap(3);
         for(LabElement item:catalog) {
-            Label number=new Label(Integer.toString(item.getZ()));number.setStyle("-fx-text-fill:#8393A8;-fx-font-size:8px;");
-            Label symbol=new Label(item.getSymbol());symbol.setStyle("-fx-text-fill:"+color(item)+";-fx-font-size:15px;-fx-font-weight:bold;");
+            Label number=new Label(Integer.toString(item.getZ()));number.setStyle("-fx-text-fill:#6B7483;-fx-font-size:8.5px;");
+            Label symbol=new Label(item.getSymbol());symbol.setStyle("-fx-text-fill:"+color(item)+";-fx-font-size:14px;-fx-font-family:'IBM Plex Sans SmBld';");symbol.setMinWidth(Region.USE_PREF_SIZE);
             VBox graphics=new VBox(-1,number,symbol);graphics.setAlignment(Pos.CENTER);
             Button tile=new Button();tile.setGraphic(graphics);tile.setUserData(item);tile.setId("collision-element-"+item.getZ());
             tile.setMinSize(39,36);tile.setPrefSize(39,36);tile.setPadding(Insets.EMPTY);
-            tile.setStyle("-fx-background-color:#152235;-fx-background-radius:5;-fx-cursor:hand;");
+            tile.getStyleClass().add("element-tile");
             tile.setAccessibleText(item.getName()+I18n.text(", numéro atomique ")+item.getZ());
             tile.setTooltip(I18n.tooltip(item.getName()+" · Z = "+item.getZ()+" · "+item.getIsotopesCount()+" isotopes"));
             tile.setOnAction(e->showIsotopes(item,item.getDefaultA()));
@@ -55,11 +55,11 @@ public final class CollisionPicker {
                 node.setOpacity(matches?1:.16);node.setDisable(!matches);
             });
         });
-        selected.setStyle("-fx-text-fill:#EDF5FF;-fx-font-size:17px;-fx-font-weight:bold;");
-        mass.setStyle("-fx-text-fill:#91A4C0;-fx-font-size:11px;");mass.setWrapText(true);
+        selected.getStyleClass().add("plan-heading");
+        mass.getStyleClass().add("plan-note");mass.setWrapText(true);
         isotopes.setPrefWrapLength(750);isotopes.setPadding(new Insets(0,0,5,0));
         ScrollPane isotopeScroll=new ScrollPane(isotopes);isotopeScroll.setFitToWidth(true);isotopeScroll.setPrefViewportHeight(84);
-        isotopeScroll.setStyle("-fx-background:#0B1422;-fx-background-color:#0B1422;");
+        isotopeScroll.setStyle("-fx-background:transparent;-fx-background-color:transparent;");
         VBox content=new VBox(10,heading,search,table,selected,mass,isotopeScroll);content.setPadding(new Insets(14));
         dialog.getDialogPane().setContent(content);dialog.getDialogPane().setPrefWidth(805);
         dialog.getDialogPane().lookupButton(use).setId("collision-use-isotope");
@@ -71,6 +71,8 @@ public final class CollisionPicker {
     void show(){dialog.show();}
     private void showIsotopes(LabElement item,int chosen) {
         element=item;isotopes.getChildren().clear();
+        // La case de l'élément choisi, allumée.
+        for(javafx.scene.Node n:table.getChildren()){n.getStyleClass().remove("on");if(n.getUserData()==item)n.getStyleClass().add("on");}
         ToggleGroup group=new ToggleGroup();
         for(LabIsotope data:item.getIsotopesList()) {
             ToggleButton button=new ToggleButton(item.getSymbol()+"–"+data.getA()+(data.getStable()?" •":""));
@@ -84,7 +86,7 @@ public final class CollisionPicker {
     }
     private void select(LabElement item,LabIsotope data) {
         isotope=data.getA();selected.setText(item.getName()+" · "+item.getSymbol()+"–"+isotope+"     "+item.getZ()+" protons / "+(isotope-item.getZ())+" neutrons");
-        mass.setText(String.format(I18n.locale(),I18n.text("Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)"),data.getMassU(),data.getStable()?"stable":"radioactif",item.getZ()));
+        mass.setText(String.format(I18n.locale(),I18n.text("Masse atomique du catalogue : %.6f u   ·   %s   ·   Noyau entièrement ionisé (+%de)"),data.getMassU(),I18n.text(data.getStable()?"stable":"radioactif"),item.getZ()));
     }
     private static String color(LabElement item){return item.getColor().isBlank()?"#AECDEB":item.getColor();}
     private static String fold(String text){return Normalizer.normalize(text.toLowerCase(Locale.ROOT),Normalizer.Form.NFD).replaceAll("\\p{M}","");}

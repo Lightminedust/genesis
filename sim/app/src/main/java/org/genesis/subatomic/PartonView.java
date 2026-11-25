@@ -54,7 +54,7 @@ public final class PartonView {
         void reset();
     }
 
-    private static final Color INK = Color.web("#E8EEF7"), LABEL = Color.web("#8896AB"), DIM = Color.web("#5F6C80");
+    private static final Color INK = Color.web("#ECEFF3"), LABEL = Color.web("#8896AB"), DIM = Color.web("#5F6C80");
     private static final Color TEAL = Color.web("#3DD6C6"), AMBER = Color.web("#F5B84B"), CORAL = Color.web("#FF7A6B");
     private static final Color GLUON = DocStyle.GOLD;
     private static final double SIDE = 300, GAP = 16, STRIP = 160, BAG_RADIUS_FM = 1.08, PLAY_SECONDS = 14;
@@ -88,22 +88,10 @@ public final class PartonView {
         camera.yaw = -.55;
         camera.pitch = .3;
 
-        Label title = label(FusionDashboard.spaced("LA MER DE PARTONS"), 11, "#8896AB");
-        Label sub = label("Plus la résolution Q² monte, plus le nucléon montre de gluons et de paires quark–antiquark.", 13, "#E8EEF7");
-        Button exit = new Button("← Collision");
-        exit.getStyleClass().add("doc-button");
-        exit.setFocusTraversable(false);
-        exit.setOnAction(e -> actions.back());
-        Region gap = new Region();
-        HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox top = new HBox(20, new VBox(4, title, sub), gap, exit);
-        top.setAlignment(Pos.CENTER_LEFT);
-        top.setPadding(new Insets(14, 22, 13, 22));
-        top.getStyleClass().add("doc-bar");
-        root.setTop(top);
+        // Plus de bandeau ni de retour : la mer de partons est un mode du laboratoire, choisi dans l'en-tête commun.
 
         StackPane center = new StackPane(scene);
-        center.setStyle("-fx-background-color:#03060C;");
+        center.getStyleClass().add("plan-scene");
         scene.widthProperty().bind(center.widthProperty());
         scene.heightProperty().bind(center.heightProperty());
         scene.setOnMousePressed(e -> { dragging = true; previousX = e.getX(); previousY = e.getY(); });
@@ -242,11 +230,9 @@ public final class PartonView {
         return l;
     }
 
+    /** Une section de la colonne : le même dessin que dans les autres laboratoires (voir Plan.section). */
     private static VBox section(String title, javafx.scene.Node... nodes) {
-        VBox box = new VBox(8);
-        box.getChildren().add(label(FusionDashboard.spaced(title), 9, "#8896AB"));
-        box.getChildren().addAll(nodes);
-        return box;
+        return org.genesis.common.Plan.section("", title, nodes);
     }
 
     static String q2Text(double q2) {
@@ -352,7 +338,7 @@ public final class PartonView {
         g.fillRect(0, 0, w, h);
         if (state == null || partons.isEmpty()) {
             g.setFill(LABEL);
-            g.setFont(Font.font("Segoe UI", 13));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 13));
             g.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(g, "En attente du calcul Python…", w / 2, h / 2);
             return;
@@ -492,11 +478,11 @@ public final class PartonView {
         g.strokeOval(end - spot, y - spot, 2 * spot, 2 * spot);
         // ses nombres
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI Semibold", 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setFill(hue.interpolate(Color.WHITE, .4));
         double ty = stageHeight - 74;                              // les nombres sous la scène, pas sur le nucléon
         I18n.fillText(g, "photon virtuel", start, ty);
-        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         g.setFill(LABEL);
         I18n.fillText(g, String.format(I18n.locale(), I18n.text("Q = %s GeV  ·  λ = ħc/Q = %s fm  ·  f = Qc/h ≈ %s Hz (équivalente)"), ReactorView.fmt(q),
                 lambdaFm < .01 ? String.format(I18n.locale(), "%.4f", lambdaFm) : ReactorView.fmt(lambdaFm),
@@ -671,7 +657,7 @@ public final class PartonView {
             g.strokeOval(s[0] - r, s[1] - r, 2 * r, 2 * r);
             if (pair && f < .75) {
                 g.setTextAlign(TextAlignment.LEFT);
-                g.setFont(Font.font("Segoe UI Semibold", 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(c.deriveColor(0, 1, 1, 1 - f / .75));
                 I18n.fillText(g, name(e.getKind()), s[0] + r + 4, s[1] - 2);
             }
@@ -690,14 +676,14 @@ public final class PartonView {
                 : (p.getKind().equals("qbar") ? "antiquark " + p.getFlavor() + " · " + anti[Math.floorMod(p.getAnticolor(), 3)]
                 : (p.getValence() ? "quark de valence " : "quark ") + p.getFlavor() + " · " + colours[Math.floorMod(p.getColor(), 3)]);
         String detail = String.format(I18n.locale(), I18n.text("x = %.4f · né à t = %.3f fm/c"), p.getX(), Math.max(0, p.getBornFmc()));
-        Font bold = Font.font("Segoe UI Semibold", 11), light = Font.font("Segoe UI", 10);
+        Font bold = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11), light = Font.font(org.genesis.common.Plan.SANS, 10);
         double tw = Math.max(ReactorView.width(what, bold), ReactorView.width(detail, light)) + 18;
         double tx = Math.min(scene.getWidth() - FusionDashboard.WIDTH - 40 - tw, mouseX + 14), ty = Math.max(8, mouseY - 48);
         g.setFill(Color.color(.02, .03, .05, .94));
-        g.fillRoundRect(tx, ty, tw, 38, 8, 8);
+        g.fillRect(tx, ty, tw, 38);
         g.setStroke(Color.color(1, 1, 1, .16));
         g.setLineWidth(1);
-        g.strokeRoundRect(tx + .5, ty + .5, tw - 1, 37, 8, 8);
+        g.strokeRect(tx + .5, ty + .5, tw - 1, 37);
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(bold);
         g.setFill(INK);
@@ -719,11 +705,11 @@ public final class PartonView {
         g.strokeLine(x, y - 4, x, y + 4);
         g.strokeLine(x + px, y - 4, x + px, y + 4);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI Semibold", 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setFill(INK);
         I18n.fillText(g, String.format(I18n.locale(), fm < 1 ? "%.1f fm" : "%.0f fm", fm), x + px / 2, y - 8);
         g.setTextAlign(TextAlignment.RIGHT);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(DIM);
         I18n.fillText(g, "sphère = rayon quadratique moyen du proton, 0,84 fm × √(5/3)", stageWidth - 24, y + 16);
     }
@@ -754,7 +740,7 @@ public final class PartonView {
     private void drawPdfStrip(GraphicsContext g, double x, double y, double w, double h) {
         DocStyle.panel(g, x, y, w, h);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI Semibold", 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(LABEL);
         I18n.fillText(g, FusionDashboard.spaced("x·f(x) À CETTE RÉSOLUTION"), x + 16, y + 21);
         double left = x + 16, top = y + 32, pw = w - 32, ph = h - 32 - 28;
@@ -775,7 +761,7 @@ public final class PartonView {
         g.setLineWidth(1);
         g.strokeLine(cut, top, cut, top + ph);
         g.setLineDashes(null);
-        g.setFont(Font.font("Segoe UI", 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         g.setFill(AMBER);
         g.setTextAlign(TextAlignment.LEFT);
         if (cut - left > 70) I18n.fillText(g, "non résolu", left + 5, top + 11);
@@ -784,7 +770,7 @@ public final class PartonView {
         g.setTextAlign(TextAlignment.LEFT);
         double legendX = left + pw;
         g.setTextAlign(TextAlignment.RIGHT);
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         for (PartonCurve c : state.getCurvesList()) {
             List<Double> px = new ArrayList<>(), py = new ArrayList<>();
             for (int i = 0; i < c.getXCount(); i++) {
@@ -797,9 +783,9 @@ public final class PartonView {
             g.strokePolyline(px.stream().mapToDouble(Double::doubleValue).toArray(), py.stream().mapToDouble(Double::doubleValue).toArray(), px.size());
             g.setFill(curveColor(c.getName()));
             I18n.fillText(g, curveLabel(c.getName()), legendX, y + 21);
-            legendX -= ReactorView.width(curveLabel(c.getName()), Font.font("Segoe UI", 10)) + 18;
+            legendX -= ReactorView.width(curveLabel(c.getName()), Font.font(org.genesis.common.Plan.SANS, 10)) + 18;
         }
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(DIM);
         g.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(g, "10⁻⁴", left, y + h - 10);
@@ -818,10 +804,10 @@ public final class PartonView {
                 for (int i = 0; i < c.getXCount(); i++) if (Math.abs(Math.log(c.getX(i) / xv)) < Math.abs(Math.log(c.getX(best) / xv))) best = i;
                 text.append(String.format(I18n.locale(), " · %s %.3f", curveLabel(c.getName()).replace(" ÷ 10", "").replace("÷ 10", ""), c.getXf(best)));
             }
-            Font font = Font.font("Segoe UI Semibold", 10);
+            Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
             double tw = ReactorView.width(text.toString(), font) + 14, tx = Math.min(left + pw - tw, Math.max(left, mouseX - tw / 2));
             g.setFill(Color.color(.02, .03, .05, .94));
-            g.fillRoundRect(tx, top + 14, tw, 18, 5, 5);
+            g.fillRect(tx, top + 14, tw, 18);
             g.setFont(font);
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(INK);
@@ -856,18 +842,18 @@ public final class PartonView {
         double w = FusionDashboard.WIDTH, row = 18, h = 34 + row * EVENT_KINDS.length + 52;
         DocStyle.panel(g, x, y, w, h);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI Semibold", 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(LABEL);
         I18n.fillText(g, FusionDashboard.spaced("ÉVÉNEMENTS JUSQU'ICI"), x + 16, y + 21);
         int[] counts = eventCounts(events, time);
         double ry = y + 34;
         for (int i = 0; i < EVENT_KINDS.length; i++) {
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", 11));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
             g.setFill(i < 2 ? TEAL : (i < 4 ? AMBER : INK));
             I18n.fillText(g, EVENT_NAMES[i], x + 16, ry + 12);
             g.setTextAlign(TextAlignment.RIGHT);
-            g.setFont(Font.font("Segoe UI Semibold", 11));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
             g.setFill(INK);
             I18n.fillText(g, "" + counts[i], x + w - 16, ry + 12);
             ry += row;
@@ -881,7 +867,7 @@ public final class PartonView {
             dc = Math.max(dc, Math.abs(e.getDcolour()));
             seen++;
         }
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(LABEL);
         I18n.fillText(g, String.format(I18n.locale(), I18n.text("écarts maximaux sur %d événements :"), seen), x + 16, ry + 18);

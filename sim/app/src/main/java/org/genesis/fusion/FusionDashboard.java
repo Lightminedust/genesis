@@ -61,8 +61,10 @@ public final class FusionDashboard {
 
     public static final double WIDTH = 288;
     private static final double PAD = 16, HEAD = 34, HERO = 62, ROW = 29, PLOT = 142, FACT = 17.5, SECTION = 24;
-    private static final Color INK = Color.web("#E8EEF7"), LABEL = Color.web("#8896AB"), DIM = Color.web("#5F6C80");
-    private static final Color TEAL = Color.web("#3DD6C6"), AMBER = Color.web("#F5B84B"), CORAL = Color.web("#FF7A6B");
+    private static final Color INK = org.genesis.common.Plan.INK, LABEL = org.genesis.common.Plan.INK2,
+            DIM = org.genesis.common.Plan.INK3;
+    // Les niveaux (jauges) : bleu clair → ambre → corail ; sur le papier bleu, le bleu clair remplace le turquoise.
+    private static final Color TEAL = Color.web("#9FD3FF"), AMBER = Color.web("#F2C14E"), CORAL = Color.web("#FF7A6B");
     private final Map<String, Double> shown = new HashMap<>();
     private double hoverX = -1, hoverY = -1;
     /** Le style documentaire (verre bleu) des écrans subatomiques, à la place du verre fumé du laboratoire de fusion. */
@@ -74,28 +76,24 @@ public final class FusionDashboard {
         return t < .6 ? TEAL.interpolate(AMBER, t / .6) : AMBER.interpolate(CORAL, (t - .6) / .4);
     }
 
-    /** Des capitales espacées, à la manière des légendes de photos documentaires. */
+    /**
+     * Une légende (l'étape, le titre d'une section du tableau). Autrefois en capitales espacées, à la manière des photos
+     * documentaires ; désormais traduite puis écrite comme une phrase (les noms propres et les symboles gardés).
+     */
     public static String spaced(String text) {
-        StringBuilder out = new StringBuilder();
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            out.append(c);
-            if (i < text.length() - 1) out.append(c == ' ' ? "  " : " ");
-        }
-        return out.toString();
+        return org.genesis.common.Plan.sentence(I18n.text(text));
     }
 
-    /** Un panneau plat : un fond sombre presque opaque, un filet fin ; `accent` colore un trait court sur le bord gauche. */
+    /**
+     * Un panneau du plan : le papier bleu presque opaque, un trait fin, ses amorces aux coins (voir Plan.frame) ;
+     * `accent` colore le bord gauche.
+     */
     static void glass(GraphicsContext gc, double x, double y, double w, double h, Color accent) {
-        gc.setFill(Color.color(.039, .055, .078, .9));
-        gc.fillRoundRect(x, y, w, h, 12, 12);
-        gc.setLineWidth(1);
-        gc.setStroke(Color.color(1, 1, 1, .09));
-        gc.strokeRoundRect(x + .5, y + .5, w - 1, h - 1, 12, 12);
+        org.genesis.common.Plan.frame(gc, x, y, w, h, org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .94));
         if (accent != null) {
-            gc.setStroke(accent.deriveColor(0, 1, 1, .9));
-            gc.setLineWidth(2);
-            gc.strokeLine(x + 1.5, y + 12, x + 1.5, y + h - 12);
+            // La couleur de la carte : un point près de son titre (un filet sur le bord ne suit pas les coins arrondis).
+            gc.setFill(accent);
+            gc.fillOval(x + w - 14, y + 12, 6, 6);
         }
     }
 
@@ -116,7 +114,7 @@ public final class FusionDashboard {
     // ================================================================== la mesure (même gabarit que le dessin)
     /** La légende du partage, disposée en lignes : (colonne, ligne) de chaque part, et le nombre de lignes. */
     private static int legendLines(Split s, double width, double[][] at) {
-        Font font = Font.font("Segoe UI", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS, 10);
         double x = 0;
         int line = 0;
         for (int i = 0; i < s.parts().size(); i++) {
@@ -161,7 +159,7 @@ public final class FusionDashboard {
         else glass(gc, x, y, w, h, null);
         gc.setTextAlign(TextAlignment.LEFT);
         // L'étape : à gauche en capitales fines, un point à droite.
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.MEDIUM, 11));
         gc.setFill(LABEL);
         I18n.fillText(gc, spaced(b.stage()), x + PAD, y + 21);
         gc.setFill(TEAL);
@@ -224,7 +222,7 @@ public final class FusionDashboard {
     private static void heading(GraphicsContext gc, double x, double y, double w, String text) {
         rule(gc, x, y, w);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.MEDIUM, 11));
         gc.setFill(LABEL);
         I18n.fillText(gc, spaced(text), x, y + 17);
     }
@@ -236,12 +234,12 @@ public final class FusionDashboard {
             gc.fillRect(x - 6, y - 1, w + 12, FACT - 1);
         }
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, key, x, y + 11.5, value.isEmpty() ? w : w * .56);
         if (!value.isEmpty()) {
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.setFont(Font.font("Segoe UI Semibold", 10.5));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
             gc.setFill(accent ? AMBER.interpolate(Color.WHITE, .25) : INK);
             I18n.fillText(gc, value, x + w, y + 11.5, w * .5);
         }
@@ -250,29 +248,29 @@ public final class FusionDashboard {
     /** Le partage de l'énergie : le total, une barre segmentée, et la légende. Renvoie la hauteur occupée. */
     private double split(GraphicsContext gc, double x, double y, double w, Split s, double dt) {
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.MEDIUM, 11));
         gc.setFill(LABEL);
         I18n.fillText(gc, spaced(s.label()), x, y + 13);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI Semibold", 14));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 14));
         gc.setFill(INK);
         I18n.fillText(gc, s.total(), x + w, y + 14);
         double by = y + 22, bh = 7, sum = 0;
         for (Part p : s.parts()) sum += Math.max(0, p.share());
-        gc.setFill(Color.color(1, 1, 1, .06));
-        gc.fillRoundRect(x, by, w, bh, 2, 2);
+        gc.setFill(Color.color(1, 1, 1, .08));
+        gc.fillRect(x, by, w, bh);
         double at = x, gap = 2;
         for (Part p : s.parts()) {
             double share = sum > 0 ? smooth("split:" + s.label() + ":" + p.name(), Math.max(0, p.share()) / sum, dt) : 0;
             double len = (w - gap * Math.max(0, s.parts().size() - 1)) * share;
             if (len < .5) continue;
             gc.setFill(p.color());
-            gc.fillRoundRect(at, by, len, bh, 2, 2);
+            gc.fillRect(at, by, len, bh);
             at += len + gap;
         }
         double[][] pos = new double[s.parts().size()][2];
         int lines = legendLines(s, w, pos);
-        gc.setFont(Font.font("Segoe UI", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         gc.setTextAlign(TextAlignment.LEFT);
         for (int i = 0; i < s.parts().size(); i++) {
             Part p = s.parts().get(i);
@@ -282,7 +280,7 @@ public final class FusionDashboard {
             gc.setFill(LABEL);
             I18n.fillText(gc, p.name() + "  ", lx + 11, ly);
             gc.setFill(INK);
-            I18n.fillText(gc, p.value(), lx + 11 + ReactorView.width(p.name() + "  ", Font.font("Segoe UI", 10)), ly);
+            I18n.fillText(gc, p.value(), lx + 11 + ReactorView.width(p.name() + "  ", Font.font(org.genesis.common.Plan.SANS, 10)), ly);
         }
         return 36 + 15 * lines + 6;
     }
@@ -291,15 +289,15 @@ public final class FusionDashboard {
     private void hero(GraphicsContext gc, double x, double y, double w, Dial d, double dt) {
         double f = smooth("hero:" + d.key(), d.fill(), dt);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, d.label(), x, y + 13);
-        Font big = Font.font("Segoe UI Semibold", 27);
+        Font big = Font.font(org.genesis.common.Plan.LIGHT, 29);
         gc.setFont(big);
         gc.setFill(INK);
         I18n.fillText(gc, d.value(), x, y + 41, w * .72);
         if (!d.unit().isBlank()) {
-            gc.setFont(Font.font("Segoe UI", 11));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
             gc.setFill(LABEL);
             I18n.fillText(gc, d.unit(), x + Math.min(w * .72, ReactorView.width(d.value(), big)) + 6, y + 41);
         }
@@ -311,11 +309,11 @@ public final class FusionDashboard {
                         double mark, String markLabel, double dt) {
         double f = smooth("metric:" + key, fill, dt);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, label, x, y + 11, w * .6);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI Semibold", 11.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
         gc.setFill(INK);
         I18n.fillText(gc, value, x + w, y + 11, w * .5);
         gauge(gc, x, y + 17, w, 2.5, f, false);
@@ -324,7 +322,7 @@ public final class FusionDashboard {
             gc.setFill(INK);
             gc.fillRect(mx - .75, y + 14, 1.5, 8.5);
             if (markLabel != null && !markLabel.isEmpty()) {
-                gc.setFont(Font.font("Segoe UI", 8.5));
+                gc.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
                 gc.setTextAlign(TextAlignment.CENTER);
                 gc.setFill(DIM);
                 I18n.fillText(gc, markLabel, Math.max(x + 6, Math.min(x + w - 6, mx)), y + 28);
@@ -360,11 +358,11 @@ public final class FusionDashboard {
     private void plot(GraphicsContext gc, double x, double y, double w, Plot p) {
         double top = y + 20, height = PLOT - 40, left = x, right = x + w;
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.MEDIUM, 11));
         gc.setFill(LABEL);
         I18n.fillText(gc, spaced(p.title()), x, y + 11);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         I18n.fillText(gc, "survol : lire la valeur", right, y + 11);
         gc.setFill(Color.color(1, 1, 1, .03));
@@ -386,7 +384,7 @@ public final class FusionDashboard {
             gc.strokeLine(left, ey, right, ey);
             gc.setLineDashes(null);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.setFont(Font.font("Segoe UI Semibold", 9));
+            gc.setFont(Font.font(org.genesis.common.Plan.MEDIUM, 11));
             gc.setFill(AMBER);
             I18n.fillText(gc, p.levelLabel(), left + 4, ey - 4);
         }
@@ -409,7 +407,7 @@ public final class FusionDashboard {
         gc.setStroke(TEAL);
         gc.setLineWidth(1.3);
         gc.strokeOval(mx - 5.5, my - 5.5, 11, 11);
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, ReactorView.fmt(p.xmin()) + " " + p.xUnit(), left, top + height + 12);
@@ -424,12 +422,9 @@ public final class FusionDashboard {
             gc.setFill(TEAL);
             gc.fillOval(hoverX - 3, hy - 3, 6, 6);
             String text = "r = " + ReactorView.fmt(xv) + " " + p.xUnit() + "   V = " + ReactorView.energy(yv * 1000);
-            Font f = Font.font("Segoe UI Semibold", 10);
+            Font f = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
             double tw = ReactorView.width(text, f) + 14, tx = Math.min(right - tw, Math.max(left, hoverX - tw / 2));
-            gc.setFill(Color.color(.02, .03, .05, .94));
-            gc.fillRoundRect(tx, top + 2, tw, 18, 5, 5);
-            gc.setStroke(Color.color(1, 1, 1, .14));
-            gc.strokeRoundRect(tx + .5, top + 2.5, tw - 1, 17, 5, 5);
+            org.genesis.common.Plan.frame(gc, tx, top + 2, tw, 18, org.genesis.common.Plan.DEEP.deriveColor(0, 1, 1, .96));
             gc.setFont(f);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(INK);

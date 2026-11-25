@@ -45,7 +45,7 @@ final class AtomMap {
     static final Color NET = Color.web("#FFE07A"), ELECTRONS = Color.web("#5CC8FF"), NUCLEI = Color.web("#FF9A4D"),
             LONDON = Color.web("#7EE0A1"), HAND = Color.web("#F4F8FF");
     static final Color ATTRACT = Color.web("#8FD8FF"), REPEL = Color.web("#FF9A5C");
-    private static final Color TEXT = Color.web("#DCE8F7"), GREY = Color.web("#8FA4C2"), DIM = Color.web("#6F82A0"),
+    private static final Color TEXT = Color.web("#ECEFF3"), GREY = Color.web("#A2ABB8"), DIM = Color.web("#6F82A0"),
             REST = Color.web("#B9A8E8");
     private static final double HEAD = 54, MAP = 222, ROW = 15, SUB = 13;
     /** Les flèches : elles partent du bord de l'atome (START px du centre) ; la plus forte mesure LENGTH px. */
@@ -362,13 +362,13 @@ final class AtomMap {
             g.setLineDashes(2, 3);
             g.strokeOval(cx - 21, cy - 21, 42, 42);
             g.setLineDashes();
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9.5));
             g.setTextAlign(TextAlignment.CENTER);
             g.setFill(NET);
             g.fillText(I18n.text("en équilibre"), cx, cy + 33);
         }
         header(g, w, atom, i, net, toward(scene, i, net, placed));
-        g.setFont(Font.font("Segoe UI", 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(DIM);
         g.fillText(I18n.text(mine.isEmpty() ? "aucun voisin : rien ne le tire ni ne le pousse"
@@ -381,7 +381,7 @@ final class AtomMap {
         else table(g, w, scene, tableTop, placed);
         if (confined) {
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
             g.setFill(Color.web("#FFB37A"));
             double y = height - 22;
             g.fillText(I18n.text("charge tenue à −2,5 e par la contrainte des anions :"), 2, y);
@@ -424,7 +424,7 @@ final class AtomMap {
     /** Les trois lectures, en onglets au-dessus de la carte. */
     private void tabs(GraphicsContext g, double w) {
         String[] labels = {I18n.text("l'essentiel"), I18n.text("par voisin"), I18n.text("par terme")};
-        Font font = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9.5);
+        Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9.5);
         double x = w - 2, y = HEAD + 2, h = 15;
         for (int k = labels.length - 1; k >= 0; k--) {
             Text probe = new Text(labels[k]);
@@ -434,13 +434,13 @@ final class AtomMap {
             tabs[k] = new double[]{x, y, width, h};
             boolean on = mode == k;
             g.setFill(on ? Color.web("#1E3A5C", .95) : Color.web("#0B1626", .9));
-            g.fillRoundRect(x, y, width, h, h, h);
+            g.fillRect(x, y, width, h);
             g.setStroke(on ? Color.web("#5CC8FF", .7) : Color.web("#2A3B52", .9));
             g.setLineWidth(.8);
-            g.strokeRoundRect(x, y, width, h, h, h);
+            g.strokeRect(x, y, width, h);
             g.setFont(font);
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFill(on ? Color.web("#EAF2FF") : GREY);
+            g.setFill(on ? Color.web("#ECEFF3") : GREY);
             g.fillText(labels[k], x + width / 2, y + 11);
             x -= 4;
         }
@@ -451,37 +451,37 @@ final class AtomMap {
         g.clearRect(0, 0, w, HEAD);
         Color element = MoleculeScene.elementColor(atom.getZ());
         g.setFill(element.deriveColor(0, 1, 1, .16));
-        g.fillRoundRect(2, 3, 46, 46, 10, 10);
+        g.fillRect(2, 3, 46, 46);
         g.setStroke(element.deriveColor(0, 1, 1, .8));
         g.setLineWidth(1.2);
-        g.strokeRoundRect(2, 3, 46, 46, 10, 10);
+        g.strokeRect(2, 3, 46, 46);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         g.setFill(GREY);
         g.fillText(String.valueOf(atom.getZ()), 6, 13);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 19));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 19));
         g.setFill(element.deriveColor(0, 1, 1.15, 1));
         g.fillText(MoleculeView.nuclide(atom.getSymbol(), atom.getMassNumber()), 25, 33);
-        g.setFont(Font.font("Segoe UI", 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         g.setFill(GREY);
         g.fillText(MoleculeFormat.decimal(atom.getMassU(), 3), 25, 45);
         double q = atom.getCharge();
         float[] c = MoleculeScene.chargeColour(q);
         Color charge = Color.color(c[0], c[1], c[2]);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 14));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 14));
         g.setFill(TEXT);
         g.fillText(atom.getSymbol() + (i + 1), 58, 17);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
         g.setFill(charge);
         g.setTextAlign(TextAlignment.RIGHT);
         g.fillText(I18n.text("charge") + " " + MoleculeFormat.signed(q, 2) + " e" + (q < -.05 ? "  δ−" : q > .05 ? "  δ+" : ""), w - 2, 17);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         g.setFill(GREY);
         g.fillText(I18n.text("voisins (coordination)") + "  " + MoleculeFormat.decimal(atom.getCoordination(), 2), 58, 32);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
         g.setFill(NET);
         g.fillText(I18n.text("force nette") + "  " + MoleculeFormat.decimal(norm(net), 2) + " eV/Å"
                 + (toward.isEmpty() ? "" : "  ·  " + toward), 58, 47);
@@ -509,7 +509,7 @@ final class AtomMap {
             return;
         }
         Color colour = mode == BY_TERM && Math.abs(force) >= .02 ? (force >= 0 ? ATTRACT : REPEL).deriveColor(0, 1, 1, .55)
-                : n.bonded ? Color.web("#B9CBE0", .22) : Color.web("#8FA4C2", .35);
+                : n.bonded ? Color.web("#B9CBE0", .22) : Color.web("#A2ABB8", .35);
         g.setStroke(colour);
         g.setLineWidth(n.bonded ? 1.2 + 1.1 * Math.min(3, p.order()) : 1);
         if (!n.bonded) g.setLineDashes(1.5, 3.5);
@@ -526,16 +526,16 @@ final class AtomMap {
         double x = n.x + ux / len * 16 - bw / 2, y = n.y + uy / len * 16 - bh / 2;
         x = Math.max(2, Math.min(w - bw - 2, x));
         y = Math.max(HEAD + 20, Math.min(HEAD + MAP - bh, y));
-        g.setFill(Color.web("#081120", .94));
-        g.fillRoundRect(x, y, bw, bh, 8, 8);
+        g.setFill(Color.web("#111419", .94));
+        g.fillRect(x, y, bw, bh);
         g.setStroke(Color.web("#3B4F6B", .9));
         g.setLineWidth(.8);
-        g.strokeRoundRect(x, y, bw, bh, 8, 8);
+        g.strokeRect(x, y, bw, bh);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9.5));
         g.setFill(TEXT);
         g.fillText(first, x + 7, y + 12);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(p.total() >= 0 ? ATTRACT : REPEL);
         g.fillText(second, x + 7, y + 25);
     }
@@ -552,7 +552,7 @@ final class AtomMap {
         g.setStroke(Color.color(c[0], c[1], c[2], .8 * alpha));
         g.setLineWidth(1.3);
         g.strokeOval(n.x - r, n.y - r, 2 * r, 2 * r);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(element.getBrightness() > .7 ? Color.web("#0A1220", alpha) : Color.web("#F4F8FF", alpha));
         g.fillText(scene.symbols[n.atom] + (n.atom + 1), n.x, n.y + 3);
@@ -573,7 +573,7 @@ final class AtomMap {
         g.setStroke(charge);
         g.setLineWidth(1.8);
         g.strokeOval(cx - r, cy - r, 2 * r, 2 * r);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(element.getBrightness() > .7 ? Color.web("#0A1220") : Color.web("#F4F8FF"));
         g.fillText(scene.symbols[i] + (i + 1), cx, cy + 4);
@@ -587,7 +587,7 @@ final class AtomMap {
         g.strokeLine(x, y - 3.5, x + 14, y - 3.5);
         g.setLineDashes();
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", strong ? FontWeight.SEMI_BOLD : FontWeight.NORMAL, 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, strong ? FontWeight.SEMI_BOLD : FontWeight.NORMAL, 10.5));
         g.setFill(ink);
         g.fillText(text, x + 20, y);
     }
@@ -598,7 +598,7 @@ final class AtomMap {
         key(g, 2, y + ROW, ATTRACT, 3, false, I18n.text("ils s'attirent"), TEXT, false);
         key(g, w / 2 + 4, y + ROW, REPEL, 3, false, I18n.text("ils se repoussent"), TEXT, false);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(GREY);
         g.fillText(I18n.text("trait plein : liés · tirets : non liés · épaisseur : la force"), 2, y + 2 * ROW);
         g.fillText(I18n.text("le détail des forces : « par voisin », « par terme »"), 2, y + 3 * ROW);
@@ -616,7 +616,7 @@ final class AtomMap {
                     + MoleculeFormat.decimal(norm(rest), 2), TEXT, false);
         }
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(GREY);
         g.fillText(I18n.text("une flèche de travers : la paire tient aussi l'angle"), 2, y + (more ? 3 : 2) * ROW);
     }
@@ -652,7 +652,7 @@ final class AtomMap {
             if (members.isEmpty()) continue;
             if (!group && y > top + 2) y += 6;
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
             g.setFill(GREY);
             g.fillText(I18n.text(group ? "LIÉS" : "NON LIÉS"), 2, y);
             y += 16;
@@ -663,24 +663,24 @@ final class AtomMap {
                 g.setFill(MoleculeScene.elementColor(scene.z[n.atom]));
                 g.fillOval(2, y - 8, 8, 8);
                 g.setTextAlign(TextAlignment.LEFT);
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(TEXT);
                 g.fillText(scene.symbols[n.atom] + (n.atom + 1), 16, y);
-                g.setFont(Font.font("Segoe UI", 10));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
                 g.setFill(GREY);
                 g.fillText(MoleculeFormat.decimal(p.distance(), 2) + " Å", 48, y);
                 double barX = 96, barW = w - 2 - 64 - barX, filled = biggest > 1e-9 ? barW * force / biggest : 0;
                 g.setFill(Color.web("#16202F"));
-                g.fillRoundRect(barX, y - 7, barW, 6, 6, 6);
+                g.fillRect(barX, y - 7, barW, 6);
                 g.setFill(colour.deriveColor(0, 1, 1, .9));
-                g.fillRoundRect(barX, y - 7, Math.max(3, filled), 6, 6, 6);
+                g.fillRect(barX, y - 7, Math.max(3, filled), 6);
                 g.setTextAlign(TextAlignment.RIGHT);
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(colour);
                 g.fillText(MoleculeFormat.decimal(force, 2) + " eV/Å", w - 2, y);
                 y += SUB;
                 g.setTextAlign(TextAlignment.LEFT);
-                g.setFont(Font.font("Segoe UI", 9));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
                 g.setFill(GREY);
                 String verb = Math.abs(along) < .02 ? "" : I18n.text(along >= 0 ? "l'attire" : "le repousse") + " · ";
                 String why;
@@ -718,7 +718,7 @@ final class AtomMap {
     private static void table(GraphicsContext g, double w, MoleculeScene scene, double top, List<Neighbour> placed) {
         double y = top + 2;
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(GREY);
         g.fillText(I18n.text("VOISINS"), 2, y);
         if (placed.isEmpty()) return;
@@ -729,7 +729,7 @@ final class AtomMap {
             g.setFill(MoleculeScene.elementColor(scene.z[n.atom]));
             g.fillOval(2, y - 8, 8, 8);
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
             g.setFill(TEXT);
             String bond = broken ? I18n.text("liaison rompue") : bonded ? I18n.text("liaison") + " " + MoleculeFormat.decimal(p.order(), 2)
                     : I18n.text("non liés");
@@ -740,7 +740,7 @@ final class AtomMap {
             g.fillText(MoleculeFormat.decimal(whole, 2) + " eV/Å", w - 2, y);
             y += ROW;
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
             g.setFill(along >= 0 ? ATTRACT.deriveColor(0, .7, .9, 1) : REPEL.deriveColor(0, .7, .9, 1));
             String axis = Math.abs(along) < .02 ? I18n.text("le long de l'axe : presque rien")
                     : I18n.text(along >= 0 ? "le long de l'axe : ils s'attirent" : "le long de l'axe : ils se repoussent") + " "

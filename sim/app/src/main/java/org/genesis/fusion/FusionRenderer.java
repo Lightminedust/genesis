@@ -2226,7 +2226,7 @@ public final class FusionRenderer {
             }
         if (!legendWanted) return;
         // La légende, une fois : la convention et la valeur du champ.
-        gc.setFont(javafx.scene.text.Font.font("Segoe UI", 10));
+        gc.setFont(javafx.scene.text.Font.font(org.genesis.common.Plan.SANS, 10));
         gc.setFill(Color.color(.72, .86, 1, .55));
         I18n.fillText(gc, (Math.abs(along) > .55 ? along > 0 ? "⊙" : "⊗" : "—") + "  B = "
                 + ReactorView.fmt(externalFieldT) + " T" + (Math.abs(along) > .55 ? along > 0 ? " · vers vous" : " · vers le fond" : " · dans le plan"),

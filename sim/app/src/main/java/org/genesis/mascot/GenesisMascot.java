@@ -628,7 +628,7 @@ public final class GenesisMascot {
         text.setMaxWidth(Double.MAX_VALUE);
         text.setLineSpacing(1.5);
         formula.setWrapText(true);
-        formula.setStyle("-fx-text-fill:#FDE68A;-fx-font-family:Consolas,monospace;-fx-font-size:10.5px;");
+        formula.setStyle("-fx-text-fill:#FDE68A;-fx-font-family:'IBM Plex Mono';-fx-font-size:10.5px;");
         formula.setMaxWidth(Double.MAX_VALUE);
         speech.getChildren().addAll(name, text, formula);
         speech.setPadding(new Insets(8, 11, 9, 12));

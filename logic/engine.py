@@ -20,6 +20,13 @@ import time
 import traceback
 from concurrent import futures
 
+# L'algèbre linéaire sur deux fils, posé avant le premier import de numpy. Par défaut OpenBLAS prend tous les cœurs pour
+# des matrices de 150 à 250 orbitales, où se synchroniser coûte plus que calculer : un calcul GFN1-xTB de 62 atomes
+# prenait 270 ms en occupant 1,9 cœur, il en prend 196 sur 2 fils (192 sur un seul), en en occupant un — la machine
+# (et l'interface) gardent le reste. Une valeur donnée dans l'environnement est respectée.
+for _threads in ("OPENBLAS_NUM_THREADS", "OMP_NUM_THREADS", "MKL_NUM_THREADS"):
+    os.environ.setdefault(_threads, "2")
+
 import grpc
 import numpy as np
 
@@ -36,7 +43,7 @@ from common.units import format_duration
 # Incrémenté à chaque changement incompatible du contrat. Le client refuse de
 # dessiner une frame qui ne porte pas ce numéro : mieux vaut un message clair
 # qu'un affichage silencieusement faux.
-PROTOCOL_VERSION = 28
+PROTOCOL_VERSION = 30
 
 TICK_S = 0.05
 MOLECULE_TICK_S = 0.01
@@ -1238,7 +1245,7 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
                 for event in events:
                     print(f"  t={format_duration(event['time_s'])} [{event['kind']}] {event['title']}")
 
-        session._close_chain()
+        session.close_labs()
         print("Le client a ferme la connexion.")
 
     @staticmethod
@@ -1446,6 +1453,23 @@ class UniverseEngineServicer(genesis_pb2_grpc.UniverseEngineServicer):
             if kind == Action.MOLECULE_ASSESS:
                 molecules.assess(action.value, action.vector, action.amount > 0)
                 return []
+            if kind == Action.MOLECULE_REACT:
+                molecules.react(action.value, action.vector, action.amount)
+                return []
+            if kind == Action.MOLECULE_SCHEME:
+                molecules.scheme(action.value, action.text)
+                return []
+            if kind == Action.MOLECULE_SCHEME_PLAY:
+                # vector : [en cours (1/0), vitesse (images du chemin par seconde ; 0 : au rythme du calcul)]
+                molecules.scheme_play(action.value, action.amount, bool(action.vector) and action.vector[0] > 0,
+                                      action.vector[1] if len(action.vector) > 1 else None)
+                return []
+            if kind == Action.MOLECULE_SMILES:
+                molecules.smiles(action.value, action.text)
+                return []
+            if kind == Action.MOLECULE_SOLVENT:
+                molecules.set_solvent(action.value)
+                return []
         if kind == Action.CHAIN_START:
             return session.start_chain()
         if kind == Action.CHAIN_STOP:
@@ -1536,6 +1560,44 @@ def grpc_address(environ=os.environ):
     return f"{host}:{port}"
 
 
+def watch_parent(pid):
+    """Le moteur embarqué s'arrête avec l'application qui l'a lancé (GENESIS_PARENT_PID), même si elle n'a pas pu
+    l'arrêter elle-même : tuée par le gestionnaire des tâches, plantée, ou l'ordinateur qui ferme sa session. Sous
+    Windows, un processus tué n'emporte pas ses enfants ; le moteur garde une poignée sur son parent et attend sa fin.
+    Ailleurs, un orphelin change de parent (getppid). Rend le fil de veille (déjà lancé), ou None."""
+    def leave():
+        print("L'application qui a lancé le moteur est fermée : le moteur s'arrête.")
+        sys.stdout.flush()
+        os._exit(0)
+
+    if os.name == "nt":
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        kernel.WaitForSingleObject.restype = wintypes.DWORD
+        kernel.WaitForSingleObject.argtypes = (wintypes.HANDLE, wintypes.DWORD)
+        handle = kernel.OpenProcess(0x00100000, False, pid)          # SYNCHRONIZE
+        if not handle:
+            leave()                                                   # le parent n'existe déjà plus
+
+        def wait():
+            kernel.WaitForSingleObject(handle, 0xFFFFFFFF)            # INFINITE : jusqu'à la fin du parent
+            leave()
+    else:
+        parent = os.getppid()
+
+        def wait():
+            while os.getppid() == parent:
+                time.sleep(1.0)
+            leave()
+
+    thread = threading.Thread(target=wait, name="parent-watch", daemon=True)
+    thread.start()
+    return thread
+
+
 def serve():
     # Le journal contient des flèches et des exposants : une console qui ne
     # sait pas les écrire ne doit pas couper la connexion du client.
@@ -1556,6 +1618,9 @@ def serve():
         raise OSError(f"Port gRPC indisponible : {address}")
     server.start()
     print(f"Moteur atomique demarre sur {address} (protocole v{PROTOCOL_VERSION}).")
+    parent = os.environ.get("GENESIS_PARENT_PID", "")
+    if parent.isdigit():
+        watch_parent(int(parent))
     server.wait_for_termination()
 
 

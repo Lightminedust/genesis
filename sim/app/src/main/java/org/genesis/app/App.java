@@ -19,6 +19,9 @@ import org.genesis.atom.SimCanvas;
 import org.genesis.atom.StabilityChart;
 import org.genesis.fusion.StarView;
 import org.genesis.subatomic.SubatomicView;
+import org.genesis.common.Guide;
+import org.genesis.common.Icons;
+import org.genesis.common.Plan;
 import org.genesis.common.Visuals;
 
 import com.studio.genesis.grpc.PeriodicTable;
@@ -42,6 +45,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
@@ -62,7 +66,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.Popup;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -97,7 +100,7 @@ public class App extends Application {
 
     private static final double PREFERRED_WIDTH = 1440;
     private static final double PREFERRED_HEIGHT = 900;
-    private static final double SIDEBAR_WIDTH = 400;
+    private static final double SIDEBAR_WIDTH = Plan.RIGHT_WIDTH;
 
     private SimCanvas simCanvas;
     /** La dernière frame reçue : le noyau visé par « Tirer une α ». */
@@ -144,8 +147,26 @@ public class App extends Application {
     private boolean stopping;
     private ActionType pendingLabStart;
 
-    private final Circle statusDot = new Circle(4.5, Color.web("#64748B"));
-    private final Tooltip statusTip = I18n.tooltip("Démarrage…");
+    /** La barre du laboratoire ouvert (voir LabBar) et l'accueil, qui présente les laboratoires (voir HomeScreen). */
+    private LabBar labBar;
+    private HomeScreen home;
+    private LabBar.Lab shownLab;
+    /**
+     * Le laboratoire qu'on ouvre (ou l'atome, qu'on rejoint), tant que l'écran d'attente est là : la barre le montre.
+     * Le moteur referme d'abord l'ancien ; entre les deux, aucune frame n'annonce de laboratoire actif, et la barre
+     * repassait à l'atome pendant le chargement du laboratoire demandé.
+     */
+    private LabBar.Lab opening;
+    /** Les échelles de l'atome (Atome, Noyau, Nucléon, Gouffre) : ses modes, posés dans l'en-tête. */
+    private Region atomModes;
+    /** Le guide du laboratoire montré (touche H), et le message bref du bas de l'écran. */
+    private final GuideOverlay guideOverlay = new GuideOverlay();
+    private final Toast toast = new Toast();
+    /** Les panneaux des laboratoires sont-ils montrés (Tab les cache tous, pour laisser la scène seule) ? */
+    private boolean panelsShown = true;
+    /** Un laboratoire a-t-il été ouvert depuis l'accueil (sa carte le dit, Échap y revient) ? */
+    private boolean labOpened;
+    private Region atomLeft, atomRight, atomScene;
     private Button tableButton;
     private final Label elementSymbol = new Label("?");
     private final Label elementName = new Label("Choisir un élément");
@@ -181,11 +202,9 @@ public class App extends Application {
     /** Énergie d'une α tirée depuis l'atome, dans le laboratoire (keV) : celle d'une désintégration α typique. */
     private static final double ALPHA_LAB_KEV = 5000;
     private boolean startElementLoaded;
-    private Button lightButton;
-    private Popup lightPopup;
     private final ToggleGroup scaleGroup = new ToggleGroup();
     private final ToggleGroup dragGroup = new ToggleGroup();
-    private ToggleButton autoSpin;
+    private ToggleButton autoSpin, rotateButton, panButton;
     private ToggleButton valenceOnly;
     private ToggleButton bohrView;
     /**
@@ -195,7 +214,7 @@ public class App extends Application {
     private final java.util.ArrayDeque<Object[]> heldFrames = new java.util.ArrayDeque<>();
     private double clock;
     private Slider laserSlider;
-    private Label laserLabel;
+    private Label laserLabel, laserEnergy;
     private Rectangle laserSwatch;
     private double laserNm = 656.28;
 
@@ -224,6 +243,8 @@ public class App extends Application {
         stage.setMinHeight(Math.min(640, screen.getHeight()));
         // un écran plus petit que la taille voulue : la fenêtre s'ouvre agrandie, à la taille exacte de l'espace libre
         if (small) stage.setMaximized(true);
+        // L'écran de démarrage couvre la fenêtre dès sa première image : l'accueil, construit derrière, ne se voit pas avant.
+        startup.show(this::openLink, null);
         stage.show();
         if (small || stage.getWidth() > screen.getWidth() || stage.getHeight() > screen.getHeight()) {
             stage.setMaximized(true);
@@ -232,7 +253,6 @@ public class App extends Application {
             stage.setY(screen.getMinY() + (screen.getHeight() - stage.getHeight()) / 2);
         }
 
-        startup.show(this::openLink, null);
         if (Boolean.getBoolean("genesis.bundled")) {
             try {
                 bundledEngine = BundledEngine.start();
@@ -269,7 +289,7 @@ public class App extends Application {
                 startup.tick(delta);
                 updateCard.tick(delta);
                 telemetryNotice.tick(delta);
-                boolean waiting = loader.isShowing() || startup.isShowing();
+                boolean waiting = loader.isShowing() || startup.isShowing() || home.isShowing();
                 telemetry.tick(waiting ? null : currentLab(), delta, window.isFocused());
                 // La carte des statistiques : une fois, au premier lancement, quand l'écran de démarrage s'est effacé.
                 if (!noticeOffered && !waiting && telemetry.noticeNeeded()) {
@@ -277,8 +297,14 @@ public class App extends Application {
                     telemetryNotice.show(true, true, telemetry.install(), telemetry::answer);
                 }
                 if (pendingUpdate != null && !waiting) {
-                    offerUpdate(pendingUpdate);
+                    UpdateChecker.Release release = pendingUpdate;
+                    offerUpdate(release);
+                    home.setUpdate(release.version(), () -> offerUpdate(release));
                     pendingUpdate = null;
+                }
+                if (!waiting && shownLab != null && !guideOverlay.isShowing() && !telemetryNotice.isShowing()
+                        && !guideSeen(shownLab)) {
+                    showGuide();
                 }
                 if (chainActive) {
                     chainView.tick(delta);
@@ -325,6 +351,7 @@ public class App extends Application {
 
     /** Tout l'écran, sans fenêtre ni réseau : utilisé par start() et par les aperçus. */
     Scene buildScene(double width, double height) {
+        Plan.language = I18n::follow;              // les bulles et fiches de common/Plan suivent la langue
         double panelWidth = SIDEBAR_WIDTH - 24;
 
         simCanvas = new SimCanvas();
@@ -399,7 +426,19 @@ public class App extends Application {
             @Override public void assess(int request, double[] vector, boolean deep) {
                 sendVector(ActionType.MOLECULE_ASSESS, request, deep ? 1 : 0, vector);
             }
+            @Override public void react(int request, double[] vector, double temperature) {
+                sendVector(ActionType.MOLECULE_REACT, request, temperature, vector);
+            }
             @Override public void pressure(double atm) { sendBoth(ActionType.MOLECULE_PRESSURE, 0, atm); }
+            @Override public void scheme(int request, String json) { sendText(ActionType.MOLECULE_SCHEME, request, json); }
+            @Override public void schemePlay(int step, double position, boolean running) {
+                sendVector(ActionType.MOLECULE_SCHEME_PLAY, step, position, new double[]{running ? 1 : 0});
+            }
+            @Override public void schemePlay(int step, double position, boolean running, double speed) {
+                sendVector(ActionType.MOLECULE_SCHEME_PLAY, step, position, new double[]{running ? 1 : 0, speed});
+            }
+            @Override public void smiles(int request, String text) { sendText(ActionType.MOLECULE_SMILES, request, text); }
+            @Override public void solvent(int index) { send(ActionType.MOLECULE_SOLVENT, index); }
             @Override public void experiment(int index) { send(ActionType.MOLECULE_EXPERIMENT, index); }
         });
         subatomicView = new SubatomicView(() -> leaveLab(ActionType.SUBATOMIC_STOP, f -> !f.getSubatomic().getActive()),
@@ -462,14 +501,30 @@ public class App extends Application {
         moleculeView.getNode().setVisible(false);
         subatomicView.getNode().setVisible(false);
         quantumLab.getNode().setVisible(false);
+        mainScreen.getStyleClass().add(LabBar.Lab.ATOM.style);
+        // L'accueil d'abord : on choisit un laboratoire avant d'y entrer (l'atome se prépare derrière).
+        home = new HomeScreen(this::openFromHome, this::openLink);
+        home.setVersion(UpdateChecker.currentVersion());
         StackPane laboratories = new StackPane(mainScreen, fusionView.getNode(), starView.getNode(),
-                reactorView.getNode(), chainView.getNode(), moleculeView.getNode(), subatomicView.getNode(), quantumLab.getNode(), loader.getNode(),
+                reactorView.getNode(), chainView.getNode(), moleculeView.getNode(), subatomicView.getNode(), quantumLab.getNode(),
+                home.getNode(), loader.getNode(),
                 updateCard.getNode(), telemetryNotice.getNode());
+        // Un laboratoire caché ne compte pas dans la place : sinon le plus large d'entre eux imposerait sa largeur minimale
+        // à tous, et l'écran déborderait d'une petite fenêtre.
+        for (javafx.scene.Node lab : new javafx.scene.Node[]{mainScreen, fusionView.getNode(), starView.getNode(), reactorView.getNode(),
+                chainView.getNode(), moleculeView.getNode(), subatomicView.getNode(), quantumLab.getNode(), home.getNode()}) {
+            lab.managedProperty().bind(lab.visibleProperty());
+        }
         BorderPane localizedShell = new BorderPane(laboratories);
-        localizedShell.setTop(buildLanguageBar());
-        Scene scene = new Scene(new StackPane(localizedShell, startup.getNode()),
+        labBar = new LabBar(this::showHome, this::showGuide, this::capture, this::togglePanels, this::toggleFullscreen,
+                settingsMenu());
+        localizedShell.setTop(labBar.getNode());
+        syncLab();
+        Plan.load();
+        // Le message bref et le guide couvrent toute la fenêtre, barre du haut comprise (le guide y nomme les modes).
+        Scene scene = new Scene(new StackPane(localizedShell, toast.getNode(), guideOverlay.getNode(), startup.getNode()),
                 width, height);
-        scene.setFill(Color.web("#05070E"));
+        scene.setFill(Plan.DEEP);
         scene.getStylesheets().add(stylesheet());
         scene.addEventFilter(KeyEvent.KEY_PRESSED, this::onKeyPressed);
 
@@ -478,48 +533,40 @@ public class App extends Application {
         return scene;
     }
 
-    /** Language selection belongs to the client shell, so it stays available in every laboratory. */
-    private Region buildLanguageBar() {
-        MenuButton choice = new MenuButton();
-        choice.setFocusTraversable(false);
-        choice.setStyle("-fx-background-color: #142139; -fx-text-fill: #E6EDF7; "
-                + "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 2 7;");
-        MenuItem french = new MenuItem("Français");
-        MenuItem english = new MenuItem("English");
-        french.setOnAction(event -> I18n.setLanguage(I18n.Language.FR));
-        english.setOnAction(event -> I18n.setLanguage(I18n.Language.EN));
-        choice.getItems().addAll(french, english);
-        Runnable refresh = () -> {
-            choice.setText(I18n.language() == I18n.Language.FR ? "FR" : "EN");
-            french.setDisable(I18n.language() == I18n.Language.FR);
-            english.setDisable(I18n.language() == I18n.Language.EN);
-        };
-        I18n.onChange(refresh);
-        refresh.run();
-        HBox bar = new HBox(6, settingsMenu(), choice);
-        bar.setAlignment(Pos.CENTER_RIGHT);
-        bar.setPadding(new Insets(3, 12, 3, 12));
-        bar.setStyle("-fx-background-color: #070D19; -fx-border-color: #1A2941; -fx-border-width: 0 0 1 0;");
-        return bar;
-    }
-
     /**
-     * ⚙ : l'interrupteur des statistiques d'utilisation, et ce qu'elles contiennent. Absent d'une version de
-     * développement, qui n'envoie rien.
+     * Les réglages, derrière une icône : la langue, les statistiques d'utilisation (et ce qu'elles contiennent ; absentes
+     * d'une version de développement, qui n'envoie rien), le guide et l'accueil.
      */
     private MenuButton settingsMenu() {
-        MenuButton settings = new MenuButton("⚙");
+        MenuButton settings = new MenuButton("", Icons.path("settings", 16));
+        settings.getStyleClass().setAll("menu-button", "icon-button", "only", "plan-settings");
         settings.setFocusTraversable(false);
-        settings.setStyle("-fx-background-color: #142139; -fx-text-fill: #E6EDF7; "
-                + "-fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 7; -fx-padding: 2 7;");
+        settings.setTooltip(Plan.tooltip("Réglages : langue, statistiques d'utilisation"));
+        javafx.scene.control.ToggleGroup languages = new javafx.scene.control.ToggleGroup();
+        javafx.scene.control.RadioMenuItem french = new javafx.scene.control.RadioMenuItem("Français");
+        javafx.scene.control.RadioMenuItem english = new javafx.scene.control.RadioMenuItem("English");
+        french.setToggleGroup(languages);
+        english.setToggleGroup(languages);
+        french.setOnAction(event -> I18n.setLanguage(I18n.Language.FR));
+        english.setOnAction(event -> I18n.setLanguage(I18n.Language.EN));
+        Runnable refresh = () -> (I18n.language() == I18n.Language.FR ? french : english).setSelected(true);
+        I18n.onChange(refresh);
+        refresh.run();
         javafx.scene.control.CheckMenuItem send = new javafx.scene.control.CheckMenuItem("Envoyer les statistiques d'utilisation");
         MenuItem what = new MenuItem("Quelles données sont envoyées ?");
         send.setOnAction(event -> telemetry.setEnabled(send.isSelected()));
         what.setOnAction(event -> telemetryNotice.show(false, telemetry.enabled(), telemetry.install(), telemetry::setEnabled));
-        settings.setOnShowing(event -> send.setSelected(telemetry.enabled()));
-        settings.getItems().addAll(send, what);
-        settings.setVisible(telemetry.available());
-        settings.setManaged(telemetry.available());
+        MenuItem guideItem = new MenuItem("Guide de ce laboratoire     H");
+        guideItem.setOnAction(event -> showGuide());
+        MenuItem homeItem = new MenuItem("Accueil et liens de Genesis");
+        homeItem.setOnAction(event -> showHome());
+        settings.setOnShowing(event -> {
+            send.setSelected(telemetry.enabled());
+            guideItem.setDisable(home.isShowing());
+        });
+        settings.getItems().addAll(french, english, new SeparatorMenuItem());
+        if (telemetry.available()) settings.getItems().addAll(send, what, new SeparatorMenuItem());
+        settings.getItems().addAll(guideItem, homeItem);
         return settings;
     }
 
@@ -608,7 +655,7 @@ public class App extends Application {
         try {
             getHostServices().showDocument(url);
         } catch (RuntimeException error) {
-            setStatus(I18n.text("Impossible d'ouvrir ") + url, "#FBBF24");
+            notice(I18n.text("Impossible d'ouvrir ") + url);
         }
     }
 
@@ -706,7 +753,7 @@ public class App extends Application {
      */
     private Region buildRoot() {
         Pane canvasHolder = new Pane(simCanvas.getNode(), simCanvas.getOverlay(), matterCanvas.getNode(), moleculeCanvas.getNode());
-        canvasHolder.setStyle("-fx-background-color: #05070E;");
+        canvasHolder.getStyleClass().add("plan-scene");
         simCanvas.getNode().widthProperty().bind(canvasHolder.widthProperty());
         simCanvas.getNode().heightProperty().bind(canvasHolder.heightProperty());
         simCanvas.getOverlay().prefWidthProperty().bind(canvasHolder.widthProperty());
@@ -727,188 +774,389 @@ public class App extends Application {
         BorderPane simulation = new BorderPane();
         simulation.setCenter(canvasStack);
         simulation.setBottom(timeline.getNode());
+        atomScene = canvasStack;
 
         BorderPane root = new BorderPane();
-        root.setTop(buildTopBar());
+        atomLeft = buildAtomControls();
+        atomRight = buildSidebar();
+        root.setLeft(atomLeft);
         root.setCenter(simulation);
-        root.setRight(buildSidebar());
+        root.setRight(atomRight);
         return root;
     }
 
-    /** La barre du haut : l'élément (clic : la table), p⁺ n e⁻, la lumière, les laboratoires. */
-    private Region buildTopBar() {
-        Label brand = new Label("GENESIS");
-        brand.getStyleClass().add("dash-brand");
-        ImageView logo = new ImageView(Branding.logo());
-        logo.setFitWidth(42);
-        logo.setFitHeight(42);
-        logo.setPreserveRatio(true);
-        StackPane logoBadge = new StackPane(logo);
-        logoBadge.getStyleClass().add("dash-logo");
-        logoBadge.setMinSize(38, 38);
-        logoBadge.setMaxSize(38, 38);
-        HBox identity = new HBox(8, logoBadge, brand);
-        identity.setAlignment(Pos.CENTER_LEFT);
-
-        elementSymbol.setMinSize(36, 36);
-        elementSymbol.setMaxSize(36, 36);
+    /**
+     * La colonne de gauche de l'atome : ce qu'on prépare. En tête, l'élément (sa case, son nom, son isotope ; un clic ouvre
+     * la table) ; puis ce qui le compose, mot à mot ; la lumière, sur une piste aux couleurs du spectre (vives dans le
+     * visible, éteintes dans l'ultraviolet et l'infrarouge), et le photon à envoyer ; les autres projectiles.
+     */
+    private Region buildAtomControls() {
+        elementSymbol.setMinSize(50, 50);
+        elementSymbol.setMaxSize(50, 50);
         elementSymbol.setAlignment(Pos.CENTER);
-        elementSymbol.setStyle("-fx-background-color: #1B2740; -fx-background-radius: 8; -fx-text-fill: #E6EDF7;"
-                + " -fx-font-size: 16px; -fx-font-weight: bold;");
-        elementName.setStyle("-fx-text-fill: #E6EDF7; -fx-font-size: 13px; -fx-font-weight: bold;");
-        elementNuclide.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 11px;");
-        Label caret = new Label("▾");
-        caret.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 11px;");
-        HBox chipContent = new HBox(9, elementSymbol, new VBox(0, elementName, elementNuclide), caret);
+        elementSymbol.setStyle(symbolStyle(null));
+        elementName.getStyleClass().add("element-name");
+        elementNuclide.getStyleClass().add("element-meta");
+        javafx.scene.Node chevron = Icons.path("chevron-right", 14);
+        Region chipGrow = new Region();
+        HBox.setHgrow(chipGrow, Priority.ALWAYS);
+        VBox words = new VBox(3, elementName, elementNuclide);
+        words.setAlignment(Pos.CENTER_LEFT);
+        HBox chipContent = new HBox(12, elementSymbol, words, chipGrow, chevron);
         chipContent.setAlignment(Pos.CENTER_LEFT);
         tableButton = new Button();
         tableButton.setGraphic(chipContent);
-        tableButton.getStyleClass().add("dash-chip");
+        tableButton.getStyleClass().addAll("dash-chip", "element-card");
         tableButton.setFocusTraversable(false);
-        tableButton.setDisable(true);
-        tableButton.setTooltip(I18n.tooltip("changer d'élément : la table périodique · touche T"));
+        tableButton.setMaxWidth(Double.MAX_VALUE);
+        tableButton.setAlignment(Pos.CENTER_LEFT);
+        tableButton.setTooltip(Plan.tooltip("Changer d'élément : la table périodique · T"));
         tableButton.setOnAction(event -> openPeriodicTable());
 
-        HBox build = new HBox(8,
-                stepper("p⁺", "#F87171", protonCount, ActionType.ADD_PROTON, ActionType.REMOVE_PROTON,
-                        "protons : ils font l'élément · P / Maj+P"),
-                stepper("n", "#94A3B8", neutronCount, ActionType.ADD_NEUTRON, ActionType.REMOVE_NEUTRON,
-                        "neutrons : ils font l'isotope · N / Maj+N"),
-                stepper("e⁻", "#7DD3FC", electronCount, ActionType.ADD_ELECTRON, ActionType.REMOVE_ELECTRON,
-                        "électrons : ils font l'ion · E / Maj+E"));
-        build.setAlignment(Pos.CENTER_LEFT);
+        VBox build = new VBox(6,
+                stepper("Protons", "p⁺", protonCount, ActionType.ADD_PROTON, ActionType.REMOVE_PROTON,
+                        "Les protons font l'élément · P, Maj+P"),
+                stepper("Neutrons", "n", neutronCount, ActionType.ADD_NEUTRON, ActionType.REMOVE_NEUTRON,
+                        "Les neutrons font l'isotope · N, Maj+N"),
+                stepper("Électrons", "e⁻", electronCount, ActionType.ADD_ELECTRON, ActionType.REMOVE_ELECTRON,
+                        "Les électrons font l'ion · E, Maj+E"));
 
-        // La lumière : un réglage (dans une petite fenêtre) et une action.
-        laserSwatch = new Rectangle(12, 12);
-        laserSwatch.setArcWidth(4);
-        laserSwatch.setArcHeight(4);
+        // La lumière : la longueur d'onde du laser, sur une piste aux couleurs du spectre.
+        laserSwatch = new Rectangle(10, 10);
+        laserSwatch.setArcWidth(10);
+        laserSwatch.setArcHeight(10);
         laserLabel = new Label();
-        laserLabel.setStyle("-fx-text-fill: #E2E8F0; -fx-font-family: Consolas, monospace; -fx-font-size: 12px;");
+        laserLabel.getStyleClass().add("plan-value");
+        laserEnergy = new Label();
+        laserEnergy.getStyleClass().add("plan-label");
         laserSlider = new Slider(Math.log10(LightPanel.MIN_NM), Math.log10(LightPanel.MAX_NM), Math.log10(laserNm));
-        laserSlider.setPrefWidth(280);
+        laserSlider.setMaxWidth(Double.MAX_VALUE);
         laserSlider.setFocusTraversable(false);
-        laserSlider.getStyleClass().add("tl-speed");
+        laserSlider.getStyleClass().add("spectrum");
+        laserSlider.setTooltip(Plan.tooltip("La longueur d'onde du laser. Dans le spectre, à droite, un clic sur une raie l'accorde exactement."));
         laserSlider.valueProperty().addListener((obs, old, value) -> {
             if (!updatingLaser) {
                 tuneLaser(Math.pow(10, value.doubleValue()));
             }
         });
-        lightButton = new Button();
-        lightButton.getStyleClass().add("dash-button");
-        lightButton.setFocusTraversable(false);
-        lightButton.setTooltip(I18n.tooltip("régler la longueur d'onde du laser"));
-        lightButton.setOnAction(event -> toggleLightPopup());
-        Button fire = new Button("✦  Tirer un photon");
-        fire.getStyleClass().add("dash-fire");
-        fire.setFocusTraversable(false);
-        fire.setTooltip(I18n.tooltip("un photon de cette longueur d'onde vers l'atome · touche L"));
+        paintSpectrum(laserSlider);
+        Region readoutGrow = new Region();
+        HBox.setHgrow(readoutGrow, Priority.ALWAYS);
+        HBox laser = new HBox(8, laserSwatch, laserLabel, readoutGrow, laserEnergy);
+        laser.setAlignment(Pos.CENTER_LEFT);
+        Button fire = Plan.primary(I18n.text("Envoyer un photon"));
+        fire.setGraphic(Icons.path("arrow-right", 14));
+        fire.setContentDisplay(javafx.scene.control.ContentDisplay.RIGHT);
+        fire.setTooltip(Plan.tooltip("Un photon de cette longueur d'onde vers l'atome. S'il a l'énergie d'une raie, un électron "
+                + "change d'orbitale · L"));
         fire.setOnAction(event -> firePhoton());
-        // Tirer sur le noyau : un neutron lent (calculé ici), ou une α (la chambre de collision la calcule).
-        MenuButton shoot = new MenuButton("☢  Tirer sur le noyau");
-        shoot.getStyleClass().add("dash-menu");
-        shoot.setFocusTraversable(false);
-        shoot.setTooltip(I18n.tooltip("un projectile vers le noyau : capture, fission, transmutation · touche B : un neutron"));
-        MenuItem neutronShot = new MenuItem("n   ·  un neutron lent (0,0253 eV)");
+        Button flame = Plan.button(I18n.text("Chauffer dans une flamme"));
+        flame.setMaxWidth(Double.MAX_VALUE);
+        flame.setTooltip(Plan.tooltip("Des chocs avec un gaz chaud excitent l'atome, comme dans une flamme ; il se désexcite "
+                + "en émettant ses raies · F"));
+        flame.setOnAction(event -> send(ActionType.HEAT));
+
+        // Les autres projectiles : un neutron lent, une α (que le laboratoire de fusion calcule).
+        Button neutronShot = Plan.button(I18n.text("Neutron lent"));
+        neutronShot.setMaxWidth(Double.MAX_VALUE);
+        neutronShot.setTooltip(Plan.tooltip("Un neutron thermique (0,0253 eV) vers le noyau : capture, ou fission d'un noyau lourd · B"));
         neutronShot.setOnAction(event -> fireNeutron());
-        MenuItem alphaShot = new MenuItem("α   ·  une particule α de 5 MeV → chambre de collision");
+        Button alphaShot = Plan.button(I18n.text("Particule α"));
+        alphaShot.setMaxWidth(Double.MAX_VALUE);
+        alphaShot.setTooltip(Plan.tooltip("Une particule α de 5 MeV vers le noyau : le laboratoire de fusion calcule la collision"));
         alphaShot.setOnAction(event -> fireAlpha());
-        shoot.getItems().addAll(neutronShot, alphaShot);
-        HBox light = new HBox(6, lightButton, fire, shoot);
-        light.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(neutronShot, Priority.ALWAYS);
+        HBox.setHgrow(alphaShot, Priority.ALWAYS);
+        HBox shots = new HBox(6, neutronShot, alphaShot);
 
-        MenuButton labs = new MenuButton("Laboratoires");
-        labs.getStyleClass().add("dash-menu");
-        labs.setFocusTraversable(false);
-        MenuItem fusion = new MenuItem("⚛   Fusion · fission · transmutation");
-        fusion.setOnAction(event -> openFusion());
-        MenuItem chain = new MenuItem("☢   Réaction en chaîne · masse critique");
-        chain.setOnAction(event -> openChain());
-        MenuItem molecule = new MenuItem("⌬   Laboratoire moléculaire");
-        molecule.setOnAction(event -> openMolecule());
-        MenuItem subatomic = new MenuItem("◈   Laboratoire subatomique");
-        subatomic.setOnAction(event -> openSubatomic());
-        MenuItem nucleon = new MenuItem("◉   Le monde subatomique (quarks, hadrons, partons)");
-        nucleon.setOnAction(event -> openNucleon());
-        labs.getItems().add(fusion);
-        labs.getItems().add(molecule);
-        if (CHAIN_SCREEN) labs.getItems().add(chain);
-        if (SUBATOMIC_SCREEN) labs.getItems().add(subatomic);
-        labs.getItems().add(nucleon);
-        if (STAR_SCREEN) {
-            MenuItem star = new MenuItem("★   Cœur d'étoile");
-            star.setOnAction(event -> send(ActionType.STAR_START));
-            labs.getItems().addAll(new SeparatorMenuItem(), star);
-        }
-
-        Tooltip.install(statusDot, statusTip);
-        Region grow = new Region();
-        HBox.setHgrow(grow, Priority.ALWAYS);
-        HBox bar = new HBox(16, identity, tableButton, build, verticalRule(), light, grow, labs, statusDot);
-        bar.setAlignment(Pos.CENTER_LEFT);
-        bar.setPadding(new Insets(8, 16, 8, 16));
-        bar.getStyleClass().add("dash-bar");
-        return bar;
+        Region gap = new Region();
+        gap.setMinHeight(18);
+        VBox column = new VBox(0,
+                tableButton, gap,
+                Plan.section("Composition", build),
+                Plan.section("Lumière", laser, laserSlider, fire, flame),
+                Plan.section("Autres projectiles", shots));
+        column.setPadding(new Insets(16, 16, 14, 16));
+        ScrollPane scroll = new ScrollPane(column);
+        scroll.setFitToWidth(true);
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scroll.getStyleClass().addAll("plan-side", "left");
+        scroll.setPrefWidth(Plan.LEFT_WIDTH);
+        scroll.setMinWidth(Plan.LEFT_WIDTH);
+        scroll.setMaxWidth(Plan.LEFT_WIDTH);
+        return scroll;
     }
 
-    /** Un compteur : − valeur +, pour une sorte de particule. */
-    private HBox stepper(String symbol, String colorHex, Label value, ActionType add, ActionType remove, String hint) {
-        Label label = new Label(symbol);
-        label.setStyle("-fx-text-fill: " + colorHex + "; -fx-font-size: 12px; -fx-font-weight: bold;");
-        label.setMinWidth(18);
-        value.getStyleClass().add("dash-value");
-        value.setMinWidth(30);
+    /**
+     * La piste du curseur de la lumière, aux couleurs des longueurs d'onde qu'elle parcourt (échelle logarithmique, de 50 à
+     * 5 000 nm) : vives dans le visible, éteintes au-delà (l'ultraviolet et l'infrarouge ne se voient pas).
+     */
+    private static void paintSpectrum(Slider slider) {
+        StringBuilder stops = new StringBuilder();
+        int n = 36;
+        double low = Math.log10(LightPanel.MIN_NM), high = Math.log10(LightPanel.MAX_NM);
+        for (int k = 0; k <= n; k++) {
+            double nm = Math.pow(10, low + (high - low) * k / n);
+            Color c = PhotonPacket.colour(nm);
+            boolean visible = nm >= 380 && nm <= 780;
+            if (!visible) c = c.deriveColor(0, .55, .55, 1);
+            if (k > 0) stops.append(", ");
+            stops.append(String.format(java.util.Locale.ROOT, "%s %.1f%%", Plan.css(c), 100.0 * k / n));
+        }
+        String style = "-fx-background-color: linear-gradient(to right, " + stops + ");";
+        Runnable paint = () -> {
+            javafx.scene.Node track = slider.lookup(".track");
+            if (track != null) track.setStyle(style);
+        };
+        slider.skinProperty().addListener((o, a, b) -> Platform.runLater(paint));
+        slider.sceneProperty().addListener((o, a, b) -> Platform.runLater(paint));
+    }
+
+    /** La case de l'élément : son symbole dans sa couleur, sur un fond de la même couleur, très léger. */
+    private static String symbolStyle(String color) {
+        String ink = color == null || color.isEmpty() ? Plan.INK2_HEX : color;
+        String hex = ink.length() == 7 ? ink : Plan.INK2_HEX;
+        return "-fx-background-color: " + hex + "22; -fx-background-radius: 11; -fx-text-fill: " + hex
+                + "; -fx-font-size: 21px; -fx-font-family: 'IBM Plex Sans SmBld';";
+    }
+
+    /** Un compteur sur une ligne : son nom (et son symbole, discret), puis − valeur +. */
+    private HBox stepper(String name, String symbol, Label value, ActionType add, ActionType remove, String hint) {
+        Label caption = new Label(name);
+        caption.getStyleClass().add("stepper-name");
+        Label mark = new Label(symbol);
+        mark.getStyleClass().add("stepper-symbol");
+        value.getStyleClass().add("stepper-value");
+        value.setMinWidth(40);
         value.setAlignment(Pos.CENTER);
-        Button minus = new Button("−");
-        Button plus = new Button("+");
+        Button minus = new Button("", Icons.path("minus", 12));
+        Button plus = new Button("", Icons.path("plus", 12));
         for (Button button : new Button[]{minus, plus}) {
-            button.getStyleClass().add("step-button");
+            button.getStyleClass().setAll("button", "step-button");
             button.setFocusTraversable(false);
         }
         minus.setOnAction(event -> send(remove));
         plus.setOnAction(event -> send(add));
-        HBox box = new HBox(2, label, minus, value, plus);
+        Region grow = new Region();
+        HBox.setHgrow(grow, Priority.ALWAYS);
+        HBox box = new HBox(6, caption, mark, grow, minus, value, plus);
         box.setAlignment(Pos.CENTER_LEFT);
         box.getStyleClass().add("stepper");
-        box.setPadding(new Insets(2, 4, 2, 9));
-        Tooltip.install(box, I18n.tooltip(hint));
+        Tooltip.install(box, Plan.tooltip(hint));
         return box;
     }
 
-    private static Region verticalRule() {
-        Region rule = new Region();
-        rule.getStyleClass().add("view-sep");
-        rule.setPrefHeight(26);
-        rule.setMaxHeight(26);
-        return rule;
+    /**
+     * Le laboratoire qu'on regarde, d'après les frames du moteur. Les écrans mis de côté (étoile, réaction en chaîne,
+     * ancien laboratoire de fusion) se rangent sous l'onglet le plus proche.
+     */
+    private LabBar.Lab visibleLab() {
+        if (reactorActive || fusionActive || starActive || chainActive) return LabBar.Lab.FUSION;
+        if (moleculeActive) return LabBar.Lab.MOLECULE;
+        if (nucleonActive || subatomicActive) return LabBar.Lab.SUBATOMIC;
+        return LabBar.Lab.ATOM;
     }
 
-    /** Le réglage du laser, dans une petite fenêtre qui se ferme toute seule. */
-    private void toggleLightPopup() {
-        if (lightPopup == null) {
-            Label title = new Label("LUMIÈRE · laser monochromatique");
-            title.getStyleClass().add("dash-label");
-            HBox row = new HBox(10, laserSwatch, laserSlider, laserLabel);
-            row.setAlignment(Pos.CENTER_LEFT);
-            Label hint = new Label("Astuce : dans l'onglet Lumière, un clic sur une raie accorde le laser exactement.");
-            hint.getStyleClass().add("dash-note");
-            Button flame = new Button("Chauffer dans une flamme");
-            flame.getStyleClass().add("dash-button");
-            flame.setFocusTraversable(false);
-            flame.setTooltip(I18n.tooltip("une collision thermique excite l'atome, comme dans une flamme · touche F"));
-            flame.setOnAction(event -> send(ActionType.HEAT));
-            VBox content = new VBox(10, title, row, hint, flame);
-            content.getStyleClass().add("light-popup");
-            content.getStylesheets().add(stylesheet());
-            lightPopup = new Popup();
-            lightPopup.setAutoHide(true);
-            lightPopup.getContent().add(content);
+    /** La barre suit le laboratoire montré : son nom, ses modes, sa méthode (rien sur l'accueil). */
+    private void syncLab() {
+        if (home.isShowing()) return;
+        LabBar.Lab lab = opening != null && loader.isShowing() ? opening : visibleLab();
+        if (lab != shownLab) configureBar(lab);
+    }
+
+    /** La barre d'un laboratoire : son nom, ses modes, sa méthode. */
+    private void configureBar(LabBar.Lab lab) {
+        shownLab = lab;
+        switch (lab) {
+            case ATOM -> labBar.showLab(lab, atomModes, null);
+            case FUSION -> labBar.showLab(lab, reactorView.modes(), reactorView::showModel);
+            case MOLECULE -> labBar.showLab(lab, moleculeView.viewModes(), moleculeView::showModel);
+            case SUBATOMIC -> labBar.showLab(lab, quantumLab.modes(), null);
         }
-        if (lightPopup.isShowing()) {
-            lightPopup.hide();
+    }
+
+    /** L'accueil : le laboratoire ouvert reste derrière (sa carte le dit), la barre ne garde que la marque. */
+    private void showHome() {
+        opening = null;
+        guideOverlay.hide();
+        home.setCurrent(labOpened ? visibleLab() : null);
+        home.show();
+        shownLab = null;
+        labBar.showHome();
+    }
+
+    /** Une carte de l'accueil : on quitte l'accueil pour ce laboratoire (en refermant celui qui était ouvert). */
+    private void openFromHome(LabBar.Lab target) {
+        labOpened = true;
+        switchLab(target);            // l'écran d'attente se pose d'abord, sur l'image de l'accueil…
+        home.hide();                  // … puis l'accueil s'en va dessous : on ne voit jamais l'ancien laboratoire
+        configureBar(target);         // la barre annonce tout de suite le laboratoire demandé, pendant que le moteur l'ouvre
+        applyPanels();
+    }
+
+    // ------------------------------------------------------------------ les outils communs : guide, image, panneaux
+
+    /** Le guide du laboratoire montré (rien sur l'accueil). */
+    private void showGuide() {
+        if (home.isShowing() || startup.isShowing()) return;
+        LabBar.Lab lab = visibleLab();
+        Guide page = switch (lab) {
+            case ATOM -> atomGuide();
+            case FUSION -> reactorView.guide();
+            case MOLECULE -> moleculeView.guide();
+            case SUBATOMIC -> quantumLab.guide();
+        };
+        if (!PREVIEW) java.util.prefs.Preferences.userNodeForPackage(App.class).putBoolean("guide.seen." + lab.name(), true);
+        guideOverlay.show(page, lab.style);
+    }
+
+    /** Le guide est-il déjà passé pour ce laboratoire (il s'ouvre seul la première fois) ? */
+    private boolean guideSeen(LabBar.Lab lab) {
+        return PREVIEW || java.util.prefs.Preferences.userNodeForPackage(App.class).getBoolean("guide.seen." + lab.name(), false);
+    }
+
+    private Guide atomGuide() {
+        return new Guide("Atome", "Un atome au choix : son nuage d'électrons, la lumière qu'il absorbe et émet, son noyau "
+                + "qui se désintègre avec le temps.")
+                .step("Choisir un élément (la table périodique, touche T) ou le construire proton par proton.")
+                .step("Envoyer un photon : s'il a l'énergie d'une raie, un électron change d'orbitale.")
+                .step("Accélérer le temps, en bas : un noyau radioactif se transforme, étape par étape.")
+                .spot(atomModes, "Les échelles", "L'atome, son noyau, un nucléon ; le gouffre montre les deux ensemble.")
+                .spot(atomLeft, "Préparer", "L'élément, ce qui le compose, la lumière et les projectiles.")
+                .spot(atomScene, "La scène", "Glisser pour tourner, molette pour zoomer, double-clic pour centrer.")
+                .spot(atomRight, "Mesurer", "Le spectre, l'orbitale de l'électron, le noyau ; et le journal de ce qui arrive.")
+                .spot(timeline.getNode(), "Le temps", "Sa vitesse, la chaîne des désintégrations ; une station : y aller.")
+                .key("T", "table périodique").key("L", "envoyer un photon")
+                .key("P N E", "un proton, neutron, électron de plus").key("Maj", "… de moins")
+                .key("Espace", "pause").key("→", "événement suivant")
+                .key("1 2 3", "échelles").key("G", "le gouffre");
+    }
+
+    /** Montre ou cache les panneaux (gauche, droite) du laboratoire montré : la scène prend toute la place. */
+    private void togglePanels() {
+        panelsShown = !panelsShown;
+        applyPanels();
+    }
+
+    private void applyPanels() {
+        if (labBar != null) labBar.panelsShown(panelsShown);
+        if (atomLeft != null) {
+            Plan.show(atomLeft, panelsShown);
+            Plan.show(atomRight, panelsShown);
+        }
+        reactorView.showPanels(panelsShown);
+        moleculeView.showPanels(panelsShown);
+        quantumLab.showPanels(panelsShown);
+    }
+
+    private void toggleFullscreen() {
+        if (window == null) return;
+        window.setFullScreenExitHint("");
+        window.setFullScreen(!window.isFullScreen());
+    }
+
+    /**
+     * Enregistre une image de la scène du laboratoire montré (sans ses panneaux) dans Images/Genesis, et le dit, avec de
+     * quoi ouvrir le dossier.
+     */
+    private void capture() {
+        if (home.isShowing()) return;
+        LabBar.Lab lab = visibleLab();
+        javafx.scene.Node scene = switch (lab) {
+            case ATOM -> atomScene;
+            case FUSION -> reactorView.sceneNode();
+            case MOLECULE -> moleculeView.sceneNode();
+            case SUBATOMIC -> quantumLab.sceneNode();
+        };
+        if (scene == null) return;
+        try {
+            javafx.scene.SnapshotParameters parameters = new javafx.scene.SnapshotParameters();
+            parameters.setFill(Plan.SCENE);
+            javafx.scene.image.WritableImage image = scene.snapshot(parameters, null);
+            java.nio.file.Path folder = picturesFolder();
+            java.nio.file.Files.createDirectories(folder);
+            String stamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH.mm.ss"));
+            java.nio.file.Path file = folder.resolve("Genesis " + I18n.text(lab.title).toLowerCase(I18n.locale()) + " " + stamp + ".png");
+            int w = (int) image.getWidth(), h = (int) image.getHeight();
+            java.awt.image.BufferedImage out = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+            int[] pixels = new int[w * h];
+            image.getPixelReader().getPixels(0, 0, w, h, javafx.scene.image.PixelFormat.getIntArgbInstance(), pixels, 0, w);
+            out.setRGB(0, 0, w, h, pixels, 0, w);
+            javax.imageio.ImageIO.write(out, "png", file.toFile());
+            toast.show(I18n.text("Image enregistrée") + " : " + file.getFileName(), "Ouvrir le dossier",
+                    () -> openLink(folder.toUri().toString()));
+        } catch (IOException | RuntimeException error) {
+            notice(I18n.text("Image impossible à enregistrer : ") + error.getMessage());
+        }
+    }
+
+    /** Le dossier des images : Images/Genesis (Pictures/Genesis), sinon le dossier personnel. */
+    private static java.nio.file.Path picturesFolder() {
+        java.nio.file.Path home = java.nio.file.Path.of(System.getProperty("user.home"));
+        for (String name : new String[]{"Pictures", "Images"}) {
+            java.nio.file.Path p = home.resolve(name);
+            if (java.nio.file.Files.isDirectory(p)) return p.resolve("Genesis");
+        }
+        return home.resolve("Genesis");
+    }
+
+    /** Pour les aperçus : l'accueil refermé, l'atome montré. */
+    void previewWithoutHome() {
+        home.hide();
+        syncLab();
+    }
+
+    /** Pour les aperçus : l'accueil (sans son fondu, que l'aperçu n'attend pas). */
+    void previewHome() {
+        showHome();
+        home.getNode().setOpacity(1);
+    }
+
+    /** Pour les aperçus : le guide du laboratoire montré (sans son fondu, sans retenir qu'il a été vu). */
+    void previewGuide() {
+        LabBar.Lab lab = visibleLab();
+        Guide page = switch (lab) {
+            case ATOM -> atomGuide();
+            case FUSION -> reactorView.guide();
+            case MOLECULE -> moleculeView.guide();
+            case SUBATOMIC -> quantumLab.guide();
+        };
+        guideOverlay.show(page, lab.style);
+        guideOverlay.getNode().setOpacity(1);
+    }
+
+    /** Pour les aperçus : un message bref, montré sans son fondu. */
+    void previewToast(String message, String action) {
+        toast.show(message, action, action == null ? null : () -> { });
+        toast.getNode().getChildren().get(0).setOpacity(1);
+    }
+
+    /** Les aperçus (-Dgenesis.preview=true) ne touchent pas aux préférences de l'utilisateur. */
+    private static final boolean PREVIEW = Boolean.getBoolean("genesis.preview");
+
+    /** On referme le laboratoire ouvert et on ouvre l'autre. */
+    private void switchLab(LabBar.Lab target) {
+        LabBar.Lab current = visibleLab();
+        if (target == current) return;
+        ActionType stop = switch (current) {
+            case FUSION -> reactorActive ? ActionType.REACTOR_STOP : fusionActive ? ActionType.FUSION_STOP
+                    : chainActive ? ActionType.CHAIN_STOP : ActionType.STAR_STOP;
+            case MOLECULE -> ActionType.MOLECULE_STOP;
+            case SUBATOMIC -> nucleonActive ? ActionType.NUCLEON_STOP : ActionType.SUBATOMIC_STOP;
+            case ATOM -> null;
+        };
+        if (target == LabBar.Lab.ATOM) {
+            leaveLab(stop, f -> !f.getReactor().getActive() && !f.getMoleculeLab().getActive() && !f.getNucleon().getActive()
+                    && !f.getLab().getActive() && !f.getChain().getActive() && !f.getSubatomic().getActive());
             return;
         }
-        javafx.geometry.Bounds bounds = lightButton.localToScreen(lightButton.getBoundsInLocal());
-        lightPopup.show(lightButton, bounds.getMinX(), bounds.getMaxY() + 6);
+        if (stop != null) send(stop);
+        switch (target) {
+            case FUSION -> openFusion();
+            case MOLECULE -> openMolecule();
+            case SUBATOMIC -> openNucleon();
+            default -> { }
+        }
     }
 
     /**
@@ -916,7 +1164,7 @@ public class App extends Application {
      * recentrer, des vues toutes faites, la rotation propre, le zoom.
      */
     private Region buildViewBar() {
-        HBox scales = new HBox(2,
+        HBox scales = new HBox(0,
                 viewToggle("Atome", scaleGroup, "l'atome et son nuage · touche 1", () -> goTo(SimCanvas.Scale.ATOME)),
                 viewToggle("Noyau", scaleGroup, "plonger dans le noyau, 100 000 fois plus petit · touche 2",
                         () -> goTo(SimCanvas.Scale.NOYAU)),
@@ -928,16 +1176,31 @@ public class App extends Application {
                                 toggleGulf();
                             }
                         }));
-        ToggleButton rotate = viewToggle("⟳ Tourner", dragGroup, "glisser fait tourner l'atome en 3D",
-                () -> simCanvas.setPanMode(false));
-        ToggleButton pan = viewToggle("✥ Déplacer", dragGroup, "glisser déplace la vue (aussi : clic droit glissé)",
-                () -> simCanvas.setPanMode(true));
+        // Les échelles sont les modes de l'atome : elles vont dans l'en-tête, comme les modes des autres laboratoires.
+        for (int i = 0; i < scales.getChildren().size(); i++) {
+            javafx.scene.Node scale = scales.getChildren().get(i);
+            scale.getStyleClass().setAll("toggle-button", "segment", i == 0 ? "left" : i == 3 ? "right" : "middle");
+        }
+        scales.setAlignment(Pos.CENTER_LEFT);
+        atomModes = scales;
+        // La barre de vue : ce que fait le glisser (tourner, déplacer), recentrer, des vues toutes faites, la rotation propre,
+        // la valence seule, le zoom. Des icônes, leur nom au survol.
+        ToggleButton rotate = Plan.iconToggle("orbit", "Glisser fait tourner l'atome");
+        ToggleButton pan = Plan.iconToggle("move", "Glisser déplace la vue (aussi : clic droit glissé)");
+        rotate.setToggleGroup(dragGroup);
+        pan.setToggleGroup(dragGroup);
+        rotate.setOnAction(event -> { rotate.setSelected(true); simCanvas.setPanMode(false); });
+        pan.setOnAction(event -> { pan.setSelected(true); simCanvas.setPanMode(true); });
         rotate.setSelected(true);
-        Button recenter = viewButton("⌖ Recentrer", "ramène l'atome au centre, vu de trois quarts · double-clic sur la scène : centrer ce point",
-                () -> simCanvas.recenter());
-        MenuButton views = new MenuButton("Vue");
-        views.getStyleClass().add("view-button");
+        rotateButton = rotate;
+        panButton = pan;
+        Button recenter = Plan.icon("target", null, "Recentrer : l'atome au milieu, vu de trois quarts · double-clic sur la "
+                + "scène : centrer ce point");
+        recenter.setOnAction(event -> simCanvas.recenter());
+        MenuButton views = new MenuButton(I18n.text("Vue"), Icons.path("eye", 16));
+        views.getStyleClass().setAll("menu-button", "icon-button", "plan-settings");
         views.setFocusTraversable(false);
+        views.setTooltip(Plan.tooltip("Des vues toutes faites : de face, de dessus, de côté, de trois quarts"));
         String[][] presets = {{"De face (axe z vers le haut)", "face"}, {"De dessus", "dessus"},
                 {"De côté", "côté"}, {"Trois-quarts", "3/4"}};
         for (String[] preset : presets) {
@@ -949,7 +1212,7 @@ public class App extends Application {
         autoSpin.getStyleClass().add("view-toggle");
         autoSpin.setSelected(true);
         autoSpin.setFocusTraversable(false);
-        autoSpin.setTooltip(I18n.tooltip("l'atome tourne lentement sur lui-même"));
+        autoSpin.setTooltip(Plan.tooltip("L'atome tourne lentement sur lui-même"));
         autoSpin.setOnAction(event -> simCanvas.setAutoSpin(autoSpin.isSelected()));
         valenceOnly = new ToggleButton("Valence");
         valenceOnly.getStyleClass().add("view-toggle");
@@ -965,9 +1228,12 @@ public class App extends Application {
         bohrView.setOnAction(event -> simCanvas.setBohrMode(bohrView.isSelected()));
         bohrView.setVisible(BOHR_VIEW);
         bohrView.setManaged(BOHR_VIEW);
-        Button out = viewButton("−", "dézoomer · touche −", () -> simCanvas.nudgeZoom(0.6));
-        Button in = viewButton("+", "zoomer · touche + (ou la molette)", () -> simCanvas.nudgeZoom(1.6));
-        HBox bar = new HBox(4, scales, rule(), rotate, pan, rule(), recenter, views, autoSpin, valenceOnly, bohrView, rule(), out, in);
+        Button out = Plan.icon("minus", null, "Dézoomer · touche −");
+        out.setOnAction(event -> simCanvas.nudgeZoom(0.6));
+        Button in = Plan.icon("plus", null, "Zoomer · touche + (ou la molette)");
+        in.setOnAction(event -> simCanvas.nudgeZoom(1.6));
+        for (Region r : new Region[]{views, autoSpin, valenceOnly}) r.setMinWidth(Region.USE_PREF_SIZE);     // jamais tronqués
+        HBox bar = new HBox(2, rotate, pan, rule(), recenter, views, rule(), autoSpin, valenceOnly, bohrView, rule(), out, in);
         bar.setAlignment(Pos.CENTER);
         bar.getStyleClass().add("view-bar");
         bar.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
@@ -978,8 +1244,9 @@ public class App extends Application {
     private static Region rule() {
         Region rule = new Region();
         rule.getStyleClass().add("view-sep");
-        rule.setPrefHeight(22);
-        rule.setMaxHeight(22);
+        rule.setPrefHeight(18);
+        rule.setMaxHeight(18);
+        HBox.setMargin(rule, new Insets(0, 4, 0, 4));
         return rule;
     }
 
@@ -1018,27 +1285,25 @@ public class App extends Application {
         }
         for (javafx.scene.control.Toggle toggle : dragGroup.getToggles()) {
             ToggleButton button = (ToggleButton) toggle;
-            boolean on = I18n.source(button).contains("Déplacer") == simCanvas.isPanMode();
+            boolean on = (button == panButton) == simCanvas.isPanMode();
             if (button.isSelected() != on) {
                 button.setSelected(on);
             }
         }
     }
 
-    /** La barre du haut suit l'atome : symbole, nom, nuclide, compteurs. */
+    /** La case de l'élément suit l'atome : symbole, nom, isotope et état ; les compteurs. */
     private void updateTopBar(UniverseFrame frame) {
         String symbol = frame.getElement().getSymbol();
         elementSymbol.setText(symbol.isEmpty() ? "?" : symbol);
         String color = frame.getElement().getColorHex();
-        elementSymbol.setStyle("-fx-background-color: " + (color.isEmpty() ? "#1B2740" : color + "33")
-                + "; -fx-background-radius: 8; -fx-text-fill: " + (color.isEmpty() ? "#E6EDF7" : color)
-                + "; -fx-font-size: 16px; -fx-font-weight: bold;");
-        elementName.setText(frame.getElement().getName().isEmpty() ? "Chambre vide" : frame.getElement().getName());
+        elementSymbol.setStyle(symbolStyle(color));
+        elementName.setText(frame.getElement().getName().isEmpty() ? I18n.text("Chambre vide") : frame.getElement().getName());
         String nuclide = frame.getNucleus().getNuclide();
         int charge = frame.getAtom().getNetCharge();
-        elementNuclide.setText((nuclide.isEmpty() ? "aucun noyau" : nuclide)
-                + (charge == 0 ? "" : charge > 0 ? " · ion +" + charge : " · ion " + charge)
-                + (frame.getNucleus().getUnstable() ? " · radioactif" : ""));
+        elementNuclide.setText((nuclide.isEmpty() ? I18n.text("aucun noyau") : nuclide)
+                + (charge == 0 ? "" : charge > 0 ? " · " + I18n.text("ion") + " +" + charge : " · " + I18n.text("ion") + " " + charge)
+                + (frame.getNucleus().getUnstable() ? " · " + I18n.text("radioactif") : ""));
         protonCount.setText(Integer.toString(frame.getAtom().getProtons()));
         neutronCount.setText(Integer.toString(frame.getAtom().getNeutrons()));
         electronCount.setText(Integer.toString(frame.getAtom().getElectrons()));
@@ -1046,7 +1311,7 @@ public class App extends Application {
 
     private Region buildSidebar() {
         TabPane tabs = new TabPane(
-                tab("Lumière", padded(lightPanel.getNode())),
+                tab("Spectre", padded(lightPanel.getNode())),
                 tab("Orbitale", padded(quantumView.getNode())),
                 tab("Noyau", nucleusPanel.getNode()));
         tabs.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
@@ -1054,8 +1319,8 @@ public class App extends Application {
         tabs.getSelectionModel().select(1);          // on ouvre sur l'orbitale : la forme du nuage, avant le spectre
 
         // Deux vues du journal : les logs seuls (complets), ou Genesis qui explique en mots simples, les logs en dessous.
-        Label journalTitle = new Label("JOURNAL");
-        journalTitle.getStyleClass().add("dash-label");
+        Label journalTitle = new Label("Journal");
+        journalTitle.getStyleClass().add("plan-title");
         ToggleGroup viewGroup = new ToggleGroup();
         ToggleButton logsView = viewToggle("Journal", viewGroup, "les événements, leur calcul et leur explication", () -> showGenesis(false));
         ToggleButton genesisView = viewToggle("Genesis", viewGroup, "Genesis explique chaque événement avec des mots simples", () -> showGenesis(true));
@@ -1066,7 +1331,7 @@ public class App extends Application {
         HBox.setHgrow(headGrow, Priority.ALWAYS);
         HBox journalHead = new HBox(8, journalTitle, headGrow, switcher);
         journalHead.setAlignment(Pos.CENTER_LEFT);
-        journalHead.setPadding(new Insets(8, 10, 6, 12));
+        journalHead.setPadding(new Insets(12, 12, 6, 14));
         // Genesis au-dessus du journal : sa bulle explique le dernier événement, ou celui qu'on clique
         guide = new HBox(6, genesis.getNode(), genesis.speech());
         guide.setAlignment(Pos.TOP_LEFT);
@@ -1075,7 +1340,7 @@ public class App extends Application {
         journal.setOnSelect(event -> genesis.explainNow(event));
         VBox journalBox = new VBox(journalHead, guide, journal.getNode());
         VBox.setVgrow(journal.getNode(), Priority.ALWAYS);
-        journalBox.setStyle("-fx-background-color: #0B1120;");
+        journalBox.getStyleClass().add("plan-side");
         switcher.setVisible(GENESIS_ENABLED);
         switcher.setManaged(GENESIS_ENABLED);
         genesisShown = GENESIS_ENABLED && java.util.prefs.Preferences.userNodeForPackage(App.class).getBoolean("journal.genesis", false);
@@ -1094,8 +1359,9 @@ public class App extends Application {
         VBox sidebar = new VBox(split);
         VBox.setVgrow(split, Priority.ALWAYS);
         sidebar.setPrefWidth(SIDEBAR_WIDTH);
-        sidebar.setMinWidth(340);
-        sidebar.setStyle("-fx-background-color: #0B1120;");
+        sidebar.setMinWidth(SIDEBAR_WIDTH);
+        sidebar.setMaxWidth(SIDEBAR_WIDTH);
+        sidebar.getStyleClass().addAll("plan-side", "right");
         return sidebar;
     }
 
@@ -1127,7 +1393,7 @@ public class App extends Application {
      */
     private static Region padded(javafx.scene.canvas.Canvas canvas) {
         Pane box = new Pane(canvas);
-        box.setStyle("-fx-background-color: #05070F;");
+        box.getStyleClass().add("plan-side");
         box.setMinSize(0, 0);
         box.setPrefSize(canvas.getWidth() + 24, canvas.getHeight() + 20);   // taille voulue, pas une contrainte
         canvas.relocate(12, 10);
@@ -1146,13 +1412,8 @@ public class App extends Application {
         updatingLaser = false;
         laserSwatch.setFill(PhotonPacket.colour(laserNm));
         String region = Visuals.region(laserNm);
-        laserLabel.setText(Visuals.format(laserNm) + " nm · " + Visuals.format(1239.841984 / laserNm) + " eV"
-                + (region.equals("visible") ? "" : " · " + region));
-        Rectangle swatch = new Rectangle(12, 12, PhotonPacket.colour(laserNm));
-        swatch.setArcWidth(4);
-        swatch.setArcHeight(4);
-        lightButton.setGraphic(swatch);
-        lightButton.setText(Visuals.format(laserNm) + " nm" + (region.equals("visible") ? "" : " · " + region) + "  ▾");
+        laserLabel.setText(Visuals.format(laserNm) + " nm");
+        laserEnergy.setText(Visuals.format(1239.841984 / laserNm) + " eV" + (region.equals("visible") ? "" : " · " + region));
         lightPanel.setLaser(laserNm);
     }
 
@@ -1313,6 +1574,10 @@ public class App extends Application {
         simCanvas.applyFrame(frame);
         updateMatter(frame);
         loader.onFrame(frame);
+        if (opening != null && !loader.isShowing()) {
+            opening = null;                       // le moteur a confirmé : la barre suit de nouveau les frames
+            syncLab();
+        }
         startup.onFrame(frame);
         lightPanel.applyFrame(frame);
         nucleusPanel.applyFrame(frame);
@@ -1360,6 +1625,7 @@ public class App extends Application {
             reactorView.getNode().setVisible(reactor);
             subatomicView.getNode().setVisible(subatomic);
             quantumLab.getNode().setVisible(nucleon);
+            syncLab();
         }
         fusionView.applyFrame(frame);
         reactorView.applyFrame(frame);
@@ -1449,7 +1715,7 @@ public class App extends Application {
      */
     private void fireAlpha() {
         if (lastFrame == null || lastFrame.getAtom().getProtons() < 1) {
-            setStatus(I18n.text("Aucun noyau à viser : choisir d'abord un élément."), "#FBBF24");
+            notice(I18n.text("Aucun noyau à viser : choisir d'abord un élément."));
             return;
         }
         int z = lastFrame.getAtom().getProtons();
@@ -1478,9 +1744,16 @@ public class App extends Application {
     /** Demande un laboratoire au moteur ; l'écran d'attente reste jusqu'à ce que la frame le confirme. */
     private void openLab(ActionType start, String heading, String detail,
                          java.util.function.Predicate<UniverseFrame> ready, ActionType stop) {
+        opening = switch (start) {
+            case MOLECULE_START -> LabBar.Lab.MOLECULE;
+            case SUBATOMIC_START, NUCLEON_START -> LabBar.Lab.SUBATOMIC;
+            default -> LabBar.Lab.FUSION;            // réacteur, fusion, étoile, réaction en chaîne
+        };
         loader.show(heading, detail, ready, () -> {
+            opening = null;
             pendingLabStart = null;
             send(stop);
+            showHome();                   // ouverture annulée : on revient au choix des laboratoires
         });
         if (!engineConnected) {
             if (bundledEngine != null) {
@@ -1500,6 +1773,7 @@ public class App extends Application {
 
     /** Retour à l'atome : même attente, plus courte. */
     private void leaveLab(ActionType stop, java.util.function.Predicate<UniverseFrame> ready) {
+        opening = LabBar.Lab.ATOM;
         loader.show("Retour à l'atome", "Le moteur referme le laboratoire et reprend l'atome là où il était.",
                 ready, null);
         send(stop);
@@ -1541,6 +1815,17 @@ public class App extends Application {
         }
         try {
             client.send(action, value, amount, vector);
+        } catch (RuntimeException error) {
+            onError(error);
+        }
+    }
+
+    private void sendText(ActionType action, int value, String text) {
+        if (client == null) {
+            return;
+        }
+        try {
+            client.sendText(action, value, 0, text);
         } catch (RuntimeException error) {
             onError(error);
         }
@@ -1665,6 +1950,7 @@ public class App extends Application {
 
     private void openPeriodicTable() {
         if (periodicTable == null) {
+            notice("La table périodique arrive du moteur, un instant…");
             return;
         }
         try {
@@ -1716,10 +2002,41 @@ public class App extends Application {
     }
 
     private void onKeyPressed(KeyEvent event) {
+        if (startup.isShowing()) return;
+        // Le guide ouvert : n'importe quelle touche le referme.
+        if (guideOverlay.isShowing()) {
+            guideOverlay.hide();
+            event.consume();
+            return;
+        }
+        // Sur l'accueil, les touches 1 à 4 ouvrent un laboratoire ; Échap revient à celui qui est ouvert.
+        if (home.isShowing()) {
+            if (home.key(event.getCode())) event.consume();
+            return;
+        }
+        // Les touches communes à tous les laboratoires (sauf pendant qu'on écrit dans un champ).
+        boolean typing = event.getTarget() instanceof javafx.scene.control.TextInputControl;
+        if (!typing) {
+            if (event.isShortcutDown() && event.getCode() == KeyCode.S) {
+                capture();
+                event.consume();
+                return;
+            }
+            if (!event.isShortcutDown() && !event.isAltDown()) {
+                switch (event.getCode()) {
+                    case H, F1 -> { showGuide(); event.consume(); return; }
+                    case TAB -> { togglePanels(); event.consume(); return; }
+                    case F11 -> { toggleFullscreen(); event.consume(); return; }
+                    case ESCAPE -> {
+                        if (!moleculeView.assemblerOpen()) { showHome(); event.consume(); return; }
+                    }
+                    default -> { }
+                }
+            }
+        }
         boolean remove = event.isShiftDown();
         if (partonsActive) {
             switch (event.getCode()) {
-                case ESCAPE -> send(ActionType.PARTONS_STOP);
                 case R -> send(ActionType.PARTONS_RESET);
                 case SPACE -> partonView.togglePlayback();
                 default -> { }
@@ -1727,16 +2044,13 @@ public class App extends Application {
             return;
         }
         if (chainActive) {
-            if (event.getCode() == KeyCode.ESCAPE) leaveLab(ActionType.CHAIN_STOP, f -> !f.getChain().getActive());
             return;
         }
         if (moleculeActive) {
-            if (event.getCode() == KeyCode.ESCAPE) leaveLab(ActionType.MOLECULE_STOP, f -> !f.getMoleculeLab().getActive());
             return;
         }
         if (nucleonActive) {
             switch (event.getCode()) {
-                case K, ESCAPE -> leaveLab(ActionType.NUCLEON_STOP, f -> !f.getNucleon().getActive());
                 case R -> send(ActionType.NUCLEON_RESET);
                 case SPACE -> quantumLab.togglePlayback();
                 default -> { }
@@ -1852,10 +2166,19 @@ public class App extends Application {
         }
     }
 
-    /** L'état de la connexion : un point de couleur dans la barre du haut, le détail au survol. */
+    /**
+     * L'état de la connexion. Connecté (vert) : la barre se tait. Sinon (ambre : en cours, rouge : en panne), une pastille
+     * le dit dans la barre du haut, le détail au survol.
+     */
     private void setStatus(String message, String colorHex) {
-        statusTip.setText(message);
-        statusDot.setFill(Color.web(colorHex));
+        if (labBar == null) return;
+        boolean fine = colorHex.equalsIgnoreCase("#34D399");
+        labBar.status(fine ? null : message, colorHex.equalsIgnoreCase("#F87171"));
+    }
+
+    /** Un avertissement bref (un geste impossible, un lien qui ne s'ouvre pas) : en bas de l'écran, quelques secondes. */
+    private void notice(String message) {
+        toast.show(message, null, null);
     }
 
     @Override

@@ -235,12 +235,12 @@ public class QuantumView {
         if (width <= 0 || height <= 0) {
             return;
         }
-        gc.setFill(Color.web("#05070F"));
+        gc.setFill(org.genesis.common.Plan.PAPER);
         gc.fillRect(0, 0, width, height);
 
         if (orbital == null) {
-            gc.setFill(Color.web("#334155"));
-            gc.setFont(Font.font("Segoe UI", 11));
+            gc.setFill(Color.web("#2A2F38"));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
             gc.setTextAlign(TextAlignment.CENTER);
             gc.setTextBaseline(VPos.CENTER);
             I18n.fillText(gc, emptyMessage, width / 2, height / 2);
@@ -272,13 +272,13 @@ public class QuantumView {
         drawHundDiagram(width, top + side + 6);
 
         gc.setTextAlign(TextAlignment.CENTER);
-        gc.setFont(Font.font("Segoe UI", 9));
-        gc.setFill(Color.web("#64748B"));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
+        gc.setFill(Color.web("#6B7483"));
         if (phase) {
             // Deux lignes : la convention des couleurs, puis l'orbitale choisie et pourquoi.
             I18n.fillText(gc, I18n.text("phase de ψ pour ") + orbital.getPhaseName() + " · " + I18n.text("bleu ψ > 0 · orange ψ < 0"),
                     width / 2, top + side + 48);
-            gc.setFill(Color.web("#475569"));
+            gc.setFill(Color.web("#4B525D"));
             I18n.fillText(gc, phaseIsLastElectron() ? "l'orbitale du dernier électron placé (Hund)"
                     : "le dernier électron est hors de la coupe : dernière orbitale occupée visible", width / 2, top + side + 60);
         } else {
@@ -293,16 +293,16 @@ public class QuantumView {
             return;
         }
         String text = phaseMode ? "|ψ|²" : "phase ±";
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
         double w = I18n.text(text).length() * 6.2 + 14;
         double x = left + side - w - 6;
         double y = top + 6;
-        gc.setFill(Color.web("#0F172A", 0.85));
-        gc.fillRoundRect(x, y, w, 18, 9, 9);
-        gc.setStroke(Color.web(phaseMode ? "#F59E0B" : "#3B82F6", 0.8));
+        gc.setFill(Color.web("#111419", 0.85));
+        gc.fillRect(x, y, w, 18);
+        gc.setStroke(Color.web(phaseMode ? "#F2C14E" : "#3B82F6", 0.8));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x + 0.5, y + 0.5, w - 1, 17, 9, 9);
-        gc.setFill(Color.web("#E2E8F0"));
+        gc.strokeRect(x + 0.5, y + 0.5, w - 1, 17);
+        gc.setFill(Color.web("#ECEFF3"));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
         I18n.fillText(gc, text, x + w / 2, y + 9);
@@ -349,17 +349,17 @@ public class QuantumView {
                 Integer.parseInt(orbital.getLabel().replaceAll("^\\d+[spdfghi]", "")));
 
         // Bandeaux sombres : le texte doit rester lisible sur les zones brillantes.
-        gc.setFill(Color.web("#05070F", 0.72));
+        gc.setFill(Color.web("#0C0E12", 0.72));
         gc.fillRect(left, top, side, 46);
         gc.fillRect(left, top + side - 18, side, 18);
 
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.BASELINE);
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        gc.setFill(Color.web("#F1F5F9"));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
+        gc.setFill(Color.web("#ECEFF3"));
         I18n.fillText(gc, I18n.text("orbitale ") + title, left + 6, top + 16);
-        gc.setFont(Font.font("Consolas", 9));
-        gc.setFill(Color.web("#CBD5E1", 0.8));
+        gc.setFont(Font.font(org.genesis.common.Plan.MONO, 9));
+        gc.setFill(Color.web("#A2ABB8", 0.8));
         I18n.fillText(gc, "n=" + orbital.getN() + "  l=" + orbital.getL() + " (" + letters.charAt(Math.min(6, orbital.getL()))
                 + ")  Z_eff=" + Visuals.fixed(orbital.getZEff(), 2), left + 6, top + 29);
         boolean unresolvedM = orbital.getOrbitalNamesList().contains("m non résolu");
@@ -373,15 +373,15 @@ public class QuantumView {
         double pixels = length / metresPerPixel;
         double barY = top + side - 10;
         double barRight = left + side - 8;
-        gc.setStroke(Color.web("#E2E8F0", 0.8));
+        gc.setStroke(Color.web("#ECEFF3", 0.8));
         gc.setLineWidth(1.4);
         gc.strokeLine(barRight - pixels, barY, barRight, barY);
-        gc.setFill(Color.web("#E2E8F0", 0.8));
+        gc.setFill(Color.web("#ECEFF3", 0.8));
         gc.setTextAlign(TextAlignment.RIGHT);
         I18n.fillText(gc, Visuals.formatLength(length), barRight, barY - 4);
 
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFill(Color.web("#94A3B8", 0.8));
+        gc.setFill(Color.web("#A2ABB8", 0.8));
         I18n.fillText(gc, "coupe xz · |ψ|² en échelle log (4 décades)", left + 6, top + side - 6);
     }
 
@@ -399,7 +399,7 @@ public class QuantumView {
             int occupancy = orbital.getOccupation(k);
             String name = k < orbital.getOrbitalNamesCount() ? orbital.getOrbitalNames(k) : "";
             boolean outOfSlice = OUT_OF_SLICE.contains(name);
-            gc.setStroke(Color.web(outOfSlice ? "#334155" : "#64748B"));
+            gc.setStroke(Color.web(outOfSlice ? "#2A2F38" : "#6B7483"));
             gc.setLineWidth(1);
             gc.strokeRect(x, top, boxWidth, 18);
             gc.setStroke(Visuals.subshellColor(orbital.getL()));
@@ -410,8 +410,8 @@ public class QuantumView {
             if (occupancy == 2) {
                 drawArrow(x + boxWidth * 0.65, top + 3, top + 15, false);
             }
-            gc.setFill(Color.web(outOfSlice ? "#334155" : "#94A3B8"));
-            gc.setFont(Font.font("Consolas", 8));
+            gc.setFill(Color.web(outOfSlice ? "#2A2F38" : "#A2ABB8"));
+            gc.setFont(Font.font(org.genesis.common.Plan.MONO, 8));
             gc.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(gc, name, x + boxWidth / 2, top + 29);
             x += boxWidth + 4;

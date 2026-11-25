@@ -9,11 +9,12 @@ through, an unstable nucleus decays. Nothing is scripted: each event happens at
 the moment drawn by the physical law, together with the calculation that
 justifies it.
 
-Licence: [EULA.txt](EULA.txt).
+Licence: [EULA.txt](EULA.txt). Fonts: IBM Plex Sans (and Mono), SIL Open Font License 1.1
+([sim/app/src/main/resources/fonts/OFL.txt](sim/app/src/main/resources/fonts/OFL.txt)).
 
 ```
 JavaFX (sim/)  --- bidirectional gRPC --->  Python (logic/)  ---> MongoDB
-  draws the events     genesis.proto v28     clock + rules        periodic table
+  draws the events     genesis.proto v30     clock + rules        periodic table
                                              scipy, radioactivedecay, mendeleev
 ```
 
@@ -88,11 +89,11 @@ environment and build the package:
 
 ```powershell
 .\logic\venv\Scripts\python.exe -m pip install "pyinstaller>=6,<7"
-powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.5.0
+powershell -NoProfile -ExecutionPolicy Bypass -File .\packaging\build-windows.ps1 -Version 0.6.0
 ```
 
 The script tests the standalone engine, then produces `dist/windows/Genesis`
-(portable application), `Genesis-0.5.0-portable.zip` and an `.exe` installer.
+(portable application), `Genesis-0.6.0-portable.zip` and an `.exe` installer.
 The installer puts Genesis in the user profile and adds shortcuts to the Start
 menu and the desktop. For a new version, raise `-Version`; the same install
 identifier allows upgrades.
@@ -102,7 +103,9 @@ On first start, a loading screen stays visible until the Python engine has
 opened its local connection. If it fails, the log is in
 `%LOCALAPPDATA%\Genesis\logs\engine.log`.
 The user needs neither Gradle, Python, Docker nor MongoDB.
-The engine listens only on `127.0.0.1` and stops with Genesis. Logs and cache
+The engine listens only on `127.0.0.1` and stops with Genesis: when the window closes, when Java exits, and
+even if Genesis is killed or crashes (the engine watches the process that launched it and stops within a second
+when it disappears; measured: 1.2 s). It computes on two linear-algebra threads, which leaves the machine free. Logs and cache
 are written to `%LOCALAPPDATA%\Genesis\`; the portable application writes there
 too. The Molecule scale stays hidden in this version.
 The package is not signed; code signing and third-party notices must be
@@ -120,9 +123,9 @@ download page. Offline, or when run from the sources, nothing is shown
 (`-Dgenesis.version=0.1.0` simulates an older version for testing). Each
 release must therefore publish its `CHECKSUMS-SHA256.txt`.
 
-**Support.** While the engine starts, the loading screen shows a quiet
-"Support Genesis" section: GitHub, the Genesis website, Gemmie
-(gemmi-e.com/contact), r/gemmie and nellawassi@gmail.com.
+**Support.** While the engine starts, the loading screen shows, quietly at the
+bottom: a star on GitHub, the Genesis website, r/gemmie and the contact
+(nellawassi@gmail.com).
 
 ## Linux x86-64 package
 
@@ -131,13 +134,13 @@ On Ubuntu 22.04 (or a compatible build system), install JDK 21, `gradle`,
 `logic/requirements.txt`, `grpcio-tools` and PyInstaller. Then run:
 
 ```bash
-bash packaging/build-linux.sh 0.5.0
+bash packaging/build-linux.sh 0.6.0
 ```
 
 The script freezes the same Python engine, checks its gRPC service and the
 table of 118 elements, builds the JavaFX client, then produces in `dist/linux/`
-an installer `Genesis-0.5.0-linux-x64.deb` and a portable archive
-`Genesis-0.5.0-linux-x64.tar.gz`. A GitHub Actions workflow
+an installer `Genesis-0.6.0-linux-x64.deb` and a portable archive
+`Genesis-0.6.0-linux-x64.tar.gz`. A GitHub Actions workflow
 `.github/workflows/linux-package.yml` runs this build on Ubuntu.
 
 The archive is extracted and started with `Genesis/bin/Genesis`; the `.deb`
@@ -149,11 +152,11 @@ and its cache in `${XDG_CACHE_HOME:-~/.cache}/genesis/cache`.
 ## macOS package (Apple Silicon)
 
 On a Mac with JDK 21 and a Python environment holding `logic/requirements.txt`
-and PyInstaller, run `bash packaging/build-macos.sh 0.5.0`; without a Mac, the
+and PyInstaller, run `bash packaging/build-macos.sh 0.6.0`; without a Mac, the
 GitHub Actions workflow `.github/workflows/macos-package.yml` builds it on an
-Apple Silicon runner. It produces `Genesis-0.5.0-macos-arm64.dmg` and
-`Genesis-0.5.0-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
-version starting with 0, so the bundle carries `1.5.0` internally; the real
+Apple Silicon runner. It produces `Genesis-0.6.0-macos-arm64.dmg` and
+`Genesis-0.6.0-macos-arm64.zip` in `dist/macos/`. jpackage refuses a macOS app
+version starting with 0, so the bundle carries `1.6.0` internally; the real
 number is passed as `-Dgenesis.version`, which the update check reads first.
 The app is signed ad hoc and not notarized: on first launch, right-click it
 and choose **Open**. The engine log is in `~/Library/Logs/Genesis/engine.log`.
@@ -238,7 +241,7 @@ Laws, sources and limits: [the subatomic world](docs/SUBATOMIC_MODEL.md) and [th
 
 ## The molecular laboratory
 
-**⌬ Molecular laboratory** (Laboratories menu) puts atoms on a workbench and computes their electrons. Nobody decides
+**Molecular laboratory** (Molecules, on the home screen) puts atoms on a workbench and computes their electrons. Nobody decides
 that two atoms are bonded, or at what angle: for every position of the nuclei, the quantum tight-binding method
 GFN1-xTB gives the energy and the exact force on each nucleus, and geometry, bonds, vibrations and reactions follow.
 
@@ -314,6 +317,47 @@ GFN1-xTB gives the energy and the exact force on each nucleus, and geometry, bon
   near-zero gap is flagged, since GFN1 has no spin. **Send to the 3D simulator** places each molecule in 3D from its
   bonds (covalent radii, angles from the π bonds) where it sits in the drawing, optionally inside the reactor's
   sphere, and every option of the simulator applies: OH· and H· drawn side by side become water on relaxation.
+  **Reaction** asks what the drawn molecules become: each is relaxed alone, they are brought into contact inside the
+  reactor's sphere and shaken at 1 500, 2 500 or 4 000 K for three 600 fs trials (a nanoreactor, Wang et al. 2014),
+  then each species present is relaxed alone. The outcomes are grouped (how many trials, ΔE, the products drawn) and
+  can be drawn back into the assembler or opened in 3D. The card says which barriers a trial can cross (≈ 2.9 kT) and
+  what GFN1 gets wrong: OH⁻ + H₃O⁺ → 2 H₂O in 3/3 trials, ΔE −10.9 eV (≈ −9.8 measured, gas phase); OH· + H· →
+  H₂O −8.1 eV for −5.1 measured, since radicals are overbound without spin.
+* **Reaction scheme** — **Reaction scheme** opens a chemist's editor: skeletal formulas (implicit hydrogens, rings,
+  abbreviations Me, Ph, OMe, TMS…), reaction arrows with the reagents above (MeI, CsF, Co₂(CO)₈, a name or a SMILES)
+  and the conditions below, curly electron arrows, pasted SMILES, examples. **Compute the scheme**: the engine splits
+  the steps, tells which atom becomes which (from your curly arrows, otherwise from the mapping that changes the fewest
+  bonds), deduces the byproducts (Me₃SiF, NMe₃, 2 CO…), then computes each step with GFN1-xTB — reactants and products
+  relaxed alone (ΔE), a 3D path with distances pulled both ways — and judges whether each product holds. The scheme's
+  energy profile is shown, and **See the path** replays the step in 2.5D, recomputed position by position: glass
+  beads and sticks on the laboratory's own background, a legend, the bonds that form and break as glowing filaments
+  (their glow is their Mayer index), with their length and index,
+  Mulliken charges, trajectories, the drawing's curly arrows; beside it, the energy, indices, distances and charges
+  image by image; slow, normal or fast playback; **3D scene** carries on in the laboratory. The steps follow on: an
+  atom keeps its number from one step to the next, step 2 starts where step 1 left the molecule (its images turned as
+  one block to match), and the view glides from one to the other. **Whole scheme** plays every step in sequence, joined
+  by a relay (the by-product fades out, the reagent written on the next arrow fades in; nothing is computed there, and
+  the view says so), with the energy profile of the whole scheme (each step at its height, the intermediates relaxed
+  alone as plateaus) and a summary: what forms and breaks from start to end, what comes in and goes out, the step with
+  the highest barrier. Each barrier is also given as a time (Eyring half-reaction at the arrow's temperature); beyond
+  a year, the view says the imposed path, without a catalyst, cannot happen — checked by computation on the aldol
+  addition in water: 3.9 eV uncatalysed, 0.83 / 0.11 / 2.36 eV when drawn in three steps with OH⁻ (a new example), the
+  same ΔE (−0.99 eV) in the end. Structures and schemes from **ChemDraw** and **MarvinSketch**: paste them (Ctrl+V; Copy
+  As MOL, SMILES or CDXML), open their files or drop them on the drawing (MOL, SDF, RXN, CDXML, MRV, SMILES, reaction
+  SMILES; read by RDKit, arrows included). The path view also shows the molecule in **relief**: a red-cyan anaglyph
+  (half-colour, the left eye in grey) or side by side. The molecular laboratory is kept when another laboratory is
+  opened: its scene, its computed scheme and its paths are there on return. Butadiene + ethylene → cyclohexene:
+  ΔE −2.80 eV, path barrier 0.35 eV (measured ≈ −1.7 and 1.2 eV: GFN1 overbinds and underestimates barriers);
+  everything is in the gas phase unless a solvent is written under the arrow. The **Examples** menu offers complete
+  schemes: Robinson annulation (Wieland–Miescher ketone), Wittig, aromatic Claisen, aldol condensation, the same aldol
+  addition catalysed by OH⁻, Diels–Alder then hydrolysis, the four-step silylated diene.
+* **Solvent** — the **Medium** menu (bottom of the laboratory) puts the scene in an implicit solvent: GFN1-xTB's ALPB
+  model (Ehlert et al. 2021), taken from tblite with its published parameters for 25 solvents (water, methanol,
+  acetonitrile, DMSO, DMF, THF, dichloromethane, toluene…). Charges are screened by a dielectric continuum, with the
+  cavity and hydrogen bonds at the surface; the electrons respond and the solvation energy is shown. In the reaction
+  scheme, a solvent written under an arrow becomes the step's medium. Verified: exact gradients (finite differences to
+  10⁻⁷ Eh/Å), hydration of acetone −3.6 kcal/mol (measured −3.8), acetonitrile −3.8 (−3.9), I⁻ −54 (≈ −60); water and
+  ammonia are oversolvated, and GFN1's own ion energies stay off by several eV — as the screen says.
 * **Reading the 3D scene** — atoms are tinted by their computed charge (silver neutral, cyan δ+, magenta δ−); a bond
   is drawn as one, two or three strands (its Mayer index), flat when its π part has one side (the bond cannot rotate,
   ethylene) and twisted when the π part surrounds the axis (triple bonds, CO₂). Hovering an atom shows a drawn card
@@ -388,16 +432,26 @@ The model, its data and its validation: [the chain reaction](docs/CHAIN_MODEL.md
 
 ## What you can do
 
-At launch, the simulator loads a uranium-238 atom and opens the Orbital tab (the shape of the valence cloud, before the spectrum). The atom screen has three bands:
+At start-up, while the engine opens, **the Genesis logotype types itself** like a terminal: first the cursor alone, blinking; the G arrives in a glitch (horizontal slices sliding sideways, its cyan and violet fringes pulled apart, jumping step by step before settling: the G_ mark); then E, N, E, S, I, S are typed, each letter with a small glitch, the cursor moving one cell per key, and it blinks again at the end of the name. Then « La matière, calculée sous vos yeux. ». The screen covers the window from its very first image (the home screen never shows before it), stays at least 5 seconds, then fades out over one second. The strokes sticking out of the G_ are frozen glitches: each fringe is the white letter shifted by a few units, and a stroke is a horizontal slice of a fringe that slid further. Animated, the mark really glitches, in short bursts about every 3 s, at start-up and in the lab-loading card. The mark, the logotype and the icons come from the brand kit in `assets/brand` (the SVG outlines are drawn as they are).
 
-- **The top bar**:
+Then the **home screen**. At the top, what Genesis is in one sentence: *matter, computed*. In the middle, the four laboratories **ordered from the largest to the smallest** — molecules, atom, nuclei, nucleon — each linked by a line to its place on a **scale of sizes**, from 10⁻⁸ to 10⁻¹⁶ m: the emptiness of the atom shows at a glance (its nucleus is 10,000 to 100,000 times smaller). Each card carries a drawing traced from a formula (benzene, a 3d orbital, the Coulomb barrier, the quarks of a proton), one sentence, and its method on hover. At the bottom, Genesis itself: what it is, its links (website, code on GitHub, community, contact), its version (and the update when there is one) and its language. A click, or keys 1 to 4, opens a laboratory; **Esc** goes back home, and back again — the open laboratory waits behind (its card says so).
+
+**The same instrument in every laboratory.** The scene is the subject; the interface is its housing: a neutral graphite, lighter than the space of the scenes and without a tint of its own, so that every scene keeps its colours. Groups read through space and their title, not through boxes; controls are soft surfaces, the current choice is raised. A single type family (IBM Plex Sans, bundled) in four weights: light for big numbers, regular for text, medium for controls, semibold for titles — its figures all have the same width, so changing values do not dance. Icons are drawn as strokes, the same everywhere. Each laboratory has its **colour** — ice for the atom, orange for fusion, sea green for molecules, violet for the subatomic world — kept for the main action, what is switched on and the keyboard focus. Every laboratory reads the same way:
+
+- **at the top, its bar**: a path "GENESIS_ / Atom 10⁻¹⁰ m" (the logotype goes back home), then the laboratory's modes (the atom's scales, Essential | Complete for fusion, the ρ · Δρ · ψ views of molecules, Collision · Workshop · Parton sea of the subatomic world). On the right, the shared tools, as icons: the **guide** (H), an **image of the scene** (Ctrl+S, saved in Pictures/Genesis), the **panels** (Tab hides them, the scene takes all the room), **full screen** (F11), the laboratory's **Method** and the **settings** (language, usage statistics). The engine state only appears when there is something to say. You switch laboratories from the home screen, and a **waiting screen** says what the engine is preparing, and why if it does not answer. It lands at once on a still image of the screen at the moment of the click, then fades into the requested laboratory: the old laboratory never shows, nor the atom in between (once its data are loaded the engine switches laboratories in 1 to 50 ms; the card only appears when the wait lasts);
+- **on the left, what you prepare** (no numbers; what is used less often folds away, like the Lawson plasma; the main action, solid, at the bottom or in its section);
+- **in the centre, the scene**, with its view controls on it;
+- **on the right, what you measure** (as pages when there is a lot: Energy · Orbitals · Atom · Vibrations for molecules);
+- **at the bottom, time** (playback, speed, steps).
+
+**The guide.** Key H (or "?" in the bar): the screen dims, each area is outlined in the laboratory's colour and carries a small numbered card (the modes, prepare, the scene, measure, time), and a card in the middle says what you do here, where to start, and the keys. It opens by itself the first time you enter a laboratory. That is where explanations of the interface go; the panels keep only names and values, the detail waits for the hover (a card with its title, its sentence, sometimes its formula). In the atom:
+
+- **The left column**:
   - the element (click: the periodic table, which closes as soon as an element is chosen, or with Esc). A chosen element comes with its **natural isotope**, the most abundant on Earth (Fe-56, Cu-63, U-238); without a tabulated abundance, the longest-lived isotope (Tc-98, Pu-244);
-  - three counters − p⁺ + · − n + · − e⁻ +;
-  - light: the wavelength (click: a small setting, with the flame) and "Fire a photon";
-  - **☢ Fire at the nucleus**: a **slow neutron** (0.0253 eV), whose outcome is drawn in proportion to the measured cross sections (scattering, (n,γ) capture, fission of U-233/U-235/Pu-239, (n,α) on Li-6 and B-10, (n,p) on He-3 and N-14), with Q computed from measured masses; or a **5 MeV α particle**, which opens the collision chamber with He-4 against the nucleus on screen. Without a measured cross section (Tc-98…), Genesis says so and does not invent the outcome;
-  - on the right, the **Laboratories** menu (fusion · fission · transmutation, molecular laboratory, subatomic world), hidden until opened. As soon as one is chosen, a **waiting screen** (`LabLoader`) says what the engine is preparing and the elapsed time. It disappears when the frame confirms the laboratory, and says why if the engine does not answer (outdated, unreachable). Going back to the atom has the same wait;
-  - a coloured dot that gives the connection state on hover.
-- **The scene**, with its view bar:
+  - three counters p⁺ · n · e⁻ (− value +);
+  - light: the laser wavelength, tuned in place, and the flame;
+  - fire: a **photon** of that wavelength; a **slow neutron** (0.0253 eV), whose outcome is drawn in proportion to the measured cross sections (scattering, (n,γ) capture, fission of U-233/U-235/Pu-239, (n,α) on Li-6 and B-10, (n,p) on He-3 and N-14), with Q computed from measured masses; or a **5 MeV α particle**, which opens fusion with He-4 against the nucleus on screen. Without a measured cross section (Tc-98…), Genesis says so and does not invent the outcome.
+- **The scene**, with its view bar (the Atom · Nucleus · Nucleon · Scale gap scales are in the header):
   - the scale (Atom · Nucleus · Nucleon · Scale gap);
   - what dragging does (⟳ Rotate · ✥ Pan; right-click or Shift always pans);
   - ⌖ Recentre, and ready-made views (front, top, side, three-quarter);
@@ -419,11 +473,12 @@ The chain comes from the engine (`Session.decay_chain`, dominant path at each st
 | Group | Action | Keys |
 |---|---|---|
 | BUILD | add / remove proton, neutron, electron · periodic table · empty | `P` `N` `E` (Shift: remove) · `T` · `R` |
-| LIGHT | tune the laser (top bar, or click a line) · fire a photon · flame | `L` · `F` |
-| NUCLEUS | fire a slow neutron · fire an α (☢ menu) | `B` |
+| LIGHT | tune the laser (left column, or click a line) · fire a photon · flame | `L` · `F` |
+| NUCLEUS | fire a slow neutron · fire an α | `B` |
 | TIME | pause · speed · next event · step by step · go to a station (click) | `Space` · `[` `]` · `→` · `A` |
 | VIEW | atom, nucleus, nucleon, scale gap · wheel zoom · drag: rotate (or pan) · double-click: centre · valence only · Bohr model | `1` `2` `3` `G` · `+` `−` · `V` · `O` |
-| LABORATORIES | Laboratories menu: fusion · fission · transmutation, molecular laboratory, subatomic world | `U` · `K` |
+| LABORATORIES | the home screen (Genesis, top left): molecules · atom · fusion · subatomic | `1` to `4` on home · `Esc` · `U` · `K` |
+| EVERYWHERE | the guide · an image of the scene · hide the panels · full screen | `H` · `Ctrl+S` · `Tab` · `F11` |
 
 The Matter and Molecule scales are disabled in the interface
 (`App.ADVANCED_SCALES = false`); their code and tests are kept.
@@ -986,7 +1041,7 @@ File by file:
 
 | Path | Role |
 |---|---|
-| `core/genesis.proto` | The shared contract (v28), absorbable wavelengths in double precision |
+| `core/genesis.proto` | The shared contract (v30), absorbable wavelengths in double precision |
 | `logic/chainlab/transport.py` | Neutron transport in a sphere: first-collision probabilities, k_eff, adjoint flux, Λ |
 | `logic/chainlab/lab.py` | The chain reaction laboratory: settings, critical radius, cascade, excursion |
 | `logic/moleculelab/xtb.py` | GFN1-xTB in numpy: energy and analytic forces, term by term |
@@ -1024,8 +1079,8 @@ File by file:
 | `sim/app/.../atom/OrbitalCloud.java` | The 3D cloud: |ψ|² projected exactly, dive slices, fleeting measurements |
 | `sim/app/.../atom/NuclearDrop.java` | The drop nucleus: Bohr–Mottelson vibrations, p ↔ n pion exchanges |
 | `sim/app/.../atom/Camera3D.java` | The camera of the 3D views of the atom and the nucleus |
-| `sim/app/.../app/LabLoader.java` | The waiting screen when opening or leaving a laboratory |
-| `sim/app/.../app/StartupScreen.java` | The start-up screen: a computed hydrogen orbital (|ψ|² sampled point by point), the current step, the GitHub star and support links |
+| `sim/app/.../app/LabLoader.java` | The waiting screen when opening or leaving a laboratory: laid on a still image of the screen, faded into the requested laboratory |
+| `sim/app/.../app/StartupScreen.java` | The start-up screen: the GENESIS_ logotype typing itself (the G_ lighting up, then the letters, the cursor blinking), the current step and the support links; at least 5 s, then a one-second fade |
 | `sim/app/.../app/Telemetry.java` | Usage statistics: installation identifier, sessions, time per laboratory, offline queue, opt-out |
 | `sim/app/.../app/TelemetryNotice.java` | The first-launch card about usage statistics (OK / Decline), reopened from ⚙ |
 | `sim/app/.../app/UpdateChecker.java` | The latest GitHub release, version comparison, verified download (SHA-256) |

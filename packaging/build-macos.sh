@@ -8,7 +8,7 @@ if [[ "$(uname -s)" != Darwin ]]; then
     exit 1
 fi
 
-version="${1:-0.5.0}"
+version="${1:-0.6.0}"
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo 'Version must be major.minor.patch.' >&2
     exit 1
@@ -25,7 +25,8 @@ output="$repo/dist/macos"
 work="$output/_work"
 image="$output/Genesis.app"
 python="${GENESIS_PYTHON:-$repo/logic/venv/bin/python}"
-icon_src="$repo/assets/web-app-manifest-512x512.png"
+# L'icône de la marque (assets/brand), toutes tailles déjà dans le .icns.
+icon="$repo/assets/brand/icone-app/genesis.icns"
 
 is_jdk21() {
     local home="$1"
@@ -55,7 +56,7 @@ fi
 export JAVA_HOME="$java_home"
 export PATH="$JAVA_HOME/bin:$PATH"
 
-for command in jpackage tar sips iconutil codesign hdiutil ditto; do
+for command in jpackage tar codesign hdiutil ditto; do
     command -v "$command" >/dev/null || { echo "$command is missing." >&2; exit 1; }
 done
 if command -v gradle >/dev/null 2>&1; then
@@ -65,7 +66,7 @@ else
     [[ -x "$repo/sim/gradlew" ]] || chmod +x "$repo/sim/gradlew"
 fi
 [[ -x "$python" ]] || { echo "Python environment is missing: $python" >&2; exit 1; }
-[[ -f "$icon_src" ]] || { echo "macOS icon source is missing: $icon_src" >&2; exit 1; }
+[[ -f "$icon" ]] || { echo "macOS icon is missing: $icon" >&2; exit 1; }
 
 mkdir -p "$output"
 for target in "$work" "$image"; do
@@ -83,7 +84,7 @@ mkdir -p "$work/proto"
 "$python" -m PyInstaller --noconfirm --clean --onedir \
     --name GenesisEngine --paths "$work/proto" --paths "$repo/logic" \
     --collect-submodules numpy.core \
-    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable \
+    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable --collect-all rdkit \
     --add-data "$repo/logic/chainlab/data:chainlab/data" \
     --add-data "$repo/logic/moleculelab/data:moleculelab/data" \
     --distpath "$work/python-dist" --workpath "$work/python-work" \
@@ -137,21 +138,6 @@ cp "$repo/EULA.txt" "$input/EULA.txt"
     echo 'The Java client or the bundled engine is missing.' >&2
     exit 1
 }
-
-iconset="$work/Genesis.iconset"
-icon="$work/Genesis.icns"
-mkdir -p "$iconset"
-sips -z 16 16 "$icon_src" --out "$iconset/icon_16x16.png" >/dev/null
-sips -z 32 32 "$icon_src" --out "$iconset/icon_16x16@2x.png" >/dev/null
-sips -z 32 32 "$icon_src" --out "$iconset/icon_32x32.png" >/dev/null
-sips -z 64 64 "$icon_src" --out "$iconset/icon_32x32@2x.png" >/dev/null
-sips -z 128 128 "$icon_src" --out "$iconset/icon_128x128.png" >/dev/null
-sips -z 256 256 "$icon_src" --out "$iconset/icon_128x128@2x.png" >/dev/null
-sips -z 256 256 "$icon_src" --out "$iconset/icon_256x256.png" >/dev/null
-sips -z 512 512 "$icon_src" --out "$iconset/icon_256x256@2x.png" >/dev/null
-sips -z 512 512 "$icon_src" --out "$iconset/icon_512x512.png" >/dev/null
-sips -z 1024 1024 "$icon_src" --out "$iconset/icon_512x512@2x.png" >/dev/null
-iconutil -c icns "$iconset" -o "$icon"
 
 # jpackage refuses a macOS app version whose first component is 0. The release
 # version is written into Info.plist after the image exists.

@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class StabilityChart {
 
-    private static final Color MUTED = Color.web("#64748B");
+    private static final Color MUTED = Color.web("#6B7483");
     private static final int MAX_Z = 92;
     private static final int MAX_N = 146;
     private static final int INSET_HALF = 6;
@@ -119,7 +119,7 @@ public class StabilityChart {
         if (width <= 0 || height <= 0) {
             return;
         }
-        gc.setFill(Color.web("#05070F"));
+        gc.setFill(org.genesis.common.Plan.PAPER);
         gc.fillRect(0, 0, width, height);
 
         double left = 30;
@@ -128,11 +128,11 @@ public class StabilityChart {
         double bottom = height - 22;
 
         // Axes
-        gc.setStroke(Color.web("#1E293B"));
+        gc.setStroke(Color.web("#1F242C"));
         gc.setLineWidth(1);
         gc.strokeLine(left, bottom, right, bottom);
         gc.strokeLine(left, top, left, bottom);
-        gc.setFont(Font.font("Consolas", 8));
+        gc.setFont(Font.font(org.genesis.common.Plan.MONO, 8));
         gc.setFill(MUTED);
         gc.setTextBaseline(VPos.TOP);
         gc.setTextAlign(TextAlignment.CENTER);
@@ -148,7 +148,7 @@ public class StabilityChart {
         gc.setTextBaseline(VPos.BASELINE);
 
         // N = Z : ce que ferait un noyau sans répulsion électrique
-        gc.setStroke(Color.web("#475569", 0.7));
+        gc.setStroke(Color.web("#4B525D", 0.7));
         gc.setLineDashes(3, 4);
         gc.strokeLine(x(0, left, right), y(0, top, bottom), x(MAX_Z, left, right), y(MAX_Z, top, bottom));
         gc.setLineDashes((double[]) null);
@@ -157,13 +157,13 @@ public class StabilityChart {
         I18n.fillText(gc, "N = Z", x(70, left, right), y(62, top, bottom));
 
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 9));
-        gc.setFill(Color.web("#34D399"));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
+        gc.setFill(Color.web("#6CD09A"));
         I18n.fillText(gc, "■ noyau stable réel", left + 6, top + 10);
-        gc.setFill(Color.web("#CBD5E1"));
+        gc.setFill(Color.web("#A2ABB8"));
         I18n.fillText(gc, "◯ ton noyau", left + 6, top + 22);
 
-        gc.setFill(Color.web("#34D399", 0.75));
+        gc.setFill(Color.web("#6CD09A", 0.75));
         for (int[] nuclide : stableNuclides) {
             gc.fillRect(x(nuclide[0], left, right) - 1, y(nuclide[1], top, bottom) - 1, 2.2, 2.2);
         }
@@ -195,9 +195,9 @@ public class StabilityChart {
 
     private Color markerColor() {
         if (frame.getNucleus().getUnstable()) {
-            return Color.web("#F87171");
+            return Color.web("#F2766B");
         }
-        return frame.getAtom().getStability() == Stability.STABLE ? Color.web("#34D399") : MUTED;
+        return frame.getAtom().getStability() == Stability.STABLE ? Color.web("#6CD09A") : MUTED;
     }
 
     private void drawCurrentNucleus(double left, double right, double top, double bottom) {
@@ -231,9 +231,9 @@ public class StabilityChart {
         double top = chartBottom - size - 16;
         double cell = size / (2 * INSET_HALF + 1);
 
-        gc.setFill(Color.web("#0B1120", 0.95));
+        gc.setFill(Color.web("#111419", 0.95));
         gc.fillRect(left, top, size, size);
-        gc.setStroke(Color.web("#334155"));
+        gc.setStroke(Color.web("#2A2F38"));
         gc.setLineWidth(1);
         gc.strokeRect(left, top, size, size);
 
@@ -247,7 +247,7 @@ public class StabilityChart {
             if (Math.abs(dz) <= INSET_HALF && Math.abs(dn) <= INSET_HALF) {
                 double cx = left + (dz + INSET_HALF) * cell;
                 double cy = top + (INSET_HALF - dn) * cell;
-                gc.setFill(Color.web("#34D399", 0.8));
+                gc.setFill(Color.web("#6CD09A", 0.8));
                 gc.fillRect(cx + 1, cy + 1, cell - 2, cell - 2);
             }
         }
@@ -265,7 +265,7 @@ public class StabilityChart {
             double toX = fromX + vector[0] * cell;
             double toY = fromY - vector[1] * cell;
             double pulse = 0.55 + 0.45 * Math.sin(clock * 4);
-            gc.setStroke(Color.web("#FBBF24", pulse));
+            gc.setStroke(Color.web("#F2C14E", pulse));
             gc.setLineWidth(1.8);
             gc.strokeLine(fromX, fromY, toX, toY);
             double angle = Math.atan2(toY - fromY, toX - fromX);
@@ -273,13 +273,13 @@ public class StabilityChart {
             gc.strokeLine(toX, toY, toX - 6 * Math.cos(angle + 0.5), toY - 6 * Math.sin(angle + 0.5));
         }
 
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "loupe  Z=" + z + "  N=" + n, left + 3, top + size + 10);
         if (vector != null) {
             // Au-dessus de la loupe : sous elle, il n'y a la place que pour une ligne.
-            gc.setFill(Color.web("#FBBF24"));
+            gc.setFill(Color.web("#F2C14E"));
             gc.setTextAlign(TextAlignment.RIGHT);
             I18n.fillText(gc, I18n.text("désintégration → ") + mainMode(), left + size, top - 3);
         }

@@ -114,7 +114,7 @@ public final class ResultView {
     ResultView(BiConsumer<Integer, Integer> onFocus) {
         this.onFocus = onFocus;
         Label title = new Label(FusionDashboard.spaced("BILAN"));
-        title.setStyle("-fx-text-fill:#8FE6FF;-fx-font-size:10px;-fx-font-weight:bold;");
+        title.getStyleClass().add("plan-title");
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
         Button detach = small("⧉ Fenêtre", "Le détacher dans sa propre fenêtre (second écran)");
@@ -135,7 +135,7 @@ public final class ResultView {
         grip.setPrefSize(14, 14);
         grip.setMaxSize(14, 14);
         grip.setCursor(Cursor.SE_RESIZE);
-        grip.setStyle("-fx-background-color:linear-gradient(to bottom right, transparent 50%, #4F7BA6 50%);-fx-background-radius:0 0 12 0;");
+        grip.setStyle("-fx-background-color:linear-gradient(to bottom right, transparent 50%, rgba(220,232,250,0.3) 50%);");
         grip.setOnMouseDragged(e -> {
             panel.setPrefSize(Math.max(400, e.getSceneX() - panel.getLayoutX()), Math.max(300, e.getSceneY() - panel.getLayoutY()));
             place(panel.getLayoutX(), panel.getLayoutY());
@@ -152,8 +152,8 @@ public final class ResultView {
         foot.setManaged(false);
         panel.layoutBoundsProperty().addListener((o, a, b) -> foot.resizeRelocate(b.getWidth() - 16, b.getHeight() - 16, 14, 14));
         panel.setPrefSize(472, 568);
-        panel.setStyle("-fx-background-color:linear-gradient(to bottom, rgba(16,27,43,0.95), rgba(6,10,18,0.97));-fx-background-radius:14;"
-                + "-fx-border-color:rgba(150,200,255,0.22);-fx-border-radius:14;-fx-effect:dropshadow(gaussian, rgba(0,0,0,0.65), 26, 0.2, 0, 6);");
+        panel.getStyleClass().add("plan-card");
+        panel.setStyle("-fx-padding:0;");
         panel.setVisible(false);
         panel.setManaged(false);
     }
@@ -235,7 +235,7 @@ public final class ResultView {
         HBox tiles = new HBox(8,
                 tile(shown.elastic() ? "ÉNERGIE" : q < 0 ? "Q · ÉNERGIE ABSORBÉE" : "Q · MASSE → ÉNERGIE", shown.elastic() ? "aucune" : (q >= 0 ? "+" : "") + fmt(q) + " MeV",
                         q > 0 && !shown.elastic() ? "#FFC46B" : "#C9D6EA"),
-                tile(shown.elastic() ? "CORPS" : "ÉJECTÉS", Integer.toString(ejected), "#E6EEFA"),
+                tile(shown.elastic() ? "CORPS" : "ÉJECTÉS", Integer.toString(ejected), "#ECEFF3"),
                 tile("LE PLUS RAPIDE", fastest > 0 ? ResultView.percent(fastest) : "—", "#9FE0FF"),
                 tile(shown.title().contains("QUASI-FISSION") ? "CAPTURE" : "PROBABILITÉ", probability(shown.probability()), "#C9D6EA"));
         HBox tabs = new HBox(0);
@@ -274,7 +274,7 @@ public final class ResultView {
         v.setTextOverrun(OverrunStyle.CLIP);
         VBox box = new VBox(2, t, v);
         box.setPadding(new Insets(7, 9, 7, 9));
-        box.setStyle("-fx-background-color:rgba(255,255,255,0.035);-fx-background-radius:10;-fx-border-color:rgba(150,200,255,0.12);-fx-border-radius:10;");
+        box.setStyle("-fx-border-color:rgba(220,232,250,0.10);");
         box.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(box, Priority.ALWAYS);
         return box;
@@ -306,7 +306,7 @@ public final class ResultView {
         reading.getChildren().add(label(FusionDashboard.spaced("LECTURE"), "#7FA6CF", 9, true));
         for (String[] line : reading()) reading.getChildren().add(label(line[0], line[1], 11.5, false));
         reading.setPadding(new Insets(10, 12, 11, 12));
-        reading.setStyle("-fx-background-color:rgba(255,255,255,0.03);-fx-background-radius:10;-fx-border-color:rgba(150,200,255,0.1);-fx-border-radius:10;");
+        reading.setStyle("-fx-border-color:rgba(220,232,250,0.10);");
         VBox page = new VBox(8, chart, caption, reading);
         if (selected >= 0 && selected < groups().size()) page.getChildren().add(detail(groups().get(selected)));
         return page;
@@ -337,7 +337,7 @@ public final class ResultView {
         g.setFill(new RadialGradient(0, 0, cx, cy, outer + 24, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#173052", .75)), new Stop(.7, Color.web("#0C1A2E", .45)), new Stop(1, Color.TRANSPARENT)));
         g.fillOval(cx - outer - 24, cy - outer - 24, 2 * (outer + 24), 2 * (outer + 24));
-        g.setFont(Font.font("Segoe UI", 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         g.setTextAlign(TextAlignment.LEFT);
         for (int d = (int) Math.ceil(l0); d <= (int) Math.floor(l1); d++) {
             double r = radius.applyAsDouble(Math.pow(10, d));
@@ -408,7 +408,7 @@ public final class ResultView {
             int same = seen.merge(p.symbol(), 1, Integer::sum);
             if (labelled < 9 && same <= 2) {
                 labelled++;
-                g.setFont(Font.font("Segoe UI Semibold", 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setTextAlign(ux < -.2 ? TextAlignment.RIGHT : ux > .2 ? TextAlignment.LEFT : TextAlignment.CENTER);
                 g.setFill(c.interpolate(Color.WHITE, .35));
                 double lx = x1 + ux * (dot + 7), ly = y1 + uy * (dot + 7) + (Math.abs(ux) <= .2 ? (uy > 0 ? 9 : -3) : 4);
@@ -425,7 +425,7 @@ public final class ResultView {
                     new Stop(0, c.interpolate(Color.WHITE, .55)), new Stop(1, c.deriveColor(0, 1, .55, 1))));
             g.fillOval(cx - r, cy - r, 2 * r, 2 * r);
             g.setFill(Color.web("#06101C"));
-            g.setFont(Font.font("Segoe UI Semibold", center.symbol().length() > 4 ? 10 : 12));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, center.symbol().length() > 4 ? 10 : 12));
             g.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(g, center.symbol(), cx, cy + 4, 2 * r - 2);
             hits.add(new double[]{cx, cy, shown.particles().indexOf(center)});
@@ -434,7 +434,7 @@ public final class ResultView {
             g.setLineWidth(1);
             g.strokeLine(cx - 5, cy, cx + 5, cy);
             g.strokeLine(cx, cy - 5, cx, cy + 5);
-            g.setFont(Font.font("Segoe UI", 9));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
             g.setFill(Color.color(1, 1, 1, .6));
             g.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(g, "centre de masse", cx, cy + 16);
@@ -459,14 +459,14 @@ public final class ResultView {
         if (shown.elastic()) {
             out.add(new String[]{shown.touched()
                     ? I18n.text("Contact atteint, sans état final lié : les deux noyaux se séparent élastiquement, déviés de θ = ") + fmt(shown.deflection()) + "°."
-                    : I18n.text("Pas de fusion : la répulsion les a renvoyés, déviés de θ = ") + fmt(shown.deflection()) + "°.", "#E6EEFA"});
+                    : I18n.text("Pas de fusion : la répulsion les a renvoyés, déviés de θ = ") + fmt(shown.deflection()) + "°.", "#ECEFF3"});
             out.add(new String[]{I18n.text("L'élan du choc (") + energy(shown.energyMev() * 1000) + I18n.text(") est rendu : rien n'est créé, rien n'est émis."), "#B9C9DF"});
             out.add(new String[]{I18n.text("Probabilité de fusion à ce tir : ") + probability(shown.probability()) + ".", "#FFC46B"});
             return out;
         }
         if (center != null) out.add(new String[]{Character.toUpperCase(center.role().charAt(0)) + center.role().substring(1) + " : "
                 + center.symbol() + " (" + center.name() + "), " + center.status() + I18n.text(" — il recule à ")
-                + percent(center.beta()) + I18n.text(" avec ") + energy(center.kineticMev() * 1000) + ".", "#E6EEFA"});
+                + percent(center.beta()) + I18n.text(" avec ") + energy(center.kineticMev() * 1000) + ".", "#ECEFF3"});
         if (best != null && total > 0) out.add(new String[]{I18n.text("Le plus énergique : ") + best.symbol() + ", " + energy(best.kineticMev() * 1000) + " ("
                 + fmt(100 * best.kineticMev() / total) + I18n.text(" % de l'énergie emportée), à ") + percent(best.beta()) + ".", "#9FE0FF"});
         List<Particle> massive = new ArrayList<>();
@@ -512,7 +512,7 @@ public final class ResultView {
                 dot.setStroke(Color.web(p.color()));
                 dot.setStrokeWidth(1.6);
             }
-            Label symbol = label(p.symbol(), p.color(), 13, true), name = label(p.name(), "#9FB4CE", 9.5, false);
+            Label symbol = label(p.symbol(), p.color(), 13, true), name = label(p.name(), "#A2ABB8", 9.5, false);
             symbol.setWrapText(false);
             name.setWrapText(false);
             name.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -521,10 +521,10 @@ public final class ResultView {
             Region track = new Region(), fill = new Region();
             track.setPrefSize(40, 5);
             track.setMaxSize(40, 5);
-            track.setStyle("-fx-background-color:rgba(255,255,255,0.08);-fx-background-radius:3;");
+            track.setStyle("-fx-background-color:rgba(220,232,250,0.07);");
             fill.setPrefSize(Math.max(2, 40 * share), 5);
             fill.setMaxSize(Math.max(2, 40 * share), 5);
-            fill.setStyle("-fx-background-color:linear-gradient(to right, #36CDF2, " + (share > .5 ? "#FFB24A" : "#7FDCF5") + ");-fx-background-radius:3;");
+            fill.setStyle("-fx-background-color:" + (share > .5 ? "#F2C14E" : "#ECEFF3") + ";");
             StackPane bar = new StackPane(track, fill);
             StackPane.setAlignment(fill, Pos.CENTER_LEFT);
             bar.setAlignment(Pos.CENTER_LEFT);
@@ -534,13 +534,13 @@ public final class ResultView {
             Label chip = label(role, role.equals("créé") ? "#7FE3B0" : role.equals("lumière") ? "#FFD36A" : role.equals("perdu") ? "#B8F5C8" : "#9FE0FF", 9.5, true);
             chip.setWrapText(false);
             boolean light = p.a() == 0 && !p.kind().equals("positron");
-            HBox r = row(dot, who, label(g.size() > 1 ? "×" + g.size() : "1", "#E6EEFA", 11, true),
+            HBox r = row(dot, who, label(g.size() > 1 ? "×" + g.size() : "1", "#ECEFF3", 11, true),
                     label(g.size() > 1 ? energy(sum * 1000) + "\n(" + energy(sum / g.size() * 1000) + " chacun)" : energy(sum * 1000), "#FFD9A0", 10.5, false),
                     label(light ? "c" : percent(p.beta()), "#9FE0FF", 10.5, false), shareBox, chip);
             int index = i;
-            String base = "-fx-background-radius:9;-fx-padding:6 8;-fx-cursor:hand;";
-            String idle = "-fx-background-color:rgba(255,255,255,0.025);" + base;
-            String on = "-fx-background-color:rgba(54,205,242,0.13);-fx-border-color:rgba(54,205,242,0.5);-fx-border-radius:9;" + base;
+            String base = "-fx-padding:6 8;-fx-cursor:hand;";
+            String idle = "-fx-background-color:transparent;" + base;
+            String on = "-fx-background-color:rgba(220,232,250,0.08);-fx-border-color:#ECEFF3;-fx-border-width:1 1 1 3;" + base;
             r.setStyle(i == selected ? on : idle);
             r.setOnMouseEntered(e -> { if (index != selected) r.setStyle("-fx-background-color:rgba(255,255,255,0.06);" + base); });
             r.setOnMouseExited(e -> r.setStyle(index == selected ? on : idle));
@@ -582,7 +582,7 @@ public final class ResultView {
         box.getChildren().add(label((g.size() > 1 ? g.size() + " × " : "") + p.symbol() + "   " + p.name(), p.color(), 13, true));
         for (String line : p.lines()) box.getChildren().add(label(line, "#C9D6EA", 11, false));
         box.setPadding(new Insets(10, 12, 11, 12));
-        box.setStyle("-fx-background-color:rgba(255,255,255,0.035);-fx-background-radius:10;-fx-border-color:" + p.color() + "55;-fx-border-radius:10;");
+        box.setStyle("-fx-border-color:" + p.color() + "88;");
         return box;
     }
 
@@ -592,7 +592,7 @@ public final class ResultView {
         double e = shown.energyMev(), q = shown.qMev();
         page.getChildren().add(label(FusionDashboard.spaced("OÙ VA L'ÉNERGIE"), "#7FA6CF", 9, true));
         page.getChildren().add(label(shown.elastic() ? I18n.text("Entrée : élan du choc ") + energy(e * 1000) + I18n.text(" — rendu tel quel : rien n'est converti.")
-                : I18n.text("Entrée : élan ") + energy(e * 1000) + "  +  bilan de masse Q = " + fmt(q) + " MeV  =  " + energy((e + q) * 1000), "#E6EEFA", 11.5, false));
+                : I18n.text("Entrée : élan ") + energy(e * 1000) + "  +  bilan de masse Q = " + fmt(q) + " MeV  =  " + energy((e + q) * 1000), "#ECEFF3", 11.5, false));
         Map<String, double[]> parts = new LinkedHashMap<>();
         Map<String, String> colors = new LinkedHashMap<>();
         double excitation = 0;
@@ -612,7 +612,7 @@ public final class ResultView {
         Canvas bar = new Canvas(440, 16);
         GraphicsContext g = bar.getGraphicsContext2D();
         g.setFill(Color.color(1, 1, 1, .06));
-        g.fillRoundRect(0, 4, 440, 10, 10, 10);
+        g.fillRect(0, 4, 440, 10);
         double total = out + excitation, at = 0;
         FlowPane legend = new FlowPane(12, 4);
         for (Map.Entry<String, double[]> p : parts.entrySet()) {
@@ -656,9 +656,9 @@ public final class ResultView {
         double j = joules[scale];
         String what = scale == 0 ? I18n.text("pour une seule réaction (") + fmt(q) + " MeV)" : I18n.text("pour ") + SCALES[scale] + " de combustible " + shown.fuelName();
         Label big = label(scientificShort(j) + " J", "#FFC46B", 22, true);
-        VBox head = new VBox(0, big, label(what, "#9FB4CE", 10.5, false));
+        VBox head = new VBox(0, big, label(what, "#A2ABB8", 10.5, false));
         VBox equivalences = new VBox(3);
-        for (String line : equivalences(j)) equivalences.getChildren().add(label(line, "#E6EEFA", 11.5, false));
+        for (String line : equivalences(j)) equivalences.getChildren().add(label(line, "#ECEFF3", 11.5, false));
         Canvas ladder = new Canvas(440, 340);
         drawLadder(ladder.getGraphicsContext2D(), ladder.getWidth(), ladder.getHeight(), joules);
         page.getChildren().addAll(scales, head, equivalences, ladder);
@@ -707,12 +707,12 @@ public final class ResultView {
         double axis = 178, top = 14, bottom = 14, lo = -19, hi = 27;
         DoubleUnaryOperator y = v -> top + (hi - Math.log10(Math.max(v, 1e-300))) / (hi - lo) * (h - top - bottom);
         g.setFill(Color.color(1, 1, 1, .025));
-        g.fillRoundRect(0, 0, w, h, 12, 12);
+        g.fillRect(0, 0, w, h);
         g.setStroke(new LinearGradient(0, top, 0, h - bottom, false, CycleMethod.NO_CYCLE,
                 new Stop(0, FusionDashboard.level(1)), new Stop(.5, FusionDashboard.level(.58)), new Stop(1, FusionDashboard.level(0))));
         g.setLineWidth(2);
         g.strokeLine(axis, top, axis, h - bottom);
-        g.setFont(Font.font("Segoe UI", 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         g.setTextAlign(TextAlignment.LEFT);
         for (int d = -15; d <= 25; d += 5) {
             double yy = y.applyAsDouble(Math.pow(10, d));
@@ -726,7 +726,7 @@ public final class ResultView {
         List<Reference> refs = new ArrayList<>(REFERENCES);
         refs.sort((a, b) -> Double.compare(b.joules(), a.joules()));
         double prev = -1e9;
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         for (Reference r : refs) {
             double ideal = y.applyAsDouble(r.joules()), ly = Math.max(ideal, prev + 13);
             prev = ly;
@@ -757,7 +757,7 @@ public final class ResultView {
             }
             g.setFill(chosen ? Color.WHITE : hotColor.deriveColor(0, 1, 1, .7));
             g.fillOval(axis - 3.5, ideal - 3.5, 7, 7);
-            g.setFont(Font.font(chosen ? "Segoe UI Semibold" : "Segoe UI", chosen ? 10.5 : 9.5));
+            g.setFont(Font.font(chosen ? org.genesis.common.Plan.SANS_SEMIBOLD : org.genesis.common.Plan.SANS, chosen ? 10.5 : 9.5));
             g.setTextAlign(TextAlignment.RIGHT);
             g.setFill(chosen ? hotColor : Color.web("#C9A878"));
             I18n.fillText(g, SCALES[i] + " · " + scientificShort(marks[i]) + " J", axis - 10, ly + 3);
@@ -783,7 +783,7 @@ public final class ResultView {
         if (owner != null) window.initOwner(owner);
         Scene scene = new Scene(body, Math.max(480, panel.getPrefWidth()), Math.max(420, panel.getPrefHeight()), Color.web("#070C16"));
         if (owner != null && owner.getScene() != null) scene.getStylesheets().addAll(owner.getScene().getStylesheets());
-        body.setStyle("-fx-background-color:linear-gradient(to bottom, #101B2B, #060A12);");
+        body.setStyle("-fx-background-color:#111419;");
         window.setScene(scene);
         window.setMinWidth(420);
         window.setMinHeight(320);

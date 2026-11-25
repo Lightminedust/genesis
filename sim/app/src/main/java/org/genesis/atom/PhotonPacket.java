@@ -176,7 +176,7 @@ public final class PhotonPacket {
 
         if (amplitude >= 10 && fade > 0.4) {
             int crest = samples / 2;
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, FontWeight.BOLD, 10));
             g.setTextAlign(TextAlignment.CENTER);
             g.setFill(colour.deriveColor(0, 1, 1.2, fade));
             I18n.fillText(g, "E", ex[crest] + e1[0] * 9, ey[crest] + e1[1] * 9 + 3);

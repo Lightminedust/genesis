@@ -58,7 +58,7 @@ public final class FormulaCard {
         double x = cx - total / 2;
         // Le titre, au-dessus.
         gc.setTextAlign(TextAlignment.CENTER);
-        gc.setFont(Font.font("Segoe UI Semibold", 9 * Math.max(.9, scale)));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9 * Math.max(.9, scale)));
         gc.setFill(f.accent().deriveColor(0, 1, 1, .8 * alpha));
         I18n.fillText(gc, FusionDashboard.spaced(f.title()), cx, cy - big * .95);
         // Le membre de gauche.
@@ -91,8 +91,8 @@ public final class FormulaCard {
         double bottom = cy + (fraction ? small * 1.3 : big * .34);
         if (detail && !f.substituted().isBlank()) {
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setFont(Font.font("Segoe UI", 10 * Math.max(.9, scale)));
-            gc.setFill(Color.web("#9FB4CE", .85 * alpha));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10 * Math.max(.9, scale)));
+            gc.setFill(Color.web("#A2ABB8", .85 * alpha));
             bottom += 15 * Math.max(.9, scale);
             I18n.fillText(gc, f.substituted(), cx, bottom, total + 120);
         }
@@ -106,14 +106,14 @@ public final class FormulaCard {
 
     /** Une pastille d'annotation, ancrée à droite (`before`) ou à gauche du point donné. */
     private static void chip(GraphicsContext gc, double x, double y, String text, Color accent, double alpha, boolean before) {
-        Font font = Font.font("Segoe UI Semibold", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
         double w = ReactorView.width(text, font) + 16, h = 20;
         double left = before ? x - w : x;
         gc.setFill(Color.color(.03, .06, .11, .72 * alpha));
-        gc.fillRoundRect(left, y - h / 2, w, h, 8, 8);
+        gc.fillRect(left, y - h / 2, w, h);
         gc.setStroke(accent.deriveColor(0, 1, 1, .5 * alpha));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(left + .5, y - h / 2 + .5, w - 1, h - 1, 8, 8);
+        gc.strokeRect(left + .5, y - h / 2 + .5, w - 1, h - 1);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setFont(font);
         gc.setFill(accent.interpolate(Color.WHITE, .4).deriveColor(0, 1, 1, alpha));
@@ -126,15 +126,15 @@ public final class FormulaCard {
         for (int i = 0; i < rows.size(); i++) {
             if (i % 2 == 0) {
                 gc.setFill(Color.color(1, 1, 1, .028 * alpha));
-                gc.fillRoundRect(x - 6, row - 11, w + 12, 18, 5, 5);
+                gc.fillRect(x - 6, row - 11, w + 12, 18);
             }
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.setFont(Font.font("Segoe UI", 10.5));
-            gc.setFill(Color.web("#9FB4CE", alpha));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
+            gc.setFill(Color.web("#A2ABB8", alpha));
             I18n.fillText(gc, rows.get(i)[0], x, row + 3, w * .52);
             gc.setTextAlign(TextAlignment.RIGHT);
-            gc.setFont(Font.font("Segoe UI Semibold", 10.5));
-            gc.setFill(Color.web("#E6EEFA", alpha));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
+            gc.setFill(Color.web("#ECEFF3", alpha));
             I18n.fillText(gc, rows.get(i)[1], x + w, row + 3, w * .46);
             row += 18;
         }

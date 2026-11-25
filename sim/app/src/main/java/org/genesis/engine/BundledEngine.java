@@ -108,7 +108,13 @@ public final class BundledEngine implements AutoCloseable {
         builder.environment().put("GENESIS_ENGINE_LOG", logPath.toString());
         builder.environment().put("GENESIS_CHEM_CACHE", cachePath.toString());
         builder.environment().remove("MONGO_URI");
-        return new BundledEngine(builder.start(), port, logPath);
+        // Le moteur s'arrête aussi si l'application meurt sans pouvoir l'arrêter (tuée, plantée) : il surveille ce
+        // processus (engine.watch_parent).
+        builder.environment().put("GENESIS_PARENT_PID", Long.toString(ProcessHandle.current().pid()));
+        BundledEngine engine = new BundledEngine(builder.start(), port, logPath);
+        // Une sortie de la JVM sans stop() de JavaFX (System.exit, Ctrl+C, fin de session) l'arrête aussi.
+        Runtime.getRuntime().addShutdownHook(new Thread(engine::close, "genesis-engine-stop"));
+        return engine;
     }
 
     private static Path xdgDirectory(String variable, Path fallback) {
@@ -118,8 +124,10 @@ public final class BundledEngine implements AutoCloseable {
         return path.isAbsolute() ? path : fallback;
     }
 
+    /** Arrête le moteur (une fois : la fenêtre qui se ferme, puis la sortie de la JVM, l'appellent toutes deux). */
     @Override
-    public void close() {
+    public synchronized void close() {
+        if (!process.isAlive()) return;
         process.destroy();
         try {
             if (!process.waitFor(3, TimeUnit.SECONDS)) {

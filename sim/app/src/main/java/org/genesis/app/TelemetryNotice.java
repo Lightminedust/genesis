@@ -42,34 +42,34 @@ final class TelemetryNotice {
     private boolean wanted;
 
     TelemetryNotice() {
-        title.setStyle("-fx-text-fill: #E6EDF7; -fx-font-size: 13.5px; -fx-font-weight: bold;");
-        text.setStyle("-fx-text-fill: #A9B8D0; -fx-font-size: 11.5px;");
+        title.getStyleClass().add("plan-heading");
+        text.getStyleClass().add("plan-note");
         text.setWrapText(true);
-        Label badge = new Label("STATISTIQUES D'UTILISATION");
-        badge.setStyle("-fx-text-fill: #7DD3FC; -fx-font-size: 9.5px; -fx-font-weight: bold;");
+        Label badge = new Label("Statistiques d'utilisation");
+        badge.getStyleClass().add("plan-quiet-note");
         for (String item : SENT) {
             // La puce à part : la phrase seule est la clé de sa traduction.
             Label bullet = new Label("•"), line = new Label(item);
-            bullet.setStyle("-fx-text-fill: #5B6B86; -fx-font-size: 11px;");
+            bullet.getStyleClass().add("plan-quiet-note");
             bullet.setMinWidth(Region.USE_PREF_SIZE);
             line.setWrapText(true);
-            line.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 11px;");
+            line.getStyleClass().add("plan-note");
             HBox row = new HBox(6, bullet, line);
             row.setAlignment(Pos.TOP_LEFT);
             details.getChildren().add(row);
         }
         Label never = new Label("Jamais envoyé : ce que tu construis, calcules ou exportes, ni tes fichiers.");
         never.setWrapText(true);
-        never.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 11px; -fx-font-style: italic;");
+        never.getStyleClass().add("plan-note");
         details.getChildren().add(never);
         identity.setWrapText(true);
-        identity.setStyle("-fx-text-fill: #6F86A8; -fx-font-size: 10.5px; -fx-font-family: Consolas, monospace;");
+        identity.getStyleClass().add("plan-quiet-note");
         identity.setVisible(false);
         identity.setManaged(false);
         details.getChildren().add(identity);
         details.setVisible(false);
         details.setManaged(false);
-        accept.getStyleClass().add("update-primary");
+        accept.getStyleClass().add("plan-primary");
         refuse.getStyleClass().add("dash-button");
         more.getStyleClass().add("update-quiet");
         for (Button b : new Button[]{accept, refuse, more}) {
@@ -88,8 +88,8 @@ final class TelemetryNotice {
         HBox.setHgrow(grow, Priority.ALWAYS);
         HBox buttons = new HBox(6, accept, refuse, grow, more);
         buttons.setAlignment(Pos.CENTER_LEFT);
-        Label settings = new Label("Modifiable à tout moment : ⚙ en haut à droite.");
-        settings.setStyle("-fx-text-fill: #5B6B86; -fx-font-size: 10.5px;");
+        Label settings = new Label("Modifiable à tout moment : Réglages, en haut à droite.");
+        settings.getStyleClass().add("plan-quiet-note");
         card.getChildren().addAll(badge, title, text, details, buttons, settings);
         card.getStyleClass().add("update-card");
         card.setMaxSize(400, Region.USE_PREF_SIZE);

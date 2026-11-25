@@ -53,8 +53,8 @@ public class MoleculeCanvas {
     private static final Color SPIN_DOWN = Color.web("#F9A8D4");
     private static final Color GAIN = Color.web("#3B82F6");
     private static final Color LOSS = Color.web("#EF4444");
-    private static final String UI = "Segoe UI";
-    private static final String MONO = "Consolas";
+    private static final String UI = org.genesis.common.Plan.SANS;
+    private static final String MONO = org.genesis.common.Plan.MONO;
 
     private static final double PANEL_WIDTH = 330;
     private static final double HEADER = 78;
@@ -372,9 +372,9 @@ public class MoleculeCanvas {
     private void drawLegend() {
         double[] box = legendBox();
         gc.setFill(CARD);
-        gc.fillRoundRect(box[0], box[1], box[2], box[3], 12, 12);
+        gc.fillRect(box[0], box[1], box[2], box[3]);
         gc.setStroke(CARD_BORDER);
-        gc.strokeRoundRect(box[0], box[1], box[2], box[3], 12, 12);
+        gc.strokeRect(box[0], box[1], box[2], box[3]);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
@@ -396,12 +396,12 @@ public class MoleculeCanvas {
     // --- Panneau : la courbe, les électrons, les orbitales ---------------------
     private double card(double x, double y, double w, double h, String title, Color accent) {
         gc.setFill(CARD);
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, h, 14, 14);
+        gc.strokeRect(x, y, w, h);
         gc.setFill(accent);
-        gc.fillRoundRect(x + 14, y + 14, 3, 12, 2, 2);
+        gc.fillRect(x + 14, y + 14, 3, 12);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
@@ -656,9 +656,9 @@ public class MoleculeCanvas {
         double x = (width - w) / 2;
         double y = (height - h) / 2;
         gc.setFill(CARD);
-        gc.fillRoundRect(x, y, w, h, 16, 16);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(CARD_BORDER);
-        gc.strokeRoundRect(x, y, w, h, 16, 16);
+        gc.strokeRect(x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 16));
         gc.setFill(TEXT);
@@ -667,9 +667,9 @@ public class MoleculeCanvas {
         gc.setFill(FORMULA);
         I18n.fillText(gc, state.getStatus(), x + 22, y + 58);
         gc.setFill(Color.web("#22304A"));
-        gc.fillRoundRect(x + 22, y + 72, w - 44, 8, 4, 4);
+        gc.fillRect(x + 22, y + 72, w - 44, 8);
         gc.setFill(Color.web("#38BDF8"));
-        gc.fillRoundRect(x + 22, y + 72, (w - 44) * state.getProgress(), 8, 4, 4);
+        gc.fillRect(x + 22, y + 72, (w - 44) * state.getProgress(), 8);
         gc.setFont(Font.font(UI, 12));
         gc.setFill(SOFT);
         I18n.fillText(gc, "À chaque distance, les équations de Kohn-Sham sont résolues pour tous les électrons.",
@@ -688,9 +688,9 @@ public class MoleculeCanvas {
         double y = HEADER - 6;
         double width = stageRight() - 44;
         gc.setFill(Color.web("#0B1222", 0.92 * alpha));
-        gc.fillRoundRect(x, y, width, 52, 12, 12);
+        gc.fillRect(x, y, width, 52);
         gc.setStroke(Color.web("#34D399", 0.7 * alpha));
-        gc.strokeRoundRect(x, y, width, 52, 12, 12);
+        gc.strokeRect(x, y, width, 52);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 13));
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));

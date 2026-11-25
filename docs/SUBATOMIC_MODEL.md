@@ -269,12 +269,14 @@ L'écran de collision montre l'événement comme une **figure en 3D**, à l'éch
 - **Les points du temps** (chronophotographie) : sur chaque trace, la position aux instants k·Δt (Δt = 2 fm/c = 6,7·10⁻²⁴ s en
   général, un pas rond choisi pour ~14 points sur le film). Leur écart est la vitesse : serrés pour un proton lent, espacés pour
   un pion ou un lepton à presque c.
-- **Les ombres** : chaque trace est projetée sur le sol et les deux parois (traits pâles) — lire une position en 3D, c'est lire
-  ces trois projections sur les grilles. Chaque objet a aussi un trait pointillé jusqu'au sol et une croix à son pied.
+- **Les ombres** : chaque trace est projetée sur le sol seulement, en trait pâle (les trois projections, sol et deux parois,
+  chargeaient trop la figure). Chaque objet garde un pointillé discret jusqu'au sol et une petite croix à son pied ; la boîte
+  elle-même est un repère léger (grille à 7 % d'opacité).
 - **Les lois angulaires, en diagrammes polaires posés sur le sol** (le centre de la boîte reste vide — un lobe 3D au point de
   rencontre masquait le proton) : la loi calculée d'où sort la direction de l'événement, r(θ) dans le plan horizontal, θ compté
-  depuis l'axe (posé à plat), des deux côtés ; en échelle logarithmique, un cercle par décade (1, 10⁻¹, 10⁻²…), des rayons tous
-  les 30°, la direction réellement tirée en trait plein, une flèche dans le sens du faisceau :
+  depuis l'axe (posé à plat), des deux côtés. Par défaut, la loi seule en trait discret et la direction tirée ; **au survol**,
+  le diagramme complet — en échelle logarithmique, un cercle par décade (1, 10⁻¹, 10⁻²…), des rayons tous les 30°, la direction
+  réellement tirée en trait plein, une flèche dans le sens du faisceau — et une fiche qui dit ce qu'il représente :
   - lepton : dσ/dΩ(θ) de 5° à 170°, tous les cas sommés (la table d'où `sample_angle` tire l'angle, en cache), sur ≤ 6 décades
     (Mott chute de 6 décades de 5° à 170° à 1,5 GeV ; un neutrino, ~3) ;
   - deux hadrons, diffraction : dσ/dΩ* ∝ e^(Bt), t = −2p*²(1 − cos θ*) — un pic très étroit vers l'avant ;
@@ -282,16 +284,24 @@ L'écran de collision montre l'événement comme une **figure en 3D**, à l'éch
     **5 − 3cos²θ*** s'il est formé par un photon (transition M1, m surtout ±3/2 ; E2 ≈ −2,5 % et la part longitudinale
     négligées). La direction du pion est désormais **tirée selon cette loi** (avant : isotrope). Pour un W : non modélisée,
     isotrope, écrit comme tel.
-- **Les fronts au sol** : la nouvelle de chaque événement (le choc, chaque rupture) s'éloigne de son point à c — un cercle sur le
-  sol, de rayon c·(t − t₀), qui pâlit en s'élargissant.
+- **Les fronts au sol** : la nouvelle de chaque événement (le choc, chaque rupture) s'éloigne de son point à c — un cercle fin
+  sur le sol, de rayon c·(t − t₀), qui pâlit en s'élargissant (sans halo).
 - **Les comètes** : tout ce qui bouge — le projectile, chaque hadron — a une tête lumineuse et, derrière elle, une traînée qui
   s'amincit et pâlit sur ~9 fm (épaisseur en perspective) : l'effilement vers l'arrière dit d'où l'objet vient et où il va. Le
   chemin complet reste en trait fin, avec ses points du temps.
-- **Les panneaux** : plus de pastilles flottantes dans la vue d'ensemble ; chaque étiquette monte sur un poteau vertical depuis
-  son objet jusqu'au-dessus de l'action (une hauteur commune, juste au-dessus des hadrons), en petit panneau (barre de couleur,
-  titre, une ligne de mesures). (Un cube néon « volume actif » a été essayé puis retiré : il imposait une forme rigide, comme un
-  tiroir qui s'ouvre, à ce qui doit être une division de matière.) Un panneau de
-  l'événement donne ce que le choc a transféré : ν, Q², W (ou √s pour deux hadrons).
+- **Les noms et le survol** : chaque objet porte son nom en petit, à côté de lui, sans cadre ni poteau (les panneaux sur
+  poteaux encombraient la figure). Le survol d'un objet (hadron, boson, quark frappé, corde…), d'une trace (hadron, projectile
+  à l'arrivée et au départ) ou d'un diagramme au sol le met en évidence et ouvre sa fiche : ses mesures (contenu en quarks,
+  impulsion, énergie, angle ; ν, Q², W pour le boson), ce que montre la trace (le chemin du centre ; un point toutes les Δt, leur
+  écart est la vitesse), et ce qu'est l'objet en une phrase. (Un cube néon « volume actif » a été essayé puis retiré : il
+  imposait une forme rigide, comme un tiroir qui s'ouvre, à ce qui doit être une division de matière.)
+- **La visée** : dès qu'on change un réglage (projectile, énergie, angle), le prochain tir se dessine dans la figure — le
+  faisceau qui arrive sur le nucléon, et la direction de sortie demandée en pointillé quand on fixe l'angle soi-même — dans la
+  couleur de son énergie (bleu faible → vert d'eau → ambre → rouge fort, `Plan.energy`). Elle s'efface quand le moteur rend la
+  nouvelle collision. La fusion a la même visée : les deux approches en ligne droite, écartées du paramètre d'impact b, colorées
+  selon E rapportée à la barrière de Coulomb.
+- **Le zoom** : les objets n'ont plus de taille minimale à l'écran (sphères, éclats, halos, têtes de comète, points du temps) :
+  en reculant, tout rapetisse ensemble, au lieu que les objets semblent grossir dans une scène qui rétrécit.
 - **Le vol libre** : au dernier instant calculé (26 fm/c), chaque hadron est formé et libre — rien ne s'exerce plus sur lui — :
   il file en ligne droite à sa vitesse p/E (la moyenne des vitesses de ses quarks, que le moteur règle exactement sur sa
   4-impulsion), sa jonction avec lui ; son mouvement interne est figé. Le film continue jusqu'à ce que tous soient écartés d'au

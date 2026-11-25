@@ -159,6 +159,33 @@ class MoleculeAssemblerTest {
     }
 
     @Test
+    void theProductsOfAReactionReplaceTheDrawing() throws Exception {
+        // Ce qu'un essai a rendu : H₂O (O lié aux deux H) et un H seul, avec leurs départs de dessin.
+        com.studio.genesis.grpc.MoleculeEntry water = com.studio.genesis.grpc.MoleculeEntry.newBuilder()
+                .setName("H₂O · eau").setFormula("H₂O").addAllNumbers(List.of(8, 1, 1)).addAllCharges(List.of(0, 0, 0))
+                .addAllBonds(List.of(0, 1, 1, 0, 2, 1)).addAllXy(List.of(0.0, 0.0, 0.8, 0.6, -0.8, 0.6)).build();
+        com.studio.genesis.grpc.MoleculeEntry hydrogen = com.studio.genesis.grpc.MoleculeEntry.newBuilder()
+                .setName("H · atome d'hydrogène").setFormula("H").addNumbers(1).addCharges(0).addAllXy(List.of(0.0, 0.0)).build();
+        onFx(() -> {
+            MoleculeAssembler a = assembler(new ArrayList<>());
+            a.load(new double[]{3, 8, 0, 0, 0, 1, 1, 0, 0, 1, 3, 0, 0, 1, 0, 1, 1}, 1);
+            a.replaceWith(List.of(water, hydrogen));
+            assertEquals(4, a.atoms.size());
+            assertEquals(List.of(8, 1, 1, 1), a.atoms.stream().map(atom -> atom.z).toList());
+            assertEquals(2, a.links.size());
+            // Le H seul est posé à droite de l'eau, sans liaison.
+            assertTrue(a.atoms.get(3).x > a.atoms.get(0).x);
+            // La vignette d'un produit est la mise en page que « Dessiner » pose : les deux O–H égaux (un H à 0,8 liaison).
+            double[][] laid = ReactionPanel.layout(water);
+            assertEquals(.8, Math.hypot(laid[1][0] - laid[0][0], laid[1][1] - laid[0][1]), .05);
+            assertEquals(.8, Math.hypot(laid[2][0] - laid[0][0], laid[2][1] - laid[0][1]), .05);
+        });
+        // Ce qu'un essai franchit : une fois en 3 × 600 fs à 10¹³ tentatives par seconde, ≈ 2,9 kT.
+        assertEquals(.62, ReactionPanel.reachEv(2500), .01);
+        assertEquals(1.0, ReactionPanel.reachEv(4000), .01);
+    }
+
+    @Test
     void aDeltaSignLeavesTheLabelsAndTheBonds() {
         // L'angle libre : à l'opposé des deux liaisons d'un O coudé, vers le haut à égalité.
         double free = MoleculeSketch.freeAngle(List.of(Math.toRadians(30), Math.toRadians(150)));

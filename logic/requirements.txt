@@ -8,3 +8,5 @@ mendeleev>=1.0
 chemicals>=1.1
 pynucastro>=3.0
 periodictable>=2.0
+rdkit>=2024.9
+networkx>=3.0

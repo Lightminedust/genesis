@@ -102,6 +102,19 @@ ENTRIES = [
     ("CBr", "bromométhane", "bromomethane"), ("CI", "iodométhane", "iodomethane"),
     ("CCCl", "chloroéthane", "chloroethane"), ("CS", "méthanethiol", "methanethiol"),
     ("CSC", "sulfure de diméthyle", "dimethyl sulfide"), ("CS(C)=O", "diméthylsulfoxyde", "dimethyl sulfoxide"),
+    # Les molécules des schémas d'exemple (aldolisation, Robinson, Wittig, Claisen, Diels–Alder).
+    ("O=CC1=CC=CC=C1", "benzaldéhyde", "benzaldehyde"),
+    ("CC(=O)CC(O)C1=CC=CC=C1", "4-hydroxy-4-phénylbutan-2-one", "4-hydroxy-4-phenylbutan-2-one"),
+    ("CC(=O)C=CC1=CC=CC=C1", "benzalacétone", "benzalacetone"),
+    ("C=CC(C)=O", "méthylvinylcétone", "methyl vinyl ketone"), ("C=CC(=O)OC", "acrylate de méthyle", "methyl acrylate"),
+    ("CC1C(=O)CCCC1=O", "2-méthylcyclohexane-1,3-dione", "2-methylcyclohexane-1,3-dione"),
+    ("CC12CCC(=O)C=C1CCCC2=O", "cétone de Wieland–Miescher", "Wieland–Miescher ketone"),
+    ("C=CCOC1=CC=CC=C1", "éther d'allyle et de phényle", "allyl phenyl ether"),
+    ("C=CCC1=CC=CC=C1O", "2-allylphénol", "2-allylphenol"),
+    ("C1C=CC=C1", "cyclopentadiène", "cyclopentadiene"), ("O=C1OC(=O)C=C1", "anhydride maléique", "maleic anhydride"),
+    ("O=C1C=CC(=O)N1C1=CC=CC=C1", "N-phénylmaléimide", "N-phenylmaleimide"),
+    ("C=P(C1=CC=CC=C1)(C1=CC=CC=C1)C1=CC=CC=C1", "méthylènetriphénylphosphorane", "methylenetriphenylphosphorane"),
+    ("O=P(C1=CC=CC=C1)(C1=CC=CC=C1)C1=CC=CC=C1", "oxyde de triphénylphosphine", "triphenylphosphine oxide"),
 ]
 
 
@@ -277,14 +290,16 @@ def sketch(numbers, bonds):
         p = vectors[:, -2:] * np.sqrt(np.maximum(values[-2:], 1e-9))
         weight = 1 / np.maximum(target, 1) ** 2
         np.fill_diagonal(weight, 0)
+        # V (le laplacien des poids) ne dépend pas des positions : sa pseudo-inverse est la même à chaque pas.
+        v = -weight.copy()
+        np.fill_diagonal(v, weight.sum(axis=1))
+        v_plus = np.linalg.pinv(v)
         for _ in range(300):                                          # SMACOF
             d = np.linalg.norm(p[:, None, :] - p[None, :, :], axis=2)
             ratio = np.where(d > 1e-9, target / np.maximum(d, 1e-9), 0)
             b_matrix = -weight * ratio
             np.fill_diagonal(b_matrix, -b_matrix.sum(axis=1))
-            v = -weight.copy()
-            np.fill_diagonal(v, weight.sum(axis=1))
-            p = np.linalg.pinv(v) @ b_matrix @ p
+            p = v_plus @ b_matrix @ p
         for k, atom in enumerate(heavy):
             out[atom] = p[k]
     for a, b, _ in bonds:

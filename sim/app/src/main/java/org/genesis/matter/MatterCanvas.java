@@ -49,8 +49,8 @@ public class MatterCanvas {
     private static final Color SOLID = Color.web("#E0F2FE");
     private static final Color LIQUID = Color.web("#38BDF8");
     private static final Color GAS = Color.web("#A78BFA");
-    private static final String UI = "Segoe UI";
-    private static final String MONO = "Consolas";
+    private static final String UI = org.genesis.common.Plan.SANS;
+    private static final String MONO = org.genesis.common.Plan.MONO;
 
     /** Échelle de chaleur : froid violet sombre, puis rouge, orange, jaune, blanc. */
     private static final Color[] HEAT = {
@@ -463,10 +463,10 @@ public class MatterCanvas {
     // =================================================================
     private void drawHeader() {
         gc.setFill(Color.web("#38BDF8", 0.14));
-        gc.fillRoundRect(22, 16, 50, 50, 12, 12);
+        gc.fillRect(22, 16, 50, 50);
         gc.setStroke(Color.web("#38BDF8", 0.6));
         gc.setLineWidth(1.2);
-        gc.strokeRoundRect(22, 16, 50, 50, 12, 12);
+        gc.strokeRect(22, 16, 50, 50);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 24));
         gc.setFill(Color.web("#38BDF8"));
         gc.setTextAlign(TextAlignment.CENTER);
@@ -505,10 +505,10 @@ public class MatterCanvas {
     private void drawLegend(double height) {
         double[] box = legendBox();
         gc.setFill(CARD);
-        gc.fillRoundRect(box[0], box[1], box[2], box[3], 12, 12);
+        gc.fillRect(box[0], box[1], box[2], box[3]);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(box[0], box[1], box[2], box[3], 12, 12);
+        gc.strokeRect(box[0], box[1], box[2], box[3]);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
@@ -534,7 +534,7 @@ public class MatterCanvas {
             stops[k] = new Stop((double) k / (HEAT.length - 1), HEAT[k]);
         }
         gc.setFill(new LinearGradient(left, 0, left + width, 0, false, CycleMethod.NO_CYCLE, stops));
-        gc.fillRoundRect(left, y, width, 10, 5, 5);
+        gc.fillRect(left, y, width, 10);
         double top = 3.0 * state.getEpsilonK();
         gc.setFont(Font.font(MONO, 10));
         gc.setFill(MUTED);
@@ -561,12 +561,12 @@ public class MatterCanvas {
 
     private double card(double x, double y, double w, double h, String title, Color accent) {
         gc.setFill(CARD);
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, h, 14, 14);
+        gc.strokeRect(x, y, w, h);
         gc.setFill(accent);
-        gc.fillRoundRect(x + 14, y + 14, 3, 12, 2, 2);
+        gc.fillRect(x + 14, y + 14, 3, 12);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
@@ -711,10 +711,10 @@ public class MatterCanvas {
         double x = 22;
         double y = HEADER + 6;
         gc.setFill(Color.web("#0B1222", 0.94 * alpha));
-        gc.fillRoundRect(x, y, 360, height, 14, 14);
+        gc.fillRect(x, y, 360, height);
         gc.setStroke(Color.web("#38BDF8", 0.7 * alpha));
         gc.setLineWidth(1.2);
-        gc.strokeRoundRect(x, y, 360, height, 14, 14);
+        gc.strokeRect(x, y, 360, height);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 10));
         gc.setFill(Color.web("#38BDF8", alpha));

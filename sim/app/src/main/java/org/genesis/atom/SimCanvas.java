@@ -61,11 +61,11 @@ public class SimCanvas {
     // --- Palette ---
     static final Color BACKGROUND = Color.web("#050812");
     private static final Color BACKGROUND_GLOW = Color.web("#0C1630");
-    private static final Color CARD = Color.web("#0C1324", 0.90);
-    private static final Color CARD_BORDER = Color.web("#22304A");
-    private static final Color TEXT = Color.web("#E6EDF7");
-    private static final Color SOFT = Color.web("#A9B6CB");
-    private static final Color MUTED = Color.web("#64748B");
+    private static final Color CARD = org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .92);
+    private static final Color CARD_BORDER = org.genesis.common.Plan.LINE;
+    private static final Color TEXT = Color.web("#ECEFF3");
+    private static final Color SOFT = Color.web("#A2ABB8");
+    private static final Color MUTED = Color.web("#6B7483");
     private static final Color FORMULA = Color.web("#FCD34D");
     private static final Color ELECTRON = Color.web("#7DD3FC");
     private static final Color EXCITED = Color.web("#FDE68A");
@@ -77,8 +77,8 @@ public class SimCanvas {
             Color.web("#EF4444"), Color.web("#22C55E"), Color.web("#3B82F6")};
     private static final String[] COLOR_NAMES = {"rouge", "vert", "bleu"};
 
-    private static final String UI = "Segoe UI";
-    private static final String MONO = "Consolas";
+    private static final String UI = org.genesis.common.Plan.SANS;
+    private static final String MONO = org.genesis.common.Plan.MONO;
 
     private static final double BOHR_PM = 52.917721;
     private static final double NUCLEON_RADIUS_M = 0.84e-15;
@@ -907,7 +907,7 @@ public class SimCanvas {
             } else if (particle.startsWith("neutrino") || particle.startsWith("antineutrino")) {
                 boolean anti = particle.startsWith("anti");
                 anim.key = anti ? "antineutrino" : "neutrino";
-                anim.color = Color.web("#CBD5E1", 0.7);
+                anim.color = Color.web("#A2ABB8", 0.7);
                 anim.size = 2.5;
                 anim.dashed = true;
                 anim.duration = 4.0;
@@ -1719,12 +1719,12 @@ public class SimCanvas {
             I18n.fillText(gc, I18n.text("valence seule · ") + hiddenCore + I18n.text(" e⁻ de cœur masqués"), x - 20, y + 1);
         }
         boolean over = Math.hypot(mouseX - x, mouseY - y) < 13;
-        gc.setFill(Color.web("#121A2B", over ? 1 : 0.85));
+        gc.setFill(over ? org.genesis.common.Plan.RAISED : org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .86));
         gc.fillOval(x - 12, y - 12, 24, 24);
-        gc.setStroke(over ? ELECTRON : CARD_BORDER);
+        gc.setStroke(over ? org.genesis.common.Plan.STRONG : org.genesis.common.Plan.LINE);
         gc.setLineWidth(1);
         gc.strokeOval(x - 12, y - 12, 24, 24);
-        gc.setFont(Font.font("Georgia", FontWeight.BOLD, 13));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12));
         gc.setFill(over ? TEXT : SOFT);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
@@ -1747,7 +1747,7 @@ public class SimCanvas {
             for (int i = 0; i < shown.length; i++) {
                 for (String line : wrap(shown[i], 96)) rows.add(new String[]{line, i == 3 ? "muted" : "soft"});
             }
-            rows.add(new String[]{I18n.text("LIMITES DU MODÈLE"), "title"});
+            rows.add(new String[]{I18n.text("Limites du modèle"), "title"});
             for (String limit : limits) {
                 List<String> wrapped = wrap(limit, 92);
                 for (int k = 0; k < wrapped.size(); k++) rows.add(new String[]{(k == 0 ? "· " : "  ") + wrapped.get(k), "soft"});
@@ -1756,17 +1756,14 @@ public class SimCanvas {
             double bx = x - w + 14;
             double by = y + 18;
             double h = 18 + rows.size() * 17 + 6;
-            gc.setFill(Color.web("#0E1524", 0.97));
-            gc.fillRoundRect(bx, by, w, h, 10, 10);
-            gc.setStroke(CARD_BORDER);
-            gc.strokeRoundRect(bx, by, w, h, 10, 10);
+            org.genesis.common.Plan.frame(gc, bx, by, w, h, org.genesis.common.Plan.RAISED.deriveColor(0, 1, 1, .97));
             gc.setTextAlign(TextAlignment.LEFT);
             double row = by + 18;
             for (String[] line : rows) {
                 boolean title = line[1].equals("title");
                 if (title) row += 6;
-                gc.setFont(title ? Font.font(UI, FontWeight.BOLD, 10.5) : Font.font(UI, 11.5));
-                gc.setFill(title ? FORMULA : line[1].equals("muted") ? MUTED : SOFT);
+                gc.setFont(title ? Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12) : Font.font(UI, 11.5));
+                gc.setFill(title ? TEXT : line[1].equals("muted") ? MUTED : SOFT);
                 gc.fillText(line[0], bx + 12, row);
                 row += 17;
             }
@@ -2227,7 +2224,7 @@ public class SimCanvas {
         double distance = Math.max(1, Math.hypot(dx, dy));
         double ux = dx / distance;
         double uy = dy / distance;
-        gc.setStroke(Color.web("#94A3B8", 0.22));
+        gc.setStroke(Color.web("#A2ABB8", 0.22));
         gc.setLineWidth(1);
         gc.strokeLine(c[0] - uy * LOUPE_RADIUS, c[1] + ux * LOUPE_RADIUS, nucleus[0], nucleus[1]);
         gc.strokeLine(c[0] + uy * LOUPE_RADIUS, c[1] - ux * LOUPE_RADIUS, nucleus[0], nucleus[1]);
@@ -2237,7 +2234,7 @@ public class SimCanvas {
         double fit = nuclearRadiusFm() * Visuals.FEMTOMETRE / (LOUPE_RADIUS * 0.6);
         drawNucleus(c[0], c[1], fmMap(fit), false, true);
         boolean hovered = loupeHit(mouseX, mouseY);
-        gc.setStroke(unstable() ? Color.web("#FB7185", 0.85) : Color.web("#3B4A63"));
+        gc.setStroke(unstable() ? Color.web("#FB7185", 0.85) : Color.web("#4B525D"));
         gc.setLineWidth(hovered ? 2.4 : 1.5);
         gc.strokeOval(c[0] - LOUPE_RADIUS, c[1] - LOUPE_RADIUS, LOUPE_RADIUS * 2, LOUPE_RADIUS * 2);
 
@@ -2437,10 +2434,10 @@ public class SimCanvas {
         gc.setFont(Font.font(UI, FontWeight.SEMI_BOLD, 12));
         double width = text.length() * 6.6 + 16;
         gc.setFill(Color.web("#070C1A", 0.82 * alpha));
-        gc.fillRoundRect(x + 10, y - 24, width, 20, 10, 10);
+        gc.fillRect(x + 10, y - 24, width, 20);
         gc.setStroke(color.deriveColor(0, 1, 1, 0.6 * alpha));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x + 10, y - 24, width, 20, 10, 10);
+        gc.strokeRect(x + 10, y - 24, width, 20);
         gc.setFill(color.deriveColor(0, 0.6, 1.35, alpha));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
@@ -2472,10 +2469,10 @@ public class SimCanvas {
         if (!symbol.isEmpty()) {
             Color accent = frame.getElement().getColorHex().isEmpty() ? SOFT : Color.web(frame.getElement().getColorHex());
             gc.setFill(accent.deriveColor(0, 1, 1, 0.14));
-            gc.fillRoundRect(x, 16, 50, 50, 12, 12);
+            gc.fillRect(x, 16, 50, 50);
             gc.setStroke(accent.deriveColor(0, 1, 1, 0.6));
             gc.setLineWidth(1.2);
-            gc.strokeRoundRect(x, 16, 50, 50, 12, 12);
+            gc.strokeRect(x, 16, 50, 50);
             gc.setFont(Font.font(UI, FontWeight.BOLD, 24));
             gc.setFill(accent);
             gc.setTextAlign(TextAlignment.CENTER);
@@ -2567,13 +2564,13 @@ public class SimCanvas {
         double pixels = length / mpp();
         double right = stageRight() - 24;
         double y = height - FOOTER - 26;
-        gc.setStroke(Color.web("#CBD5E1", 0.85));
+        gc.setStroke(Color.web("#A2ABB8", 0.85));
         gc.setLineWidth(1.5);
         gc.strokeLine(right - pixels, y, right, y);
         gc.strokeLine(right - pixels, y - 4, right - pixels, y + 4);
         gc.strokeLine(right, y - 4, right, y + 4);
         gc.setFont(Font.font(MONO, 12));
-        gc.setFill(Color.web("#CBD5E1"));
+        gc.setFill(Color.web("#A2ABB8"));
         gc.setTextAlign(TextAlignment.RIGHT);
         I18n.fillText(gc, Visuals.formatLength(length), right, y - 8);
         gc.setFont(Font.font(UI, 11));
@@ -2629,7 +2626,7 @@ public class SimCanvas {
             if (r > limit) {
                 break;
             }
-            gc.setStroke(Color.web("#94A3B8", k == 3 ? 0.3 : 0.16));
+            gc.setStroke(Color.web("#A2ABB8", k == 3 ? 0.3 : 0.16));
             gc.setLineDashes(3, 7);
             gc.strokeOval(c[0] - r, c[1] - r, 2 * r, 2 * r);
             gc.setLineDashes((double[]) null);
@@ -2693,7 +2690,7 @@ public class SimCanvas {
         double y = height - FOOTER - 26;
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.setFont(Font.font(MONO, 12));
-        gc.setFill(Color.web("#CBD5E1"));
+        gc.setFill(Color.web("#A2ABB8"));
         I18n.fillText(gc, "×10 par anneau", right, y - 8);
         gc.setFont(Font.font(UI, 11));
         gc.setFill(MUTED);
@@ -2711,10 +2708,10 @@ public class SimCanvas {
         gc.setFont(Font.font(UI, FontWeight.BOLD, 22));
         double w = Math.max(transmutation.length() * 12.5, transmutationDetail.length() * 6.6) + 48;
         gc.setFill(Color.web("#0A0F1C", 0.86 * alpha));
-        gc.fillRoundRect(x - w / 2, y - 26, w, 58, 14, 14);
+        gc.fillRect(x - w / 2, y - 26, w, 58);
         gc.setStroke(ALPHA.deriveColor(0, 1, 1, 0.6 * alpha));
         gc.setLineWidth(1.2);
-        gc.strokeRoundRect(x - w / 2, y - 26, w, 58, 14, 14);
+        gc.strokeRect(x - w / 2, y - 26, w, 58);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
         gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
@@ -2739,10 +2736,10 @@ public class SimCanvas {
         double x = stageCenterX() - width / 2;
         double y = HEADER + 4;
         gc.setFill(Color.web("#070C1A", 0.88));
-        gc.fillRoundRect(x, y, width, 26, 13, 13);
+        gc.fillRect(x, y, width, 26);
         gc.setStroke(FORMULA.deriveColor(0, 1, 1, 0.55));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, width, 26, 13, 13);
+        gc.strokeRect(x, y, width, 26);
         gc.setFill(FORMULA);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.CENTER);
@@ -2765,12 +2762,12 @@ public class SimCanvas {
     // --- Panneaux ------------------------------------------------------------
     private double card(double x, double y, double w, double h, String title, Color accent) {
         gc.setFill(CARD);
-        gc.fillRoundRect(x, y, w, h, 14, 14);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, h, 14, 14);
+        gc.strokeRect(x, y, w, h);
         gc.setFill(accent);
-        gc.fillRoundRect(x + 14, y + 14, 3, 12, 2, 2);
+        gc.fillRect(x + 14, y + 14, 3, 12);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 11));
         gc.setFill(SOFT);
         gc.setTextAlign(TextAlignment.LEFT);
@@ -2794,10 +2791,10 @@ public class SimCanvas {
         double y = 13;
         boolean hovered = inside(new double[]{x, y, w, 26}, mouseX, mouseY);
         gc.setFill(Color.web("#0C1324", hovered ? 0.98 : 0.86));
-        gc.fillRoundRect(x, y, w, 26, 13, 13);
+        gc.fillRect(x, y, w, 26);
         gc.setStroke(hovered ? ELECTRON.deriveColor(0, 1, 1, 0.7) : CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, w, 26, 13, 13);
+        gc.strokeRect(x, y, w, 26);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
         gc.setFill(SOFT);
@@ -2855,7 +2852,7 @@ public class SimCanvas {
             case NUCLEON -> drawQuarkCard(x, top);
         }
         gc.setFill(hovered ? Color.web("#1E293B") : Color.web("#0C1324", 0));
-        gc.fillRoundRect(close[0], close[1], close[2], close[3], 8, 8);
+        gc.fillRect(close[0], close[1], close[2], close[3]);
         gc.setFont(Font.font(UI, FontWeight.BOLD, 13));
         gc.setFill(hovered ? TEXT : MUTED);
         gc.setTextAlign(TextAlignment.CENTER);
@@ -3096,7 +3093,7 @@ public class SimCanvas {
             Color color = value >= 0 ? STRONG : COULOMB;
             double length = Math.abs(value) / scaleMev * barWidth;
             gc.setFill(color.deriveColor(0, 1, 1, 0.75));
-            gc.fillRoundRect(barLeft, y - 6, Math.max(2, length), 10, 4, 4);
+            gc.fillRect(barLeft, y - 6, Math.max(2, length), 10);
             gc.setFont(Font.font(MONO, 11));
             gc.setFill(color);
             gc.setTextAlign(TextAlignment.RIGHT);
@@ -3312,10 +3309,10 @@ public class SimCanvas {
         }
 
         gc.setFill(Color.web("#0B1222", 0.95 * alpha));
-        gc.fillRoundRect(box[0], box[1], box[2], box[3], 14, 14);
+        gc.fillRect(box[0], box[1], box[2], box[3]);
         gc.setStroke(accent.deriveColor(0, 1, 1, 0.7 * alpha));
         gc.setLineWidth(1.2);
-        gc.strokeRoundRect(box[0], box[1], box[2], box[3], 14, 14);
+        gc.strokeRect(box[0], box[1], box[2], box[3]);
 
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
@@ -3388,10 +3385,10 @@ public class SimCanvas {
                 labelY = anchor[1] - radius - 28;   // au-dessus : en bas, les boutons de navigation
             }
             gc.setFill(Color.web("#070C1A", 0.88 * alpha));
-            gc.fillRoundRect(labelX, labelY, width, 22, 10, 10);
+            gc.fillRect(labelX, labelY, width, 22);
             gc.setStroke(line);
             gc.setLineWidth(1);
-            gc.strokeRoundRect(labelX, labelY, width, 22, 10, 10);
+            gc.strokeRect(labelX, labelY, width, 22);
             gc.setFill(TEXT.deriveColor(0, 1, 1, alpha));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setTextBaseline(VPos.CENTER);
@@ -3506,10 +3503,10 @@ public class SimCanvas {
         double x = Math.max(8, Math.min(mouseX + 16, canvas.getWidth() - width - 8));
         double y = Math.min(mouseY + 18, canvas.getHeight() - FOOTER - height - 6);
         gc.setFill(Color.web("#0F172A", 0.96));
-        gc.fillRoundRect(x, y, width, height, 10, 10);
+        gc.fillRect(x, y, width, height);
         gc.setStroke(CARD_BORDER);
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x, y, width, height, 10, 10);
+        gc.strokeRect(x, y, width, height);
         gc.setFill(TEXT);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setTextBaseline(VPos.CENTER);
@@ -3527,7 +3524,7 @@ public class SimCanvas {
             case "captured", "ionized", "photo_ionized" -> ELECTRON;
             case "rejected" -> Color.web("#FB923C");
             case "nucleon" -> Visuals.PROTON;
-            default -> Color.web("#94A3B8");
+            default -> Color.web("#A2ABB8");
         };
     }
 

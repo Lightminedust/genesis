@@ -144,6 +144,20 @@ public final class I18n {
         if (override != null) return override;
         String exact = ENGLISH.get(source);
         if (exact != null && preservesNotation(source, exact)) return exact;
+        // A section title in capitals (« RÉACTION », Plan.section): the reviewed label in its usual case, put back in capitals.
+        if (exact == null && source.length() > 1 && source.equals(source.toUpperCase(Locale.FRANCE))
+                && source.chars().filter(Character::isLetter).count() > 1) {
+            String lower = source.toLowerCase(Locale.FRANCE);
+            String usual = ENGLISH.get(Character.toUpperCase(lower.charAt(0)) + lower.substring(1));
+            if (usual == null) usual = ENGLISH.get(lower);
+            if (usual != null) return usual.toUpperCase(Locale.ROOT);
+        }
+        // The other way: a caption once written in capitals (« LE MUR À FRANCHIR »), now shown as a sentence (Plan.sentence) —
+        // its reviewed capital form, translated, then written as a sentence again.
+        if (exact == null && !source.equals(source.toUpperCase(Locale.FRANCE))) {
+            String capitals = ENGLISH.get(source.toUpperCase(Locale.FRANCE));
+            if (capitals != null) return org.genesis.common.Plan.sentence(capitals);
+        }
         String trimmed = source.strip();
         if (!trimmed.equals(source) && !trimmed.isEmpty()) {
             String inner = whole(trimmed);
@@ -398,16 +412,35 @@ public final class I18n {
         return !right.find();
     }
 
+    /** Un texte qui suit la langue choisie (les bulles et fiches faites par common/Plan). */
+    public static void follow(Property<String> property) {
+        watch(property);
+    }
+
     public static Tooltip tooltip(String source) {
         Tooltip tooltip = new Tooltip(source);
+        shape(tooltip);
         watch(tooltip.textProperty());
         return tooltip;
     }
 
     public static Tooltip tooltip() {
         Tooltip tooltip = new Tooltip();
+        shape(tooltip);
         watch(tooltip.textProperty());
         return tooltip;
+    }
+
+    /**
+     * La même bulle partout : elle passe à la ligne au-delà de 340 px (une longue explication ne s'étale pas sur une ligne
+     * immense), apparaît vite, reste tant que la souris est là.
+     */
+    private static void shape(Tooltip tooltip) {
+        tooltip.setWrapText(true);
+        tooltip.setMaxWidth(340);
+        tooltip.setShowDelay(javafx.util.Duration.millis(350));
+        tooltip.setShowDuration(javafx.util.Duration.INDEFINITE);
+        tooltip.setHideDelay(javafx.util.Duration.millis(80));
     }
 
     public static void fillText(GraphicsContext gc, String source, double x, double y) {

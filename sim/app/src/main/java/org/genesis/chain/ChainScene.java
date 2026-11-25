@@ -363,7 +363,7 @@ final class ChainScene {
         gc.setLineDashes(6, 5);
         gc.strokeOval(x - r, y - r, 2 * r, 2 * r);
         gc.setLineDashes(null);
-        gc.setFont(Font.font("Segoe UI Semibold", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
         gc.setFill(Color.web("#F5B84B", .8));
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "rayon critique", x + r * .72 + 6, y - r * .72 - 4);

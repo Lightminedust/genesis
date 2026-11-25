@@ -88,8 +88,22 @@ public final class LabCamera {
 
     public void flyTo(double zoomLevel) {
         goalZoom = zoomLevel;
+        goalRate = 2.2;
         zoomSpeed = 0;
     }
+
+    /**
+     * Un cran de zoom : la taille de vue multipliée par 10^dLog, atteinte en douceur en ~150 ms (les crans qui se
+     * suivent s'ajoutent au but, sans élan qui continue après la molette).
+     */
+    public void zoomBy(double dLog) {
+        goalZoom = (Double.isNaN(goalZoom) ? zoom : goalZoom) + dLog;
+        goalRate = 16;
+        zoomSpeed = 0;
+    }
+
+    /** La vitesse à laquelle le zoom rejoint son but (par seconde). */
+    private double goalRate = 2.2;
 
     public void orient(double newYaw, double newPitch) {
         if (free) {
@@ -205,7 +219,7 @@ public final class LabCamera {
         zoom += zoomSpeed * dt;
         zoomSpeed *= Math.exp(-dt * 6);
         if (!Double.isNaN(goalZoom)) {
-            zoom += (goalZoom - zoom) * Math.min(1, dt * 2.2);
+            zoom += (goalZoom - zoom) * Math.min(1, dt * goalRate);
             if (Math.abs(goalZoom - zoom) < 0.002) {
                 goalZoom = Double.NaN;
             }
@@ -218,6 +232,8 @@ public final class LabCamera {
             }
         }
         zoom = Math.max(minZoom, Math.min(maxZoom, zoom));
+        // Un but hors des bornes ne serait jamais atteint, et les crans suivants s'y ajouteraient en vain.
+        if (!Double.isNaN(goalZoom)) goalZoom = Math.max(minZoom, Math.min(maxZoom, goalZoom));
     }
 
     /** Prépare la projection pour un écran (largeur, hauteur) centré en (centerX, centerY). */

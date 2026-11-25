@@ -3,11 +3,11 @@ package org.genesis.app;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-/** Images fournies dans assets/, embarquées par Gradle pour toutes les fenêtres JavaFX. */
+/** Les icônes de Genesis (assets/brand : le G_ sur son carré de nuit), embarquées par Gradle pour toutes les fenêtres. */
 public final class Branding {
-    private static final Image ICON_96 = load("/favicon-96x96.png");
-    private static final Image ICON_192 = load("/web-app-manifest-192x192.png");
-    private static final Image ICON_512 = load("/web-app-manifest-512x512.png");
+    private static final Image[] ICONS = {
+            load("/brand/web/favicon-16.png"), load("/brand/web/favicon-32.png"), load("/brand/web/favicon-96.png"),
+            load("/brand/icone-app/genesis-icone-app-256.png"), load("/brand/icone-app/genesis-icone-app-512.png")};
 
     private Branding() {
     }
@@ -20,11 +20,12 @@ public final class Branding {
         return new Image(resource.toExternalForm());
     }
 
+    /** L'icône de l'application (256 px). */
     public static Image logo() {
-        return ICON_192;
+        return ICONS[3];
     }
 
     public static void applyWindowIcons(Stage stage) {
-        stage.getIcons().addAll(ICON_96, ICON_192, ICON_512);
+        stage.getIcons().addAll(ICONS);
     }
 }

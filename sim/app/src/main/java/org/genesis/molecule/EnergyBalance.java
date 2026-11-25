@@ -26,9 +26,9 @@ final class EnergyBalance {
     /** Un terme de la balance : son nom, sa part (eV, négative : il lie), sa couleur. */
     record Term(String name, double value, Color colour) {}
 
-    static final Color BINDS = Color.web("#5CC8FF"), COSTS = Color.web("#FF9A4D"), NET = Color.web("#EAF2FF");
-    private static final Color BOUND = Color.web("#5BE39A"), WEAK = Color.web("#F2C46B"), UNBOUND = Color.web("#FF6F61"),
-            GREY = Color.web("#8FA4C2"), TEXT = Color.web("#DCE8F7");
+    static final Color BINDS = Color.web("#5CC8FF"), COSTS = Color.web("#FF9A4D"), NET = Color.web("#ECEFF3");
+    private static final Color BOUND = Color.web("#6CD09A"), WEAK = Color.web("#F2C14E"), UNBOUND = Color.web("#F2766B"),
+            GREY = Color.web("#A2ABB8"), TEXT = Color.web("#ECEFF3");
     private static final double ROW = 15, TERMS = 126;
 
     /** Les termes de la liaison (eV), par rapport aux atomes isolés : leur somme est l'énergie de liaison. */
@@ -85,15 +85,28 @@ final class EnergyBalance {
         g.setFill(state);
         g.fillOval(6, 11, 8, 8);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
         g.fillText(I18n.text(verdict), 25, 20);
-        g.setFont(Font.font("Segoe UI", 10));
         g.setFill(GREY);
-        g.fillText(I18n.text(alone ? "rien à lier : la cohésion naît des voisins"
-                : cohesion > 0 ? "l'énergie à fournir pour la séparer en atomes" : "séparée en atomes, elle serait plus stable"), 2, 38);
+        // La légende du chiffre tient dans la largeur (en anglais, elle débordait sur les lignes du dessous).
+        String headline = I18n.text(alone ? "rien à lier : la cohésion naît des voisins"
+                : cohesion > 0 ? "énergie d'atomisation · GFN1-xTB la surestime" : "séparée en atomes, elle serait plus stable");
+        double size = 10;
+        javafx.scene.text.Text probe = new javafx.scene.text.Text(headline);
+        probe.setFont(Font.font(org.genesis.common.Plan.SANS, size));
+        while (size > 8.5 && probe.getLayoutBounds().getWidth() > w - 4) {
+            size -= .5;
+            probe.setFont(Font.font(org.genesis.common.Plan.SANS, size));
+        }
+        while (headline.length() > 4 && probe.getLayoutBounds().getWidth() > w - 4) {
+            headline = headline.substring(0, headline.length() - 2) + "…";
+            probe.setText(headline);
+        }
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, size));
+        g.fillText(headline, 2, 38);
         if (!alone) {
             g.setTextAlign(TextAlignment.RIGHT);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 20));
             g.setFill(NET);
             g.fillText(MoleculeFormat.decimal(Math.abs(cohesion), 2) + " eV", w - 2, 22);
             balance(g, w, terms, cohesion, state);
@@ -104,29 +117,29 @@ final class EnergyBalance {
             y += 14;
             double kinetic = s.getKinetic(), share = cohesion > 0 ? kinetic / cohesion : 1;
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
-            g.setFill(Color.web("#C6D4E8"));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
+            g.setFill(Color.web("#A2ABB8"));
             g.fillText(I18n.text("Agitation des noyaux") + "  ·  " + MoleculeFormat.decimal(s.getTemperature(), 0) + " K", 2, y);
             g.setTextAlign(TextAlignment.RIGHT);
-            g.setFont(Font.font("Segoe UI", 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
             g.fillText(MoleculeFormat.energy(kinetic), w - 2, y);
             double gy = y + 7, left = 2, width = w - 4;
             double at = share <= 0 ? 0 : Math.max(0, Math.min(1, (Math.log10(share) + 3) / 3));
             g.setFill(Color.web("#16202F"));
-            g.fillRoundRect(left, gy, width, 6, 6, 6);
+            g.fillRect(left, gy, width, 6);
             Color heat = share < .02 ? BINDS : share < .1 ? WEAK : UNBOUND;
             g.setFill(heat.deriveColor(0, 1, 1, .9));
-            g.fillRoundRect(left, gy, Math.max(4, width * at), 6, 6, 6);
+            g.fillRect(left, gy, Math.max(4, width * at), 6);
             g.setStroke(Color.web("#04070D", .9));
             g.setLineWidth(1);
             for (int k = 1; k <= 2; k++) g.strokeLine(left + width * k / 3, gy, left + width * k / 3, gy + 6);
-            g.setFont(Font.font("Segoe UI", 8.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
             g.setFill(Color.web("#5F7391"));
             g.setTextAlign(TextAlignment.CENTER);
             g.fillText("1 %", left + width / 3, gy + 16);
             g.fillText("10 %", left + 2 * width / 3, gy + 16);
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
             g.setFill(GREY);
             String caption = cohesion <= 0 ? I18n.text("plus rien à défaire")
                     : s.getDynamics() == 0 && kinetic < 1e-6 ? I18n.text("relaxation : les noyaux descendent sans vitesse")
@@ -135,7 +148,7 @@ final class EnergyBalance {
             y = gy + 28;
         }
         // 4. Ce qui dépend du geste en cours, puis l'énergie potentielle totale.
-        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         for (String[] line : extra) {
             y += ROW;
             g.setTextAlign(TextAlignment.LEFT);
@@ -146,7 +159,7 @@ final class EnergyBalance {
         }
         y += ROW + 2;
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(Color.web("#6F82A0"));
         g.fillText(I18n.text("énergie potentielle totale") + "  " + MoleculeFormat.energy(s.getEnergy()), 2, y);
         // La limite du modèle, chiffrée, là où on lit le nombre (voir Méthode & validation).
@@ -168,7 +181,7 @@ final class EnergyBalance {
         }
         double left = 2, width = w - 4, span = Math.max(1e-9, lie + cost), zero = left + width * lie / span;
         double y = 58, bar = 64, ny = 82;
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(BINDS);
         g.fillText(I18n.text("ce qui lie") + "  " + MoleculeFormat.decimal(lie, 2) + " eV", left, y);
@@ -180,7 +193,7 @@ final class EnergyBalance {
             if (t.value >= 0) continue;
             double length = width * -t.value / span;
             g.setFill(t.colour);
-            g.fillRoundRect(x - length + .5, bar, Math.max(1, length - 1), 12, 4, 4);
+            g.fillRect(x - length + .5, bar, Math.max(1, length - 1), 12);
             x -= length;
         }
         x = zero;
@@ -188,14 +201,14 @@ final class EnergyBalance {
             if (t.value < 0) continue;
             double length = width * t.value / span;
             g.setFill(t.colour);
-            g.fillRoundRect(x + .5, bar, Math.max(1, length - 1), 12, 4, 4);
+            g.fillRect(x + .5, bar, Math.max(1, length - 1), 12);
             x += length;
         }
         // Ce qui reste : de l'extrémité de ce qui lie, raccourcie de ce qui coûte, jusqu'au zéro.
         double net = width * Math.abs(cohesion) / span;
         double from = cohesion > 0 ? zero - net : zero, cancelled = width * Math.min(lie, cost) / span;
         g.setFill(state.deriveColor(0, 1, 1, .9));
-        g.fillRoundRect(from, ny, Math.max(1.5, net), 6, 6, 6);
+        g.fillRect(from, ny, Math.max(1.5, net), 6);
         g.setStroke(COSTS.deriveColor(0, 1, 1, .55));
         g.setLineWidth(1);
         g.setLineDashes(2, 2);
@@ -204,7 +217,7 @@ final class EnergyBalance {
         g.setLineDashes();
         g.setStroke(NET.deriveColor(0, 1, 1, .85));
         g.strokeLine(zero, bar - 3, zero, ny + 9);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9.5));
         g.setFill(state);
         String rest = (cohesion > 0 ? I18n.text("reste : la cohésion") : I18n.text("il manque")) + "  "
                 + MoleculeFormat.decimal(Math.abs(cohesion), 2) + " eV";
@@ -214,9 +227,9 @@ final class EnergyBalance {
         y = TERMS;
         for (Term t : terms) {
             g.setFill(t.colour);
-            g.fillRoundRect(2, y - 8, 8, 8, 3, 3);
+            g.fillRect(2, y - 8, 8, 8);
             g.setTextAlign(TextAlignment.LEFT);
-            g.setFont(Font.font("Segoe UI", 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
             g.setFill(TEXT);
             g.fillText(I18n.text(t.name), 16, y);
             g.setTextAlign(TextAlignment.RIGHT);

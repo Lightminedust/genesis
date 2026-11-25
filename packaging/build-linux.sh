@@ -7,7 +7,7 @@ if [[ "$(uname -s)" != Linux ]]; then
     exit 1
 fi
 
-version="${1:-0.5.0}"
+version="${1:-0.6.0}"
 if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     echo 'Version must be major.minor.patch.' >&2
     exit 1
@@ -18,7 +18,7 @@ output="$repo/dist/linux"
 work="$output/_work"
 image="$output/Genesis"
 python="${GENESIS_PYTHON:-$repo/logic/venv/bin/python}"
-icon="$repo/assets/web-app-manifest-512x512.png"
+icon="$repo/assets/brand/icone-app/genesis-icone-app-512.png"
 
 for command in gradle jpackage tar; do
     command -v "$command" >/dev/null || { echo "$command is missing." >&2; exit 1; }
@@ -42,7 +42,7 @@ mkdir -p "$work/proto"
 "$python" -m PyInstaller --noconfirm --clean --onedir \
     --name GenesisEngine --paths "$work/proto" --paths "$repo/logic" \
     --collect-submodules numpy.core \
-    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable \
+    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable --collect-all rdkit \
     --add-data "$repo/logic/chainlab/data:chainlab/data" \
     --add-data "$repo/logic/moleculelab/data:moleculelab/data" \
     --distpath "$work/python-dist" --workpath "$work/python-work" \

@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '0.5.0',
+    [string]$Version = '0.6.0',
     [string]$Python = '',
     [switch]$SkipInstaller,
     [switch]$SkipPortableZip
@@ -20,7 +20,7 @@ if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
 }
 if (-not (Get-Command gradle -ErrorAction SilentlyContinue)) { throw 'gradle est introuvable dans PATH.' }
 if (-not (Get-Command jpackage -ErrorAction SilentlyContinue)) { throw 'jpackage (JDK 21) est introuvable dans PATH.' }
-$icon = Join-Path $repo 'assets\favicon.ico'
+$icon = Join-Path $repo 'assets\brand\icone-app\genesis.ico'
 if (-not (Test-Path -LiteralPath $icon -PathType Leaf)) { throw "Icone Windows introuvable : $icon" }
 
 # Les suppressions sont limitées aux deux chemins de construction attendus.
@@ -55,7 +55,7 @@ $pySpec = Join-Path $work 'python-spec'
 & $Python -m PyInstaller --noconfirm --clean --onedir --windowed `
     --name GenesisEngine --paths $protoDir --paths (Join-Path $repo 'logic') `
     --collect-submodules numpy.core `
-    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable `
+    --collect-all mendeleev --collect-all radioactivedecay --collect-all pynucastro --collect-all periodictable --collect-all rdkit `
     --add-data "$(Join-Path $repo 'logic\chainlab\data');chainlab/data" `
     --add-data "$(Join-Path $repo 'logic\moleculelab\data');moleculelab/data" `
     --distpath $pyDist --workpath $pyWork --specpath $pySpec `

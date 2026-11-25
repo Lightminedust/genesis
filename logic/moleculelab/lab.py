@@ -53,6 +53,7 @@ WALL = 0.5                      # Eh/Å²
 PISTON_FS = 300.0
 PRESSURE_FS = 200.0
 PISTON_STEP = 0.01
+PISTON_LOG = True               # le piston suit ln(P/P₀) (voir _piston)
 PRESSURE_RANGE = (100.0, 20000.0)           # atm
 ATM_PER_EH_A3 = xtb.HARTREE_EV * 1.602176634e-19 / 1e-30 / 101325.0
 THERMOSTAT_FS = 50.0
@@ -77,6 +78,12 @@ SPARK_RADIUS = 1.8              # Å
 EV = xtb.HARTREE_EV
 EH_PER_ANGSTROM_NN = 8.2387234983  # 1 Eh/Å = 8,24 nN
 RELAX, THERMOSTAT, FREE = 0, 1, 2
+PLAY_STEP = 0.34                # le chemin d'une étape du schéma : images parcourues par calcul (≈ 3 calculs par image)
+# Lu à une vitesse choisie (images du chemin par seconde), le chemin avance avec l'horloge : une géométrie calculée au
+# plus tous les PLAY_INTERVAL s (le client n'en montre pas plus), et d'au plus PLAY_LEAP image entre deux calculs quand
+# le calcul est plus lent que la vitesse demandée.
+PLAY_INTERVAL = 1 / 30
+PLAY_LEAP = 0.5
 DYNAMICS = ("relaxation", "thermostat", "libre")
 PALETTE = (1, 5, 6, 7, 8, 9, 14, 15, 16, 17, 35, 53)
 MAX_ATOMS = 40
@@ -121,8 +128,78 @@ def _surface(z):
     return density.atom_radii(int(z))[0]
 
 
+def _bodies(a, b, numbers):
+    """Les corps rigides de deux images : les atomes liés (distance < 1,25 × somme des rayons covalents) dans l'une et
+    dans l'autre ; chacun avec son alignement (Kabsch) de la première image sur la seconde."""
+    import warnings
+    from scipy.spatial.transform import Rotation
+    radius = np.array([analysis.covalent_radius(z) for z in numbers])
+    limit = 1.25 * (radius[:, None] + radius[None])
+    near = (np.linalg.norm(a[:, None] - a[None], axis=2) < limit) & (np.linalg.norm(b[:, None] - b[None], axis=2) < limit)
+    seen = np.zeros(len(a), bool)
+    for start in range(len(a)):
+        if seen[start]:
+            continue
+        body, stack = [], [start]
+        seen[start] = True
+        while stack:
+            i = stack.pop()
+            body.append(i)
+            for j in np.nonzero(near[i] & ~seen)[0]:
+                seen[j] = True
+                stack.append(int(j))
+        if len(body) < 2:
+            continue
+        ca, cb = a[body].mean(axis=0), b[body].mean(axis=0)
+        u, v = a[body] - ca, b[body] - cb
+        with warnings.catch_warnings():                            # une molécule linéaire : l'axe seul compte
+            warnings.simplefilter("ignore", UserWarning)
+            rotation = Rotation.align_vectors(v, u)[0]             # rotation · u ≈ v
+        yield body, ca, cb, u, v, rotation
+
+
+def blend(a, b, t, numbers):
+    """Une géométrie entre deux images du chemin. Chaque corps rigide (les atomes liés dans les deux images) glisse et
+    tourne de l'une à l'autre par la rotation la plus courte (Kabsch, puis une fraction t de son angle) ; seule sa
+    déformation propre est interpolée en ligne droite. En ligne droite pour tous les atomes, un CO qui se retourne d'une
+    image à l'autre passait son oxygène à travers son carbone (+31 eV à mi-chemin pour GFN1-xTB)."""
+    from scipy.spatial.transform import Rotation
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    if t <= 0:
+        return a.copy()
+    if t >= 1:
+        return b.copy()
+    out = a * (1 - t) + b * t
+    for body, ca, cb, u, v, rotation in _bodies(a, b, numbers):
+        partial = Rotation.from_rotvec(t * rotation.as_rotvec())
+        own = (1 - t) * u + t * rotation.inv().apply(v)            # la déformation, dans le repère de départ
+        out[body] = ca * (1 - t) + cb * t + partial.apply(own)
+    return out
+
+
+# Le saut de branche. Le chemin imposé garde à chaque palier la plus basse de ses deux branches (à rebours, à
+# l'endroit) : là où elles se croisent, un atome peut sauter d'une image à l'autre (un H du Diels–Alder de 1,6 Å, un H
+# de l'étape 2 du Wittig de 2,6 Å). Une géométrie interpolée entre ces deux images n'est sur aucune branche : au milieu,
+# GFN1-xTB la trouve 2,1 eV (Diels–Alder) et 9,9 eV (Wittig) au-dessus de la droite entre leurs énergies. Deux images
+# voisines ne sont pas reliées quand un atome y bouge de plus de JUMP hors de son corps rigide ET que la géométrie du
+# milieu coûte plus de JUMP_EV de plus que cette droite : le complexe au cobalt fait pivoter ses CO de 0,6–1,0 Å d'une
+# image à l'autre, mais le milieu n'y coûte que −0,07 à +0,09 eV — l'interpolation y est bonne.
+JUMP, JUMP_EV = 0.4, 0.3
+
+
+def internal_motion(a, b, numbers):
+    """Å : le plus grand déplacement d'un atome entre deux images, hors du mouvement de son corps rigide (Kabsch)."""
+    a, b = np.asarray(a, float), np.asarray(b, float)
+    worst = 0.0
+    for body, ca, cb, u, v, rotation in _bodies(a, b, numbers):
+        worst = max(worst, float(np.max(np.linalg.norm(rotation.inv().apply(v) - u, axis=1))))
+    return worst
+
+
 class MoleculeLab:
-    def __init__(self, rng_seed=0):
+    def __init__(self, rng_seed=0, background=True):
+        """`background` faux : un laboratoire sans fil de calcul, piloté pas à pas par son appelant (la recherche de
+        réaction, les tests)."""
         self.rng = np.random.default_rng(rng_seed)
         self._lock = threading.Condition()
         self._commands = []
@@ -130,6 +207,10 @@ class MoleculeLab:
         self._grid = self._next_grid = None
         self._dirty = True
         self._closed = False
+        # Mis de côté (un autre laboratoire est ouvert) : plus de pas ni de grille ; generation compte les reprises
+        # (frame.fill renvoie alors tout ce que le client doit revoir).
+        self._parked = False
+        self.generation = 0
         # L'état de la simulation (fil de calcul seulement).
         self.label = ""
         self.numbers = []
@@ -170,7 +251,8 @@ class MoleculeLab:
         # Les espèces annoncées, avec leurs atomes : ce que la scène nomme (elles ont tenu 20 fs, comme le recensement).
         self.groups = ()
         self._dictionary = threading.Thread(target=lambda: dictionary.layouts(), name="molecule-dictionary", daemon=True)
-        self._dictionary.start()
+        if background:
+            self._dictionary.start()
         self._assess_lock = threading.Condition()
         self._assess_request = None
         self._assess_thread = None
@@ -186,14 +268,33 @@ class MoleculeLab:
         self._grid_coarse = False
         self.validation = None
         self._shares = None
+        self._aside = None                  # les atomes dont la localisation se fait à côté (voir _pair_shares)
         self._forces = None
         self._worker = threading.Thread(target=self._loop, daemon=True)
+        self._react_lock = threading.Condition()
+        self._react_request = None
+        self._react_thread = None
+        self._reaction = None
+        # Le schéma réactionnel (scheme.py) : calculé dans son propre fil ; ses chemins, joués dans la scène.
+        self._scheme_lock = threading.Condition()
+        self._scheme_request = None
+        self._scheme_thread = None
+        self._scheme = None
+        self._scheme_paths = []
+        self._smiles = None
+        self.scheme_examples = None
+        self.play = None                # {step, frames, s (image, fractionnaire), running, paths}
+        self.solvent = None             # le solvant implicite de la scène (clé ALPB, solvation.py) ; None : le vide
+        if not background:
+            self._closed = True
+            return
         self._worker.start()
         # Le tableau calculé ↔ mesuré : celui que ce moteur a calculé et que les tests revérifient ; à défaut, il est
         # recalculé dans son propre fil.
         self.validation = validation.stored()
         if self.validation is None:
             threading.Thread(target=self._validate, daemon=True).start()
+        threading.Thread(target=self._examples, name="molecule-scheme-examples", daemon=True).start()
         self.load_preset(1)
 
     def _validate(self):
@@ -305,6 +406,212 @@ class MoleculeLab:
                 self._assessment = {"request": request, "deep": deep, "done": True, "molecules": [],
                                     "error": str(error)}
 
+    def react(self, request, vector, temperature):
+        """La réaction du dessin de l'assembleur (voir reaction.explore), dans son propre fil ; request < 0 l'annule."""
+        with self._react_lock:
+            self._react_request = (int(request), list(vector), float(temperature))
+            self._react_lock.notify()
+        if self._react_thread is None:
+            self._react_thread = threading.Thread(target=self._react_loop, name="molecule-react", daemon=True)
+            self._react_thread.start()
+
+    def _react_loop(self):
+        from . import reaction
+        while not self._closed:
+            with self._react_lock:
+                while self._react_request is None and not self._closed:
+                    self._react_lock.wait(0.5)
+                if self._closed:
+                    return
+                request, vector, temperature = self._react_request
+                self._react_request = None
+            if request < 0:
+                self._reaction = None
+                self._dirty = True
+                continue
+            newer = lambda: self._react_request is not None or self._closed
+            def publish(state, request=request):
+                self._reaction = dict(state, request=request)
+                with self._lock:
+                    self._dirty = True
+            try:
+                numbers, charges, xy, bonds = assembly.decode(vector)
+                if not numbers:
+                    raise ValueError("le dessin est vide")
+                if any(not xtb.supported(z) for z in numbers):
+                    raise ValueError("un élément au-delà du radon : GFN1-xTB ne le calcule pas")
+                reaction.explore(numbers, charges, xy, bonds, temperature, newer, publish)
+            except assembly.Cancelled:
+                continue
+            except Exception as error:                        # la réaction ne doit jamais arrêter le laboratoire
+                traceback.print_exc()
+                publish({"done": True, "error": str(error), "phase": 3, "trial": 0, "time_fs": 0.0, "census": "",
+                         "remaining": 0.0, "fraction": 1.0, "reactants": "", "outcomes": [], "temperature": temperature,
+                         "trials": 0, "duration": 0.0})
+
+    # ------------------------------------------------------------------ le schéma réactionnel
+    def _examples(self):
+        from . import scheme
+        try:
+            examples = scheme.examples()
+        except Exception:
+            traceback.print_exc()
+            return
+        with self._lock:
+            self.scheme_examples = examples
+            self._dirty = True
+
+    def scheme(self, request, text):
+        """Le schéma dessiné (JSON), compilé et calculé dans son propre fil (scheme.compile_scheme) ; request < 0
+        l'annule."""
+        with self._scheme_lock:
+            self._scheme_request = (int(request), str(text))
+            self._scheme_lock.notify()
+        if self._scheme_thread is None:
+            self._scheme_thread = threading.Thread(target=self._scheme_loop, name="molecule-scheme", daemon=True)
+            self._scheme_thread.start()
+
+    def _scheme_loop(self):
+        from . import scheme
+        while not self._closed:
+            with self._scheme_lock:
+                while self._scheme_request is None and not self._closed:
+                    self._scheme_lock.wait(0.5)
+                if self._closed:
+                    return
+                request, text = self._scheme_request
+                self._scheme_request = None
+            if request < 0:
+                self._scheme = None
+                self._dirty = True
+                continue
+            newer = lambda: self._scheme_request is not None or self._closed
+
+            def publish(state, request=request):
+                self._scheme_paths = list(state.get("steps", []))
+                self._scheme = dict(state, request=request)
+                with self._lock:
+                    self._dirty = True
+
+            try:
+                scheme.compile_scheme(text, newer, publish)
+            except assembly.Cancelled:
+                continue
+            except Exception as error:                        # le schéma ne doit jamais arrêter le laboratoire
+                if not isinstance(error, scheme.SchemeError):
+                    traceback.print_exc()
+                publish({"done": True, "error": str(error), "status": "", "fraction": 1.0, "remaining": 0.0,
+                         "steps": []})
+
+    def smiles(self, request, text):
+        """Le dessin d'un SMILES (atomes lourds, une liaison = 1), pour l'éditeur de schémas."""
+        def work():
+            from . import scheme
+            try:
+                # Un SMILES, ou ce que ChemDraw et MarvinSketch copient ou enregistrent (MOL, SDF, RXN, CDXML, MRV).
+                doc, kind = scheme.imported(str(text))
+                found = {"request": int(request), "error": "", "drawing": doc, "kind": kind}
+            except Exception as error:
+                found = {"request": int(request), "error": f"Illisible : {error}", "drawing": None, "kind": ""}
+            with self._lock:
+                self._smiles = found
+                self._dirty = True
+        threading.Thread(target=work, name="molecule-smiles", daemon=True).start()
+
+    def scheme_play(self, step, position, running, speed=None):
+        """`speed` : images du chemin par seconde (0 : au rythme du calcul ; None : celle d'avant)."""
+        self._post("scheme_play", step, position, running, speed)
+
+    def _do_scheme_play(self, step, position, running, speed=None):
+        step = int(step)
+        if step < 0:
+            self.play = None
+            return
+        paths = self._scheme_paths
+        if step >= len(paths) or not paths[step].get("computed"):
+            self.error = "Cette étape n'a pas de chemin calculé."
+            return
+        path = paths[step]
+        frames = np.asarray(path["frames"], float)
+        # Le même chemin tant que l'étape est la même (l'objet de son calcul) : la liste des étapes, elle, est refaite à
+        # chaque publication du schéma (toutes les 0,15 s pendant qu'il se calcule) — la lecture repartait de zéro.
+        if self.play is None or self.play["step"] != step or self.play.get("path") is not path:
+            self.isotopes = []
+            self.time_fs = 0.0
+            self.history.clear()
+            self.events.clear()
+            self.dynamics = RELAX
+            self.wall = 0.0
+            self.pressure_target = 0.0
+            self.charge = int(path.get("charge", 0))
+            self.solvent = path.get("solvent") or None     # le chemin a été calculé dans ce solvant
+            self._set_structure(f"Étape {step + 1} · {path['reactants']} → {path['products']}", path["numbers"],
+                                frames[0])
+            # Le cadre du chemin imposé (chaque image centrée sur ses masses, comme elle est montrée) : la vue reste
+            # fixe pendant la lecture ; l'approche et le départ, plus étalés, débordent un peu dans la marge du halo.
+            m = np.asarray(self.masses, float)
+            start, end = path.get("scan", (0, len(frames)))
+            core = frames[start:end] if end > start else frames
+            radius = max(float(np.max(np.linalg.norm(f - (m @ f) / m.sum(), axis=1))) for f in core)
+            self.play = {"step": step, "frames": frames, "s": 0.0, "running": False, "path": path,
+                         "radius": radius, "speed": self.play.get("speed", 0.0) if self.play else 0.0,
+                         "jumps": set(path.get("jumps", ()))}
+            self._play_pose()
+            # L'énergie de la première image, calculée ici : celle de chaque géométrie montrée s'y rapporte.
+            self.play["e0"] = None if self.result is None else float(self.result.energy)
+        if speed is not None:
+            self.play["speed"] = max(0.0, float(speed))
+        last = len(frames) - 1
+        if position >= 0:
+            self.play["s"] = float(min(max(position, 0.0), 1.0)) * last
+            self._play_pose()
+        if running and self.play["s"] >= last - 1e-9:
+            self.play["s"] = 0.0
+            self._play_pose()
+        if running and not self.play["running"]:
+            self.play["clock"] = time.perf_counter()        # l'horloge de la lecture part d'ici
+        self.play["running"] = bool(running)
+        self.status = (f"Étape {step + 1} : le chemin calculé, joué" if running
+                       else f"Étape {step + 1} : le chemin calculé, à l'arrêt")
+
+    def _play_pose(self):
+        """La scène à la position du chemin : entre deux images calculées, l'interpolation ; puis le calcul GFN1-xTB
+        de cette géométrie (densité, liaisons, énergie : tout ce que la scène montre). Entre deux images qui ne sont pas
+        reliées (un saut de branche, voir JUMP), aucune géométrie : l'une, puis l'autre."""
+        frames, s = self.play["frames"], self.play["s"]
+        if len(frames) > 1:
+            k = min(int(s), len(frames) - 2)
+            t = s - k
+            if k in self.play.get("jumps", ()):
+                p = frames[k] if t < 0.5 else frames[k + 1]
+            else:
+                p = blend(frames[k], frames[k + 1], t, self.numbers)
+        else:
+            p = frames[0]
+        self.positions = p - (self.masses @ p) / self.masses.sum()
+        self.velocities = np.zeros_like(self.positions)
+        self.relaxed = True
+        self.fire = None
+        self._evaluate()
+        self.steps += 1
+        self._record()
+
+    def _play_step(self):
+        last = len(self.play["frames"]) - 1
+        speed = self.play.get("speed", 0.0)
+        if speed > 0:
+            # À la vitesse choisie : l'avance suit l'horloge (le temps du calcul compris), bornée à PLAY_LEAP.
+            now = time.perf_counter()
+            advance = min(PLAY_LEAP, speed * (now - self.play.get("clock", now)))
+            self.play["clock"] = now
+        else:
+            advance = PLAY_STEP
+        self.play["s"] = min(self.play["s"] + advance, last)
+        self._play_pose()
+        if self.play["s"] >= last:
+            self.play["running"] = False
+            self.status = f"Étape {self.play['step'] + 1} : arrivée — la scène est libre (chauffer, relaxer, tirer)"
+
     def clear(self):
         self._post("clear")
 
@@ -323,9 +630,15 @@ class MoleculeLab:
         with self._lock:
             snap, grid = self._snapshot, self._grid
         # Le verdict de l'assembleur vient de son propre fil : il part tel quel, même quand le laboratoire est au repos.
-        if snap is not None and snap.get("assessment") is not self._assessment:
+        if snap is not None and (snap.get("assessment") is not self._assessment or snap.get("reaction") is not self._reaction
+                                 or snap.get("scheme") is not self._scheme or snap.get("smiles") is not self._smiles
+                                 or snap.get("scheme_examples") is not self.scheme_examples):
             snap = dict(snap)
             snap["assessment"] = self._assessment
+            snap["reaction"] = self._reaction
+            snap["scheme"] = self._scheme
+            snap["smiles"] = self._smiles
+            snap["scheme_examples"] = self.scheme_examples
         return snap, grid
 
     def close(self):
@@ -333,10 +646,30 @@ class MoleculeLab:
             self._closed = True
             self._lock.notify()
 
+    def closed(self):
+        return self._closed
+
+    def park(self):
+        """Mis de côté pendant qu'un autre laboratoire est ouvert : plus de pas de dynamique ni de grille (le fil
+        attend) ; les molécules, les résultats et un schéma en cours de calcul (son propre fil) restent."""
+        with self._lock:
+            self._parked = True
+            self._lock.notify()
+
+    def resume(self):
+        """Le retour au laboratoire : il repart d'où il était, et republie tout."""
+        with self._lock:
+            self._parked = False
+            self.generation += 1
+            self._dirty = True
+            self._lock.notify()
+
     # ------------------------------------------------------------------ le fil de calcul
     def _busy(self):
-        if self.calc is None:
+        if self.calc is None or self._parked:
             return False
+        if self.play is not None and self.play["running"]:
+            return True
         if self.mode_job:
             return True
         if self.paused:
@@ -346,7 +679,7 @@ class MoleculeLab:
     def _grid_due(self):
         # La vue de la densité dessine le halo et les liaisons sans grille (le client calcule le nuage projeté) : la
         # grille ne sert qu'aux vues Δρ et ψ et à la carte de potentiel.
-        if self.result is None or (self.view[0] == 0 and not self.potential_map):
+        if self.result is None or self._parked or (self.view[0] == 0 and not self.potential_map):
             return False
         if self._grid_view != self.view or self._grid_positions is None:
             return True
@@ -357,11 +690,20 @@ class MoleculeLab:
         moved = float(np.max(np.abs(self._grid_positions - self.positions))) > 0.01
         return moved and time.perf_counter() - self._grid_time >= GRID_SECONDS
 
+    def _play_wait(self):
+        """Le chemin lu à une vitesse choisie : le temps (s) avant sa prochaine géométrie (0 : maintenant, ou pas de
+        lecture à l'horloge)."""
+        if self.play is None or not self.play["running"] or self.play.get("speed", 0.0) <= 0:
+            return 0.0
+        return max(0.0, PLAY_INTERVAL - (time.perf_counter() - self.play.get("clock", 0.0)))
+
     def _loop(self):
         while True:
             with self._lock:
-                while not self._closed and not self._commands and not self._busy() and not self._grid_due():
-                    self._lock.wait(0.5)
+                while not self._closed and not self._commands and not (self._busy() and self._play_wait() <= 0) \
+                        and not self._grid_due():
+                    wait = self._play_wait()
+                    self._lock.wait(min(0.5, wait) if wait > 0 else 0.5)
                 if self._closed:
                     return
                 commands, self._commands = self._commands, []
@@ -369,8 +711,16 @@ class MoleculeLab:
                 for name, args in commands:
                     getattr(self, "_do_" + name)(*args)
                 stepped, relaxed_before = False, self.relaxed
-                if self.mode_job:
+                if self._parked:
+                    pass                                  # mis de côté : rien ne bouge jusqu'au retour
+                elif self.mode_job:
                     self._normal_modes()
+                elif self.play is not None and self.play["running"] and self.calc is not None:
+                    started = time.perf_counter()
+                    self._play_step()
+                    stepped = True
+                    elapsed = time.perf_counter() - started
+                    self.rate = 0.8 * self.rate + 0.2 / max(elapsed, 1e-4) if self.rate else 1 / max(elapsed, 1e-4)
                 elif self.calc is not None and not self.paused and (self.dynamics != RELAX or not self.relaxed
                                                                     or self.drag is not None):
                     started = time.perf_counter()
@@ -402,6 +752,7 @@ class MoleculeLab:
                 raise ValueError(f"{xtb.SYMBOLS[z]} n'est pas paramétré dans GFN1-xTB")
         positions = np.asarray(positions, float).reshape(-1, 3)
         old_velocities = self.velocities
+        self.play = None                # une autre scène : le chemin joué s'arrête
         self.label = label
         self.numbers = numbers
         self.experiment = None
@@ -424,7 +775,7 @@ class MoleculeLab:
         else:
             self.velocities = np.zeros_like(positions)
         level = self.calc.level if self.calc is not None else 1.0
-        self.calc = xtb.Calculator(numbers, charge=self.charge) if numbers else None
+        self.calc = xtb.Calculator(numbers, charge=self.charge, solvent=self.solvent) if numbers else None
         if self.calc is not None:
             self.calc.level = level                # un atome de plus : le palier du recuit reste le bon point de départ
         self.result = None
@@ -619,6 +970,7 @@ class MoleculeLab:
         self.status = "Atome retiré : la géométrie se recalcule"
 
     def _do_drag(self, index, target):
+        self.play = None
         index = int(index)
         if 0 <= index < len(self.numbers) and target is not None and len(target) >= 3:
             grabbed = self.drag is None or self.drag[0] != index
@@ -642,6 +994,7 @@ class MoleculeLab:
         self.relaxed = False
 
     def _do_dynamics(self, mode, temperature):
+        self.play = None
         mode = int(mode)
         if mode not in (RELAX, THERMOSTAT, FREE):
             return
@@ -663,6 +1016,7 @@ class MoleculeLab:
                        FREE: "Dynamique libre : l'énergie totale se conserve"}[mode]
 
     def _do_spark(self, index, ev):
+        self.play = None
         index = int(index)
         if not 0 <= index < len(self.numbers) or ev <= 0:
             return
@@ -692,6 +1046,7 @@ class MoleculeLab:
             self.status = "Calcul de la hessienne (6N forces)…"
 
     def _do_excite(self, index, quanta):
+        self.play = None
         if self.modes is None or not 0 <= int(index) < len(self.modes[0]):
             return
         frequencies, displacements = self.modes
@@ -725,7 +1080,23 @@ class MoleculeLab:
         self.status = (f"Nouvelle masse : {value} u. La surface d'énergie ne change pas (Born–Oppenheimer) ; "
                        "la dynamique et les vibrations, si.")
 
+    def set_solvent(self, index):
+        self._post("solvent", index)
+
+    def _do_solvent(self, index):
+        """Le solvant de la scène (indice dans solvation.ORDER, −1 : le vide) : la molécule se relaxe dans son nouveau
+        milieu."""
+        from . import solvation
+        self.play = None
+        index = int(index)
+        self.solvent = solvation.ORDER[index] if 0 <= index < len(solvation.ORDER) else None
+        if self.numbers:
+            self._set_structure(self.label, self.numbers, self.positions, keep_velocities=True)
+        self.status = (f"Dans {solvation.label(self.solvent)} : solvant implicite ALPB, la molécule se relaxe"
+                       if self.solvent else "Dans le vide")
+
     def _do_charge(self, charge):
+        self.play = None
         self.charge = int(min(max(charge, -2), 2))
         if self.numbers:
             self._set_structure(self.label, self.numbers, self.positions, keep_velocities=True)
@@ -734,12 +1105,21 @@ class MoleculeLab:
         self.paused = bool(paused)
 
     def _do_wall(self, radius):
+        self.play = None
         self._set_wall(radius)
         self.relaxed = False
 
     def _do_pressure(self, atm):
+        self.play = None
         atm = float(atm)
         self.pressure_target = 0.0 if atm <= 0 else float(min(max(atm, PRESSURE_RANGE[0]), PRESSURE_RANGE[1]))
+        # Un piston n'agit que si les atomes bougent : en relaxation (à 0 K) ou en pause, il restait immobile. Il met donc
+        # la dynamique à température (le thermostat, à la température choisie) en route — la barre le montre, Pause
+        # l'arrête.
+        if (self.pressure_target > 0 and (self.paused or self.dynamics == RELAX) and self.numbers
+                and len(self.masses) == len(self.numbers) == len(self.positions)):
+            self._do_dynamics(THERMOSTAT, self.temperature if self.temperature > 0 else 300.0)
+            self.status = f"Piston : dynamique à {self.temperature:.0f} K (thermostat) mise en route"
         if self.pressure_target > 0 and self.wall <= 0 and self.numbers:
             # Pas encore d'enceinte : une sphère autour des molécules, comme celle du réacteur. Le centre de masse devient
             # un degré de liberté (voir _dof) : il reçoit son agitation thermique.
@@ -790,7 +1170,15 @@ class MoleculeLab:
         if self.pressure_target > 0:
             # Sur la pression moyennée, pas l'instantanée : celle-ci vaut zéro entre deux chocs puis bondit, et la paroi
             # tremblait à chaque contact (mesuré : 16 mÅ en 50 fs à 2 000 atm ; 2 mÅ ainsi).
-            change = dt_fs / PISTON_FS * (self.pressure - self.pressure_target) / self.pressure_target
+            if PISTON_LOG:
+                # En écart logarithmique : près de la cible, la même règle (ln(P/P₀) ≈ (P − P₀)/P₀) ; loin d'elle, bien
+                # plus vite. Une sphère encore vide (P ≈ 0) plafonnait à −1 : 600 fs pour diviser le rayon par deux,
+                # une minute d'écran. Ici jusqu'à ln(1/1000) ≈ −6,9, toujours bornée à PISTON_STEP par pas.
+                # Pour se détendre (P > P₀), l'écart relatif, plus fort que son logarithme, comme avant.
+                ratio = max(self.pressure, self.pressure_target / 1000) / self.pressure_target
+                change = dt_fs / PISTON_FS * (math.log(ratio) if ratio < 1 else ratio - 1)
+            else:
+                change = dt_fs / PISTON_FS * (self.pressure - self.pressure_target) / self.pressure_target
             self.wall *= (1 + min(max(change, -PISTON_STEP), PISTON_STEP)) ** (1 / 3)
 
     # ------------------------------------------------------------------ physique
@@ -952,6 +1340,10 @@ class MoleculeLab:
         self.history.append((self.time_fs if self.dynamics != RELAX else float(self.steps),
                              r.energy * EV, kinetic * EV))
         census, named, groups = self._read_census()
+        if self.play is not None:
+            self.census, self.named, self.groups = census, named, groups
+            self._candidate = ((census, named), self.time_fs)
+            return
         if (census, named) == (self.census, self.named):
             # Les mêmes espèces (un H passé d'une eau à l'autre, par exemple) : leurs atomes suivent, sans annonce.
             self.groups = groups
@@ -1028,7 +1420,14 @@ class MoleculeLab:
         """
         now = time.perf_counter()
         cached = self._shares
-        if cached is None or cached[0] != tuple(self.numbers) or (now - cached[1] >= 0.5 and not (self.relaxed and cached[5])):
+        fresh = cached is None or cached[0] != tuple(self.numbers)
+        if fresh and self.play is not None:
+            # Un chemin du schéma vient d'être posé : sa localisation, à froid, coûte jusqu'à 2 s (aldolisation, 24
+            # atomes dans l'eau) — la scène attendait autant sa première image. Elle se fait donc à côté : la scène
+            # paraît tout de suite, les grains des liaisons quand elle a fini.
+            self._localize_aside(result)
+            return {}, [], {}
+        if fresh or (now - cached[1] >= 0.5 and not (self.relaxed and cached[5])):
             populations, centroids, orbitals = analysis.localize(result, orbitals=True)
             members = analysis.classify_pairs(populations, centroids, [])[3]
             profiles = density.pair_profiles(result, orbitals, members)
@@ -1038,6 +1437,30 @@ class MoleculeLab:
         shares, _, shared, _ = analysis.classify_pairs(populations, centroids + populations @ (self.positions - then),
                                                        bonds)
         return shares, shared, profiles
+
+    def _localize_aside(self, result):
+        """La localisation de `result` dans un fil à part ; gardée (_shares) si les atomes n'ont pas changé entre-temps."""
+        key = tuple(self.numbers)
+        if self._aside == key:
+            return
+        self._aside = key
+        positions, relaxed = self.positions.copy(), self.relaxed
+
+        def work():
+            try:
+                populations, centroids, orbitals = analysis.localize(result, orbitals=True)
+                members = analysis.classify_pairs(populations, centroids, [])[3]
+                profiles = density.pair_profiles(result, orbitals, members)
+                if tuple(self.numbers) == key:
+                    self._shares = (key, time.perf_counter(), populations, centroids, positions, relaxed, profiles)
+                    self._dirty = True
+            except Exception:
+                pass
+            finally:
+                if self._aside == key:
+                    self._aside = None
+
+        threading.Thread(target=work, name="molecule-localize", daemon=True).start()
 
     # ------------------------------------------------------------------ l'instantané publié
     def _publish(self):
@@ -1053,7 +1476,16 @@ class MoleculeLab:
                 "experiment_phase": 0 if self.experiment is None else self.experiment["phase"],
                 "experiment_time": 0.0 if self.experiment is None else self.experiment["time"],
                 "census": self.census, "events": list(self.events), "history": list(self.history),
-                "assessment": self._assessment,
+                "solvent": self.solvent,
+                "assessment": self._assessment, "reaction": self._reaction, "scheme": self._scheme,
+                "smiles": self._smiles, "scheme_examples": self.scheme_examples,
+                "play": None if self.play is None else {
+                    "step": self.play["step"], "running": self.play["running"],
+                    "position": self.play["s"] / max(1, len(self.play["frames"]) - 1),
+                    "frame": int(round(self.play["s"])), "radius": self.play.get("radius", 0.0),
+                    "speed": self.play.get("speed", 0.0),
+                    "energy": 0.0 if self.result is None or self.play.get("e0") is None
+                    else (float(self.result.energy) - self.play["e0"]) * EV},
                 "view": self.view, "drag": None if self.drag is None else (self.drag[0], self.drag[1].copy()),
                 "excited": self.excited, "computing_modes": self.mode_job, "validation": self.validation}
         if self.modes is not None:
@@ -1124,6 +1556,8 @@ class MoleculeLab:
                 "energy": r.energy * EV, "band": r.band * EV, "es2": r.es2 * EV, "es3": r.es3 * EV,
                 "repulsion": r.repulsion * EV, "dispersion": r.dispersion * EV, "halogen": r.halogen * EV,
                 "entropy": r.entropy * EV, "binding": (r.energy - reference) * EV, "kinetic": kinetic * EV,
+                "solvation": getattr(r, "solvation", 0.0) * EV,
+                "solvation_polar": (r.solvation_parts["polaire"] * EV) if getattr(r, "solvent", None) else 0.0,
                 # Les mêmes termes pour les atomes isolés : la balance de la liaison (ce qui lie, ce qui coûte).
                 "band_atoms": sum(atom_terms(z)["band"] for z in self.numbers) * EV,
                 "coulomb_atoms": sum(atom_terms(z)["coulomb"] for z in self.numbers) * EV,

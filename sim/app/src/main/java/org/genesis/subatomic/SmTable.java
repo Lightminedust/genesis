@@ -108,7 +108,7 @@ public final class SmTable {
         x0 = x + 14;
         y0 = y + 26;
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(DocStyle.PALE);
         I18n.fillText(g, DocStyle.caps("I"), x0 + cell * .45, y0 - 8);
         I18n.fillText(g, DocStyle.caps("II"), x0 + (cell + gap) + cell * .42, y0 - 8);
@@ -125,7 +125,7 @@ public final class SmTable {
         }
         // les familles, en marge droite de la grille
         double right = x0 + 5 * (cell + gap) - gap;
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8.5));
         g.setFill(DocStyle.PALE);
         g.setTextAlign(TextAlignment.LEFT);
         g.save();
@@ -143,15 +143,15 @@ public final class SmTable {
     private void drawCell(GraphicsContext g, double x, double y, double s, SmParticle p, boolean chosen, boolean over) {
         Color fill = fill(p.getFamily()), ring = ring(p.getFamily());
         g.setFill(fill.deriveColor(0, 1, over ? 1.0 : .97, .96));
-        g.fillRoundRect(x, y, s, s, 10, 10);
+        g.fillRect(x, y, s, s);
         if (chosen) {
             g.setStroke(Color.WHITE);
             g.setLineWidth(2.4);
-            g.strokeRoundRect(x - 1.5, y - 1.5, s + 3, s + 3, 12, 12);
+            g.strokeRect(x - 1.5, y - 1.5, s + 3, s + 3);
         }
         double fs = s / 78;
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 8.2 * fs + 1));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.2 * fs + 1));
         g.setFill(Color.web("#3B3550"));
         I18n.fillText(g, mass(p.getMassMev()), x + 4, y + 10 * fs + 2);
         I18n.fillText(g, charge(p.getCharge()), x + 4, y + 20 * fs + 2);
@@ -163,10 +163,10 @@ public final class SmTable {
         g.setLineWidth(2);
         g.strokeOval(cx - r, cy - r, 2 * r, 2 * r);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 17 * fs + 2));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 17 * fs + 2));
         g.setFill(ring.darker());
         I18n.fillText(g, p.getSymbol(), cx, cy + 6 * fs + 1);
-        g.setFont(Font.font("Segoe UI", 8 * fs + 1.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8 * fs + 1.5));
         g.setFill(Color.web("#3B3550"));
         I18n.fillText(g, p.getName(), x + s / 2, y + s - 5, s - 6);
     }

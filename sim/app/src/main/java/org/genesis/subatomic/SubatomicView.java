@@ -507,7 +507,7 @@ public final class SubatomicView {
     private void drawElectronInset(GraphicsContext g, double width, SubatomicSample sample) {
         double size=180, x=width-size-22, y=18;
         g.setFill(Color.web("#0B1A2A", .95));
-        g.fillRoundRect(x-5,y-5,size+10,size+47,9,9);
+        g.fillRect(x-5,y-5,size+10,size+47);
         electronCloud(size, size, state.getElectrons(), state.getElectronRadiusPm(), 200);
         g.drawImage(electronCloud,x,y,size,size);
         g.setFill(Color.web("#F5B19E"));
@@ -522,7 +522,7 @@ public final class SubatomicView {
         SubatomicSample sample=samples.get(Math.min(samples.size()-1,(int)cursor));
         double x=width-203,y=height-210,size=178,cx=x+size/2,cy=y+size/2;
         g.setFill(Color.web("#0A1827", .96));
-        g.fillRoundRect(x,y,size,203,9,9);
+        g.fillRect(x,y,size,203);
         camera.setup(width,height,width*.5,height*.5,camera.distance());
         double[] center={0,0,0};
         double totalMass=0;
@@ -575,7 +575,7 @@ public final class SubatomicView {
         g.strokeLine(mid,5,mid,h-15);
         double extent=Math.tanh(margin/10)*(mid-10);
         g.setFill(Color.web(margin>=0 ? "#70D3C4" : "#EAB17B"));
-        g.fillRoundRect(extent>=0 ? mid : mid+extent,9,Math.abs(extent),13,4,4);
+        g.fillRect(extent>=0 ? mid : mid+extent,9,Math.abs(extent),13);
         g.setFill(Color.web("#A7BED1"));
         I18n.fillText(g, "séparation",7,h-4);
         I18n.fillText(g, "0",mid-3,h-4);

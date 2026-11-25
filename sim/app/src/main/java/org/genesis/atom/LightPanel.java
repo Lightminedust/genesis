@@ -41,8 +41,8 @@ public class LightPanel {
 
     public static final double MIN_NM = 50;
     public static final double MAX_NM = 5000;
-    private static final Color TEXT = Color.web("#CBD5E1");
-    private static final Color MUTED = Color.web("#64748B");
+    private static final Color TEXT = Color.web("#A2ABB8");
+    private static final Color MUTED = Color.web("#6B7483");
     private static final double HC_EV_NM = 1239.841984;
 
     private final Canvas canvas;
@@ -223,7 +223,7 @@ public class LightPanel {
         if (width <= 0 || height <= 0) {
             return;
         }
-        gc.setFill(Color.web("#05070F"));
+        gc.setFill(org.genesis.common.Plan.PAPER);
         gc.fillRect(0, 0, width, height);
         if (frame == null) {
             return;
@@ -238,7 +238,7 @@ public class LightPanel {
         double top = 26;
         gc.setTextBaseline(VPos.CENTER);
         if (levels.isEmpty()) {
-            gc.setFont(Font.font("Segoe UI", 12));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 12));
             gc.setFill(MUTED);
             gc.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(gc, "aucun électron : aucun niveau occupé", width / 2, (top + bottom) / 2);
@@ -260,18 +260,18 @@ public class LightPanel {
         double left = 46;
         double right = width - 92;
 
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "ÉNERGIE DE L'ÉLECTRON (eV, échelle logarithmique)", 12, 11);
 
         // 0 eV : l'électron est libre, au-delà l'atome est ionisé.
         double zeroY = top;
-        gc.setStroke(Color.web("#475569"));
+        gc.setStroke(Color.web("#4B525D"));
         gc.setLineDashes(4, 4);
         gc.strokeLine(left, zeroY, right, zeroY);
         gc.setLineDashes((double[]) null);
-        gc.setFont(Font.font("Segoe UI", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         gc.setFill(MUTED);
         I18n.fillText(gc, "0 · électron libre", right + 6, zeroY);
 
@@ -281,11 +281,11 @@ public class LightPanel {
         for (EnergyLevel level : levels) {
             double y = yOf(level.getEnergyEv(), lowest, top, bottom);
             boolean occupied = oneElectron ? level.getN() == current : level.getElectrons() > 0;
-            gc.setStroke(occupied ? Color.web("#E2E8F0") : Color.web("#334155"));
+            gc.setStroke(occupied ? Color.web("#ECEFF3") : Color.web("#2A2F38"));
             gc.setLineWidth(occupied ? 2 : 1);
             gc.strokeLine(left, y, right, y);
             if ((Double.isNaN(previousLabelY) || Math.abs(y - previousLabelY) > 11) && y - zeroY > 10) {
-                gc.setFont(Font.font("Consolas", 10));
+                gc.setFont(Font.font(org.genesis.common.Plan.MONO, 10));
                 gc.setFill(occupied ? TEXT : MUTED);
                 gc.setTextAlign(TextAlignment.RIGHT);
                 I18n.fillText(gc, Visuals.format(level.getEnergyEv()), left - 6, y);
@@ -319,7 +319,7 @@ public class LightPanel {
                 gc.strokeLine(x, toY, x - 4, toY + head);
                 gc.strokeLine(x, toY, x + 4, toY + head);
             }
-            gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
             gc.setFill(color);
             gc.setTextAlign(TextAlignment.RIGHT);
             I18n.fillText(gc, Visuals.format(jump.nm()) + " nm", x - 6, (fromY + toY) / 2);
@@ -344,12 +344,12 @@ public class LightPanel {
         double visibleLeft = xOf(380);
         double visibleRight = xOf(780);
 
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "SPECTRE · cliquer pour régler le laser", 12, top - 8);
 
-        gc.setFill(Color.web("#0B1120"));
+        gc.setFill(Color.web("#111419"));
         gc.fillRect(12, top, width - 24, height);
         gc.setFill(new LinearGradient(visibleLeft, 0, visibleRight, 0, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Visuals.wavelengthColor(390).deriveColor(0, 1, 0.5, 0.5)),
@@ -403,7 +403,7 @@ public class LightPanel {
         gc.setFill(Color.WHITE);
         gc.fillPolygon(new double[]{laserX - 5, laserX + 5, laserX}, new double[]{top - 9, top - 9, top - 3}, 3);
 
-        gc.setFont(Font.font("Consolas", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.MONO, 10));
         gc.setFill(MUTED);
         gc.setTextAlign(TextAlignment.CENTER);
         gc.setTextBaseline(VPos.TOP);
@@ -411,12 +411,12 @@ public class LightPanel {
             I18n.fillText(gc, tick >= 1000 ? Visuals.format(tick / 1000) + " µm" : Visuals.format(tick),
                     xOf(tick), top + height + 11);
         }
-        gc.setFill(Color.web("#94A3B8"));
+        gc.setFill(Color.web("#A2ABB8"));
         I18n.fillText(gc, "UV", xOf(150), top + 12);
         I18n.fillText(gc, "IR", xOf(1400), top + 12);
 
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         gc.setFill(Color.web("#FDE68A"));
         I18n.fillText(gc, "▲ absorbable maintenant", 12, top + height + 24);
         if (ionization > 0) {
@@ -432,11 +432,11 @@ public class LightPanel {
             double nm = snap != null ? snap : nmAt(mouseX);
             String text = Visuals.format(nm) + " nm · " + Visuals.format(HC_EV_NM / nm) + " eV"
                     + (snap != null ? " · absorbable" : "");
-            gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
             double boxWidth = text.length() * 6.2 + 12;
             double boxX = Math.max(4, Math.min(width - boxWidth - 4, mouseX - boxWidth / 2));
-            gc.setFill(Color.web("#0F172A", 0.95));
-            gc.fillRoundRect(boxX, top - 30, boxWidth, 18, 6, 6);
+            gc.setFill(Color.web("#111419", 0.95));
+            gc.fillRect(boxX, top - 30, boxWidth, 18);
             gc.setFill(Color.WHITE);
             gc.setTextAlign(TextAlignment.LEFT);
             I18n.fillText(gc, text, boxX + 6, top - 17);

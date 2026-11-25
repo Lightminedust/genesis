@@ -211,7 +211,7 @@ public final class DocStyle {
     static void label(GraphicsContext g, String text, double x, double y, double size, TextAlignment align, double alpha) {
         if (alpha <= .01) return;
         g.setTextAlign(align);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, size));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, size));
         g.setFill(Color.color(0, .08, .15, .45 * alpha));
         I18n.fillText(g, caps(text), x + 1, y + 1.5);
         g.setFill(WHITE.deriveColor(0, 1, 1, alpha));
@@ -222,20 +222,16 @@ public final class DocStyle {
     static void symbol(GraphicsContext g, String text, double x, double y, double size, TextAlignment align, double alpha) {
         if (alpha <= .01) return;
         g.setTextAlign(align);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, size));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, size));
         g.setFill(Color.color(0, .08, .15, .45 * alpha));
         I18n.fillText(g, text, x + 1, y + 1.5);
         g.setFill(WHITE.deriveColor(0, 1, 1, alpha));
         I18n.fillText(g, text, x, y);
     }
 
-    /** Un panneau de verre bleu translucide. */
+    /** Un panneau du plan : le papier bleu, un trait fin et ses amorces aux coins (le même que partout, voir Plan.frame). */
     public static void panel(GraphicsContext g, double x, double y, double w, double h) {
-        g.setFill(Color.color(.03, .14, .24, .55));
-        g.fillRoundRect(x, y, w, h, 16, 16);
-        g.setStroke(Color.color(.65, .88, 1, .28));
-        g.setLineWidth(1);
-        g.strokeRoundRect(x + .5, y + .5, w - 1, h - 1, 16, 16);
+        org.genesis.common.Plan.frame(g, x, y, w, h, org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .92));
     }
 
     /** Un nombre lisible : 3 chiffres significatifs, notation scientifique hors de [0,01 ; 10⁵[. */

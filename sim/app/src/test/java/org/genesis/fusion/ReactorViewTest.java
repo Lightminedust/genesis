@@ -106,8 +106,8 @@ public class ReactorViewTest {
     });}
     @Test void theTwoReadingsShowDifferentAmountsOfTheSameCalculation()throws Exception{fx(()->{
         ReactorView view=view(()->{});view.applyFrame(frame(true));view.getNode().applyCss();view.getNode().layout();
-        ToggleButton simple=(ToggleButton)view.getNode().lookup("#collision-view-simple");
-        ToggleButton full=(ToggleButton)view.getNode().lookup("#collision-view-full");
+        ToggleButton simple=(ToggleButton)view.modes().lookup("#collision-view-simple");   // le mode est dans l'en-tête commun
+        ToggleButton full=(ToggleButton)view.modes().lookup("#collision-view-full");
         assertTrue(simple.isSelected(),"la lecture simple est proposée d'abord");
         Node inspect=view.getNode().lookup("#collision-inspect");
         assertFalse(inspect.isVisible(),"la sonde n'encombre pas la lecture simple");

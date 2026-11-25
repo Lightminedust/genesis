@@ -218,6 +218,7 @@ class Basis:
             for j in range(i, nsh):
                 self.groups.setdefault((self.shell_l[i], self.shell_l[j]), []).append((i, j))
         self.groups = {k: np.array(v) for k, v in self.groups.items()}
+        self._pair_cache = {}               # ce qui, dans les intégrales de chaque groupe, ne dépend que des exposants
         self.nprim = np.array([len(s["alpha"]) for s in shells])
 
     def overlap(self, positions, derivative=False, moments=False):
@@ -232,7 +233,8 @@ class Basis:
             i, j = pairs[:, 0], pairs[:, 1]
             ka, kb = self.nprim[i].max(), self.nprim[j].max()
             values = integrals.shell_pairs(la, lb, centers[i], centers[j], self.alpha[i, :ka], self.coeff[i, :ka],
-                                           self.alpha[j, :kb], self.coeff[j, :kb], derivative, moment=both)
+                                           self.alpha[j, :kb], self.coeff[j, :kb], derivative, moment=both,
+                                           cache=self._pair_cache.setdefault((la, lb), {}))
             block, grad = values[0], values[1]
             na, nb = 2 * la + 1, 2 * lb + 1
             rows = self.shell_offset[i][:, None] + np.arange(na)[None, :]
@@ -311,12 +313,21 @@ def dispersion(basis, positions, cn, dcn=None):
     w = np.where(valid, np.exp(-4 * (cn[:, None] - refcn) ** 2), 0.0)
     norm = w.sum(axis=1, keepdims=True)
     dw = np.where(valid, -8 * (cn[:, None] - refcn) * w, 0.0)
-    weights = np.where(norm > 1e-300, w / np.where(norm > 1e-300, norm, 1), 0.0)
-    exceptional = norm[:, 0] <= 1e-300
-    if exceptional.any():
-        maxcn = np.max(np.where(valid, refcn, -1), axis=1, keepdims=True)
-        weights[exceptional] = (refcn == maxcn)[exceptional].astype(float)
-    dweights = np.where(norm > 1e-300, (dw * norm - w * dw.sum(axis=1, keepdims=True)) / np.where(norm > 1e-300, norm, 1) ** 2, 0.0)
+    with np.errstate(divide="ignore", invalid="ignore", under="ignore"):
+        weights = np.where(norm > 1e-300, w / np.where(norm > 1e-300, norm, 1), 0.0)
+        dweights = np.where(norm > 1e-300, (dw * norm - w * dw.sum(axis=1, keepdims=True)) / np.where(norm > 1e-300, norm, 1) ** 2, 0.0)
+    # Loin de toutes ses références (un gros alcalin très entouré : Cs⁺ contre une molécule, NC ≈ 12), les poids
+    # gaussiens tombent vers 1e-200 : leur somme tient encore, mais son carré s'annule, et la dérivée devenait 0/0 (un
+    # gradient NaN, chaque pas refusé, la relaxation figée). Les mêmes poids à un facteur près, en retranchant le plus
+    # grand exposant : identiques en valeur, sans dépassement. Le cas ordinaire (somme > 1e-140) reste calculé tel quel.
+    small = (norm[:, 0] < 1e-140) & valid.any(axis=1)
+    if small.any():
+        exponent = np.where(valid[small], -4 * (cn[small, None] - refcn[small]) ** 2, -np.inf)
+        shifted = np.where(valid[small], np.exp(exponent - exponent.max(axis=1, keepdims=True)), 0.0)
+        total = shifted.sum(axis=1, keepdims=True)
+        dshifted = np.where(valid[small], -8 * (cn[small, None] - refcn[small]) * shifted, 0.0)
+        weights[small] = shifted / total
+        dweights[small] = (dshifted - weights[small] * dshifted.sum(axis=1, keepdims=True)) / total
     c6ref = data["d3_c6"][z[:, None], z[None, :]].astype(float)             # (nat, nat, 7, 7)
     c6 = np.einsum('ai,abij,bj->ab', weights, c6ref, weights)
     dc6 = np.einsum('ai,abij,bj->ab', dweights, c6ref, weights)              # dC6_AB / dCN_A
@@ -483,7 +494,7 @@ class Result:
 class Calculator:
     """GFN1-xTB pour une molécule donnée (les numéros atomiques sont fixés ; les positions changent)."""
 
-    def __init__(self, numbers, charge=0, unpaired=None, temperature=ELECTRONIC_TEMPERATURE):
+    def __init__(self, numbers, charge=0, unpaired=None, temperature=ELECTRONIC_TEMPERATURE, solvent=None):
         for z in numbers:
             if not supported(int(z)):
                 raise ValueError(f"Élément {z} non paramétré dans GFN1-xTB")
@@ -502,6 +513,11 @@ class Calculator:
         self._since_cooling = 0
         n = len(self.basis.shells)
         self._diag_shell = self.basis.shell_atom[:, None] == self.basis.shell_atom[None, :]
+        # Le solvant implicite (ALPB, solvation.py) : None, la molécule dans le vide.
+        self.solvation = None
+        if solvent:
+            from .solvation import Solvation
+            self.solvation = Solvation(numbers, solvent)
 
     # ------------------------------------------------------------------ électrostatique
     def _gamma(self, positions):
@@ -555,6 +571,8 @@ class Calculator:
         H0 = hcore * S
         gamma, dvec, r2, eta = self._gamma(positions)
         gam3 = b.gam3
+        solv = self.solvation
+        geometry = solv.prepare(positions, gradient) if solv is not None else None
         effort = [0]                                                  # les diagonalisations de ce calcul
 
         def respond(v_shell, constraint, kt):
@@ -607,10 +625,13 @@ class Calculator:
             (sous la contrainte des anions si `confine`)."""
             qa = np.bincount(b.shell_atom, weights=q, minlength=nat)
             v_shell = gamma @ q + (gam3 * qa ** 2)[b.shell_atom]
+            if geometry is not None:
+                v_shell = v_shell + solv.potential(geometry, qa)[b.shell_atom]
             state = constrained(v_shell, constraint, kt) if confine else respond(v_shell, constraint, kt)
             q_new, qa_new, P = state["q"], state["qa"], state["density"]
             state.update(band=float(np.sum(P * H0)), es2=0.5 * float(q_new @ gamma @ q_new),
-                         es3=float(np.sum(gam3 * qa_new ** 3)) / 3)
+                         es3=float(np.sum(gam3 * qa_new ** 3)) / 3,
+                         solv=sum(solv.energies(geometry, qa_new)[:2]) if geometry is not None else 0.0)
             return state
 
         def cycle(q, kt, damp, count, confine):
@@ -622,7 +643,7 @@ class Calculator:
             for iteration in range(1, count + 1):
                 state = evaluate(q, constraint, kt, confine)
                 constraint = state["constraint"]
-                energy = state["band"] + state["es2"] + state["es3"] + state["entropy"]
+                energy = state["band"] + state["es2"] + state["es3"] + state["entropy"] + state["solv"]
                 delta = float(np.max(np.abs(state["q"] - q)))
                 if delta < 1e-6 and energy_old is not None and abs(energy - energy_old) < tol:
                     return True, iteration, state["q"], state
@@ -657,7 +678,10 @@ class Calculator:
                     a = np.einsum("sii,i->s", X, d)
                     chi += np.outer(a, a) / d.sum()
             qa = np.bincount(b.shell_atom, weights=q, minlength=nat)
-            J = chi @ (gamma + np.where(same_atom, 2 * (gam3 * qa)[b.shell_atom][:, None], 0.0))
+            K = gamma + np.where(same_atom, 2 * (gam3 * qa)[b.shell_atom][:, None], 0.0)
+            if geometry is not None:
+                K = K + solv.response(geometry)[b.shell_atom][:, b.shell_atom]
+            J = chi @ K
             held = np.flatnonzero(state["constraint"] > 0)
             if len(held):
                 E = (b.shell_atom[:, None] == held[None, :]).astype(float)
@@ -746,12 +770,17 @@ class Calculator:
             self.level, q, state = found
             self._charges = q
         energy_el = state["band"] + state["es2"] + state["es3"] + state["entropy"]
+        atom_q = np.bincount(b.shell_atom, weights=q, minlength=nat)
+        solvation = solv.energies(geometry, atom_q) if geometry is not None else (0.0, 0.0, 0.0, 0.0)
         eps, C, occ, P, v_ao = (state[k] for k in ("orbital_energies", "coefficients", "occupations", "density", "v_ao"))
         e_rep, g_rep, rep_pairs = repulsion(b, positions)
         e_disp, g_disp, dedcn_disp, disp_pairs = dispersion(b, positions, cn, dcn)
         e_hal = halogen_energy(b, positions)
-        total = energy_el + e_rep + e_disp + e_hal
-        result = Result(energy=total, electronic=energy_el, band=state["band"], es2=state["es2"], es3=state["es3"],
+        total = energy_el + e_rep + e_disp + e_hal + sum(solvation)
+        result = Result(energy=total, electronic=energy_el, solvation=float(sum(solvation)),
+                        solvation_parts={"polaire": solvation[0], "liaisons hydrogène": solvation[1],
+                                         "non polaire": solvation[2], "décalage": solvation[3]},
+                        solvent=solv.solvent if solv is not None else None, band=state["band"], es2=state["es2"], es3=state["es3"],
                         constraint=state["constraint"], confined=np.flatnonzero(state["constraint"] > 0),
                         entropy=state["entropy"], electronic_temperature=state["kt"] / KB_HARTREE,
                         repulsion=e_rep, dispersion=e_disp, halogen=e_hal, converged=converged,
@@ -777,11 +806,14 @@ class Calculator:
             g_es *= 1.0
             g_hal = halogen_gradient(b, positions)
             electronic = g_h0 + g_cn + g_es
+            g_solv = solv.gradient(geometry, atom_q, positions) if geometry is not None else np.zeros((nat, 3))
             result.gradient_parts = {"électronique": electronic / BOHR_ANGSTROM,
                                      "répulsion": g_rep / BOHR_ANGSTROM,
                                      "dispersion": g_disp / BOHR_ANGSTROM,
                                      "halogène": g_hal / BOHR_ANGSTROM}
-            result.gradient = (electronic + g_rep + g_disp + g_hal) / BOHR_ANGSTROM      # Eh/Å
+            if geometry is not None:
+                result.gradient_parts["solvant"] = g_solv / BOHR_ANGSTROM
+            result.gradient = (electronic + g_rep + g_disp + g_hal + g_solv) / BOHR_ANGSTROM      # Eh/Å
             if not pairs:
                 return result
             # Paire par paire : [A, B] est la part du gradient sur A qui vient de la paire AB (Eh/Å). Chaque terme

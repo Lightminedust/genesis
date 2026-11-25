@@ -57,12 +57,12 @@ final class MoleculeCard {
     private static final double DRAW = 150;
     /** Debye par e·Å. */
     static final double DEBYE = 4.80320;
-    private static final Color TEXT = Color.web("#DCE8F7"), GREY = Color.web("#8FA4C2"), DIM = Color.web("#5E718E"),
-            EDGE = Color.web("#2A3B52"), LINE = Color.web("#C9D6E8");
+    private static final Color TEXT = Color.web("#ECEFF3"), GREY = Color.web("#A2ABB8"), DIM = Color.web("#5E718E"),
+            EDGE = org.genesis.common.Plan.LINE, LINE = Color.web("#A2ABB8");
 
     private final Actions actions;
     private final VBox root = new VBox(6);
-    private final Label title = MoleculeView.text("", 14, "#EAF2FF"), subtitle = MoleculeView.text("", 10.5, "#8FA4C2");
+    private final Label title = MoleculeView.text("", 14, "#ECEFF3"), subtitle = MoleculeView.text("", 10.5, "#A2ABB8");
     private final Canvas canvas = new Canvas(W - 20, 200);
     private final FlowPane buttons = new FlowPane(5, 5);
     private int atom = -1;
@@ -84,8 +84,7 @@ final class MoleculeCard {
         root.setPadding(new Insets(10));
         root.setPrefWidth(W);
         root.setMaxWidth(W);
-        root.setStyle("-fx-background-color:rgba(7,13,24,0.96);-fx-background-radius:12;-fx-border-color:#2A3B52;"
-                + "-fx-border-radius:12;-fx-effect:dropshadow(gaussian,rgba(0,0,0,0.55),18,0,0,4);");
+        root.getStyleClass().add("plan-card");
         root.setOnMouseClicked(javafx.scene.input.MouseEvent::consume);
         root.setOnMousePressed(javafx.scene.input.MouseEvent::consume);
     }
@@ -189,12 +188,12 @@ final class MoleculeCard {
             charge += atoms[k] < scene.charges.length ? scene.charges[atoms[k]] : 0;
         }
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
         g.setFill(TEXT);
         g.fillText(MoleculeFormat.decimal(mass, 3) + " g/mol  ·  " + n + " " + I18n.text(n > 1 ? "atomes" : "atome")
                 + "  ·  " + I18n.text("charge") + " " + MoleculeFormat.signed(Math.round(charge * 100) / 100.0, 2) + " e", 0, y + 12);
         double mu = AtomCard.norm(dipole) * DEBYE;
-        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         g.setFill(DIPOLE);
         g.fillText(I18n.text("moment dipolaire") + "  " + MoleculeFormat.decimal(mu, 2) + " D"
                 + (Math.abs(charge) >= .5 ? "  " + I18n.text("(un ion : par rapport à son centre de masse)") : ""), 0, y + 27);
@@ -204,13 +203,13 @@ final class MoleculeCard {
             chargeBars(g, scene, y, w);
             y += 58;
         } else {
-            g.setFont(Font.font("Segoe UI", 10));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
             g.setFill(GREY);
             g.fillText(extremes(scene), 0, y + 10);
             y += 18;
         }
         if (rowsOfBonds > 0) {
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8.5));
             g.setFill(GREY);
             g.fillText(I18n.text("LIAISONS"), 0, y + 9);
             y += 16;
@@ -226,11 +225,11 @@ final class MoleculeCard {
                     double off = (k - (strokes - 1) / 2.0) * 3;
                     g.strokeLine(2, y + 5 + off, 18, y + 5 + off);
                 }
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(TEXT);
                 String bond = strokes == 1 ? "–" : strokes == 2 ? "=" : "≡";
                 g.fillText((v[0] > 1 ? (int) v[0] + " × " : "") + parts[0] + bond + parts[1], 26, y + 9);
-                g.setFont(Font.font("Segoe UI", 10));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
                 g.setFill(GREY);
                 g.setTextAlign(TextAlignment.RIGHT);
                 g.fillText(I18n.text(strokes == 1 ? "simple" : strokes == 2 ? "double" : "triple") + "  ·  "
@@ -280,8 +279,8 @@ final class MoleculeCard {
             double x = (sheet[k][0] - cx) * (mirror ? -1 : 1), yy = sheet[k][1] - cy;
             xy[k] = new double[]{ox + scale * (cos * x - sin * yy), oy - scale * (sin * x + cos * yy)};
         }
-        g.setFill(Color.web("#0A1424"));
-        g.fillRoundRect(0, 0, w, DRAW, 10, 10);
+        g.setFill(org.genesis.common.Plan.DEEP);
+        g.fillRect(0, 0, w, DRAW);
         double r = Math.max(6, Math.min(11, scale * .26));
         for (int[] e : edges) {
             double[] p = xy[e[0]], q = xy[e[1]];
@@ -308,7 +307,7 @@ final class MoleculeCard {
             g.setLineWidth(a == atom ? 1.8 : 1.1);
             g.strokeOval(xy[k][0] - rr, xy[k][1] - rr, 2 * rr, 2 * rr);
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, scene.z[a] == 1 ? 9 : 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, scene.z[a] == 1 ? 9 : 10.5));
             g.setFill(MoleculeScene.elementColor(scene.z[a]).deriveColor(0, .7, 1.3, 1));
             g.fillText(scene.symbols[a], xy[k][0], xy[k][1] + (scene.z[a] == 1 ? 3.2 : 3.8));
             if (Math.abs(q) >= .25) {
@@ -319,7 +318,7 @@ final class MoleculeCard {
                 }
                 double at = MoleculeSketch.freeAngle(around);
                 float[] c = MoleculeScene.chargeColour(q);
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
                 g.setFill(Color.color(c[0], c[1], c[2]));
                 g.fillText(q < 0 ? "δ−" : "δ+", xy[k][0] + Math.cos(at) * (rr + 8), xy[k][1] + Math.sin(at) * (rr + 8) + 3);
             }
@@ -339,13 +338,13 @@ final class MoleculeCard {
                 g.setStroke(DIPOLE.deriveColor(0, 1, 1, .9));
                 g.setLineWidth(1.6);
                 g.strokeLine(sx + fx / len * 5 - px, sy + fy / len * 5 - py, sx + fx / len * 5 + px, sy + fy / len * 5 + py);
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
                 g.setFill(DIPOLE);
                 g.setTextAlign(TextAlignment.LEFT);
                 g.fillText("μ", ex + 4, ey - 3);
             }
         }
-        g.setFont(Font.font("Segoe UI", FontPosture.ITALIC, 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, FontPosture.ITALIC, 8.5));
         g.setFill(DIM);
         g.setTextAlign(TextAlignment.RIGHT);
         g.fillText(I18n.text("tournée comme la vue"), w - 6, DRAW - 6);
@@ -355,7 +354,7 @@ final class MoleculeCard {
     private void chargeBars(GraphicsContext g, MoleculeScene scene, double y, double w) {
         int n = atoms.length;
         double top = y + 4, zero = y + 24, half = 18;
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8.5));
         g.setFill(GREY);
         g.setTextAlign(TextAlignment.LEFT);
         g.fillText(I18n.text("CHARGES"), 0, top + 6);
@@ -370,14 +369,14 @@ final class MoleculeCard {
             float[] c = MoleculeScene.chargeColour(q);
             g.setFill(Color.color(c[0], c[1], c[2], .9));
             double x = x0 + k * step + step * .2;
-            g.fillRoundRect(x, q >= 0 ? zero - h : zero, step * .6, h, 3, 3);
+            g.fillRect(x, q >= 0 ? zero - h : zero, step * .6, h);
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8.5));
             g.setFill(a == atom ? Color.web("#FFE07A") : MoleculeScene.elementColor(scene.z[a]).deriveColor(0, .8, 1.25, 1));
             g.fillText(scene.symbols[a], x + step * .3, zero + half + 14);
         }
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 8));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8));
         g.setFill(DIM);
         g.fillText("δ+", 30, zero - 6);
         g.fillText("δ−", 30, zero + 12);

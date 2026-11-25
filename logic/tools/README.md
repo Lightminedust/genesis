@@ -16,4 +16,5 @@ venv\Scripts\python -m tools.export_collision --a 6:12 --b 8:16 --energy 20000 -
 | `export_chain_frames.py` | Écrit des frames du laboratoire de la réaction en chaîne (sous-critique, bouffée, dispersion, réflecteur, bac à sable) pour `ChainPreview`. |
 | `build_chain_groups.py` | Construit `chainlab/data/groups.npz` depuis les fichiers HDF5 d'ENDF/B-VIII.0 (OpenMC) ; demande h5py, que le moteur n'utilise pas. |
 | `export_molecule_frames.py` | Écrit des frames du laboratoire moléculaire (eau en ρ, Δρ et HOMO, éthylène, benzène, H₂ tiré, modes du méthane, réacteur) pour `MoleculePreview`. |
+| `build_solvation_data.py` | Construit `moleculelab/data/gfn1-alpb.json` (le solvant implicite ALPB de GFN1 : 25 solvants) depuis les sources de tblite et mctc-lib, à des commits fixés. |
 | `build_xtb_data.py` | Construit `moleculelab/data/xtb-data.npz` (STO-NG, rayons, C6 de D3) depuis une installation de dxtb ; dxtb et PyTorch ne servent qu'ici, jamais au moteur. |

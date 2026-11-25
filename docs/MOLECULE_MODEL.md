@@ -1,6 +1,6 @@
 # Le laboratoire moléculaire — électrons, liaisons, forces
 
-Le laboratoire (menu **Laboratoires → ⌬ Laboratoire moléculaire**) pose des atomes sur un établi et calcule leurs
+Le laboratoire (**Molécules**, sur l'accueil) pose des atomes sur un établi et calcule leurs
 électrons. Personne ne décide que deux atomes sont liés, ni sous quel angle : à chaque position des noyaux, la
 méthode quantique GFN1-xTB rend l'énergie et la force sur chaque noyau, et la géométrie, les liaisons, les
 vibrations et les réactions en découlent.
@@ -25,6 +25,14 @@ développée en gaussiennes, STO-NG), et l'énergie est
 Les charges sont auto-cohérentes, les occupations lissées par Fermi à 300 K (comme xtb) ; voir « Le cycle
 auto-cohérent » plus bas pour les cas difficiles (liaisons qui cassent, fragments séparés, charges qui s'emballent).
 Les forces sont les dérivées analytiques F = −∇E, calculées terme par terme.
+
+**Loin de toutes les références de D3.** Les C6 sont interpolés entre les références de chaque élément par des poids
+gaussiens exp(−4 (NC − NC_réf)²). Un gros alcalin très entouré (Cs⁺ contre une molécule : NC ≈ 11, ses références
+sous 2) a des poids vers 1e-200 : leur somme tient encore, mais son carré, au dénominateur de leur dérivée, s'annulait —
+un gradient NaN pour toute la molécule (la relaxation refusait chaque pas, figée ; l'élimination par CsF de l'exemple
+du diène silylé restait sur place). Quand la somme passe sous 1e-140, les mêmes poids sont recalculés en retranchant
+le plus grand exposant (identiques en valeur, sans dépassement) ; au-dessus, rien ne change, au bit près. Vérifié
+contre les différences finies (Cs au milieu de douze F, tests/test_moleculelab.py).
 
 **Qui agit sur qui.** Chaque terme du gradient est une somme sur les paires d'atomes (recouvrements dS_μν/dR pour
 μ ∈ A, ν ∈ B ; facteur π(R) ; nombre de coordination, compté paire par paire ; électrostatique γ_AB ; répulsion ;
@@ -59,10 +67,11 @@ différences finies de l'énergie.
 | étincelle | de l'énergie cinétique déposée sur un atome et ses voisins à 1,8 Å, quantité de mouvement conservée |
 | réacteur | plusieurs molécules dans une sphère à paroi raide, ½ k (r + ρ − R)², k = 0,5 Eh/Å², ρ le rayon où la densité de l'atome libre tombe à 0,002 e/bohr³ (H 1,24, O 1,40, Cl 1,71 Å) : la paroi touche le nuage, pas le noyau, et la sphère dessinée est le bord des nuages. Sur les noyaux (k = 0,05), les nuages dépassaient de 2,2 Å à 20 000 atm ; désormais de 0,22 Å au plus |
 | pression | celle que lirait un manomètre : la force des atomes sur la paroi, Σ k (r + ρ − R), divisée par sa surface 4πR², en atm (1 Eh/Å³ = 4,30·10⁷ atm) ; affichée moyennée sur 200 fs. L'enceinte la compare au gaz parfait NkT/V (N molécules) par Z = PV/NkT, calculé sur une moyenne longue (depuis le dernier changement, ou depuis que le piston est à l'équilibre) et montré seulement après 30 chocs d'atomes sur la paroi (±20 % environ) : en gaz dilué, 200 fs n'en comptent qu'un ou deux. Z > 1 : les molécules se gênent (leur volume propre — même un gaz parfait de molécules de taille finie donne Z = R/a, a le rayon où leurs centres peuvent aller) ; Z < 1 : elles s'attirent. H₂ + Cl₂ à 1 500 K sous 20 000 atm : Z = 6,1 (densité de liquide, où la fréquence des rencontres, une formule des gaz, n'est plus donnée) ; 2 H₂O à 3 000 K, paroi fixe : Z ≈ 1,1–1,5 |
-| piston | une pression imposée (100 à 20 000 atm, 0,01 à 2 GPa) : le volume de la sphère suit dV/V = (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), P la pression moyennée sur 200 fs, τ = 300 fs, au plus 1 % du volume par pas. Sur la pression instantanée (τ = 100 fs), qui vaut zéro entre deux chocs puis bondit, la paroi tremblait à chaque contact : 16 mÅ en 50 fs à 2 000 atm (H₂ + Cl₂), 2 mÅ ainsi ; la consigne reste tenue à 3–6 % (2 000, 10 000, 20 000 atm). La vue se pose sur le centre de l'enceinte : la sphère ne bouge pas, les molécules bougent dedans. Son bord est teinté par la pression (bleu faible, ambre forte) ; des chevrons y montrent quand le piston serre ou cède ; un manomètre en haut à gauche donne la mesure sur une échelle logarithmique (10 à 30 000 atm), la consigne en doré, et ce que fait le piston (à 25 % près). Sur 6 ps, la moyenne tient la consigne à 4 % près. Pourquoi pas 1 atm : à 1 500 K, une molécule n'en rencontre une autre que toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm ~2 ps, à 10 000 atm ~25 fs |
+| piston | une pression imposée (100 à 20 000 atm, 0,01 à 2 GPa) : le volume de la sphère suit dV/V = (dt/τ)(P − P₀)/P₀ (Berendsen appliqué à la paroi, pas aux atomes : les molécules gardent leur forme), P la pression moyennée sur 200 fs, τ = 300 fs, au plus 1 % du volume par pas — pour serrer, sur ln(P/P₀) plutôt que (P − P₀)/P₀ (les mêmes près de la consigne) : une sphère encore vide (P ≈ 0) plafonnait à −1 et se fermait en 670 fs (deux eaux, 10 000 atm : 75 % de la consigne) ; en 254 fs ainsi, sans plus de dépassement (12 800 atm). Plus vite, la paroi irait plus vite que les atomes (≈ 1 Å par 100 fs) et les écraserait au lieu de les comprimer. Activé en relaxation ou en pause, le piston met la dynamique à température en route (il n'agit que si les atomes bougent). Sur la pression instantanée (τ = 100 fs), qui vaut zéro entre deux chocs puis bondit, la paroi tremblait à chaque contact : 16 mÅ en 50 fs à 2 000 atm (H₂ + Cl₂), 2 mÅ ainsi ; la consigne reste tenue à 3–6 % (2 000, 10 000, 20 000 atm). La vue se pose sur le centre de l'enceinte : la sphère ne bouge pas, les molécules bougent dedans. Son bord est teinté par la pression (bleu faible, ambre forte) ; des chevrons y montrent quand le piston serre ou cède ; un manomètre en haut à gauche donne la mesure sur une échelle logarithmique (10 à 30 000 atm), la consigne en doré, et ce que fait le piston (à 25 % près). Sur 6 ps, la moyenne tient la consigne à 4 % près. Pourquoi pas 1 atm : à 1 500 K, une molécule n'en rencontre une autre que toutes les ~170 ps, plus d'une heure de calcul ; à 100 atm ~2 ps, à 10 000 atm ~25 fs |
 | vibrations | hessienne par différences centrées des forces analytiques (pas de 0,005 Å), pondérée par les masses, sans translations ni rotations ; « exciter » un mode donne n quanta hν, et la dynamique (anharmonique) prend le relais |
 | isotope | un atome (ou tous ceux d'un élément) prend la masse d'un de ses isotopes : les stables, et les radioactifs d'au moins un an de demi-vie (¹H ²H ³H, ¹²C ¹³C ¹⁴C, ¹⁶O ¹⁷O ¹⁸O…), masses de l'AME et abondances IUPAC (base mendeleev). Seule la masse change : la surface d'énergie, la géométrie, les charges restent (Born–Oppenheimer) ; la dynamique et les vibrations changent. H₂O → D₂O : 1 440, 3 677, 3 788 → 1 054, 2 650, 2 779 cm⁻¹, rapports 0,73, 0,72, 0,73 (mesurés : 0,74, 0,73, 0,74) ; HDO découple ses élongations (O–D 2 712, O–H 3 736 cm⁻¹). L'isotope s'écrit en exposant devant le symbole (²H, ¹³C) |
 | assembleur 2D | un dessin à plat, vérifié par le calcul pendant qu'on dessine, puis posé en 3D et relaxé dans le simulateur (voir « L'assembleur 2D et le dictionnaire ») |
+| réaction du dessin | réactifs → produits : les molécules du dessin agitées ensemble dans une sphère, en trois essais ; les issues trouvées, avec leur ΔE et leurs produits, à redessiner ou à ouvrir en 3D (voir « La réaction du dessin ») |
 | expériences | cinq réactions réelles, de la plus exigeante à la plus simple (`experiments.py`) : Diels-Alder (buta-1,3-diène s-cis + éthylène → cyclohexène), SN2 (OH⁻ + CH₃Cl → CH₃OH + Cl⁻), transfert de proton (H₃O⁺ + NH₃ → H₂O + NH₄⁺), recombinaison de radicaux (2 CH₃· → éthane), formation de l'eau (OH· + H· → H₂O). Chaque réactif est relaxé seul (L-BFGS, GFN1-xTB), les deux sont posés face à face par les atomes qui réagissent (l'OH⁻ à l'opposé du chlore, l'éthylène à plat à 3,2 Å au-dessus des extrémités du diène), puis lancés le long de la ligne de leurs centres avec une énergie de choc exacte (quantité de mouvement nulle), plus l'agitation de chaque réactif à 300 K sans sa translation. Dynamique libre pendant le choc, puis le thermostat prend le relais (le gaz autour, qui emporte l'énergie libérée). Réussie quand le dictionnaire reconnaît les produits ; manquée après une limite de temps. Réglées par le calcul : chacune réussit sur 3 à 6 tirages de l'agitation (tests/test_experiments.py en rejoue un), et les produits tiennent 600 fs après le choc |
 | molécules du vivant | glucose (β-D-glucopyranose), acide laurique (acide gras saturé en C12, un lipide), glycérol, alanine, caféine : les conformères 3D de PubChem (MMFF94), relaxés par GFN1-xTB en 70 à 85 pas sans qu'une liaison casse ; 13 à 38 atomes (au-delà de 40, le calcul ne suit plus en temps réel) |
 
@@ -131,6 +140,408 @@ ou 0,78 (simple, double, triple), angles de 180°, 120° ou 109,47° selon les l
 restent à 2,5 Å au moins l'une de l'autre ; l'enceinte, en option, est une sphère de rayon le plus éloigné + 1,5 Å.
 Puis le simulateur relaxe, et tout s'applique (dynamique, réacteur, vues, vibrations, isotopes). CH₄ dessiné à plat
 devient un tétraèdre ; OH· et H· dessinés côte à côte deviennent H₂O en 0,8 s de relaxation.
+
+### La réaction du dessin
+
+La carte **07 Réaction** de l'assembleur demande au moteur ce que deviennent les molécules dessinées
+(`reaction.py`, action `MOLECULE_REACT = 112`, réponse `MoleculeLabState.reaction`). Ce n'est pas une recherche
+exhaustive d'états de transition (trop coûteuse pour un outil interactif), mais un **nanoréacteur** (Wang et al.,
+*Nat. Chem.* 6, 1044, 2014) :
+
+1. chaque molécule du dessin est posée en 3D comme à l'envoi et relaxée seule (L-BFGS) ; puis toutes sont rapprochées
+   ensemble, dans la disposition du dessin, jusqu'à ce que leurs deux atomes les plus proches soient à 2,8 Å
+   (`_pack` : leurs centres glissent sur des rayons issus du centre commun — dessinées loin l'une de l'autre, elles ne
+   se rencontreraient pas en 600 fs) ;
+2. un essai : la sphère du réacteur posée sur leurs nuages, les vitesses tirées à la température choisie (1 500,
+   2 500 ou 4 000 K), le thermostat CSVR et le bain de chaque atome pendant 600 fs, puis 120 fs à 300 K ;
+3. chaque espèce présente à la fin (le recensement du laboratoire : Mayer et densité partagée) est relaxée seule ; si
+   elle se défait en se relaxant, ses morceaux le sont à leur tour. Ce sont les produits de l'essai ;
+4. trois essais, aux vitesses de départ différentes ; ceux qui mènent aux mêmes produits sont regroupés en une issue :
+   combien d'essais, ΔE = Σ E(produits seuls) − Σ E(réactifs seuls) (GFN1-xTB à 0 K, sans énergie de point zéro), et
+   quand les espèces ont changé pour la première fois.
+
+L'écran dit d'avance ce qu'un essai peut franchir : une barrière Eₐ se passe à peu près une fois en 3 × 600 fs si
+ν·t·e^(−Eₐ/kT) ≈ 1, avec ν = 10¹³ s⁻¹ (une vibration), soit Eₐ ≈ kT·ln(18) ≈ 2,9 kT : 0,37 eV à 1 500 K, 0,62 eV à
+2 500 K, 1,0 eV à 4 000 K — un ordre de grandeur, pas une mesure. Pendant le calcul, la carte suit l'essai (son
+temps, ses espèces, le temps de calcul restant d'après le rythme jusqu'ici) ; « Arrêter » l'annule, comme une
+nouvelle demande. Chaque issue montre ses produits dessinés (la mise en page de l'assembleur), leurs noms,
+ΔE, et deux gestes : **Dessiner** (les produits remplacent le dessin ; Ctrl+Z revient aux réactifs) et **En 3D**
+(les produits dans le simulateur ; le dessin ne change pas). Au plus 30 atomes : un essai coûte ≈ 2 500 pas de
+0,25 fs, de l'ordre de 10 s pour trois atomes et de 30 s pour six.
+
+Vérifié par le calcul (3 essais × 600 fs ; tests/test_reaction.py rejoue le premier) :
+
+| Dessin | Température | Issues | ΔE GFN1 | Mesuré |
+|---|---|---|---|---|
+| OH· + H· | 1 500 K | H₂O 3/3, premier changement vers 220 fs (30 s de calcul en tout) | −8,1 eV | −5,1 eV (D₀) ; −5,4 sans point zéro |
+| OH⁻ + H₃O⁺ | 1 500 K | 2 H₂O 3/3, dès 34 fs | −10,9 eV | ≈ −9,8 eV (en phase gazeuse) |
+| Cl· + CH₄ | 2 500 K | rien 2/3 ; CH₃· + HCl 1/3, à 547 fs | +0,61 eV | ≈ +0,1 eV |
+| H₂ + Cl₂ | 4 000 K | rien 3/3 | — | (la vraie réaction passe par des radicaux, Cl· + H₂) |
+| H₂O₂ seul | 2 500 K | rien 3/3 | — | (O–O tient ≈ 2,2 eV) |
+
+### Le solvant implicite (ALPB)
+
+Le laboratoire (menu **Milieu**, en bas) et le schéma réactionnel (un solvant écrit sous une flèche : eau, MeCN, DMF,
+DMSO, THF, MeOH, CH₂Cl₂…) placent la molécule dans un **solvant implicite** : le modèle ALPB de GFN1-xTB (Ehlert,
+Stahn, Spicher, Grimme, *J. Chem. Theory Comput.* 17, 4250, 2021), transposé de tblite, l'implémentation de référence
+de xtb (`solvation.py`), avec ses paramètres publiés pour 25 solvants (`data/gfn1-alpb.json`, construit par
+`tools/build_solvation_data.py` depuis les sources de tblite et mctc-lib à des commits fixés ; LGPL-3.0). Quatre termes :
+
+- **polaire** : Born généralisé, G_pol = ½ Σ q_i q_j k_ε / f(r_ij), noyau P16 f = r + R (1 + ζr/16R)⁻¹⁶ (R = √(R_i R_j),
+  ζ = 1,028), k_ε = (1/ε − 1)/(1 + α/ε), plus la correction ALPB ½ k_ε (α/ε) (Σq)² / A_det (α = 0,571412, A_det une
+  taille tirée du tenseur d'inertie). Les rayons de Born R_i suivent Onufriev–Bashford–Case (intégrale d'écrantage
+  par les sphères des voisins, rayons de van der Waals D3 × un facteur par élément et par solvant). Les charges sont
+  celles de Mulliken de GFN1 plus la correction CM5, comme dans xtb pour GFN1 ;
+- **liaisons hydrogène** : Σ h_i S_i q_i², S_i la surface accessible au solvant ;
+- **non polaire** : Σ γ_i S_i (cavité, dispersion) ;
+- **décalage** : une constante par solvant.
+
+Le potentiel ∂G/∂q entre dans le cycle auto-cohérent : les électrons répondent au solvant (et la réponse linéaire du
+Newton en tient compte). La surface est intégrée sur la grille de Lebedev de 230 points (SciPy), lissée sur ±0,3 Å.
+Le gradient est analytique (la dérivée de l'intégrale d'écrantage par la distance : différence centrale).
+
+Vérifié par le calcul (tests/test_solvation.py) :
+
+- les gradients analytiques collent aux différences finies de l'énergie à 10⁻⁷–10⁻⁸ Eh/Å près (méthanol dans le
+  DMSO, acétate dans l'eau) ; la surface lissée d'un atome isolé vaut 4πR² à 0,06 % près ;
+- les énergies libres d'hydratation, chaque espèce relaxée dans le vide puis dans l'eau, contre la mesure (Minnesota
+  Solvation Database ; ions : Kelly, Cramer, Truhlar 2006) :
+
+| Espèce | GFN1/ALPB (kcal/mol) | Mesuré |
+|---|---|---|
+| acétone | −3,6 | −3,8 |
+| acétonitrile | −3,8 | −3,9 |
+| benzène | −0,4 | −0,9 |
+| méthanol | −6,0 | −5,1 |
+| acide acétique | −8,0 | −6,7 |
+| hexane | +1,0 | +2,5 |
+| ammoniac | −9,9 | −4,3 |
+| eau | −13,5 | −6,3 |
+| méthylammonium | −66,6 | −73,0 |
+| hydroxyde | −74,4 | −105 |
+| I⁻ (atome seul) | −54 | ≈ −60 |
+
+  Les molécules organiques sont à 1 kcal/mol environ ; l'eau et l'ammoniac, petits et très liés par liaisons
+  hydrogène, sont trop solvatés (le terme de liaison hydrogène de GFN1/ALPB, ajusté sur de plus grosses molécules) ;
+  les petits anions durs (OH⁻) ne le sont pas assez, comme dans tout continuum. L'acétate n'est pas dans le tableau :
+  dans le vide, GFN1 ne le converge qu'en lissant ses occupations à 15 000 K, ce qui fausse sa référence (−90 kcal/mol
+  d'entropie électronique) — un défaut du vide, pas du solvant (dans l'eau, il converge à 300 K).
+
+Le surcoût : +50 % par calcul (56 atomes : 0,15 → 0,22 s). Ce qu'il ne corrige pas : l'énergie des ions de GFN1
+lui-même (affinité électronique du chlore 9,8 eV calculés, 3,6 mesurés ; ionisation du sodium 8,1 pour 5,1). Ainsi
+NMe₃ + MeI → NMe₄⁺ + I⁻ vaut +8,9 eV dans le vide (ions séparés) et +4,6 eV dans l'acétonitrile : le solvant retire
+4,3 eV, ce qu'il doit (NMe₄⁺ −2,2 eV, I⁻ −2,3 eV, comme les mesures), mais la réaction se fait en solution — l'écart
+restant, ≈ 5 eV, est celui de GFN1 sur l'énergie des ions, et l'écran le dit pour toute étape qui crée ou détruit des
+ions. Rien de tout cela n'est vérifié contre xtb lui-même : son binaire officiel (6.8.0) a été téléchargé et sa somme SHA-256
+contrôlée, mais pas exécuté ici.
+
+### Le schéma réactionnel
+
+Le bouton **Schéma de réaction** (en-tête du laboratoire) ouvre un éditeur de chimiste : on dessine en formule
+squelettique (les carbones aux sommets, les hydrogènes implicites, des cycles de 3 à 7 et le benzène, des abréviations
+Me, Et, Ph, OMe, TMS, Ac, CO₂Me, Boc…), on trace des **flèches de réaction** avec, au-dessus, les réactifs (MeI, CsF,
+Co₂(CO)₈, H₂, NaBH₄, OsO₄… une soixantaine, un nom du dictionnaire ou un SMILES) et, au-dessous, les conditions
+(un solvant parmi les 25 d'ALPB devient le milieu de l'étape, voir plus haut ; température, Δ, hν : dites, pas
+simulées), et, si l'on veut, les **flèches courbes** des électrons. Un
+SMILES collé se dessine (RDKit) ; des exemples tout faits s'ouvrent du menu. Le moteur (`scheme.py`, action
+`MOLECULE_SCHEME = 113`, texte JSON ; réponse `MoleculeLabState.scheme`) compile le dessin :
+
+1. **les étapes** : chaque flèche relie les molécules derrière sa queue (en chaîne, tant qu'elles se touchent presque)
+   à celles devant sa pointe ; un schéma en serpentin (flèches vers la droite, vers le bas, vers la gauche) se lit
+   comme sur papier, et une étape dont un réactif est le produit d'une autre vient après elle ;
+2. **qui devient quoi** : avec des flèches courbes, exactement — chaque flèche déplace une paire d'électrons (d'un
+   doublet ou d'une liaison vers un atome, une liaison existante ou à former), ce qui donne les ordres de liaison et
+   les charges formelles d'arrivée ; le graphe obtenu doit être celui du produit dessiné (isomorphisme, networkx),
+   sinon l'écran le dit et le calcul suit le dessin. Sans flèches : plusieurs correspondances sont essayées (la plus
+   grande sous-structure commune, RDKit FMCS, avec tous les réactifs ou molécule par molécule dans chaque ordre, les
+   liaisons de tout ordre ou d'ordre exact), complétées par les hydrogènes, et la plus économe en liaisons formées,
+   rompues ou changées est gardée. Ce qui ne va dans aucun produit dessiné forme les **sous-produits**, déduits des
+   valences (un N⁺ qui perd une liaison redevient neutre, un CO qui perd son métal est [C⁻]≡[O⁺], un cation et un
+   anion covalents se lient : Me₃Si⁺ + F⁻ → Me₃SiF) ;
+3. **le calcul** (une étape de 60 atomes ≈ 450 calculs GFN1, environ 2 minutes sur une machine libre ; les résultats
+   arrivent étape par étape, et une étape calculée se rejoue déjà pendant que les suivantes se calculent) : chaque réactif relaxé seul (sa géométrie de l'étape précédente s'il en sort, sinon son conformère
+   le plus stable parmi six, RDKit ETKDG puis UFF), chaque produit et sous-produit de même ; ΔE = Σ E(produits seuls)
+   − Σ E(réactifs seuls). Le chemin part du **produit** : posé avec ses sous-produits (le groupe partant à l'opposé
+   de l'attaquant), puis les liaisons formées étirées jusqu'au contact (≈ r₁ + r₂ + 1,4 Å) et les liaisons rompues
+   ramenées à leur longueur, en 11 paliers (contrainte harmonique de 27 eV/Å², tout le reste relaxé par L-BFGS à pas
+   bornés, voir plus bas) ; le
+   complexe des réactifs ainsi obtenu, relaxé sans contrainte (ses molécules tenues à 2,6 Å au moins), sert de
+   départ au même chemin à l'endroit. Tiré dans un seul sens, un chemin reste sur sa branche (le cyclohexène étiré
+   garde ses carbones sp³ jusqu'à 2,5 Å, 6 eV au-dessus du produit, puis bascule) : à chaque palier, l'image de l'une ou
+   l'autre branche est gardée, la suite la plus basse (sa plus haute image, puis la somme) parmi celles dont deux
+   images voisines se rejoignent — on ne change de branche que là où elles se rejoignent (voir « Les sauts »). Partir du produit compte : tirée depuis un butadiène s-trans, la fermeture
+   du cycle donnait un trans-cyclohexène, 2 eV trop haut ;
+4. **le verdict** : chaque produit, relaxé seul jusqu'à ce que ses forces retombent (trois départs au plus), garde-t-il
+   les liaisons dessinées ? Une liaison est perdue si elle s'allonge au-delà de 1,3 fois la somme des rayons
+   covalents, une nouvelle comptée si GFN1 la voit (Mayer, densité partagée) à moins de 1,15 fois — les indices de
+   Mayer seuls se trompent sur les liaisons à plusieurs centres (le cœur Co₂C₂ : sous 0,5). Les ions formés dont les
+   charges se compensent sont comptés en paire d'ions, comme le sel écrit sur la flèche l'est côté réactifs. La barrière est la plus haute énergie du chemin au-dessus du complexe de départ.
+
+Après le chemin imposé, les molécules formées s'écartent de la plus grosse (1, 2 puis 3 Å, chaque image calculée),
+comme les réactifs arrivaient : un sous-produit s'en va au lieu de rester collé au produit. À l'approche, deux
+molécules s'écartent l'une de l'autre ; à partir de trois (une molécule et les deux ions d'un sel), les autres
+s'écartent de la plus grosse ; une image d'approche ou de départ où deux atomes de morceaux différents seraient plus
+proches qu'au contact n'est pas montrée (CsF près d'un ammonium, écartés depuis leur centre commun, plaçait F⁻ dans un
+méthyle : +316 eV).
+
+**La relaxation : des pas bornés.** Chaque relaxation d'un schéma (réactifs, produits, paliers, complexe de départ)
+est un L-BFGS à pas bornés, celui d'ASE : la direction des deux boucles de L-BFGS, raccourcie pour qu'aucun atome ne
+bouge de plus de 0,2 Å, divisée par deux tant que l'énergie monte ; pas de recherche linéaire. Celui de SciPy
+(L-BFGS-B) pouvait s'arrêter sur place : son premier pas, long de 1 Å en tout et porté par les quelques atomes que
+tire une contrainte, menait à +12 eV ; sa recherche linéaire n'acceptait qu'un pas infime, et son test de réduction
+relative (rapportée à une énergie de 87 Eh) annonçait la convergence. Mesuré sur un palier de l'élimination par CsF :
+L-BFGS-B, 3 calculs, rien n'a bougé ; à pas bornés, 13 calculs, les trois distances à leur cible (Si–C 2,585 Å pour
+2,585). L'étape entière : 237 s au lieu de 288, et un chemin qui avance à chaque palier (la barrière de ce chemin,
+1,08 eV au lieu de 3,80 : l'ancienne venait du palier figé, à +16 eV dans l'autre sens).
+
+Pendant le calcul, l'éditeur montre ce que le moteur calcule (`MoleculeScheme.live`, `.log`) : la géométrie en cours
+de relaxation, à chaque pas de L-BFGS (les distances tirées en tirets), le profil qui se remplit palier par palier, à
+rebours puis à l'endroit, et le journal — chaque relaxation et chaque palier, sa molécule, son énergie (« produit
+relaxé seul, il tient · C₆H₁₀ · E −18,07236 Eh », « chemin à l'endroit, palier 4/12 · +3,00 eV · C1–C7 2,53 Å »),
+et le nombre de calculs GFN1-xTB (666 pour Diels–Alder, en 6 s). Une fois le calcul fini, l'écran se dit fini puis
+se replie (le journal reste à un clic). Pendant le calcul, le dessin est verrouillé (il est celui qu'on calcule ;
+Arrêter le libère), et les cartes des étapes ne sont refaites que quand une étape s'ajoute : le moteur publie toutes
+les 0,15 s, et des cartes refaites à chaque publication perdaient les clics (« Voir le chemin » qu'il fallait
+recliquer, « Limites et remarques » qui se repliaient aussitôt). Ces publications sont légères : les étapes (les images
+de chaque chemin, des milliers de nombres) ne partent qu'à leur changement ; entre-temps, le message les dit gardées
+(`MoleculeScheme.steps_kept`) et le client garde les siennes.
+
+Le moteur calcule sur deux fils d'algèbre linéaire (`OPENBLAS_NUM_THREADS`, posé par engine.py s'il n'est pas donné) :
+OpenBLAS prenait tous les cœurs pour des matrices de 150 à 250 orbitales, où se synchroniser coûte plus que calculer
+— un calcul de 62 atomes prenait 270 ms en occupant 1,9 cœur, il en prend 196 en en occupant un ; la machine et
+l'interface gardent le reste.
+
+Chaque étape se rejoue dans sa vue de lecture (plus bas), qui la joue seule, ou dans la scène 3D
+(`MOLECULE_SCHEME_PLAY = 114`) : là, le moteur pose les géométries du chemin et
+recalcule chacune — densité, liaisons, énergie, espèces présentes —, tout ce que la scène montre d'habitude. Entre deux
+images, chaque corps rigide (les atomes liés dans les deux images) glisse et tourne de l'une à l'autre par la rotation
+la plus courte, seule sa déformation propre étant interpolée en ligne droite : en ligne droite pour tous les atomes,
+un CO expulsé posé à l'envers par les deux branches du chemin passait son oxygène à travers son carbone (+31 eV à
+mi-chemin pour GFN1-xTB, des pics sur la courbe d'énergie) ; par corps rigide, chaque géométrie intermédiaire reste
+entre ses deux images (complexe alcyne–dicobalt : 0 à 2,53 eV le long du chemin, comme les images). Pendant la
+lecture, la scène ne montre que la réaction : les liaisons qui se forment (tirets verts) et se rompent (tirets orange),
+d'autant plus épaisses que leur indice de Mayer à cet instant est grand, avec sa valeur ; les atomes qui réagissent,
+nommés comme dans la carte (C2, Co13) ; ni signes δ ni étiquettes d'espèce ; un cadre fixe qui tient tout le chemin,
+à droite de la carte. Les espèces présentes suivent l'image montrée, sans annonce au journal (le temps ne passe pas).
+Une carte en bas à gauche porte le transport, le profil d'énergie avec la position courante et les liaisons qui
+changent (formées et rompues d'abord, colorées comme dans la scène) ; toucher la scène (chauffer, tirer un atome) la
+rend libre. L'éditeur montre le profil de tout le schéma (un palier par étape, Σ ΔE ;
+une bosse par barrière) et, pour chaque étape, ΔE, la barrière, le verdict, les sous-produits déduits et les limites.
+
+**La vue du chemin (le replay).** « Voir le chemin » ouvre l'écran du chemin (`SchemeStage`, `StageRenderer`) à la
+place de la scène du laboratoire : un replay en 2.5D, dessiné sur un canevas, dans le fond même de la scène du
+laboratoire (son bleu nuit, rien d'autre : pas de décor qui ne mesure rien). Les atomes sont des billes de verre teinté
+calculées pixel par pixel (rayon 0,14 Å + 0,32 × rayon covalent : H 0,24 Å, C 0,38 Å, Si 0,51 Å) de la couleur de leur
+élément — la teinte de la table CPK pour la nuit : le carbone acier bleuté, l'hydrogène blanc, l'azote bleu roi,
+l'oxygène rouge corail — : le verre épais, sombre de sa teinte ; la lumière principale, venue d'en haut à gauche, que
+la bille concentre de l'autre côté ; le liseré de Fresnel ; le reflet net de la lumière principale et celui, petit, de
+la lumière d'appoint ; dehors, un contour sombre qui la détache de ce qui est derrière. Les liaisons sont des bâtonnets
+de verre éclairés de même selon leur angle à l'écran. Tout est vu en perspective et dessiné du fond vers l'avant (chaque
+atome couvre ce qui est derrière lui) ; ce qui est loin se voile vers le fond. Ce qu'elle montre vient du calcul :
+
+- les images du chemin telles que le moteur les a calculées, rejouées par l'écran lui-même (`PathMotion`) : leurs
+  positions, leurs énergies, leurs charges de Mulliken et les indices de Mayer de toutes leurs liaisons
+  (`MoleculeSchemeStep.bond_pairs`, `bond_orders` : chaque paire liée, indice ≥ 0,3, dans au moins une image) ; entre
+  deux images, chaque corps rigide glisse et tourne de l'une à l'autre par la rotation la plus courte (le quaternion
+  de Horn qui aligne l'une sur l'autre, une fraction de son angle), comme le moteur le fait dans la scène 3D, et les
+  nombres sont interpolés ; à travers un saut, l'une puis l'autre image, par un bref fondu dit non calculé. La lecture ne dépend ni du moteur
+  (qui calcule peut-être encore les étapes suivantes) ni de ses allers-retours : jouer, revenir, cliquer sur la frise
+  répondent tout de suite ;
+- un, deux ou trois bâtonnets selon l'indice de Mayer calculé là (`MoleculeScene.strokes`) ; une liaison qui se forme
+  (vert) ou se rompt (orange) est un filament de verre lumineux, sa lumière tenue par son indice de Mayer m à cette
+  géométrie : son épaisseur (0,24 + 0,76 √s du bâtonnet), son opacité et sa lueur suivent s = m / 0,75 — un fil à peine
+  visible quand l'indice est faible, un bâtonnet plein à 0,75, de sa couleur ensuite. Sans liaison (pas encore, ou
+  plus : m sous 0,02), un trait fin en pointillé relie la paire. Chaque liaison qui change est étiquetée de sa longueur
+  et de son indice (« 2,28 Å 0,23 », sans cadre ; une étiquette sans place se tait) ; celles dont seul l'ordre change
+  sont teintées de bleu ;
+- au choix (bouton des charges), chaque bille prend la couleur de sa charge de Mulliken à cette géométrie (argent au
+  neutre, cyan δ+, magenta δ−, la convention du laboratoire) et un halo de cette couleur, d'autant plus large et vif
+  qu'elle est forte ; au choix aussi, les trajectoires des atomes
+  qui réagissent (un point par image calculée, pâles pour l'approche et le départ), les flèches courbes du dessin
+  posées sur les atomes calculés (une hypothèse sur les électrons, dite comme telle), les hydrogènes qui ne réagissent
+  pas ; sur chaque bille assez grande, le symbole de l'élément comme dans une formule squelettique — les carbones et
+  les hydrogènes sous-entendus, les autres éléments écrits, les atomes qui réagissent numérotés (tous, sur demande) ;
+- la vue elle-même : l'œil regarde le long de l'axe le plus mince des positions des atomes qui réagissent sur tout le
+  chemin imposé — les liaisons qui changent sont dans le plan de l'écran (Diels–Alder : l'anneau qui se ferme, vu de
+  face) —, puis s'incline de 22° ; la caméra cadre le chemin imposé ; elle tourne, se rapproche (vers la souris), se
+  déplace, et revient (double-clic, R).
+
+La légende, courte, dit chaque signe présent en quelques mots et ce qui n'est qu'un décor (le verre et ses reflets) ;
+les lueurs, elles, sont calculées (l'éclat des liaisons qui changent ; en mode charges, les halos) ; les explications
+sont dans les « ? » du panneau. À droite : l'énergie à la géométrie
+montrée en grand, la barrière de ce chemin et ΔE, la courbe par les images (et le point calculé là) ; image par
+image, l'indice de Mayer et la longueur de chaque liaison qui change, la charge de chaque atome qui réagit
+(`MoleculeSchemeStep.path`, `charges`, `orders` — un clic place le chemin là), et dessous ce qui a le plus changé du
+début à la fin, calculé (« C21 gagne 0,25 e · O28 en perd 0,04 e ») ; les liaisons qui changent à cet instant, avec la
+jauge de leur indice ; le verdict, le milieu, ce qui est écrit sur la flèche (noms traduits) et les limites. En bas,
+la frise : le profil d'énergie du chemin en silhouette (déjà lu, en couleur), ses zones (approche, chemin imposé,
+départ), une marque par image, les sauts de branche ; et la vitesse : 1, 2,5 ou 6 images du chemin par seconde, à
+l'horloge de l'écran. Pendant la lecture, la vue suit la géométrie image d'écran par image d'écran ; un pas d'une image
+ou un clic sur la frise y glisse en quelques centièmes de seconde (et saute d'un coup au-delà de 0,35 Å : un saut de
+branche). Le rendu prend 0,06 à 0,25 ms par image sur le fil de l'interface (Robinson 30 atomes, diène silylé 55, vue
+fixe ou en rotation ; la scène du laboratoire, 13 à 16 ms), seulement quand quelque chose bouge : chaque bille et
+chaque tranche de bâtonnet est calculée une fois (par teinte, taille, voile et angle) puis reposée ; la légende n'est
+redessinée que si elle change ; la scène du laboratoire, cachée dessous, n'est plus dessinée. Sur la courbe
+d'énergie, un trait pointillé marque ΔE (produits et réactifs relaxés chacun seul) : la dernière image du chemin,
+qui garde les molécules formées côte à côte, en diffère (Robinson, étape 1 : −1,28 eV contre −1,45). **Scène 3D**
+confie le même chemin au moteur, depuis la position montrée ; la carte de la scène 3D revient à la vue de lecture à
+la sienne (et arrête le moteur). Les onglets du laboratoire (ρ, Δρ, ψ, assembleur 2D) referment l'éditeur et la vue
+de lecture.
+
+**Les sauts.** Le chemin imposé gardait à chaque palier la plus basse de ses deux branches : là où elles se
+croisent, un atome pouvait sauter d'une image à l'autre. Mesuré : un H du Diels–Alder bouge de 1,6 Å entre deux images
+voisines, un H de l'étape 2 du Wittig de 2,6 Å ; une géométrie interpolée entre elles n'est sur aucune branche —
+GFN1-xTB la trouve 2,1 à 2,4 eV (Diels–Alder) et 9,9 eV (Wittig) au-dessus de la droite entre les deux images (la
+lecture la montrait : un point d'énergie bien au-dessus de la courbe). Le moteur repère ces sauts en calculant le
+chemin (`lab.internal_motion`, `JUMP`, `JUMP_EV` : un atome bouge de plus de 0,4 Å hors de son corps rigide, après
+l'alignement de Kabsch, ET la géométrie du milieu coûte plus de 0,3 eV de plus que la droite ; le complexe au cobalt
+fait pivoter ses CO de 0,6 à 1,0 Å d'une image à l'autre, mais le milieu n'y coûte que −0,07 à +0,09 eV : pas de saut)
+et les écrit au journal (« saut de branche entre les images 13 et 14 · +2,38 eV au milieu ») ; la lecture passe d'une
+image à l'autre (`MoleculeSchemeStep.jumps`), la frise et les courbes les marquent, et la vue le dit.
+
+Deux corrections réduisent ces sauts. Le chemin gardé ne passe plus d'une branche à l'autre là où leurs images ne se
+rejoignent pas (chaque branche, chaque palier partant du précédent, est continue) : la suite d'images reliées la plus
+basse (`scheme._continuous`). Puis, entre deux images voisines encore séparées, le palier du milieu est calculé
+(relaxé sous ses contraintes depuis leur mélange par corps rigides, deux fois au plus en profondeur) : un pas trop grand
+s'y résout. Ce qui reste est un vrai décrochage : la géométrie suivie sous contrainte cesse d'exister, et la molécule
+tombe d'un coup dans un autre minimum. Robinson, étape 1 : juste après le col (2,61 eV), C2 se pyramidalise de 0,49 Å
+d'un palier au suivant — même à un quart de pas — et l'énergie tombe de 1,24 eV. La vue le dit avec ce qu'elle calcule
+sur les deux images (« Saut · C2 bouge d'un coup de 0,49 Å, énergie −1,24 eV · passage non calculé, montré en
+fondu ») et passe de l'une à l'autre par un bref fondu par corps rigides, au tiers du segment, au lieu d'une coupure.
+Relier les deux minima par des images calculées (une bande élastique entre eux, au même palier) n'est pas fait.
+
+**Les étapes qui se suivent, tout le schéma.** Chaque étape était calculée et montrée à part : ses atomes numérotés
+dans son propre ordre, ses images posées dans son propre repère, sa vue calculée sur elle seule — de l'étape 1 à
+l'étape 2, on voyait deux images sans lien. Maintenant :
+
+- un atome garde son numéro dans tout le schéma (`MoleculeSchemeStep.ids`) : le moteur reprend ceux du produit d'une
+  étape pour la molécule qui en vient, et donne de nouveaux numéros, à la suite, aux réactifs écrits sur une flèche
+  (aldolisation : O11 et H10 de l'étape 1 sont O11 et H10 de l'étape 2) ; le journal du calcul, la vue, la scène 3D et
+  sa carte écrivent les mêmes ;
+- les images d'une étape sont tournées et déplacées d'un seul bloc (la rotation de Horn sur ses atomes partagés avec
+  l'étape d'où ils viennent : rien d'autre ne change, distances, énergies et charges restent celles du calcul) pour que
+  sa première image pose la molécule reprise là où l'étape précédente l'a laissée ; la vue glisse en 0,9 s de la vue
+  calculée de l'une à celle de l'autre (tournée à la main, elle reste telle quelle) ;
+- **Tout le schéma** (premier onglet de la vue du chemin, ou « Tout le schéma, à la suite » dans l'éditeur) joue les
+  étapes à la suite. Entre deux, un relais : la dernière image de l'une, la première de l'autre, sur leurs atomes
+  réunis ; la molécule reprise passe de l'une à l'autre par corps rigides, le sous-produit s'efface (première moitié),
+  le réactif écrit paraît (seconde moitié) ; rien n'y est calculé, la vue le dit (« Relais · étape 1 → 2 · passage non
+  calculé »). La colonne de droite devient celle du schéma : l'énergie depuis les réactifs du départ relaxés chacun
+  seul, ΔE de tout le schéma, la plus haute barrière, le profil de toutes les étapes à leur hauteur, la liste des étapes
+  (un clic en ouvre une) et le bilan — ce qui se forme et se rompt du début à la fin (par les numéros : une liaison
+  formée à l'étape 1 et rompue à l'étape 3 ne compte pas), ce qui entre (écrit sur les flèches) et sort (les
+  sous-produits), l'étape à la plus haute barrière et son temps de demi-réaction.
+
+Les hauteurs (`SchemeStage.Levels`) : les réactifs de l'étape k relaxés chacun seul sont à Σ ΔE des étapes d'avant (les
+molécules qui ne réagissent pas encore, ou plus, loin des autres : chaque énergie compte une fois) ; le moteur dit où
+sont la première et la dernière image de chaque chemin par rapport à ces molécules relaxées seules
+(`start_ev`, `end_ev`) ; ses images s'y posent. Vérifié : l'aldolisation catalysée (trois étapes) retombe sur le ΔE de
+l'aldolisation directe (−1,46 − 1,23 + 1,70 = −0,99 eV).
+
+Trouvé en route : une molécule reprise d'une étape faite dans un autre milieu gardait l'énergie calculée dans ce
+milieu-là — le diacide de l'exemple Diels–Alder puis hydrolyse comptait l'anhydride relaxé dans le toluène pour une
+hydrolyse dans l'eau. Elle est maintenant relaxée de nouveau dans le milieu de l'étape, et ce passage est compté
+(`transfer_ev` : +0,10 eV pour l'anhydride, du toluène à l'eau) ; l'hydrolyse passe de −0,45 à −0,56 eV.
+
+**Ce que le chemin forme vraiment à son bout.** Le chemin imposé ne tire que les liaisons qui se forment ou se rompent ;
+le reste est libre, et GFN1-xTB peut y faire autre chose que le dessin. L'aldolisation catalysée, étape 3 (la
+reprotonation) : pendant que H9 passe bien de l'eau à O13, l'hydroxyde qui naît arrache un autre proton, H8, au CH₂
+voisin de la cétone (plus acide pour GFN1). Les images de départ écartaient pourtant les molécules du dessin : le OH⁻
+dessiné s'en allait en laissant H8 seul au milieu (+3,4 eV dès 1 Å, +5,3 eV à 3 Å ; le complexe y valait 5,9 eV de plus
+que ses morceaux seuls). Maintenant, la dernière image du chemin est jugée comme un produit seul (une liaison du dessin
+rompue au-delà de 1,3 fois la somme des rayons covalents ; une autre formée si GFN1 la lie sous 1,15 fois — la distance
+seule aurait pris le contact Cs⁺…F⁻ pour une liaison et manqué les liaisons à plusieurs centres du complexe au cobalt) ;
+les images de départ écartent les molécules qui y sont vraiment ; et si elles diffèrent du dessin, le verdict le dit
+(« chaque produit tient seul, mais au bout du chemin imposé GFN1-xTB finit sur un autre produit »), les remarques
+nomment les liaisons (« forme O1–H8 et rompt C3–H8 » ; ses images de départ ne montent plus que de 0,21 eV ; recalculés, les neuf autres exemples ne changent pas et ne déclenchent aucune alerte), et le journal aussi.
+
+**Ce que ΔE ignore : l'entropie.** Quand des molécules partent (le complexe alcyne–dicobalt libère 2 CO), ΔE (0 K,
+sans entropie) dit la réaction plus coûteuse qu'elle n'est. Le moteur estime −TΔS (`entropy_ev`) : l'entropie de
+translation (Sackur–Tetrode, gaz parfait à 1 bar) et de rotation (rotor rigide, nombre de symétrie 1) de chaque
+molécule relaxée seule, à la température de l'étape — CO à 298 K : 197,6 J/mol/K (mesuré 197,7) ; H₂O : 188,6 une fois
+corrigé de σ = 2 (mesuré 188,8). Ni vibrations ni solvant : un ordre de grandeur. Complexe au cobalt : −TΔS ≈ −0,43 eV
+(une molécule de plus au bout), ΔE − TΔS ≈ +1,86 eV — l'écart à l'expérience (la réaction se fait à température
+ambiante) vient surtout des énergies métal–ligand de GFN1-xTB, dites dans les remarques. La vue du chemin et la carte
+de l'éditeur l'écrivent dès qu'il dépasse 0,05 eV.
+
+**Le temps d'une barrière.** Sous la barrière, son temps de demi-réaction d'Eyring, t½ = ln 2 / k avec
+k = (k_B T / h) · e^(−E / k_B T), à la température écrite sur la flèche (sinon 300 K) — la barrière prise pour
+l'enthalpie libre d'activation : un ordre de grandeur. Au-delà d'un an (1,22 eV à 300 K), la vue dit que ce chemin
+imposé, sans catalyseur, ne se fait pas, et propose de dessiner les étapes du mécanisme réel. La remarque dépend de la réaction :
+si un H passe d'un atome à un autre, la catalyse acide ou basique ; sinon (le complexe au cobalt), un chemin concerté
+qui n'est sans doute pas le mécanisme, à découper en étapes. Sous une barrière basse, la vue rappelle que celle de
+GFN1-xTB est souvent trop basse (le Diels–Alder « en moins d'une milliseconde » est sans doute plus lent). Vérifié sur
+l'aldolisation dans l'eau : sans catalyseur, 3,9 eV (plus que l'âge de l'Univers) ; dessinée avec OH⁻ (l'énolate,
+l'addition, la reprotonation — l'exemple « Aldolisation catalysée par OH⁻ »), 0,83, 0,11 et 2,36 eV. La reprotonation
+par l'eau reste haute et coûteuse (+1,70 eV) : GFN1-xTB lie mal OH⁻ dans l'eau (voir le solvant implicite).
+
+**Le relief.** Le bouton des lunettes de la vue du chemin : anaglyphe rouge-cyan (les deux yeux de part et d'autre de
+la cible, à ±1,5° ; l'œil gauche en gris dans le rouge, l'œil droit en couleur dans le vert et le bleu — un anaglyphe
+« demi-couleur », qui évite qu'un atome rouge ne se voie que d'un œil ; le fond passe au gris), puis côte à côte
+(l'œil gauche à gauche : visiocasque, écran 3D, vision parallèle). Les textes à plat (la fiche, la pastille, l'échelle)
+sont les mêmes pour les deux yeux.
+
+**Depuis ChemDraw et MarvinSketch.** L'éditeur lit ce que ces logiciels copient ou enregistrent (`scheme.imported`,
+par RDKit) : un bloc MDL (MOL ou SDF, V2000 ou V3000 — « Copier comme MOL »), un bloc RXN, du CDXML (ChemDraw : ses
+molécules, et ses étapes de réaction avec leurs flèches), du MRV (MarvinSketch, molécule ou réaction), un SMILES de
+réaction (« A.B>>C ») ou un SMILES. « Coller » (ou Ctrl+V sur le dessin), « Ouvrir un fichier… », ou un fichier glissé
+sur le dessin ; sous Windows, le format MDL que ChemDraw dépose dans le presse-papiers (MDLCT) est lu aussi. Les
+positions 2D du fichier sont gardées (une liaison y mesure 1, comme dans un dessin), les hydrogènes deviennent
+implicites, les agents d'une réaction s'écrivent au-dessus de sa flèche. Le CDX binaire de ChemDraw ne se lit pas
+(l'enregistrer en CDXML).
+
+**D'un laboratoire à l'autre.** Ouvrir un autre laboratoire fermait le laboratoire moléculaire : la scène, le schéma
+calculé (des minutes de calcul) et ses chemins étaient perdus au retour. Il est maintenant mis de côté
+(`Session.parked_molecule_lab`, `MoleculeLab.park` / `resume`) : plus de pas de dynamique ni de grille pendant
+l'absence, tout reste en mémoire, et un schéma en cours de calcul continue dans son fil ; au retour, tout est republié.
+
+**La scène 3D d'une étape.** « Scène 3D » montrait un instant ce que la scène avait avant (l'eau de départ) : le
+moteur mettait 1,2 à 3,7 s à publier la première image du chemin, dont 1,9 à 3,1 s de localisation de Pipek–Mezey à
+froid (les grains des liaisons ; aldolisation, 24 atomes dans l'eau). La localisation d'un chemin qui vient d'être posé
+se fait maintenant dans un fil à part (la première image part en 0,3 s, les grains suivent), et la vue du chemin reste
+à l'écran jusqu'à ce que le moteur joue l'étape demandée.
+
+Les schémas tout faits (menu **Exemples** de l'éditeur) : Diels–Alder butadiène + éthylène ; Menshutkin dans
+l'acétonitrile ; complexe alcyne–dicobalt ; le diène silylé en quatre étapes ; l'annulation de Robinson jusqu'à la
+cétone de Wieland–Miescher (Michael, aldol intramoléculaire, déshydratation, dans le méthanol) ; la réaction de Wittig
+(ylure + benzaldéhyde → oxaphosphétane → styrène + Ph₃PO, dans le THF) ; le réarrangement de Claisen aromatique
+(éther d'allyle et de phényle → cyclohexadiénone → 2-allylphénol) ; l'aldolisation-crotonisation benzaldéhyde +
+acétone dans l'eau ; la même addition catalysée par OH⁻, en trois étapes ; le Diels–Alder cyclopentadiène +
+anhydride maléique puis l'hydrolyse en diacide.
+
+Les exemples calculés (chaque étape confirmée : chaque produit tient seul ; ΔE GFN1-xTB, barrière du chemin imposé ;
+tous recalculés avec la relaxation à pas bornés et le chemin d'images reliées : les ΔE à 0,01 eV près ; les barrières
+montent là où l'ancien chemin sautait d'une branche à l'autre, ce qui les sous-estimait — Michael 2,4 → 2,6 eV, aldol
+de la Robinson 3,8 → 4,1, Claisen 3,3 → 3,6, aldol de la benzalacétone 3,5 → 3,9) :
+
+| Exemple | Étapes : ΔE (barrière), eV | Milieu |
+|---|---|---|
+| Robinson → Wieland–Miescher | Michael −1,45 (2,6) ; aldol −0,69 (4,1) ; déshydratation +0,85 (4,2), H₂O déduite | méthanol |
+| Wittig | oxaphosphétane −2,39 (0,17) ; styrène + Ph₃PO −1,08 (0,52) | THF |
+| Claisen aromatique | cyclohexadiénone +0,77 (3,6) ; 2-allylphénol −0,93 (0,75) | vide |
+| aldolisation-crotonisation | aldol −0,99 (3,9) ; benzalacétone + H₂O +0,68 (4,4) | eau |
+| aldolisation catalysée par OH⁻ | énolate + H₂O −1,46 (0,83) ; addition −1,23 (0,11) ; reprotonation + OH⁻ +1,70 (2,36) | eau |
+| cyclopentadiène + anhydride maléique | Diels–Alder −2,18 (0,21) ; hydrolyse −0,56 (6,5) | toluène, puis eau |
+
+À 0 K et sans entropie, une déshydratation qui libère une molécule d'eau paraît coûteuse (+0,7 à +0,9 eV) : en vrai,
+l'entropie gagnée la rend favorable. Une hydrolyse forcée en un seul chemin concerté (6,5 eV) n'est pas le mécanisme
+réel, qui passe par des intermédiaires tétraédriques : le chemin imposé ne dit alors qu'une borne très haute.
+
+Vérifié par le calcul (tests/test_scheme.py rejoue le premier) :
+
+| Schéma | Correspondance | ΔE GFN1 | Barrière du chemin | Verdict | Mesuré |
+|---|---|---|---|---|---|
+| butadiène + éthylène → cyclohexène | sous-structures | −2,80 eV (calcul direct : −2,80) | 0,35 eV | tient | ΔH ≈ −1,7 eV, Eₐ ≈ 1,2 eV |
+| NMe₃ + MeI → NMe₄⁺ + I⁻ | sous-structures | vide : +0,71 eV en paire d'ions (+8,9 ions séparés) ; acétonitrile : +4,65 eV | 2,9 / 2,8 eV | tient | se fait en solution (solvant polaire) |
+| diène silylé + N-phénylmaléimide → adduit (Diels–Alder) | sous-structures | −3,15 eV | 0,21 eV | tient | |
+| adduit + MeI → ammonium⁺ + I⁻, dans l'acétonitrile | sous-structures | +3,95 eV (ions séparés, solvatés) | 2,72 eV | tient | se fait en solution : l'écart est celui de GFN1 sur l'énergie des ions |
+| ammonium⁺ + CsF → 2,3-diméthylènecyclohexane + Me₃SiF + NMe₃ + Cs⁺, dans l'acétonitrile | sous-structures ; sous-produits déduits | −1,36 eV | 1,08 eV | tient | élimination 1,4 induite par le fluorure ; 3,80 eV avant la correction de la relaxation et de D3 (un palier figé) |
+| diène + acrylate de méthyle → bicycle (Diels–Alder) | sous-structures | −2,23 eV | 1,07 eV | tient | |
+| but-2-yne + Co₂(CO)₈ → Co₂(CO)₆(but-2-yne) + 2 CO | sous-structures ; 2 CO déduits | +2,29 eV (calcul direct : +2,28) | 2,74 eV (chemin concerté imposé) | tient (Co–Co 2,41 Å, Co–C 1,97 Å) | se fait à température ambiante ; le vrai mécanisme perd d'abord un CO |
+
+Les quatre dernières lignes sont le schéma de l'exemple « Diène silylé » (quatre étapes, jusqu'à 62 atomes) : les
+atomes de chaque étape sont appariés sans flèche courbe, les sous-produits de l'élimination (Me₃SiF, NMe₃, Cs⁺) sont
+déduits des valences, et chaque produit tient seul.
 
 ## Ce qu'on voit
 
@@ -327,8 +738,29 @@ maximiser Σ_i Σ_A (Q^A_ii)², la localisation de Pipek–Mezey : chaque paire 
 2, NH₃ 1, HCl 3), deux (liaison) ou plus. Les systèmes π délocalisés (CO₂ : paires π à 80 % sur O et 19 % sur C) n'ont
 pas de découpage unique en paires libres et liaisons ; seule la part de chaque liaison est montrée. Rotations de Jacobi
 en parallèle (n/2 couples disjoints par tour, ordre du tournoi à la ronde) jusqu'à 10⁻⁶ rad : même optimum que les
-rotations une à une, quatre à sept fois plus vite (Au₆ : 94 ms) ; refaite au plus deux fois par seconde pendant que les
-atomes bougent, chaque barycentre suivant ses atomes entre-temps.
+rotations une à une, quatre à sept fois plus vite ; refaite au plus deux fois par seconde pendant que les atomes
+bougent, chaque barycentre suivant ses atomes entre-temps. Une rotation ne change que deux colonnes des orbitales :
+plutôt que de faire tourner les matrices Q^A entières, L et S L tournent ensemble et les Q^A_ii, Q^A_jj, Q^A_ij de
+chaque tour s'en déduisent — les mêmes équations (populations égales à 10⁻¹⁴ près, l'ordre des arrondis seul change),
+deux à quatre fois plus vite que la version d'origine (caféine : 87 → 32 ms ; acide laurique : 121 → 32 ms).
+
+**Le coût.** Optimisé sans rien changer de ce qui est calculé ni montré : chaque sortie comparée à la version d'avant
+— identique au bit près, sauf les paires localisées (10⁻¹⁴) — et chaque image de la scène identique au pixel près.
+
+- Les valeurs des orbitales en des points (profils des paires, densité partagée, grilles ρ, Δρ, ψ) : loin d'un noyau,
+  les primitives serrées tombaient sous le plus petit nombre normal de la simple précision (10⁻³⁸), où le processeur
+  calcule des dizaines de fois plus lentement ; elles valent 0 d'emblée (`integrals.normal_exp` ; aucune somme n'en
+  dépend). Les couches s et p ne passent plus par la matrice sphérique (une simple permutation), et les distances
+  d'un atome servent à toutes ses couches. Profils des paires : caféine 210 → 70 ms, acide laurique 350 → 200 ms.
+- Le dictionnaire des espèces : la pseudo-inverse de SMACOF ne dépend pas des positions, calculée une fois par
+  molécule au lieu de 300 (les 152 croquis, à l'ouverture du laboratoire : 2,2 → 0,8 s).
+- La matrice de Mayer et la densité partagée sont gardées le temps d'un résultat (le recensement de chaque pas, puis
+  l'instantané, les lisaient deux ou trois fois) ; les parts des recouvrements qui ne dépendent que des exposants
+  sont gardées d'un calcul à l'autre.
+- La scène : le halo est calculé atome par atome sur les seules colonnes de pixels qu'il couvre (les mêmes sommes,
+  dans le même ordre), ses pixels vont à la carte graphique sans conversion (PixelBuffer) ; les arcs des bulles sont
+  tracés sans objet par évaluation du champ, et leurs couleurs ne sont plus relues de leur texte à chaque trait
+  (−15 à −25 % de temps par image sur le fil de l'interface).
 
 **Les liaisons.** Un indice de Mayer dit combien d'électrons deux atomes partagent, pas comment. Les paires localisées
 le disent, et chaque liaison (B ≥ 0,35) est dessinée selon les paires qui la tiennent (seuils de lecture) :
@@ -501,6 +933,21 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
   GFN1-xTB trouve un minimum pour la molécule seule, dans le vide, à 0 K : ni qu'elle existe, ni qu'elle dure à
   température ambiante ou au contact d'autres (un radical « tient », puis réagit au premier choc) ; sa cohésion est
   celle de GFN1 (1,3 à 2,2 fois trop forte).
+- **La réaction du dessin.** Quelques centaines de femtosecondes à haute température, à la densité d'un liquide :
+  une issue qui n'apparaît pas peut exister, et la fréquence d'une issue (« 1/3 ») n'est ni une vitesse ni un
+  rendement réels — elle dit seulement ce que trois essais ont rencontré. Les ΔE héritent des défauts de GFN1 sans
+  spin (radicaux trop liés : OH· + H· −8,1 eV pour −5,1) ; O₂ n'a pas de barrière de spin. Le nanoréacteur original
+  comprime aussi le gaz par à-coups pour hâter les rencontres ; ici la sphère reste fixe.
+- **Le schéma réactionnel.** Un chemin imposé n'est pas un état de transition cherché : sa plus haute énergie estime
+  la barrière le long de ce chemin, et GFN1-xTB sous-estime souvent les barrières (Diels–Alder : 0,35 eV pour
+  ≈ 1,2 mesuré) ; les ΔE ont les défauts de GFN1 (Diels–Alder −2,80 eV pour ≈ −1,7). Tout se calcule à 0 K, en phase
+  gazeuse ou dans le solvant implicite écrit sous la flèche (ALPB) ; sans solvant, les ions isolés sont très défavorisés (NMe₃ + MeI → NMe₄⁺ + I⁻ : +0,7 eV en paire
+  d'ions, +8,9 eV pour les ions séparés, quand la réaction se fait en solution ; les ions formés sont donc comptés en
+  paire), et les conditions écrites sur une flèche ne sont pas
+  simulées. Pour un métal de transition, GFN1 donne de bonnes géométries (Co₂(CO)₆(but-2-yne) : Co–Co 2,41 Å, Co–C
+  1,96 Å ; mesurés ≈ 2,46 et 1,95) mais de mauvaises énergies métal–ligand (Co₂(CO)₈ + but-2-yne → complexe + 2 CO :
+  +2,3 eV, alors que la réaction se fait à température ambiante). Pas de stéréochimie dessinée : le conformère le
+  plus stable est choisi. Au plus 90 atomes par étape ; une étape de 60 atomes prend quelques minutes.
 - **Taille.** Au plus 40 atomes : le calcul est en numpy (≈ 10 ms par pas pour le méthanol, 30 ms pour neuf atomes).
 
 ## Fichiers
@@ -513,6 +960,10 @@ Calculé par ce moteur (`python -m moleculelab.validation` → `data/validation.
 | `experiments.py` | Les cinq expériences guidées : réactifs relaxés, mise face à face, choc, protocole (`MOLECULE_EXPERIMENT`) |
 | `dictionary.py` | Le dictionnaire : SMILES, empreinte des graphes, noms français et anglais, départs de dessin 2D |
 | `assembly.py` | L'assembleur : le dessin reçu (`MOLECULE_ASSESS`, `MOLECULE_BUILD`), sa pose en 3D, les verdicts |
+| `reaction.py` | La réaction du dessin (`MOLECULE_REACT`) : réactifs relaxés et rapprochés, essais du nanoréacteur, produits relaxés seuls, issues regroupées |
+| `solvation.py` | Le solvant implicite ALPB (`Calculator(…, solvent=…)`) : rayons de Born, noyau P16, correction ALPB, CM5, surface de Lebedev, liaisons hydrogène, gradients ; `data/gfn1-alpb.json` |
+| `scheme.py` | Le schéma réactionnel (`MOLECULE_SCHEME`, `MOLECULE_SMILES`) : lecture du dessin (H implicites, abréviations, réactifs écrits), étapes, flèches courbes, correspondance des atomes, sous-produits, chemins calculés dans les deux sens, verdicts, exemples |
+| `ReactionPanel.java` | La carte 07 Réaction de l'assembleur : température, essais en cours, issues dessinées (client) |
 | `AtomCard.java`, `MoleculeCard.java` | La carte du survol d'un atome et la fiche d'une molécule au clic droit (client) |
 | `density.py` | ρ, Δρ et ψ sur une grille, et leur codage pour le client |
 | `lab.py` | La session : établi, relaxation, dynamique, traction, étincelle, réacteur, vibrations, dans un fil à part |

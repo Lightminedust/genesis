@@ -35,24 +35,24 @@ public class NucleusPanel {
 
     public NucleusPanel(StabilityChart chart) {
         this.chart = chart;
-        title.setStyle("-fx-text-fill: #E2E8F0; -fx-font-size: 15px; -fx-font-weight: bold;");
+        title.setStyle("-fx-text-fill: #ECEFF3; -fx-font-size: 15px; -fx-font-weight: bold;");
         for (Label label : new Label[]{status, rate, channels, binding}) {
             label.setWrapText(true);
             label.setMinHeight(Region.USE_PREF_SIZE);
-            label.setStyle("-fx-text-fill: #94A3B8; -fx-font-size: 12px;");
+            label.setStyle("-fx-text-fill: #A2ABB8; -fx-font-size: 12px;");
         }
-        rate.setStyle("-fx-text-fill: #FDE68A; -fx-font-family: Consolas, monospace; -fx-font-size: 11px;");
-        binding.setStyle("-fx-text-fill: #94A3B8; -fx-font-family: Consolas, monospace; -fx-font-size: 11px;");
+        rate.setStyle("-fx-text-fill: #FDE68A; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 11px;");
+        binding.setStyle("-fx-text-fill: #A2ABB8; -fx-font-family:'IBM Plex Mono'; -fx-font-size: 11px;");
         VBox text = new VBox(4, title, status, rate, channels, binding);
         text.setPadding(new Insets(8, 12, 8, 12));
         VBox content = new VBox(6, chart.getNode(), text);
         content.setPadding(new Insets(8, 12, 8, 12));
-        content.setStyle("-fx-background-color: #05070F;");
+        content.setStyle("-fx-background-color: transparent;");
         chart.getNode().widthProperty().bind(content.widthProperty().subtract(24));
         root = new ScrollPane(content);
         root.setFitToWidth(true);
         root.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        root.setStyle("-fx-background: #05070F; -fx-background-color: #05070F;");
+        root.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
     }
 
     public Region getNode() {

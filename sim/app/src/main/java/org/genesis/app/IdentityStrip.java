@@ -28,10 +28,10 @@ public class IdentityStrip {
 
     public IdentityStrip() {
         symbol.setMinWidth(58);
-        symbol.setStyle("-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #64748B;");
-        name.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #E2E8F0;");
-        detail.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748B;");
-        counters.setStyle("-fx-font-family: Consolas, monospace; -fx-font-size: 11px; -fx-text-fill: #94A3B8;");
+        symbol.setStyle("-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: #6B7483;");
+        name.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #ECEFF3;");
+        detail.setStyle("-fx-font-size: 10px; -fx-text-fill: #6B7483;");
+        counters.setStyle("-fx-font-family:'IBM Plex Mono'; -fx-font-size: 11px; -fx-text-fill: #A2ABB8;");
 
         Region grow = new Region();
         HBox.setHgrow(grow, Priority.ALWAYS);
@@ -44,8 +44,8 @@ public class IdentityStrip {
         root = new HBox(10, symbol, text);
         root.setAlignment(Pos.CENTER_LEFT);
         root.setPadding(new Insets(12, 14, 12, 14));
-        root.setStyle("-fx-background-color: #0B1120; "
-                + "-fx-border-color: transparent transparent #1E293B transparent; -fx-border-width: 0 0 1 0;");
+        root.setStyle("-fx-background-color: #111419; "
+                + "-fx-border-color: transparent transparent #1F242C transparent; -fx-border-width: 0 0 1 0;");
     }
 
     public Region getNode() {
@@ -55,7 +55,7 @@ public class IdentityStrip {
     public void update(UniverseFrame frame) {
         Element element = frame.getElement();
         AtomState atom = frame.getAtom();
-        String color = element.getColorHex().isEmpty() ? "#64748B" : element.getColorHex();
+        String color = element.getColorHex().isEmpty() ? "#6B7483" : element.getColorHex();
 
         symbol.setText(element.getSymbol().isEmpty() ? "?" : element.getSymbol());
         symbol.setStyle("-fx-font-size: 34px; -fx-font-weight: bold; -fx-text-fill: " + color + ";");
@@ -76,7 +76,7 @@ public class IdentityStrip {
             style = "-fx-background-color: #4C0519; -fx-text-fill: #FDA4AF;";
         } else {
             text = "—";
-            style = "-fx-background-color: #1E293B; -fx-text-fill: #94A3B8;";
+            style = "-fx-background-color: #1F242C; -fx-text-fill: #A2ABB8;";
         }
         badge.setText(text);
         badge.setStyle(style + " -fx-font-size: 9px; -fx-font-weight: bold; "

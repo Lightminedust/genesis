@@ -34,6 +34,24 @@ class I18nTest {
     }
 
     @Test
+    void captionsAndTitlesTranslateWhateverTheirCase() {
+        I18n.Language previous = I18n.language();
+        try {
+            I18n.setLanguage(I18n.Language.EN);
+            // Une légende autrefois en capitales, montrée en phrase : sa traduction en capitales, remise en phrase.
+            assertEquals("The wall to cross", I18n.text("Le mur à franchir"));
+            assertEquals("Legend", I18n.text("Légende"));
+            // Un titre en capitales sans entrée à lui : celle du titre ordinaire, remise en capitales.
+            assertEquals("REACTION", I18n.text("RÉACTION"));
+            // Le nom d'une langue reste dans sa langue.
+            assertEquals("Français", I18n.text("Français"));
+            assertEquals("Matter, computed.", I18n.text("La matière, calculée."));
+        } finally {
+            I18n.setLanguage(previous);
+        }
+    }
+
+    @Test
     void engineSentencesTranslateThroughTemplatesAndSegments() {
         I18n.Language previous = I18n.language();
         try {

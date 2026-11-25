@@ -29,6 +29,14 @@ public final class DashboardPreview {
                 for (int[] size : new int[][]{{1440, 900}, {1365, 740}}) {
                     App app = new App();
                     Scene scene = app.buildScene(size[0], size[1]);
+                    if (size[0] == 1440) {
+                        // L'accueil, tel qu'il s'ouvre au lancement.
+                        app.receive(read(frames, "uranium_now"));
+                        app.previewHome();
+                        run(app, 0.3);
+                        ImageIO.write(snap(scene), "png", out.resolve("home_" + size[0] + ".png").toFile());
+                    }
+                    app.previewWithoutHome();      // puis l'atome, l'accueil refermé
                     scene.snapshot(null);          // première mise en page : les canevas prennent leur taille
                     app.previewJournal(false);
                     app.receive(read(frames, "uranium_now"));

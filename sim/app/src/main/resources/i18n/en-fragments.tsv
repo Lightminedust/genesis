@@ -177,3 +177,18 @@ m 105,7 MeV	m 105.7 MeV
 m 938,3 MeV	m 938.3 MeV
 m 139,6 MeV	m 139.6 MeV
 m < 0,8 eV	m < 0.8 eV
+
+le calcul ne confirme pas — 	the computation does not confirm — 
+ne se forme pas : 	does not form: 
+ne se rompt pas : 	does not break: 
+Sous-produits déduits : 	Deduced byproducts: 
+Sur la flèche : 	On the arrow: 
+Calculé : 	Computed: 
+ · GFN1-xTB, phase gazeuse	 · GFN1-xTB, gas phase
+ · encore ≈ 	 · ≈ 
+le calcul de cette étape a échoué : 	this step's computation failed: 
+ : le solvant n'est pas simulé (phase gazeuse)	: the solvent is not simulated (gas phase)
+ : inconnu, ignoré (un nom, une formule du tableau ou un SMILES)	: unknown, ignored (a name, a listed formula or a SMILES)
+flèches courbes : 	curly arrows: 
+ : ajoutez le réactif manquant au-dessus de la flèche	: add the missing reagent above the arrow
+ ne tient pas seul (	 does not hold on its own (

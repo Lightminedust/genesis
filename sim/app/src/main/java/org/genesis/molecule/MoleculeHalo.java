@@ -2,11 +2,14 @@ package org.genesis.molecule;
 
 import org.genesis.common.LabCamera;
 
+import javafx.geometry.Rectangle2D;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.effect.BlendMode;
+import javafx.scene.image.PixelBuffer;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
 
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -87,8 +90,30 @@ final class MoleculeHalo {
         }
     }
 
+    /** Les tampons d'une rangée (un jeu par fil de calcul, gardé d'une image à l'autre : aucune allocation par rangée). */
+    private static final class Row {
+        double[] ray = new double[0], norm = new double[0], s = new double[0], q = new double[0];
+
+        Row fit(int width) {
+            if (ray.length < width) {
+                ray = new double[width];
+                norm = new double[width];
+                s = new double[width];
+                q = new double[width];
+            }
+            return this;
+        }
+    }
+
+    private static final ThreadLocal<Row> ROWS = ThreadLocal.withInitial(Row::new);
+
     private final Map<Integer, Table> tables = new HashMap<>();
+    /**
+     * L'image du halo et ses pixels, partagés avec la carte graphique (PixelBuffer) : les pixels calculés y vont sans
+     * recopie ni conversion de format.
+     */
     private WritableImage image;
+    private PixelBuffer<IntBuffer> buffer;
     private int[] pixels = new int[0];
     /** La part de l'écran (en pixels de l'écran) que couvre l'image : x, y, largeur, hauteur. */
     private int[] drawn = {0, 0, 0, 0};
@@ -187,14 +212,19 @@ final class MoleculeHalo {
         if (iw < uw || ih < uh || (long) iw * ih > 3L * uw * uh + 64 * 64) {
             iw = (uw + 63) / 64 * 64;
             ih = (uh + 63) / 64 * 64;
-            image = new WritableImage(iw, ih);
             pixels = new int[iw * ih];
+            buffer = new PixelBuffer<>(iw, ih, IntBuffer.wrap(pixels), PixelFormat.getIntArgbPreInstance());
+            image = new WritableImage(buffer);
         }
-        for (int j = 0; j < uh; j++) Arrays.fill(pixels, j * iw, j * iw + uw, 0);
-        for (int f = 0; f < order.size(); f++) {
-            if (boxes.get(f) != null) draw(order.get(f), circle, charges, boxes.get(f), x0, y0, iw);
-        }
-        image.getPixelWriter().setPixels(0, 0, uw, uh, PixelFormat.getIntArgbPreInstance(), pixels, 0, iw);
+        int stride = iw, left = x0, top = y0;
+        // Les pixels changent dans l'appel qui les signale à la carte graphique : elle ne relit que ce rectangle.
+        buffer.updateBuffer(b -> {
+            for (int j = 0; j < uh; j++) Arrays.fill(pixels, j * stride, j * stride + uw, 0);
+            for (int f = 0; f < order.size(); f++) {
+                if (boxes.get(f) != null) draw(order.get(f), circle, charges, boxes.get(f), left, top, stride);
+            }
+            return new Rectangle2D(0, 0, uw, uh);
+        });
         drawn = new int[]{x0, y0, uw, uh};
     }
 
@@ -276,27 +306,44 @@ final class MoleculeHalo {
             int m = 0;
             for (int a : members) if (Math.abs(y + .5 - circle[a][1]) <= circle[a][2]) row[m++] = a;
             int base = j * cw;
-            Arrays.fill(sigma, base, base + cw, 0f);
-            Arrays.fill(held, base, base + cw, 0f);
-            if (m == 0) return;
+            if (m == 0) {
+                Arrays.fill(sigma, base, base + cw, 0f);
+                Arrays.fill(held, base, base + cw, 0f);
+                return;
+            }
             double b = -(y + .5 - cy) * inv;
+            // Le rayon de chaque pixel de la rangée, puis chaque atome sur les seules colonnes que couvre son carré : les
+            // apports s'ajoutent à chaque pixel dans l'ordre des atomes, comme pixel par pixel — les mêmes sommes.
+            Row r = ROWS.get().fit(cw);
+            double[] ray = r.ray, norm = r.norm, s = r.s, q = r.q;
             for (int i = 0; i < cw; i++) {
-                int x = x0 + i;
-                double a = (x + .5 - cx) * inv;
-                double invNorm = 1 / Math.sqrt(1 + a * a + b * b);
-                double s = 0, q = 0;
-                for (int k = 0; k < m; k++) {
-                    int atom = row[k];
-                    double[] c = circle[atom];
-                    if (Math.abs(x + .5 - c[0]) > c[2]) continue;
-                    double along = (vf[atom] + a * vr[atom] + b * vu[atom]) * invNorm;
-                    double value = scale[atom] * table[atom].at(vv[atom] - along * along);
+                double a = (x0 + i + .5 - cx) * inv;
+                ray[i] = a;
+                norm[i] = 1 / Math.sqrt(1 + a * a + b * b);
+                s[i] = 0;
+                q[i] = 0;
+            }
+            for (int k = 0; k < m; k++) {
+                int atom = row[k];
+                double c0 = circle[atom][0], c2 = circle[atom][2];
+                // Les colonnes où |x + ½ − c₀| ≤ c₂ : un intervalle, encadré puis resserré par le même test exact.
+                int from = Math.max(x0, (int) Math.ceil(c0 - .5 - c2) - 1);
+                int to = Math.min(x0 + cw - 1, (int) Math.floor(c0 - .5 + c2) + 1);
+                while (from <= to && Math.abs(from + .5 - c0) > c2) from++;
+                while (to >= from && Math.abs(to + .5 - c0) > c2) to--;
+                Table t = table[atom];
+                double f = vf[atom], rr = vr[atom], u = vu[atom], v = vv[atom], k2 = scale[atom], held2 = charges[atom];
+                for (int i = from - x0; i <= to - x0; i++) {
+                    double along = (f + ray[i] * rr + b * u) * norm[i];
+                    double value = k2 * t.at(v - along * along);
                     if (value <= 0) continue;
-                    s += value;
-                    q += value * charges[atom];
+                    s[i] += value;
+                    q[i] += value * held2;
                 }
-                sigma[base + i] = (float) s;
-                held[base + i] = (float) q;
+            }
+            for (int i = 0; i < cw; i++) {
+                sigma[base + i] = (float) s[i];
+                held[base + i] = (float) q[i];
             }
         });
         // Pixels par Å à la profondeur de la molécule : pour donner au liseré une largeur en Å.
@@ -313,7 +360,8 @@ final class MoleculeHalo {
                 double signed = (s - COLUMN) / gl;                         // pixels jusqu'au contour (+ dedans)
                 double inside = Math.max(0, signed) / perAngstrom;          // Å
                 double cover = Math.max(0, Math.min(1, signed + .5));
-                double rim = inside < 8 * RIM_WIDTH ? Math.exp(-inside / RIM_WIDTH) : 0;
+                // Hors du contour, inside vaut 0 : e⁰ = 1 exactement, sans appeler l'exponentielle (la moitié des pixels).
+                double rim = inside == 0 ? 1 : inside < 8 * RIM_WIDTH ? Math.exp(-inside / RIM_WIDTH) : 0;
                 double line = Math.max(0, 1 - Math.abs(signed) / 1.25);
                 double haze = 0;
                 if (cover < 1) {
@@ -325,7 +373,7 @@ final class MoleculeHalo {
                 double sheen = 0;
                 if (cover > 0 && inside < .8) {
                     double facing = Math.max(0, -(gx * LIGHT_X + gy * LIGHT_Y) / gl);
-                    sheen = SHEEN * cover * facing * facing * facing * Math.exp(-inside / .16);
+                    sheen = SHEEN * cover * facing * facing * facing * (inside == 0 ? 1 : Math.exp(-inside / .16));
                 }
                 double lift = Math.min(1, .55 * line + .3 * cover * rim);
                 int shade = 3 * (int) Math.max(0, Math.min(SHADES - 1,

@@ -191,6 +191,29 @@ final class MoleculeScene {
     boolean showCharges, showOrders, showSymbols = true, showArrows, showHalo = true, showPotential, showField, showBonds = true,
             showInner = true, showContacts = true, showLegend = true, showNames = true;
     /**
+     * Le chemin d'une étape du schéma, joué (SchemePlayer) : les liaisons qui changent (a, b, ordre avant, ordre après,
+     * par quatre) et leur indice de Mayer calculé à l'image montrée. Pendant la lecture, la scène ne montre que la
+     * réaction : ces liaisons en tirets (vert : elle se forme, orange : elle se rompt), épaisses de leur indice, leurs
+     * atomes nommés comme dans la carte (C2, Co13) ; ni signes δ ni étiquettes d'espèce, et un cadre fixe qui tient tout
+     * le chemin (`pathRadius`, Å : approche et départ compris).
+     */
+    boolean playing;
+    /** Le numéro de chaque atome dans tout le schéma joué (un atome repris d'une étape à l'autre garde le sien). */
+    int[] pathNumbers = new int[0];
+    int[] pathChanges = new int[0];
+    double[] pathMayer = new double[0];
+    double pathRadius;
+    static final Color FORMING = Color.web("#5FE0B4"), BREAKING = Color.web("#F5A45D");
+    /**
+     * Les couleurs des bulles, de leurs arcs et de leurs noyaux, lues une fois : dessinées pour chaque atome à chaque
+     * image (dix-huit arcs par atome), elles étaient relues de leur texte à chaque trait.
+     */
+    private static final Color ARC_FRONT = Color.web("#D6EDFF", .5), ARC_BACK = Color.web("#D6EDFF", .18),
+            FLOW_FRONT = Color.web("#F2FAFF", .55), FLOW_BACK = Color.web("#F2FAFF", .2), ARC_GLOW = Color.web("#9FD8FF", .18),
+            GLINT = Color.web("#FFFFFF", .55), SPOT = Color.web("#FFFFFF", .32), EMBER_CORE = Color.web("#FFF1E4"),
+            EMBER = Color.web("#FF9A5C"), EMBER_HALO = Color.web("#FF4A1A", .35);
+    private static final Color NUCLEUS_CLEAR = NUCLEUS.deriveColor(0, 1, 1, 0), NUCLEUS_NEAR = NUCLEUS.deriveColor(0, 1, 1, .8);
+    /**
      * Les espèces que le moteur a reconnues, celles qui ont tenu 20 fs : leurs atomes, « H₂O · eau » (la formule, et le
      * nom quand le dictionnaire connaît ce graphe) et l'instant où elles se sont formées (−∞ : déjà là).
      */
@@ -453,6 +476,12 @@ final class MoleculeScene {
             Random spin = new Random(31L * z[Math.min(a, z.length - 1)] + a);
             double turn = spin.nextDouble() * Math.PI;
             List<double[]> lines = new ArrayList<>();
+            // Les puits et leurs forces en tableaux, et le champ écrit dans des tableaux gardés : les mêmes opérations,
+            // sans un objet par évaluation (deux évaluations par pas, 69 pas, 18 arcs, chaque atome, chaque frame).
+            double[][] wells = sinks.toArray(new double[0][]);
+            double[] pull = new double[strength.size()];
+            for (int i = 0; i < pull.length; i++) pull[i] = strength.get(i);
+            double[] f = new double[3], mid = new double[3], g = new double[3];
             for (double[] s : seeds) {
                 double[] p = {Math.cos(turn) * s[0] - Math.sin(turn) * s[1], Math.sin(turn) * s[0] + Math.cos(turn) * s[1], s[2]};
                 for (int k = 0; k < 3; k++) p[k] *= .12;
@@ -462,12 +491,14 @@ final class MoleculeScene {
                 line[m++] = p[1];
                 line[m++] = p[2];
                 for (int step = 0; step < 69; step++) {
-                    double[] f = arcField(p, sinks, strength, e, push);
-                    double[] mid = {p[0] + f[0] * .015, p[1] + f[1] * .015, p[2] + f[2] * .015};
-                    double[] g = arcField(mid, sinks, strength, e, push);
+                    arcField(p, wells, pull, e, push, f);
+                    mid[0] = p[0] + f[0] * .015;
+                    mid[1] = p[1] + f[1] * .015;
+                    mid[2] = p[2] + f[2] * .015;
+                    arcField(mid, wells, pull, e, push, g);
                     for (int k = 0; k < 3; k++) p[k] += g[k] * .03;
                     boolean captured = false;
-                    for (double[] sink : sinks) {
+                    for (double[] sink : wells) {
                         if (Math.sqrt(sq(p[0] - sink[0]) + sq(p[1] - sink[1]) + sq(p[2] - sink[2])) < .07) {
                             p = new double[]{sink[0] * .985, sink[1] * .985, sink[2] * .985};
                             captured = true;
@@ -494,15 +525,15 @@ final class MoleculeScene {
         return true;
     }
 
-    /** Le champ unitaire qui guide un arc (voir computeArcs). */
-    private static double[] arcField(double[] p, List<double[]> sinks, List<Double> strength, double[] e, double push) {
+    /** Le champ unitaire qui guide un arc (voir computeArcs), écrit dans {@code out}. */
+    private static void arcField(double[] p, double[][] sinks, double[] strength, double[] e, double push, double[] out) {
         double r = Math.max(.05, norm(p));
         double fx = p[0] / (r * r * r), fy = p[1] / (r * r * r), fz = p[2] / (r * r * r);
-        for (int i = 0; i < sinks.size(); i++) {
-            double[] u = sinks.get(i);
+        for (int i = 0; i < sinks.length; i++) {
+            double[] u = sinks[i];
             double dx = u[0] - p[0], dy = u[1] - p[1], dz = u[2] - p[2];
             double d = Math.max(.05, Math.sqrt(dx * dx + dy * dy + dz * dz));
-            double s = strength.get(i) / (d * d * d);
+            double s = strength[i] / (d * d * d);
             fx += s * dx;
             fy += s * dy;
             fz += s * dz;
@@ -511,7 +542,9 @@ final class MoleculeScene {
         fy += push * e[1];
         fz += push * e[2];
         double n = Math.sqrt(fx * fx + fy * fy + fz * fz) + 1e-12;
-        return new double[]{fx / n, fy / n, fz / n};
+        out[0] = fx / n;
+        out[1] = fy / n;
+        out[2] = fz / n;
     }
 
     /** La densité en unités de l'échelle logarithmique du rendu (0 : 10⁻⁴ e/Å³, 1 : 8 e/Å³), à partir d'u.a. */
@@ -752,13 +785,23 @@ final class MoleculeScene {
      * retour quand on s'est perdu : double-clic dans le vide, touche F, bouton ⌖.
      */
     void showAll() {
-        focus = new int[0];
+        // Pendant la lecture d'un chemin : le cœur de la réaction (les atomes dont une liaison change) et ses voisins.
+        // Les molécules qui s'en vont (2 CO, H₂O) sortent du cadre au lieu de faire reculer la vue à 30 Å.
+        focus = playing ? reactingAtoms() : new int[0];
         panGoal = new double[3];
         zoomAtom = -1;
         zoomPoint = null;
         navigated = false;
         double[] box = bounds();
         double extent = Math.max(1.2, box[3]);
+        if (playing && focus.length > 0) {
+            double[] c = anchor();
+            double reach = 0;
+            for (int a : focus) reach = Math.max(reach, Math.hypot(positions[a][0] - c[0], Math.hypot(positions[a][1] - c[1], positions[a][2] - c[2])));
+            extent = Math.max(3, reach + 2.5);
+        } else if (playing) {
+            extent = Math.max(extent, pathRadius);
+        }
         // Dans une enceinte, la vue se pose sur son centre (voir anchor) : le cadre est la sphère.
         if (wall > 0) {
             extent = wall;
@@ -835,10 +878,15 @@ final class MoleculeScene {
         zoomAtom = pick(sx, sy);
         zoomPoint = zoomAtom >= 0 ? null : unproject(sx, sy, new double[]{camera.targetX, camera.targetY, camera.targetZ});
         panGoal = null;
-        camera.scroll(notches);
+        // Un cran de molette : ×1,12 (il passait par un élan de 0,9 décade par seconde, ×1,4 à ×2,8 d'un cran selon
+        // la souris, et la molécule passait de minuscule à débordante). Le but est borné comme le zoom lui-même.
+        camera.zoomBy(-notches * ZOOM_STEP);
         navigated = true;
         handledAt = clock;
     }
+
+    /** log10 du facteur d'un cran de molette (×1,12). */
+    static final double ZOOM_STEP = Math.log10(1.12);
 
     /** Tourner la vue à la main : elle est alors à vous, les vues ne la tournent plus. */
     void rotateBy(double dx, double dy) {
@@ -1063,7 +1111,7 @@ final class MoleculeScene {
             }
         }
         double before = camera.zoom;
-        camera.tick(dt, dragging, Math.log10(2.0), Math.log10(Math.max(150, 2.6 * wall + 8)));
+        camera.tick(dt, dragging, Math.log10(3.0), Math.log10(Math.max(150, 2.6 * wall + 8)));
         // La molette : l'œil et le point visé se rapprochent du point pointé dans le même rapport — il reste sous le
         // curseur, et le pivot de la rotation glisse vers lui.
         double ratio = Math.pow(10, camera.zoom - before);
@@ -1124,14 +1172,16 @@ final class MoleculeScene {
                 drawBonds(g, near, far, screen);
                 drawMulticentres(g, near, far);
             }
+            if (playing) drawPath(g, near, false);
             drawAtoms(g, near, far, screen);
+            if (playing) drawPath(g, near, true);
             drawBursts(g, near);
             if (showArrows) drawArrows(g);
             if (hovered >= 0 && dragged < 0) drawHover(g, screen);
         } else {
             drawNuclei(g, near, far, screen);
         }
-        if (showNames) drawNames(g, screen, w);
+        if (showNames && !playing) drawNames(g, screen, w);
         drawDrag(g);
         drawPivot(g, dragging);
         if (showLegend) drawLegend(g, w);
@@ -1140,7 +1190,7 @@ final class MoleculeScene {
                 : mode == DEFORMATION && grid.peak < DEFORMATION_FLOOR
                 ? "Δρ sous 0,01 e/Å³ partout : rien n'a bougé (un atome seul est l'atome libre de référence)" : "";
         if (!notice.isEmpty()) {
-            g.setFont(Font.font("Segoe UI", 12));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 12));
             g.setTextAlign(TextAlignment.CENTER);
             g.setFill(Color.web("#B9CBE0", .8));
             g.fillText(I18n.text(notice), w / 2, h * .18);
@@ -1177,7 +1227,7 @@ final class MoleculeScene {
                 g.strokeOval(p[0] - ring, p[1] - ring, 2 * ring, 2 * ring);
             }
             if (showSymbols && i < symbols.length) {
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(Color.web("#DCEBFF", .65));
                 g.fillText(MoleculeView.nuclide(symbols[i], i < massNumbers.length ? massNumbers[i] : 0), p[0] + ring + 5, p[1] - ring);
             }
@@ -1638,11 +1688,7 @@ final class MoleculeScene {
         if (lastH < 200) return;
         double r = 25, cx = insetLeft + 26 + r, cy = 94 + 10 + r;
         double atm = shownPressure, start = 225, sweep = 270, width = 2 * r + 20 + 168;
-        g.setFill(Color.web("#081222", .8));
-        g.fillRoundRect(cx - r - 10, cy - r - 10, width, 2 * r + 20, 14, 14);
-        g.setStroke(Color.web("#2E4C73", .5));
-        g.setLineWidth(1);
-        g.strokeRoundRect(cx - r - 10, cy - r - 10, width, 2 * r + 20, 14, 14);
+        org.genesis.common.Plan.frame(g, cx - r - 10, cy - r - 10, width, 2 * r + 20, org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .92));
         g.setLineCap(StrokeLineCap.ROUND);
         g.setStroke(Color.web("#FFFFFF", .08));
         g.setLineWidth(4);
@@ -1668,18 +1714,18 @@ final class MoleculeScene {
         }
         g.setLineCap(StrokeLineCap.BUTT);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFill(Color.web("#EAF2FF"));
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, atm >= 10000 ? 10.5 : 12));
+        g.setFill(Color.web("#ECEFF3"));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, atm >= 10000 ? 10.5 : 12));
         g.fillText(atm < 1 ? "≈ 0" : MoleculeFormat.atm(atm).replace(" atm", ""), cx, cy + 3);
-        g.setFont(Font.font("Segoe UI", 9));
-        g.setFill(Color.web("#8FA4C2"));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
+        g.setFill(Color.web("#A2ABB8"));
         g.fillText("atm", cx, cy + 15);
         g.setTextAlign(TextAlignment.LEFT);
         double tx = cx + r + 14;
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
         g.setFill(Color.web("#A9C2E6"));
         g.fillText(I18n.text("pression sur la paroi"), tx, cy - 11);
-        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         if (pistonOn) {
             g.setFill(Color.web("#FFD27A"));
             g.fillText(I18n.text("consigne du piston") + " " + MoleculeFormat.atm(pressureTarget), tx, cy + 4);
@@ -1688,7 +1734,7 @@ final class MoleculeScene {
             g.fillText((direction < 0 ? "↘ " : direction > 0 ? "↗ " : "● ") + I18n.text(direction < 0 ? "le piston serre"
                     : direction > 0 ? "le piston cède" : "consigne tenue"), tx, cy + 19);
         } else {
-            g.setFill(Color.web("#8FA4C2"));
+            g.setFill(Color.web("#A2ABB8"));
             g.fillText(I18n.text("paroi fixe : volume constant"), tx, cy + 4);
         }
     }
@@ -2163,7 +2209,7 @@ final class MoleculeScene {
         for (int i = 0; i < n; i++) order[i] = i;
         Arrays.sort(order, (a, b) -> Double.compare(screen[b] == null ? 0 : screen[b][2], screen[a] == null ? 0 : screen[a][2]));
         if (showOrders) {
-            g.setFont(Font.font("Segoe UI", 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
             g.setTextAlign(TextAlignment.CENTER);
             for (Bond bond : bonds) {
                 if (bond.order() < .3 || bond.shared() < SHARED_FROM || bond.a() >= n || bond.b() >= n) continue;
@@ -2217,12 +2263,101 @@ final class MoleculeScene {
             double[] away = labelDirection(idx, screen);
             double lx = x + away[0] * (radius + 11), ly = y + away[1] * (radius + 11) + 4;
             g.setTextAlign(TextAlignment.CENTER);
+            if (playing) {
+                if (reacting(idx) && idx < symbols.length) {
+                    double ring = radius + 3.5;
+                    g.setStroke(Color.web("#FFFFFF", .35));
+                    g.setLineWidth(.9);
+                    g.strokeOval(x - ring, y - ring, 2 * ring, 2 * ring);
+                    g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
+                    g.setFill(Color.web("#F2F6FB", .92));
+                    int number = idx < pathNumbers.length && pathNumbers[idx] > 0 ? pathNumbers[idx] : idx + 1;
+                    g.fillText(symbols[idx] + number, x + away[0] * (radius + 13), y + away[1] * (radius + 13) + 4);
+                }
+                continue;
+            }
             if (showSymbols && idx < symbols.length) {
-                g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
                 g.setFill(Color.web("#DCEBFF", .55));
                 g.fillText(MoleculeView.nuclide(symbols[idx], idx < massNumbers.length ? massNumbers[idx] : 0), lx, ly);
             }
             if (idx < charges.length && Math.abs(charges[idx]) >= SIGN_CHARGE) signs(g, idx, x, y, radius, away);
+        }
+    }
+
+    /** Les atomes d'une liaison qui change dans le chemin joué. */
+    private int[] reactingAtoms() {
+        java.util.TreeSet<Integer> out = new java.util.TreeSet<>();
+        for (int k = 0; k + 3 < pathChanges.length; k += 4) {
+            if (pathChanges[k] < positions.length) out.add(pathChanges[k]);
+            if (pathChanges[k + 1] < positions.length) out.add(pathChanges[k + 1]);
+        }
+        return out.stream().mapToInt(Integer::intValue).toArray();
+    }
+
+    /** L'atome prend-il part à une liaison qui change dans le chemin joué ? */
+    private boolean reacting(int atom) {
+        for (int k = 0; k + 3 < pathChanges.length; k += 4) {
+            if (pathChanges[k] == atom || pathChanges[k + 1] == atom) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Les liaisons qui changent dans le chemin joué. Sous les atomes (labels = false) : un trait en tirets d'une sphère à
+     * l'autre, vert pour une liaison qui se forme, orange pour une qui se rompt, d'autant plus épais et franc que son
+     * indice de Mayer calculé à cette image est grand. Au-dessus (labels = true) : cet indice, au milieu du trait.
+     */
+    private void drawPath(GraphicsContext g, GraphicsContext near, boolean labels) {
+        int n = positions.length;
+        List<double[]> placed = new ArrayList<>();
+        for (int k = 0, c = 0; k + 3 < pathChanges.length; k += 4, c++) {
+            int a = pathChanges[k], b = pathChanges[k + 1], before = pathChanges[k + 2], after = pathChanges[k + 3];
+            if (a >= n || b >= n) continue;
+            double mayer = c < pathMayer.length ? pathMayer[c] : 0;
+            double[] A = positions[a], B = positions[b];
+            double[] u = {B[0] - A[0], B[1] - A[1], B[2] - A[2]};
+            double length = norm(u);
+            if (length < 1e-6) continue;
+            for (int i = 0; i < 3; i++) u[i] /= length;
+            double ra = sphere(a), rb = sphere(b);
+            double[] pa = camera.project(A[0] + u[0] * ra, A[1] + u[1] * ra, A[2] + u[2] * ra);
+            double[] pb = camera.project(B[0] - u[0] * rb, B[1] - u[1] * rb, B[2] - u[2] * rb);
+            if (pa == null || pb == null) continue;
+            boolean changing = before == 0 || after == 0;
+            Color colour = before == 0 ? FORMING : after == 0 ? BREAKING : Color.web("#CFE0F5");
+            double strength = Math.max(0, Math.min(1, mayer));
+            if (!labels) {
+                if (!changing || length <= ra + rb) continue;
+                double width = 1.1 + 2.2 * strength;
+                near.setStroke(colour.deriveColor(0, 1, 1, .25 + .5 * strength));
+                near.setLineWidth(width + 4);
+                near.strokeLine(pa[0], pa[1], pb[0], pb[1]);
+                g.setLineDashes(5, 4);
+                g.setLineCap(StrokeLineCap.BUTT);
+                g.setStroke(colour.deriveColor(0, 1, 1, .45 + .55 * strength));
+                g.setLineWidth(width);
+                g.strokeLine(pa[0], pa[1], pb[0], pb[1]);
+                g.setLineDashes();
+                g.setLineCap(StrokeLineCap.ROUND);
+                continue;
+            }
+            // L'indice d'une liaison absente (sous 0,05) ne se lit pas : son trait pâle suffit. Deux valeurs qui se
+            // couvriraient (un cœur Co₂C₂ vu de biais) : la première posée reste, la carte donne les autres.
+            if (changing && mayer < .05) continue;
+            double mx = (pa[0] + pb[0]) / 2, my = (pa[1] + pb[1]) / 2;
+            String text = MoleculeFormat.decimal(mayer, 2);
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
+            double tw = text.length() * 6.4 + 8;
+            boolean free = true;
+            for (double[] r : placed) if (Math.abs(r[0] - mx) < (r[2] + tw) / 2 + 2 && Math.abs(r[1] - my) < 17) free = false;
+            if (!free) continue;
+            placed.add(new double[]{mx, my, tw});
+            g.setFill(Color.web("#0B1420", .78));
+            g.fillRoundRect(mx - tw / 2, my - 9, tw, 16, 8, 8);
+            g.setTextAlign(TextAlignment.CENTER);
+            g.setFill(colour);
+            g.fillText(text, mx, my + 3.5);
         }
     }
 
@@ -2264,11 +2399,11 @@ final class MoleculeScene {
         Color colour = Color.color(Math.min(1, c[0] * 1.08), Math.min(1, c[1] * 1.08), Math.min(1, c[2] * 1.08));
         double lx = x + away[0] * distance, ly = y + away[1] * distance + 5;
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 14));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 14));
         g.setFill(colour);
         g.fillText(q < 0 ? "δ−" : "δ+", lx, ly);
         if (showCharges) {
-            g.setFont(Font.font("Segoe UI", 10));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
             g.setFill(colour.deriveColor(0, 1, 1, .8));
             g.fillText(MoleculeFormat.signed(q, 2), lx, ly + 13);
         }
@@ -2336,12 +2471,12 @@ final class MoleculeScene {
         g.setLineWidth(.9);
         g.strokeOval(x - r, y - r, 2 * r, 2 * r);
         // Le reflet de la lumière : un arc vif en haut à gauche, une tache douce dedans, un contre-reflet en bas.
-        g.setStroke(Color.web("#FFFFFF", .55));
+        g.setStroke(GLINT);
         g.setLineWidth(1.3);
         g.strokeArc(x - r * .93, y - r * .93, 1.86 * r, 1.86 * r, 105, 55, ArcType.OPEN);
         double hx = x - r * .42, hy = y - r * .4, hr = r * .3;
         g.setFill(new RadialGradient(0, 0, hx, hy, hr, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#FFFFFF", .32)), new Stop(1, Color.TRANSPARENT)));
+                new Stop(0, SPOT), new Stop(1, Color.TRANSPARENT)));
         g.fillOval(hx - hr, hy - hr, 2 * hr, 2 * hr);
         g.setStroke(rim.deriveColor(0, 1, 1, .3));
         g.setLineWidth(1);
@@ -2362,10 +2497,14 @@ final class MoleculeScene {
         g.setLineCap(StrokeLineCap.ROUND);
         g.setLineJoin(StrokeLineJoin.ROUND);
         double width = radius > 30 ? .7 : .55;
+        double[] xs = new double[0], ys = new double[0];          // le canevas copie les points à chaque trait
         for (double[] line : arcs.get(idx)) {
             int n = line.length / 3;
             if (n < 2) continue;
-            double[] xs = new double[n], ys = new double[n];
+            if (xs.length < n) {
+                xs = new double[n];
+                ys = new double[n];
+            }
             int m = 0;
             double depth = 0;
             for (int k = 0; k < n; k++) {
@@ -2378,17 +2517,17 @@ final class MoleculeScene {
             }
             if (m < 2) continue;
             boolean behind = depth / n > .05;
-            g.setStroke(Color.web("#D6EDFF", behind ? .18 : .5));
+            g.setStroke(behind ? ARC_BACK : ARC_FRONT);
             g.setLineWidth(width);
             g.strokePolyline(xs, ys, m);
             // Le courant : de courts traits clairs qui glissent du noyau vers le bord.
-            g.setStroke(Color.web("#F2FAFF", behind ? .2 : .55));
+            g.setStroke(behind ? FLOW_BACK : FLOW_FRONT);
             g.setLineDashes(3, 16);
             g.setLineDashOffset(-clock * 14);
             g.strokePolyline(xs, ys, m);
             g.setLineDashes();
             if (!behind) {
-                near.setStroke(Color.web("#9FD8FF", .18));
+                near.setStroke(ARC_GLOW);
                 near.setLineWidth(1.2);
                 near.strokePolyline(xs, ys, m);
             }
@@ -2399,11 +2538,11 @@ final class MoleculeScene {
     private void nucleus(GraphicsContext g, GraphicsContext near, GraphicsContext far, double x, double y, double radius) {
         double core = Math.max(1.4, radius * .06);
         g.setFill(new RadialGradient(0, 0, x, y, core * 1.5, false, CycleMethod.NO_CYCLE,
-                new Stop(0, Color.web("#FFF1E4")), new Stop(.4, Color.web("#FF9A5C")), new Stop(1, NUCLEUS.deriveColor(0, 1, 1, 0))));
+                new Stop(0, EMBER_CORE), new Stop(.4, EMBER), new Stop(1, NUCLEUS_CLEAR)));
         g.fillOval(x - core * 1.5, y - core * 1.5, 3 * core, 3 * core);
-        near.setFill(NUCLEUS.deriveColor(0, 1, 1, .8));
+        near.setFill(NUCLEUS_NEAR);
         near.fillOval(x - core * 1.5, y - core * 1.5, 3 * core, 3 * core);
-        far.setFill(Color.web("#FF4A1A", .35));
+        far.setFill(EMBER_HALO);
         far.fillOval(x - core * 2.6, y - core * 2.6, 5.2 * core, 5.2 * core);
     }
 
@@ -2474,7 +2613,7 @@ final class MoleculeScene {
      */
     private void drawNames(GraphicsContext g, double[][] screen, double w) {
         Text probe = new Text();
-        Font nameFont = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11.5), formulaFont = Font.font("Segoe UI", 10.5);
+        Font nameFont = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5), formulaFont = Font.font(org.genesis.common.Plan.SANS, 10.5);
         List<double[]> placed = new ArrayList<>();
         // Une seule molécule : le titre de la scène la nomme déjà (sauf si elle vient de se former).
         int named = 0;
@@ -2533,11 +2672,11 @@ final class MoleculeScene {
                 g.setLineWidth(1.4);
                 g.strokeOval(cx - ring, cy - ring, 2 * ring, 2 * ring);
             }
-            g.setFill(Color.web("#07101C", .62));
-            g.fillRoundRect(x, y, width, height, height, height);
-            g.setStroke(glow > 0 ? FORMED.deriveColor(0, 1, 1, .35 + .5 * glow) : Color.web("#9FC4FF", .18));
+            g.setFill(org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .7));
+            g.fillRect(x, y, width, height);
+            g.setStroke(glow > 0 ? FORMED.deriveColor(0, 1, 1, .35 + .5 * glow) : org.genesis.common.Plan.LINE);
             g.setLineWidth(1);
-            g.strokeRoundRect(x + .5, y + .5, width - 1, height - 1, height, height);
+            g.strokeRect(x + .5, y + .5, width - 1, height - 1);
             g.setTextAlign(TextAlignment.LEFT);
             double baseline = y + height / 2 + 4;
             if (!name.isEmpty()) {
@@ -2606,7 +2745,7 @@ final class MoleculeScene {
         g.setLineDashes();
         g.setFill(Color.web("#FFFFFF", .9));
         g.fillOval(b[0] - 3, b[1] - 3, 6, 6);
-        g.setFont(Font.font("Segoe UI", 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         g.setTextAlign(TextAlignment.LEFT);
         g.fillText(MoleculeFormat.decimal(tetherNewtons, 2) + " nN", b[0] + 8, b[1] - 6);
     }
@@ -2654,7 +2793,7 @@ final class MoleculeScene {
         }
         double size = 10.5, widest = 0;
         Text probe = new Text();
-        probe.setFont(Font.font("Segoe UI", size));
+        probe.setFont(Font.font(org.genesis.common.Plan.SANS, size));
         for (String[] line : lines) {
             probe.setText(I18n.text(line[1]));
             widest = Math.max(widest, probe.getLayoutBounds().getWidth());
@@ -2667,20 +2806,16 @@ final class MoleculeScene {
         // Un fond presque opaque et un filet : la légende se lit sans laisser deviner la molécule dessous ; repliée,
         // il n'en reste que le titre, à droite.
         String title = I18n.text("Légende") + (legendFolded ? "  ▸" : "  ▾");
-        probe.setFont(Font.font("Segoe UI", size));
+        probe.setFont(Font.font(org.genesis.common.Plan.SANS, size));
         probe.setText(title);
         double titleWidth = probe.getLayoutBounds().getWidth() + 20;
         double box = legendFolded ? titleWidth : widest + 44, step = Math.round(size * 1.62);
         double x = Math.max(12, w - box - 4), y = 66;
         double height = legendFolded ? step + 6 : (lines.size() + 1) * step + 10;
-        g.setFill(Color.web("#050B14", .88));
-        g.fillRoundRect(x - 10, y - 15, box, height, 10, 10);
-        g.setStroke(Color.web("#2A3B52", .9));
-        g.setLineWidth(.8);
-        g.strokeRoundRect(x - 10, y - 15, box, height, 10, 10);
-        g.setFont(Font.font("Segoe UI", size));
+        org.genesis.common.Plan.frame(g, x - 10, y - 15, box, height, org.genesis.common.Plan.PAPER.deriveColor(0, 1, 1, .92));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, size));
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFill(Color.web("#8FA4C2", .95));
+        g.setFill(Color.web("#A2ABB8", .95));
         g.fillText(title, x, y);
         legendTitle = new double[]{x - 10, y - 15, box, step + 6};
         if (mode == ORBITAL) scaleBar(g, x - 10 + box, y - 15 + height + 22);
@@ -2704,7 +2839,7 @@ final class MoleculeScene {
                     float[] a = chargeColour(CHARGE_SCALE), b = chargeColour(-CHARGE_SCALE);
                     g.setFill(new javafx.scene.paint.LinearGradient(x, 0, x + 16, 0, false, CycleMethod.NO_CYCLE,
                             new Stop(0, Color.color(a[0], a[1], a[2], .75)), new Stop(1, Color.color(b[0], b[1], b[2], .75))));
-                    g.fillRoundRect(x, gy - 5, 16, 9, 8, 8);
+                    g.fillRect(x, gy - 5, 16, 9);
                 }
                 case "arcs" -> {
                     g.setStroke(Color.web("#D6EDFF", .6));
@@ -2807,7 +2942,7 @@ final class MoleculeScene {
                     glassIcon(g, two ? x + 4 : x + 8, gy, OrbitalLayer.PLUS);
                     if (two) glassIcon(g, x + 4 + 7 + gap, gy, OrbitalLayer.MINUS);
                     if (kind.equals("lobenode")) {
-                        g.setStroke(Color.web("#E6EEFA", .55));
+                        g.setStroke(Color.web("#ECEFF3", .55));
                         g.setLineWidth(.8);
                         g.strokeLine(x + 7.5 + gap / 2 + 4, gy - 5, x + 7.5 + gap / 2 + 4, gy + 5);
                     }
@@ -2846,12 +2981,12 @@ final class MoleculeScene {
         double[] p = camera.project(center[0], center[1], center[2]);
         if (p == null) return;
         double length = p[3];
-        g.setStroke(Color.web("#E6EEFA", .85));
+        g.setStroke(Color.web("#ECEFF3", .85));
         g.setLineWidth(2);
         g.strokeLine(right - length, y, right, y);
-        g.setFont(Font.font("Segoe UI", 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFill(Color.web("#E6EEFA", .85));
+        g.setFill(Color.web("#ECEFF3", .85));
         g.fillText("1 Å", right - length / 2, y - 6);
         g.setTextAlign(TextAlignment.LEFT);
     }

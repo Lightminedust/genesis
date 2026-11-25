@@ -27,7 +27,7 @@ public class EngineClient {
      * champs se décalent et l'affichage devient silencieusement faux, donc on
      * préfère refuser de dessiner.
      */
-    public static final int PROTOCOL_VERSION = 28;
+    public static final int PROTOCOL_VERSION = 30;
     // Une collision de noyaux lourds transporte tous ses produits et échantillons.
     // Le plafond gRPC implicite (4 Mio) coupait le flux et recréait une chambre vide.
     static final int MAX_FRAME_BYTES = 64 * 1024 * 1024;
@@ -102,6 +102,11 @@ public class EngineClient {
         UserAction.Builder b = UserAction.newBuilder().setType(type).setValue(value).setAmount(amount);
         if (vector != null) for (double v : vector) b.addVector(v);
         send(b.build());
+    }
+
+    /** Une action qui porte un texte (le schéma réactionnel en JSON, un SMILES). */
+    public void sendText(UserAction.ActionType type, int value, double amount, String text) {
+        send(UserAction.newBuilder().setType(type).setValue(value).setAmount(amount).setText(text == null ? "" : text).build());
     }
 
     public void kickSubatomic(int particle, int sample, double vx, double vy, double vz) {

@@ -33,7 +33,7 @@ import java.util.List;
  */
 final class MoleculeSketch {
     static final double W = 250, H = 236, HEAD = 20, FOOT = 34;
-    private static final Color CARD = Color.web("#070D18"), GREY = Color.web("#8FA4C2"), LINE = Color.web("#C9D6E8");
+    private static final Color CARD = org.genesis.common.Plan.PAPER, GREY = Color.web("#A2ABB8"), LINE = Color.web("#A2ABB8");
     /** Le bouton « tous les H », dans le titre : x, y, largeur, hauteur. */
     private static final double[] H_BUTTON = {84, 4, 58, 13};
 
@@ -343,27 +343,25 @@ final class MoleculeSketch {
         GraphicsContext g = canvas.getGraphicsContext2D();
         g.clearRect(0, 0, W, H);
         g.setFill(CARD.deriveColor(0, 1, 1, .9));
-        g.fillRoundRect(0, 0, W, h, 12, 12);
-        g.setStroke(Color.web("#2A3B52", .9));
-        g.setLineWidth(1);
-        g.strokeRoundRect(.5, .5, W - 1, h - 1, 12, 12);
+        g.fillRect(0, 0, W, h);
+        org.genesis.common.Plan.frame(g, 0, 0, W, h, null);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(GREY);
         g.fillText(I18n.text("SCHÉMA 2D") + (folded ? "  ▸" : "  ▾"), 10, 14);
         // Le bouton « H » : tous les hydrogènes dessinés, ou rassemblés dans leurs groupes.
-        g.setFill(explicitH ? Color.web("#1E3A5C", .95) : Color.web("#0B1626", .9));
-        g.fillRoundRect(H_BUTTON[0], H_BUTTON[1], H_BUTTON[2], H_BUTTON[3], 10, 10);
-        g.setStroke(explicitH ? Color.web("#5CC8FF", .7) : Color.web("#2A3B52", .9));
+        g.setFill(explicitH ? org.genesis.common.Plan.INK : org.genesis.common.Plan.PAPER);
+        g.fillRect(H_BUTTON[0], H_BUTTON[1], H_BUTTON[2], H_BUTTON[3]);
+        g.setStroke(explicitH ? org.genesis.common.Plan.INK : org.genesis.common.Plan.LINE);
         g.setLineWidth(.8);
-        g.strokeRoundRect(H_BUTTON[0], H_BUTTON[1], H_BUTTON[2], H_BUTTON[3], 10, 10);
+        g.strokeRect(H_BUTTON[0], H_BUTTON[1], H_BUTTON[2], H_BUTTON[3]);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
-        g.setFill(explicitH ? Color.web("#EAF2FF") : GREY);
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
+        g.setFill(explicitH ? org.genesis.common.Plan.PAPER : GREY);
         g.fillText(I18n.text("tous les H"), H_BUTTON[0] + H_BUTTON[2] / 2, H_BUTTON[1] + 10);
         g.setTextAlign(TextAlignment.RIGHT);
-        g.setFont(Font.font("Segoe UI", 10));
-        g.setFill(Color.web("#DCE8F7"));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
+        g.setFill(Color.web("#ECEFF3"));
         g.fillText(s.getCensus(), W - 10, 14);
         hits.clear();
         int n = scene.positions.length;
@@ -439,7 +437,7 @@ final class MoleculeSketch {
         }
         int selected = scene.selected;
         // Les étiquettes d'abord (sans les dessiner) : leur boîte coupe les liaisons et écarte les signes δ.
-        Font heavyFont = Font.font("Segoe UI", FontWeight.BOLD, 12), lightFont = Font.font("Segoe UI", FontWeight.BOLD, 10);
+        Font heavyFont = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12), lightFont = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
         double[][] boxes = new double[n][];
         String[] texts = new String[n];
         int[] folds = new int[n];
@@ -493,7 +491,7 @@ final class MoleculeSketch {
                 g.setLineDashes();
             }
             if (mine) {
-                g.setFont(Font.font("Segoe UI", 8.5));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
                 g.setTextAlign(TextAlignment.CENTER);
                 g.setFill(Color.web("#FFE07A", .9));
                 g.fillText(MoleculeFormat.decimal(length(scene.positions[b.a()], scene.positions[b.b()]), 2),
@@ -528,7 +526,7 @@ final class MoleculeSketch {
                 if (folds[i] > 0) around.add(leftward[i] ? Math.PI : 0.0);
                 double a = freeAngle(around);
                 float[] c = MoleculeScene.chargeColour(q);
-                Font font = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 9);
+                Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9);
                 double[] spot = clear(x, y, Math.cos(a), Math.sin(a), width("δ−", font) / 2 + 1, 5.5, taken);
                 taken.add(new double[]{spot[0] - 6, spot[1] - 5.5, spot[0] + 6, spot[1] + 5.5});
                 g.setFont(font);
@@ -558,10 +556,10 @@ final class MoleculeSketch {
         compass(g, W - 26, H - FOOT - 18, right, up);
         // Dessous : une ligne de mesures, puis la consigne.
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 9.5));
-        g.setFill(Color.web("#C6D4E8"));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
+        g.setFill(Color.web("#A2ABB8"));
         g.fillText(measures(s, bonds.size()), 10, H - FOOT + 12);
-        g.setFont(Font.font("Segoe UI", javafx.scene.text.FontPosture.ITALIC, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, javafx.scene.text.FontPosture.ITALIC, 9));
         g.setFill(GREY);
         g.fillText(instruction, 10, H - FOOT + 26);
     }
@@ -570,7 +568,7 @@ final class MoleculeSketch {
     private static void compass(GraphicsContext g, double x, double y, double[] right, double[] up) {
         String[] names = {"x", "y", "z"};
         Color[] colours = {Color.web("#FF7A6B"), Color.web("#7EE0A1"), Color.web("#6FB6FF")};
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 7.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 7.5));
         g.setTextAlign(TextAlignment.CENTER);
         for (int k = 0; k < 3; k++) {
             double ex = right[k] * 11, ey = -up[k] * 11;

@@ -36,7 +36,7 @@ public class EventJournal {
 
     /** Les catégories d'événements, pour l'étiquette et les filtres. */
     enum Category {
-        LIGHT("LUMIÈRE", "#F2B84B"), ELECTRON("ÉLECTRONS", "#7DD3FC"), NUCLEUS("NOYAU", "#FB7185"), INFO("INFO", "#8B9BB8");
+        LIGHT("LUMIÈRE", "#F2C14E"), ELECTRON("ÉLECTRONS", "#7DD3FC"), NUCLEUS("NOYAU", "#FB7185"), INFO("INFO", "#A2ABB8");
 
         final String label;
         final String colour;
@@ -63,10 +63,10 @@ public class EventJournal {
     private String lastInfo = "";
 
     public EventJournal() {
-        entries.setStyle("-fx-background-color: #0B1120;");
+        entries.setStyle("-fx-background-color: transparent;");
         scroller.setFitToWidth(true);
         scroller.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        scroller.setStyle("-fx-background: #0B1120; -fx-background-color: #0B1120;");
+        scroller.setStyle("-fx-background: transparent; -fx-background-color: transparent;");
         ToggleGroup group = new ToggleGroup();
         chip(all, group, null);
         all.setSelected(true);
@@ -81,12 +81,13 @@ public class EventJournal {
         filters.setAlignment(Pos.CENTER_LEFT);
         root.getChildren().addAll(filters, scroller);
         VBox.setVgrow(scroller, Priority.ALWAYS);
-        root.setStyle("-fx-background-color: #0B1120;");
+        root.setStyle("-fx-background-color: transparent;");
         rebuild();
     }
 
     private void chip(ToggleButton button, ToggleGroup group, Category category) {
         button.getStyleClass().add("log-chip");
+        button.setMinWidth(Region.USE_PREF_SIZE);
         button.setToggleGroup(group);
         button.setFocusTraversable(false);
         button.setOnAction(event -> {
@@ -195,10 +196,10 @@ public class EventJournal {
         }
         if (entries.getChildren().isEmpty()) {
             Label empty = new Label(events.isEmpty()
-                    ? "Rien pour l'instant. Tire un photon, ajoute une particule ou fais couler le temps : chaque événement s'écrira ici, avec son calcul."
+                    ? "Aucun événement pour l'instant."
                     : "Aucun événement de cette catégorie.");
             empty.setWrapText(true);
-            empty.setStyle("-fx-text-fill: #5B6B86; -fx-font-size: 11.5px;");
+            empty.getStyleClass().add("plan-label");
             empty.setPadding(new Insets(12, 14, 12, 14));
             entries.getChildren().add(empty);
         }
@@ -214,15 +215,15 @@ public class EventJournal {
         boolean info = category == Category.INFO;
 
         Label tag = new Label(category.label);
-        tag.setStyle("-fx-text-fill: " + hex + "; -fx-font-size: 9px; -fx-font-weight: bold; -fx-background-color: " + hex
-                + "22; -fx-background-radius: 4; -fx-padding: 1 6 1 6;");
+        tag.setStyle("-fx-text-fill: " + hex + "; -fx-font-size: 9px; -fx-font-family: 'IBM Plex Mono'; -fx-border-color: " + hex
+                + "88; -fx-padding: 0 5 0 5;");
         tag.setMinWidth(Region.USE_PREF_SIZE);
         Label time = new Label(TimelineBar.compact(event.getTimeS()));
-        time.setStyle("-fx-text-fill: #5B6B86; -fx-font-family: Consolas, monospace; -fx-font-size: 10px;");
+        time.getStyleClass().add("plan-label");
         time.setMinWidth(Region.USE_PREF_SIZE);
         time.setTooltip(I18n.tooltip("temps simulé : " + Visuals.duration(event.getTimeS())));
-        Label title = label(event.getTitle(), "-fx-text-fill: " + (info ? "#A9B6CB" : "#E6EDF7") + "; -fx-font-size: "
-                + (info ? "11.5" : "12.5") + "px;" + (info ? "" : " -fx-font-weight: bold;"));
+        Label title = label(event.getTitle(), "-fx-text-fill: " + (info ? "#A2ABB8" : "#ECEFF3") + "; -fx-font-size: "
+                + (info ? "11.5" : "12.5") + "px;" + (info ? "" : " -fx-font-family: 'IBM Plex Sans SmBld';"));
         Region grow = new Region();
         HBox.setHgrow(grow, Priority.ALWAYS);
 
@@ -240,12 +241,12 @@ public class EventJournal {
             body.getChildren().addAll(head, title);
             if (!event.getFormula().isEmpty()) {
                 Label formula = label(event.getFormula(),
-                        "-fx-text-fill: #FDE68A; -fx-font-family: Consolas, monospace; -fx-font-size: 11px;"
-                                + " -fx-background-color: #0F1626; -fx-background-radius: 6; -fx-padding: 5 8 5 8;");
+                        "-fx-text-fill: #ECEFF3; -fx-font-family: 'IBM Plex Mono'; -fx-font-size: 11px;"
+                                + " -fx-border-color: rgba(220,232,250,0.10); -fx-padding: 4 8 4 8;");
                 body.getChildren().add(formula);
             }
             if (!event.getDetail().isEmpty()) {
-                body.getChildren().add(label(event.getDetail(), "-fx-text-fill: #94A3B8; -fx-font-size: 11.5px;"));
+                body.getChildren().add(label(event.getDetail(), "-fx-text-fill: #A2ABB8; -fx-font-size: 11.5px;"));
             }
         }
         body.setPadding(new Insets(compact ? 5 : 9, 12, compact ? 5 : 10, 11));
@@ -255,8 +256,8 @@ public class EventJournal {
         bar.setStyle("-fx-background-color: " + hex + (info ? "66" : "") + ";");
         HBox row = new HBox(bar, body);
         HBox.setHgrow(body, Priority.ALWAYS);
-        String base = "-fx-border-color: transparent transparent #162034 transparent; -fx-border-width: 0 0 1 0;";
-        row.setStyle(base + (event == selected ? " -fx-background-color: #131C30;" : ""));
+        String base = "-fx-border-color: transparent transparent rgba(220,232,250,0.07) transparent; -fx-border-width: 0 0 1 0;";
+        row.setStyle(base + (event == selected ? " -fx-background-color: rgba(205,225,255,0.08);" : ""));
         if (compact) {
             row.setStyle(row.getStyle() + " -fx-cursor: hand;");
             Tooltip.install(row, I18n.tooltip("clic : Genesis explique cet événement"));

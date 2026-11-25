@@ -83,6 +83,9 @@ final class MoleculeAssembler {
         void assess(int request, double[] vector, boolean deep);
         void close();
         void pickElement();
+
+        /** La réaction du dessin (ReactionPanel) : request < 0 l'annule ; temperature en K. */
+        default void react(int request, double[] vector, double temperature) {}
     }
 
     static final class Atom {
@@ -110,12 +113,14 @@ final class MoleculeAssembler {
     enum Tool { DRAW, SELECT, MOVE, ERASE, CHARGE }
 
     private static final int MAX_ATOMS = 40;
+    /** Au-delà, un essai de la recherche de réaction coûterait plusieurs minutes (reaction.py : MAX_ATOMS). */
+    private static final int MAX_REACTING = 30;
     /** Sous cet écart HOMO–LUMO (eV), une molécule a des couches presque ouvertes : GFN1 sans spin la décrit mal. */
     private static final double SMALL_GAP = .5;
     private static final int[] PALETTE = {1, 6, 7, 8, 9, 15, 16, 17, 35, 53, 5, 14};
-    private static final Color BACK = Color.web("#060B15"), GRID = Color.web("#13203A"), LINE = Color.web("#C9D6E8");
-    private static final Color GOOD = Color.web("#5BE39A"), WARN = Color.web("#F2C46B"), BAD = Color.web("#FF6F61"),
-            GREY = Color.web("#8FA4C2"), TEXT = Color.web("#DCE8F7");
+    private static final Color BACK = Color.web("#0C0E12"), GRID = Color.web("#1C2028"), LINE = Color.web("#A2ABB8");
+    private static final Color GOOD = Color.web("#6CD09A"), WARN = Color.web("#F2C14E"), BAD = Color.web("#F2766B"),
+            GREY = Color.web("#A2ABB8"), TEXT = Color.web("#ECEFF3");
 
     private final Host host;
     private final BorderPane root = new BorderPane();
@@ -140,7 +145,7 @@ final class MoleculeAssembler {
     private final TreeSet<Integer> bandBase = new TreeSet<>();
     /** La barre d'actions posée au-dessus de la sélection. */
     private final HBox selectionBar = new HBox(4);
-    private final Label selectionCount = MoleculeView.text("", 10.5, "#C6D4E8");
+    private final Label selectionCount = MoleculeView.text("", 10.5, "#A2ABB8");
     private final CheckBox numbers = new CheckBox();
     private final Map<String, Cursor> cursors = new HashMap<>();
     private String message = "";
@@ -155,16 +160,25 @@ final class MoleculeAssembler {
     private final List<MoleculeEntry> dictionary = new ArrayList<>();
     private final VBox templateList = new VBox(3), moleculeCards = new VBox(8);
     private final TextField search = new TextField();
-    private final Label counter = MoleculeView.text("", 11, "#8FA4C2"), hint = MoleculeView.text("", 10.5, "#8FA4C2");
+    private final Label counter = MoleculeView.text("", 11, "#A2ABB8"), hint = MoleculeView.text("", 10.5, "#A2ABB8");
     private final CheckBox enclosed = new CheckBox();
     private final ToggleGroup elementGroup = new ToggleGroup(), toolGroup = new ToggleGroup(), orderGroup = new ToggleGroup();
     private final FlowPane elementBox = new FlowPane(4, 4);
     private final Button send = MoleculeView.button("Envoyer dans le simulateur 3D  ▶", true);
+    private final ReactionPanel reaction;
 
     MoleculeAssembler(Host host) {
         this.host = host;
+        reaction = new ReactionPanel(new ReactionPanel.Actions() {
+            @Override public double[] drawing() { return reacting(); }
+            @Override public void react(int request, double[] vector, double temperature) {
+                host.react(request, vector, temperature);
+            }
+            @Override public void draw(List<MoleculeEntry> products) { replaceWith(products); }
+            @Override public void open(List<MoleculeEntry> products) { openProducts(products); }
+        });
         root.getStyleClass().addAll("fusion-lab", "molecule-lab");
-        root.setStyle("-fx-background-color:#04070D;-fx-font-family:'Segoe UI';");
+        root.getStyleClass().add("plan-scene");
         holder.getChildren().add(canvas);
         selectionBar();
         holder.getChildren().add(selectionBar);
@@ -255,7 +269,7 @@ final class MoleculeAssembler {
     private Region topBar() {
         Button back = MoleculeView.button("← Simulateur 3D", false);
         back.setOnAction(e -> host.close());
-        Label title = MoleculeView.text("Assembleur moléculaire", 17, "#EAF2FF");
+        Label title = MoleculeView.text("Assembleur moléculaire", 17, "#ECEFF3");
         Label sub = MoleculeView.text("dessiner ses molécules à plat, les vérifier par le calcul, puis les envoyer en 3D", 11.5,
                 "#8FD8FF");
         VBox titles = new VBox(1, title, sub);
@@ -265,33 +279,25 @@ final class MoleculeAssembler {
         HBox bar = new HBox(14, back, titles, gap, counter, send);
         bar.setAlignment(Pos.CENTER_LEFT);
         bar.setPadding(new Insets(10, 14, 10, 14));
-        bar.setStyle("-fx-background-color:#060A14;");
+        bar.getStyleClass().add("plan-bar");
         return bar;
     }
 
     private static ScrollPane scroll(VBox content, double width) {
-        content.setPadding(new Insets(12, 10, 12, 10));
-        content.setPrefWidth(width);
+        content.setPadding(new Insets(14, 16, 14, 16));
         ScrollPane pane = new ScrollPane(content);
         pane.setFitToWidth(true);
         pane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        pane.setPrefWidth(width + 14);
-        pane.setStyle("-fx-background:#060A14;-fx-background-color:#060A14;");
+        double column = Math.max(width, org.genesis.common.Plan.LEFT_WIDTH);
+        pane.setPrefWidth(column);
+        pane.setMinWidth(column);
+        pane.setMaxWidth(column);
+        pane.getStyleClass().addAll("plan-side", "left");
         return pane;
     }
 
     private static VBox section(String index, String title, Node... nodes) {
-        Label number = MoleculeView.text(index, 9.5, "#36CDF2"), name = MoleculeView.text(
-                I18n.text(title).toUpperCase(I18n.locale()), 9.5, "#8FB3D9");
-        number.setStyle(number.getStyle() + "-fx-font-weight:bold;");
-        name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
-        HBox head = new HBox(9, number, name);
-        head.setAlignment(Pos.CENTER_LEFT);
-        VBox box = new VBox(7);
-        box.getChildren().add(head);
-        box.getChildren().addAll(nodes);
-        box.getStyleClass().add("glass-section");
-        return box;
+        return org.genesis.common.Plan.section(index, title, nodes);
     }
 
     private ToggleButton toggle(String label, ToggleGroup group, String tip) {
@@ -365,7 +371,7 @@ final class MoleculeAssembler {
         FlowPane drawing = new FlowPane(5, 5, hydrogens, tidy, cancel, wipe, importScene);
         numbers.setText(I18n.text("numéros des atomes"));
         numbers.setTooltip(I18n.tooltip("Le numéro de chaque atome, celui qu'il gardera dans le simulateur 3D (C1, O2…)"));
-        numbers.setStyle("-fx-text-fill:#C6D4E8;-fx-font-size:11px;");
+        numbers.setStyle("-fx-text-fill:#A2ABB8;-fx-font-size:11px;");
         numbers.selectedProperty().addListener((o, a, b) -> draw());
         search.setPromptText(I18n.text("chercher : eau, éthanol, benzène…"));
         search.setStyle("-fx-font-size:11.5px;-fx-font-weight:normal;");
@@ -384,15 +390,16 @@ final class MoleculeAssembler {
 
     private VBox readings() {
         enclosed.setText(I18n.text("dans une enceinte (le réacteur)"));
-        enclosed.setStyle("-fx-text-fill:#C6D4E8;-fx-font-size:11px;");
+        enclosed.setStyle("-fx-text-fill:#A2ABB8;-fx-font-size:11px;");
         enclosed.setTooltip(I18n.tooltip("Une sphère autour des molécules : elles restent ensemble et peuvent réagir"));
         Label how = MoleculeView.text("Chaque molécule est posée en 3D d'après ses liaisons (longueurs des rayons covalents, "
                 + "angles d'après les liaisons π), à sa place sur le dessin, puis relaxée par GFN1-xTB : toutes les "
-                + "options du simulateur servent ensuite.", 10.5, "#8FA4C2");
+                + "options du simulateur servent ensuite.", 10.5, "#A2ABB8");
         how.setWrapText(true);
         return new VBox(10,
                 section("06", "Molécules du dessin", moleculeCards),
-                section("07", "Envoi", enclosed, how));
+                section("07", "Réaction", reaction.getNode()),
+                section("08", "Envoi", enclosed, how));
     }
 
     private static String web(Color c) {
@@ -509,7 +516,7 @@ final class MoleculeAssembler {
                 Canvas c = new Canvas(32, 32);
                 GraphicsContext g = c.getGraphicsContext2D();
                 Color ring = tool == Tool.ERASE ? BAD : tool == Tool.CHARGE ? Color.web("#C9B8FF") : MoleculeScene.elementColor(element);
-                g.setFill(Color.web("#060B15", .75));
+                g.setFill(Color.web("#0C0E12", .75));
                 g.fillOval(6, 6, 20, 20);
                 g.setStroke(ring);
                 g.setLineWidth(1.6);
@@ -521,7 +528,7 @@ final class MoleculeAssembler {
                 g.strokeLine(0, 16, 4, 16);
                 g.strokeLine(28, 16, 32, 16);
                 g.setTextAlign(TextAlignment.CENTER);
-                g.setFont(Font.font("Segoe UI", FontWeight.BOLD, tool == Tool.DRAW && MoleculeView.symbolOf(element).length() > 1 ? 9 : 11));
+                g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, tool == Tool.DRAW && MoleculeView.symbolOf(element).length() > 1 ? 9 : 11));
                 g.setFill(ring.deriveColor(0, .85, 1.3, 1));
                 g.fillText(tool == Tool.ERASE ? "×" : tool == Tool.CHARGE ? "±" : MoleculeView.symbolOf(element), 16, 20);
                 SnapshotParameters parameters = new SnapshotParameters();
@@ -978,8 +985,7 @@ final class MoleculeAssembler {
         }
         selectionBar.setAlignment(Pos.CENTER_LEFT);
         selectionBar.setPadding(new Insets(4, 6, 4, 8));
-        selectionBar.setStyle("-fx-background-color:rgba(8,17,32,0.94);-fx-background-radius:9;-fx-border-color:#3A5070;"
-                + "-fx-border-radius:9;");
+        selectionBar.getStyleClass().add("plan-overlay");
         selectionBar.setManaged(false);
         selectionBar.setVisible(false);
     }
@@ -1318,11 +1324,66 @@ final class MoleculeAssembler {
 
     /** Pose une molécule du dictionnaire dans le dessin, à droite de ce qui y est déjà. */
     void insert(MoleculeEntry entry) {
-        int n = entry.getNumbersCount();
-        if (atoms.size() + n > MAX_ATOMS) {
+        if (atoms.size() + entry.getNumbersCount() > MAX_ATOMS) {
             say(I18n.text("Au plus 40 atomes : au-delà, le calcul ne suit plus en temps réel."), BAD);
             return;
         }
+        remember();
+        place(entry);
+        say(I18n.text(entry.getName()) + " " + I18n.text("ajouté au dessin"), GREY);
+        changed();
+    }
+
+    /** Les produits d'une réaction à la place du dessin, de gauche à droite (Ctrl+Z : revenir aux réactifs). */
+    void replaceWith(List<MoleculeEntry> products) {
+        remember();
+        atoms.clear();
+        links.clear();
+        selection.clear();
+        hoverAtom = hoverLink = -1;
+        for (MoleculeEntry entry : products) place(entry);
+        recentre();
+        say(I18n.text("les produits remplacent le dessin (Ctrl+Z : revenir)"), GREY);
+        changed();
+    }
+
+    /** Les produits d'une réaction dans le simulateur 3D ; le dessin, lui, ne change pas. */
+    private void openProducts(List<MoleculeEntry> products) {
+        String kept = serial();
+        atoms.clear();
+        links.clear();
+        for (MoleculeEntry entry : products) place(entry);
+        double[] v = vector();
+        int charge = totalCharge();
+        restore(kept);
+        if (Math.abs(charge) > 2) {
+            say(I18n.text("le simulateur accepte une charge totale de −2 à +2"), BAD);
+            return;
+        }
+        host.build(v, charge, enclosed.isSelected());
+        host.close();
+    }
+
+    /** Le dessin pour une recherche de réaction, s'il s'y prête (sinon : pourquoi, et null). */
+    private double[] reacting() {
+        if (atoms.isEmpty()) {
+            say(I18n.text("le dessin est vide"), BAD);
+            return null;
+        }
+        if (atoms.size() > MAX_REACTING) {
+            say(I18n.text("au plus 30 atomes pour chercher une réaction : un essai coûterait plusieurs minutes"), BAD);
+            return null;
+        }
+        if (Math.abs(totalCharge()) > 2) {
+            say(I18n.text("le simulateur accepte une charge totale de −2 à +2"), BAD);
+            return null;
+        }
+        return vector();
+    }
+
+    /** Pose une molécule (son graphe et son départ de dessin) à droite du dessin, sans mémoriser ni recalculer. */
+    private void place(MoleculeEntry entry) {
+        int n = entry.getNumbersCount();
         int[] z = new int[n];
         for (int k = 0; k < n; k++) z[k] = entry.getNumbers(k);
         List<int[]> bonds = new ArrayList<>();
@@ -1346,10 +1407,13 @@ final class MoleculeAssembler {
         if (atoms.isEmpty()) {
             right = wx(canvas.getWidth() / 2) - (maxX - minX) / 2 - 1.5;
             centreY = wy(canvas.getHeight() / 2);
+            if (Double.isNaN(right) || Double.isNaN(centreY)) {      // la vue n'est pas encore cadrée (rien de dessiné)
+                right = -(maxX - minX) / 2 - 1.5;
+                centreY = 0;
+            }
         } else {
             for (Atom a : atoms) centreY += a.y / atoms.size();
         }
-        remember();
         int offset = atoms.size();
         for (int k = 0; k < n; k++) {
             Atom a = new Atom(z[k], right + 1.5 + p[k][0] - minX, centreY - (p[k][1] - midY));
@@ -1357,8 +1421,6 @@ final class MoleculeAssembler {
             atoms.add(a);
         }
         for (int[] b : bonds) links.add(new Link(b[0] + offset, b[1] + offset, b[2]));
-        say(I18n.text(entry.getName()) + " " + I18n.text("ajouté au dessin"), GREY);
-        changed();
     }
 
     /** Les molécules du simulateur 3D, redessinées à plat (vues dans leur plan moyen, puis mises au propre). */
@@ -1577,8 +1639,14 @@ final class MoleculeAssembler {
         host.close();
     }
 
-    /** Ce que le moteur envoie : le dictionnaire (une fois), le verdict du dernier dessin. */
+    /** Le panneau de la réaction (aperçus, tests). */
+    ReactionPanel reaction() {
+        return reaction;
+    }
+
+    /** Ce que le moteur envoie : le dictionnaire (une fois), le verdict du dernier dessin, la réaction en cours. */
     void update(MoleculeLabState s) {
+        if (s.hasReaction()) reaction.update(s.getReaction());
         if (dictionary.isEmpty() && s.getDictionaryCount() > 0) {
             dictionary.addAll(s.getDictionaryList());
             refreshTemplates();
@@ -1622,7 +1690,7 @@ final class MoleculeAssembler {
             b.setOnAction(e -> insert(entry));
             templateList.getChildren().add(b);
         }
-        if (shown == 0 && !dictionary.isEmpty()) templateList.getChildren().add(MoleculeView.text(I18n.text("rien de tel"), 10.5, "#8FA4C2"));
+        if (shown == 0 && !dictionary.isEmpty()) templateList.getChildren().add(MoleculeView.text(I18n.text("rien de tel"), 10.5, "#A2ABB8"));
     }
 
     private static String fold(String s) {
@@ -1639,7 +1707,7 @@ final class MoleculeAssembler {
         List<List<Integer>> groups = molecules();
         if (groups.isEmpty()) {
             Label empty = MoleculeView.text("Le dessin est vide : choisir un élément et cliquer dans le cadre, ou poser un "
-                    + "modèle du dictionnaire.", 11, "#8FA4C2");
+                    + "modèle du dictionnaire.", 11, "#A2ABB8");
             empty.setWrapText(true);
             moleculeCards.getChildren().add(empty);
             return;
@@ -1655,7 +1723,7 @@ final class MoleculeAssembler {
         String formula = v != null ? v.getFormula() : hill(counts);
         String name = v != null && !v.getName().isEmpty() ? I18n.text(v.getName()) : v != null
                 ? I18n.text("inconnue du dictionnaire") : "…";
-        Label title = MoleculeView.text(formula + "  ·  " + name, 12.5, v != null && !v.getName().isEmpty() ? "#EAF2FF" : "#C6D4E8");
+        Label title = MoleculeView.text(formula + "  ·  " + name, 12.5, v != null && !v.getName().isEmpty() ? "#ECEFF3" : "#A2ABB8");
         title.setStyle(title.getStyle() + "-fx-font-weight:bold;");
         title.setWrapText(true);
         VBox box = new VBox(4, title);
@@ -1669,19 +1737,19 @@ final class MoleculeAssembler {
         }
         if (v != null && v.getUnpaired() == 1) notes.add(I18n.text("nombre impair d'électrons : un radical"));
         for (String note : notes) {
-            Label l = MoleculeView.text("• " + note, 10.5, "#F2C46B");
+            Label l = MoleculeView.text("• " + note, 10.5, "#F2C14E");
             l.setWrapText(true);
             box.getChildren().add(l);
         }
         if (radicals > 0 && (v == null || v.getVerdict().isEmpty())) {
-            Label l = MoleculeView.text(I18n.text("« Compléter les H » donne à chaque atome sa valence usuelle."), 10, "#8FA4C2");
+            Label l = MoleculeView.text(I18n.text("« Compléter les H » donne à chaque atome sa valence usuelle."), 10, "#A2ABB8");
             l.setWrapText(true);
             box.getChildren().add(l);
         }
         String verdict = v == null ? "" : v.getVerdict();
         Label line;
         if (v == null || (!assessment.getDeep() && verdict.isEmpty())) {
-            line = MoleculeView.text(I18n.text("calcul GFN1-xTB en cours…"), 10.5, "#8FA4C2");
+            line = MoleculeView.text(I18n.text("calcul GFN1-xTB en cours…"), 10.5, "#A2ABB8");
         } else if (verdict.equals("tient")) {
             line = MoleculeView.text("✔ " + I18n.text("tient : un minimum de GFN1-xTB") + "  ·  " + I18n.text("cohésion") + " "
                     + MoleculeFormat.decimal(v.getCohesionEv(), 2) + " eV  ·  " + I18n.text("écart") + " "
@@ -1693,7 +1761,7 @@ final class MoleculeAssembler {
             line = MoleculeView.text("✖ " + I18n.text("se défait à la relaxation, en") + " " + String.join(" + ",
                     v.getPiecesList().stream().map(MoleculeFormat::names).toList()), 10.5, web(BAD));
         } else if (verdict.equals("atome")) {
-            line = MoleculeView.text(I18n.text("un atome seul"), 10.5, "#8FA4C2");
+            line = MoleculeView.text(I18n.text("un atome seul"), 10.5, "#A2ABB8");
         } else {
             line = MoleculeView.text("✖ " + I18n.text("le calcul n'a pas trouvé d'état électronique sensé"), 10.5, web(BAD));
         }
@@ -1707,7 +1775,7 @@ final class MoleculeAssembler {
             l.setWrapText(true);
             box.getChildren().add(l);
         }
-        box.setStyle("-fx-background-color:rgba(10,22,38,0.7);-fx-background-radius:8;-fx-padding:8;");
+        box.setStyle("-fx-border-color:rgba(220,232,250,0.10);-fx-padding:8;");
         return box;
     }
 
@@ -1827,18 +1895,18 @@ final class MoleculeAssembler {
         for (List<Integer> group : molecules()) caption(g, group);
         // Le message du dernier geste refusé (ou fait), quelques secondes.
         if (!message.isEmpty() && System.nanoTime() - messageAt < 6_000_000_000L) {
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12));
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFill(Color.web("#081120", .9));
+            g.setFill(Color.web("#111419", .9));
             double width = message.length() * 6.6 + 24;
-            g.fillRoundRect(w / 2 - width / 2, h - 44, width, 26, 13, 13);
+            g.fillRect(w / 2 - width / 2, h - 44, width, 26);
             g.setFill(messageColour);
             g.fillText(message, w / 2, h - 26);
         }
         if (hoverAtom >= 0 && hoverAtom < atoms.size() && !dragging) chip(g, hoverAtom);
         placeBar();
         if (atoms.isEmpty()) {
-            g.setFont(Font.font("Segoe UI", 14));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 14));
             g.setTextAlign(TextAlignment.CENTER);
             g.setFill(GREY);
             g.fillText(I18n.text("Choisir un élément à gauche, puis cliquer ici pour poser un atome."), w / 2, h / 2 - 10);
@@ -1884,7 +1952,7 @@ final class MoleculeAssembler {
         g.setLineDashes(3, 3);
         g.strokeOval(x - r, y - r, 2 * r, 2 * r);
         g.setLineDashes();
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, z == 1 ? 11 : 13.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, z == 1 ? 11 : 13.5));
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(colour.deriveColor(0, 1, 1, .55));
         g.fillText(possible ? MoleculeView.symbolOf(z) : "×", x, y + (z == 1 ? 4 : 5));
@@ -1910,16 +1978,16 @@ final class MoleculeAssembler {
             case SELECT -> I18n.text("double-clic : toute la molécule");
             default -> I18n.text("tirer : le déplacer");
         };
-        Font font = Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11), small = Font.font("Segoe UI", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11), small = Font.font(org.genesis.common.Plan.SANS, 10);
         double w = Math.max(MoleculeSketch.width(head, font), MoleculeSketch.width(next, small)) + 20;
         double r = radius(a), x = sx(a.x) + r + 10, y = sy(a.y) - r - 40;
         if (x + w > canvas.getWidth() - 6) x = sx(a.x) - r - 10 - w;
         if (y < 6) y = sy(a.y) + r + 10;
-        g.setFill(Color.web("#081120", .93));
-        g.fillRoundRect(x, y, w, 34, 9, 9);
-        g.setStroke(Color.web("#3A5070"));
+        g.setFill(Color.web("#111419", .93));
+        g.fillRect(x, y, w, 34);
+        g.setStroke(Color.web("#30363F"));
         g.setLineWidth(.8);
-        g.strokeRoundRect(x, y, w, 34, 9, 9);
+        g.strokeRect(x, y, w, 34);
         g.setTextAlign(TextAlignment.LEFT);
         g.setFont(font);
         g.setFill(TEXT);
@@ -1946,7 +2014,7 @@ final class MoleculeAssembler {
         g.setStroke(k == hoverAtom ? Color.web("#FFE07A") : element.deriveColor(0, 1, 1, .9));
         g.setLineWidth(k == hoverAtom ? 2 : 1.4);
         g.strokeOval(x - r, y - r, 2 * r, 2 * r);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, a.z == 1 ? 11 : 13.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, a.z == 1 ? 11 : 13.5));
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(element.deriveColor(0, .85, 1.3, 1));
         g.fillText(MoleculeView.symbolOf(a.z), x, y + (a.z == 1 ? 4 : 5));
@@ -1955,12 +2023,12 @@ final class MoleculeAssembler {
             double bx = x + r * .8, by = y - r * .8, br = 6.5;
             g.setFill(a.charge > 0 ? MoleculeScene.POOR : MoleculeScene.RICH);
             g.fillOval(bx - br, by - br, 2 * br, 2 * br);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
             g.setFill(Color.web("#06101E"));
             g.fillText((Math.abs(a.charge) > 1 ? String.valueOf(Math.abs(a.charge)) : "") + (a.charge > 0 ? "+" : "−"), bx, by + 3.6);
         }
         if (numbers.isSelected()) {
-            g.setFont(Font.font("Segoe UI", 9));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
             g.setFill(GREY);
             g.setTextAlign(TextAlignment.LEFT);
             g.fillText(String.valueOf(k + 1), x + r * .75, y + r + 9);
@@ -1996,11 +2064,11 @@ final class MoleculeAssembler {
         Color colour = verdict.equals("tient") ? GOOD : verdict.equals("se réarrange") ? WARN
                 : verdict.equals("se défait") || verdict.equals("échec") ? BAD : GREY;
         double x = (minX + maxX) / 2, y = maxY + radius(atoms.get(group.get(0))) + 22;
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFill(Color.web("#081120", .85));
+        g.setFill(Color.web("#111419", .85));
         double width = text.length() * 6.4 + 34;
-        g.fillRoundRect(x - width / 2, y - 14, width, 20, 10, 10);
+        g.fillRect(x - width / 2, y - 14, width, 20);
         g.setFill(colour);
         g.fillOval(x - width / 2 + 8, y - 7.5, 7, 7);
         g.setFill(TEXT);

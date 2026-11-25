@@ -89,18 +89,18 @@ public class PeriodicTableDialog {
         grid.add(spacer, 0, 7);
 
         Label title = new Label("TABLE PÉRIODIQUE");
-        title.setStyle("-fx-text-fill: #E2E8F0; -fx-font-size: 15px; -fx-font-weight: bold;");
+        title.getStyleClass().add("plan-heading");
 
         Label hint = new Label(I18n.text("Clique un élément pour le construire (la table se referme ; Échap pour fermer). ")
                 + I18n.text("Les éléments encadrés en pointillés n'ont aucun isotope stable."));
-        hint.setStyle("-fx-text-fill: #475569; -fx-font-size: 11px;");
+        hint.getStyleClass().add("plan-label");
 
-        detail.setStyle("-fx-text-fill: #94A3B8; -fx-font-size: 12px;");
+        detail.setStyle("-fx-text-fill: #A2ABB8; -fx-font-size: 12px;");
         detail.setMinHeight(20);
 
         VBox root = new VBox(12, title, hint, grid, buildLegend(table), detail);
         root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: #070B15;");
+        root.getStyleClass().add("plan-side");
         root.setAlignment(Pos.TOP_LEFT);
 
         stage.initOwner(owner);
@@ -129,7 +129,7 @@ public class PeriodicTableDialog {
 
     private Region buildCell(Element element, IntConsumer onPick) {
         Color accent = element.getColorHex().isEmpty()
-                ? Color.web("#64748B")
+                ? Color.web("#6B7483")
                 : Color.web(element.getColorHex());
         boolean radioactive = element.getStableIsotopesCount() == 0;
 
@@ -138,7 +138,7 @@ public class PeriodicTableDialog {
                 + toHex(accent) + ";");
 
         Label number = new Label(String.valueOf(element.getZ()));
-        number.setStyle("-fx-font-size: " + Math.max(7, Math.round(cellSize * 0.18)) + "px; -fx-text-fill: #475569;");
+        number.setStyle("-fx-font-size: " + Math.max(7, Math.round(cellSize * 0.18)) + "px; -fx-text-fill: #6B7483;");
 
         VBox content = new VBox(-2, number, symbol);
         content.setAlignment(Pos.CENTER);
@@ -188,12 +188,13 @@ public class PeriodicTableDialog {
     }
 
     private static String cellStyle(Color accent, boolean radioactive, boolean hovered) {
-        String background = hovered ? toHex(accent.deriveColor(0, 1, 0.42, 1)) : "#111C33";
-        String border = hovered ? toHex(accent) : toHex(accent) + "55";
+        // Une case : un fond léger à la couleur de sa famille, qui s'éclaire au survol ; un pointillé dit « radioactif ».
+        String background = toHex(accent) + (hovered ? "40" : "1C");
+        String border = hovered ? toHex(accent) : radioactive ? toHex(accent) + "80" : "transparent";
         return "-fx-padding: 0; "
-                + "-fx-background-color: " + background + "; -fx-background-radius: 5; "
-                + "-fx-border-color: " + border + "; -fx-border-radius: 5; -fx-border-width: 1; "
-                + (radioactive ? "-fx-border-style: dashed; " : "")
+                + "-fx-background-color: " + background + "; -fx-background-radius: 6; "
+                + "-fx-border-color: " + border + "; -fx-border-radius: 6; -fx-border-width: 1; "
+                + (radioactive && !hovered ? "-fx-border-style: dashed; " : "")
                 + "-fx-cursor: hand;";
     }
 
@@ -227,10 +228,10 @@ public class PeriodicTableDialog {
             Region swatch = new Region();
             swatch.setMinSize(10, 10);
             swatch.setMaxSize(10, 10);
-            swatch.setStyle("-fx-background-color: " + family.getValue() + "; -fx-background-radius: 2;");
+            swatch.setStyle("-fx-background-color: transparent; -fx-border-color: " + family.getValue() + ";");
 
             Label name = new Label(family.getKey());
-            name.setStyle("-fx-text-fill: #64748B; -fx-font-size: 10px;");
+            name.getStyleClass().add("plan-label");
 
             HBox item = new HBox(5, swatch, name);
             item.setAlignment(Pos.CENTER_LEFT);

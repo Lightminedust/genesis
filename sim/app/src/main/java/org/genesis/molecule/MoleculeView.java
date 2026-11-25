@@ -27,6 +27,7 @@ import javafx.scene.control.Button;
 import javafx.scene.effect.BlendMode;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
@@ -103,6 +104,26 @@ public final class MoleculeView {
 
         /** Le verdict du moteur sur un dessin de l'assembleur : noms aussitôt, puis (deep) la relaxation GFN1-xTB. */
         default void assess(int request, double[] vector, boolean deep) {}
+
+        /** La réaction d'un dessin de l'assembleur (le nanoréacteur) : request < 0 l'annule ; temperature en K. */
+        default void react(int request, double[] vector, double temperature) {}
+
+        /** Le schéma réactionnel dessiné (JSON, voir SchemeEditor.json) : request < 0 annule le calcul. */
+        default void scheme(int request, String json) {}
+
+        /** Le chemin d'une étape joué dans la scène : step < 0 l'arrête ; position 0 → 1 (< 0 : garder). */
+        default void schemePlay(int step, double position, boolean running) {}
+
+        /** Le même, à une vitesse choisie : images du chemin par seconde (0 : au rythme du calcul). */
+        default void schemePlay(int step, double position, boolean running, double speed) {
+            schemePlay(step, position, running);
+        }
+
+        /** Le dessin d'un SMILES, pour l'éditeur de schémas. */
+        default void smiles(int request, String text) {}
+
+        /** Le solvant implicite de la scène (indice dans MoleculeLabState.solvents ; −1 : le vide). */
+        default void solvent(int index) {}
     }
 
     private static final String[] VIEW_NAMES = {"ρ  Densité", "Δρ  Déformation", "ψ  Orbitale"};
@@ -121,6 +142,33 @@ public final class MoleculeView {
     private final BorderPane root = new BorderPane();
     /** L'écran de l'assembleur 2D, posé par-dessus le laboratoire 3D quand il est ouvert. */
     private final MoleculeAssembler assembler;
+    /** L'éditeur de schémas réactionnels, posé par-dessus le laboratoire quand il est ouvert ; le chemin joué. */
+    private final SchemeEditor schemeEditor;
+    private final SchemePlayer schemePlayer;
+    /** Le chemin d'une étape dans sa vue 2.5D de lecture, posée par-dessus le laboratoire (voir SchemeStage). */
+    private final SchemeStage schemeStage;
+    private com.studio.genesis.grpc.MoleculeScheme lastScheme, playedScheme;
+    private int playedRequest = -1;
+    private boolean playMode;
+
+    /**
+     * Pendant la lecture d'un chemin de schéma, la colonne de gauche (établi, molécules, expériences) se retire : elle
+     * ne sert pas au replay et prenait un cinquième de la largeur. Elle revient quand la scène redevient libre.
+     */
+    private void playMode(boolean on) {
+        if (on == playMode) return;
+        playMode = on;
+        Node left = root.getLeft();
+        if (left != null) {
+            left.setVisible(!on);
+            left.setManaged(!on);
+        }
+    }
+    /** L'étape dont le chemin est joué, cadrée une fois au début de sa lecture (−1 : aucune). */
+    private int playedStep = -1;
+    /** Le solvant de la scène (ALPB) et son énergie libre de solvatation. */
+    private final javafx.scene.control.ComboBox<String> solventBox = new javafx.scene.control.ComboBox<>();
+    private final Label solvationLabel = new Label();
     private final StackPane frame;
     private final StackPane stage = new StackPane();
     private final Pane holder;
@@ -138,22 +186,23 @@ public final class MoleculeView {
     private final ToggleButton[] chargeButtons = new ToggleButton[3];
     /** Les expériences guidées : une ligne chacune (titre, équation), puis ce qui se passe pour celle qui tourne. */
     private final VBox experimentBox = new VBox(4);
+    private final HBox viewModes = new HBox(10);
     private final List<HBox> experimentButtons = new ArrayList<>();
-    private final Label experimentPhase = text("", 11.5, "#C7D6EA"), experimentNote = text("", 10.5, "#8FA4C2");
-    private final Label title = text("", 17, "#EAF2FF"), census = text("", 12.5, "#8FD8FF");
+    private final Label experimentPhase = text("", 11.5, "#C7D6EA"), experimentNote = text("", 10.5, "#A2ABB8");
+    private final Label title = text("", 17, "#ECEFF3"), census = text("", 12.5, "#8FD8FF");
     /** Sous les espèces, ce que montre la vue Δρ ou ψ (l'orbitale : nom, énergie, électrons, composition). */
     private final Label modeLine = text("", 12, "#C7D6EA");
     private String moleculeSignature = "";
     private List<MoleculeOrbitalPart> orbitalParts = List.of();
     private int partsOrbital = -1;
-    private final Label status = text("", 11, "#90A3BE"), error = text("", 11.5, "#FF9C8A");
+    private final Label status = text("", 11, "#A2ABB8"), error = text("", 11.5, "#FF9C8A");
     /** Le bilan d'énergie (voir EnergyBalance), la cible des niveaux (EnergyTarget), la carte de l'atome (AtomMap). */
     private final Canvas balance = new Canvas(270, 200), atomCanvas = new Canvas(270, 300);
     private final EnergyTarget target = new EnergyTarget();
     private final AtomMap atomMap = new AtomMap();
     private int levelHover = -1;
-    private final Label speciesLines = text("", 11.5, "#DCE8F7"), eventLines = text("", 10.5, "#A9BCD6");
-    private final Label atomCard = text("", 11.5, "#DCE8F7"), dipoleLine = text("", 11, "#A9BCD6");
+    private final Label speciesLines = text("", 11.5, "#ECEFF3"), eventLines = text("", 10.5, "#A9BCD6");
+    private final Label atomCard = text("", 11.5, "#ECEFF3"), dipoleLine = text("", 11, "#A9BCD6");
     /** Les isotopes de l'atome choisi (voir refreshIsotopes) ; ceux que le moteur propose, par élément. */
     private final FlowPane isotopeRow = new FlowPane(4, 4);
     private final ToggleButton isotopeAll = new ToggleButton();
@@ -162,19 +211,21 @@ public final class MoleculeView {
     private final Label orbitalLine = text("", 11, "#A9BCD6"), modeHeader = text("", 11, "#A9BCD6");
     private final VBox modeList = new VBox(3);
     private final Slider temperature = new Slider(0, 4000, 300), spark = new Slider(1, 30, 8), quanta = new Slider(1, 10, 1);
-    private final Label temperatureLabel = text("", 11, "#C6D4E8"), sparkLabel = text("", 11, "#C6D4E8");
-    private final Label quantaLabel = text("", 11, "#C6D4E8");
+    private final Label temperatureLabel = text("", 11, "#A2ABB8"), sparkLabel = text("", 11, "#A2ABB8");
+    private final Label quantaLabel = text("", 11, "#A2ABB8");
     /**
      * Le piston du réacteur : allumé, la paroi suit la pression choisie (100 à 20 000 atm, échelle logarithmique) ; et
      * ce que l'enceinte mesure (pression sur la paroi, volume, gaz parfait, fréquence des rencontres).
      */
     private final ToggleButton piston = new ToggleButton();
     private final Slider pressure = new Slider(2, Math.log10(20000), Math.log10(3000));
-    private final Label pressureLabel = text("", 11, "#C6D4E8"), enclosure = text("", 10.5, "#A9BCD6");
+    private final Label pressureLabel = text("", 11, "#A2ABB8"), enclosure = text("", 10.5, "#A9BCD6");
+    /** Le sens de la lecture de l'enceinte (ce que veut dire Z, ce que fait le piston), au survol. */
+    private final Tooltip enclosureTip = I18n.tooltip();
     private final Button pause = button("Ⅱ", false);
     private final Canvas chart = new Canvas(430, 92), levels = new Canvas(270, 264);
     private final VBox modelBanner = new VBox(8);
-    private final Label modelText = text("", 11.5, "#E6EEFA");
+    private final Label modelText = text("", 11.5, "#ECEFF3");
     private final GridPane validation = new GridPane();
     private final List<String> presets = new ArrayList<>(), reactions = new ArrayList<>();
     private final java.util.Set<Integer> supported = new java.util.HashSet<>();
@@ -213,8 +264,35 @@ public final class MoleculeView {
 
     public MoleculeView(Actions actions) {
         this.actions = actions;
+        schemePlayer = new SchemePlayer(new SchemePlayer.Actions() {
+            @Override public void play(int step, double position, boolean running) { actions.schemePlay(step, position, running); }
+            @Override public void openEditor() { showScheme(true); }
+            @Override public void openStage() {
+                // La vue du chemin reprend là où joue la scène 3D, et la rejoue seule : le moteur s'arrête.
+                com.studio.genesis.grpc.MoleculeSchemePlay p = state == null ? null : state.getPlay();
+                int step = p == null ? -1 : p.getStep();
+                schemeStage.update(lastScheme);
+                schemeStage.show(true, step, p == null ? 0 : p.getPosition(), p != null && p.getRunning());
+                schemeEditor.getNode().setVisible(false);
+                if (step >= 0) actions.schemePlay(-1, -1, false);
+            }
+        });
+        schemeStage = new SchemeStage(new SchemeStage.Actions() {
+            @Override public void openScene(int step, double position, boolean running, double speed) {
+                // La vue du chemin reste là jusqu'à ce que le moteur ait posé l'étape : la scène 3D montrait sinon, un
+                // instant, ce qu'elle avait avant (l'eau de départ).
+                pendingScene = step;
+                sceneAskedAt = System.nanoTime();
+                schemeStage.opening(true);
+                actions.schemePlay(step, position, running, speed);
+            }
+            @Override public void openEditor() {
+                showStage(false, -1);
+                showScheme(true);
+            }
+        });
         root.getStyleClass().addAll("fusion-lab", "molecule-lab");
-        root.setStyle("-fx-background-color:#04070D;-fx-font-family:'Segoe UI';");
+        root.getStyleClass().add("plan-scene");
         holder = new Pane(sceneCanvas, glowFar, glowNear);
         if (orbitalLayer != null) {
             Pane lobes = (Pane) orbitalLayer.getNode();
@@ -305,16 +383,14 @@ public final class MoleculeView {
         holder.setOnScroll(e -> scene.zoomAt(e.getX(), e.getY(), e.getDeltaY() / 40));
         dock = dock();
         navigation = navigation();
-        stage.getChildren().addAll(holder, header(), dock, sketchCanvas, navigation, modelBanner());
+        stage.getChildren().addAll(holder, header(), sketchCanvas, navigation, modelBanner(), schemePlayer.getNode());
+        StackPane.setAlignment(schemePlayer.getNode(), Pos.BOTTOM_LEFT);
+        StackPane.setMargin(schemePlayer.getNode(), new javafx.geometry.Insets(0, 0, 14, 14));
+        // La navigation en bas à droite de la scène, la vignette 2D en bas à gauche ; la barre de dynamique est dessous.
         StackPane.setAlignment(navigation, Pos.BOTTOM_RIGHT);
-        dock.heightProperty().addListener((o, a, b) ->
-                StackPane.setMargin(navigation, new Insets(0, 14, b.doubleValue() + 22, 0)));
-        StackPane.setMargin(navigation, new Insets(0, 14, 200, 0));
-        // La vignette 2D, en bas à gauche, juste au-dessus du dock (qui change de hauteur avec la ligne d'état).
+        StackPane.setMargin(navigation, new Insets(0, 14, 14, 0));
         StackPane.setAlignment(sketchCanvas, Pos.BOTTOM_LEFT);
-        dock.heightProperty().addListener((o, a, b) ->
-                StackPane.setMargin(sketchCanvas, new Insets(0, 0, b.doubleValue() + 22, 12)));
-        StackPane.setMargin(sketchCanvas, new Insets(0, 0, 200, 12));
+        StackPane.setMargin(sketchCanvas, new Insets(0, 0, 14, 12));
         // La vignette et la scène se répondent : survoler un atome du schéma le montre en 3D, le cliquer le choisit.
         sketchCanvas.setOnMouseClicked(e -> {
             if (sketch.onTitle(e.getX(), e.getY())) {
@@ -336,10 +412,15 @@ public final class MoleculeView {
             scene.hovered = -1;
             drawSketch();
         });
-        root.setCenter(stage);
-        root.setLeft(scroll(workbench(), 236));
-        root.setRight(scroll(readings(), 300));
+        BorderPane centre = new BorderPane(stage);
+        centre.setBottom(dock);
+        sceneStage = stage;
+        root.setCenter(centre);
+        root.setLeft(column(workbench(), org.genesis.common.Plan.LEFT_WIDTH, "left"));
+        root.setRight(column(readings(), org.genesis.common.Plan.RIGHT_WIDTH, "right"));
         // La cible : survoler un cercle lit son niveau au cœur, cliquer montre son orbitale.
+        Tooltip.install(levels, I18n.tooltip("Le rayon suit l'énergie, pas une distance : au centre, les électrons les plus liés ; "
+                + "au bord, le vide. Survoler un cercle pour lire son niveau, cliquer pour voir son orbitale."));
         levels.setOnMouseMoved(e -> {
             int over = target.pick(e.getX(), e.getY());
             levels.setCursor(over >= 0 ? Cursor.HAND : Cursor.DEFAULT);
@@ -380,25 +461,119 @@ public final class MoleculeView {
                 framedLabel = "";                     // la nouvelle scène sera cadrée
             }
             @Override public void assess(int request, double[] vector, boolean deep) { actions.assess(request, vector, deep); }
+            @Override public void react(int request, double[] vector, double temperature) {
+                actions.react(request, vector, temperature);
+            }
             @Override public void close() { showAssembler(false); }
             @Override public void pickElement() { actions.pickElement(); }
         });
         assembler.onImport(() -> assembler.importScene(scene));
         Region drawing = assembler.getNode();
         drawing.setVisible(false);
-        frame = new StackPane(root, drawing);
+        schemeEditor = new SchemeEditor(new SchemeEditor.Host() {
+            @Override public void compute(int request, String json) { actions.scheme(request, json); }
+            @Override public void smiles(int request, String text) { actions.smiles(request, text); }
+            @Override public void play(int step) {
+                // La vue du chemin rejoue elle-même le chemin calculé : rien n'est demandé au moteur (qui calcule
+                // peut-être encore les étapes suivantes).
+                showScheme(false);
+                showStage(true, step);
+            }
+            @Override public void close() { showScheme(false); }
+        });
+        Region schemes = schemeEditor.getNode();
+        schemes.setVisible(false);
+        frame = new StackPane(root, drawing, schemes, schemeStage.getNode());
+        frame.getStyleClass().add("lab-molecule");              // sa couleur (genesis.css), assembleur compris
     }
 
     public Region getNode() {
         return frame;
     }
 
-    /** La colonne des lectures (aperçus). */
+    /** La scène (ses canevas et ce qui est posé dessus), pour en enregistrer une image. */
+    private javafx.scene.Node sceneStage;
+
+    /** Le guide du laboratoire (touche H) : ce qu'on y fait, par où commencer, ce que montre chaque zone. */
+    public org.genesis.common.Guide guide() {
+        return new org.genesis.common.Guide("Molécules", "Des atomes et des molécules calculés par la chimie quantique : "
+                + "leurs électrons, leurs liaisons, leurs forces et leurs réactions.")
+                .step("Choisir une molécule, une expérience guidée ou un mélange du réacteur.")
+                .step("Choisir la dynamique, en bas : relaxer, chauffer (thermostat) ou laisser libre.")
+                .step("Cliquer un atome : ses forces. Clic droit sur une molécule : sa fiche. L'assembleur 2D dessine les vôtres.")
+                .spot(viewModes, "Les vues", "La densité d'électrons, sa déformation par les liaisons, une orbitale ; l'assembleur 2D.")
+                .spot(root.getLeft(), "Préparer", "Molécules, expériences, réacteur, établi : ce qu'on met dans la scène.")
+                .spot(sceneStage, "La scène", "Glisser : tourner · molette : zoomer · tirer un atome : le déplacer · double-clic : centrer.")
+                .spot(root.getRight(), "Mesurer", "L'énergie et ce qui la compose, les orbitales, les espèces, l'atome choisi.")
+                .spot(dock, "Le temps", "Relaxation, thermostat ou dynamique libre, la température, une étincelle.");
+    }
+
+    /** Les colonnes du laboratoire : cachées, la scène prend toute la place. */
+    public void showPanels(boolean shown) {
+        org.genesis.common.Plan.show(root.getLeft(), shown);
+        org.genesis.common.Plan.show(root.getRight(), shown);
+    }
+
+    /** La scène seule, pour en enregistrer une image (l'assembleur, s'il est ouvert). */
+    public javafx.scene.Node sceneNode() {
+        if (schemeStage != null && schemeStage.isOpen()) return schemeStage.getNode();
+        if (schemeEditor != null && schemeEditor.getNode().isVisible()) return schemeEditor.getNode();
+        return assemblerOpen() ? assembler.getNode() : sceneStage;
+    }
+
+    /** L'assembleur 2D (ou l'éditeur de schémas, ou la vue du chemin) est-il ouvert (Échap y sert à autre chose) ? */
+    public boolean assemblerOpen() {
+        return assembler != null && assembler.getNode().isVisible()
+                || schemeEditor != null && schemeEditor.getNode().isVisible()
+                || schemeStage != null && schemeStage.isOpen();
+    }
+
+    /** Ouvre ou ferme l'éditeur de schémas réactionnels. */
+    void showScheme(boolean open) {
+        Region node = schemeEditor.getNode();
+        node.setVisible(open);
+        if (open) {
+            showAssembler(false);
+            schemeStage.show(false, -1);
+            schemeEditor.draw();
+            node.requestFocus();
+        }
+    }
+
+    /** L'étape que la scène 3D attend du moteur avant de s'ouvrir (−1 : aucune), et depuis quand. */
+    private int pendingScene = -1;
+    private long sceneAskedAt;
+
+    /** Ouvre ou ferme la vue du chemin (l'étape que le moteur va jouer, ou −1 : celle qu'il joue). */
+    void showStage(boolean open, int step) {
+        if (open) schemeStage.update(lastScheme);
+        schemeStage.show(open, step);
+        if (open) schemeEditor.getNode().setVisible(false);
+    }
+
+    /** La vue du chemin (aperçus et tests). */
+    SchemeStage schemeStage() {
+        return schemeStage;
+    }
+
+    /** Les modes du laboratoire (vues ρ, Δρ, ψ et l'assembleur 2D), posés dans l'en-tête commun. */
+    public Region viewModes() {
+        return viewModes;
+    }
+
+    /** La page des lectures montrée (aperçus). */
     Region readingsPane() {
-        return (Region) root.getRight();
+        return readingTabs.page(Math.max(0, readingTabs.selected()));
     }
 
     /** Ouvre ou ferme l'assembleur 2D. */
+    /** L'éditeur de schémas, la vue du chemin et l'assembleur fermés : la scène du laboratoire. */
+    private void closeOverlays() {
+        if (schemeStage.isOpen()) showStage(false, -1);
+        schemeEditor.getNode().setVisible(false);
+        showAssembler(false);
+    }
+
     void showAssembler(boolean open) {
         Region drawing = assembler.getNode();
         drawing.setVisible(open);
@@ -426,37 +601,49 @@ public final class MoleculeView {
     }
 
     private static VBox section(String index, String title, Node... nodes) {
-        Label number = text(index, 9.5, "#36CDF2"), name = text(spaced(title), 9.5, "#8FB3D9");
-        number.setStyle(number.getStyle() + "-fx-font-weight:bold;");
-        name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
-        HBox head = new HBox(9, number, name);
-        head.setAlignment(Pos.CENTER_LEFT);
-        VBox box = new VBox(7);
-        box.getChildren().add(head);
-        box.getChildren().addAll(nodes);
-        box.getStyleClass().add("glass-section");
-        return box;
+        return org.genesis.common.Plan.section(index, title, nodes);
     }
 
     private static String spaced(String title) {
         return I18n.text(title).toUpperCase(I18n.locale());
     }
 
-    private static ScrollPane scroll(VBox content, double width) {
-        content.setPadding(new Insets(12, 10, 12, 10));
-        content.setPrefWidth(width);
+    /**
+     * Une colonne faite de pages (gauche : ce qu'on prépare ; droite : ce qu'on mesure), de la largeur commune aux
+     * laboratoires ; ses pages défilent seules.
+     */
+    private static VBox column(Region content, double width, String side) {
+        VBox pane = new VBox(content);
+        VBox.setVgrow(content, Priority.ALWAYS);
+        pane.setPrefWidth(width);
+        pane.setMinWidth(width);
+        pane.setMaxWidth(width);
+        pane.getStyleClass().addAll("plan-side", side);
+        return pane;
+    }
+
+    /** Le contenu d'une page de colonne, avec sa marge. */
+    private static VBox page(javafx.scene.Node... nodes) {
+        VBox box = new VBox(12, nodes);
+        box.setPadding(new Insets(12, 16, 16, 16));
+        return box;
+    }
+
+    /** Une colonne (gauche : ce qu'on fait ; droite : ce qu'on mesure), de la largeur commune aux laboratoires. */
+    private static ScrollPane scroll(VBox content, double width, String side) {
+        content.setPadding(new Insets(14, 16, 14, 16));
         ScrollPane pane = new ScrollPane(content);
         pane.setFitToWidth(true);
         pane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        pane.setPrefWidth(width + 14);
-        pane.setStyle("-fx-background:#060A14;-fx-background-color:#060A14;");
+        pane.setPrefWidth(width);
+        pane.setMinWidth(width);
+        pane.setMaxWidth(width);
+        pane.getStyleClass().addAll("plan-side", side);
         return pane;
     }
 
     // ================================================================== l'en-tête, le dock, le modèle
     private Region header() {
-        Button back = button("← Atome", false);
-        back.setOnAction(e -> actions.back());
         ToggleGroup views = new ToggleGroup();
         HBox segment = new HBox(0);
         for (int k = 0; k < 3; k++) {
@@ -470,6 +657,8 @@ public final class MoleculeView {
             b.setOnAction(e -> {
                 b.setSelected(true);
                 if (updating) return;
+                // Un onglet du laboratoire y ramène : l'éditeur de schémas, la vue du chemin, l'assembleur se ferment.
+                closeOverlays();
                 request("view", kind);
                 // Tout de suite : la scène quitte la vue précédente sans attendre le moteur.
                 viewKind = kind;
@@ -481,15 +670,19 @@ public final class MoleculeView {
             segment.getChildren().add(b);
         }
         viewButtons[0].setSelected(true);
-        Button model = button("Méthode & validation", false);
-        model.setOnAction(e -> modelBanner.setVisible(!modelBanner.isVisible()));
-        Button draw = button("✎  Assembleur 2D", false);
+        Button draw = button("Assembleur 2D", false);
         draw.setTooltip(I18n.tooltip("Dessiner ses molécules à plat, les vérifier par le calcul, puis les envoyer ici en 3D"));
-        draw.setOnAction(e -> showAssembler(true));
-        Region gap = new Region();
-        HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox controls = new HBox(10, back, segment, gap, draw, model);
-        controls.setAlignment(Pos.CENTER_LEFT);
+        draw.setOnAction(e -> {
+            closeOverlays();
+            showAssembler(true);
+        });
+        Button schemeButton = button("Schéma de réaction", false);
+        schemeButton.setTooltip(I18n.tooltip("Dessiner un schéma en plusieurs étapes (réactifs sur les flèches, flèches courbes) : "
+                + "Genesis calcule le chemin 3D de chaque étape"));
+        schemeButton.setOnAction(e -> showScheme(true));
+        // Les vues (ρ, Δρ, ψ) et l'assembleur sont les modes du laboratoire : dans l'en-tête commun (voir viewModes()).
+        viewModes.getChildren().setAll(segment, draw, schemeButton);
+        viewModes.setAlignment(Pos.CENTER_LEFT);
         error.setWrapText(true);
         // Le message s'enroule à gauche de la légende de la scène (en haut à droite) au lieu de passer dessous.
         error.maxWidthProperty().bind(javafx.beans.binding.Bindings.max(260, holder.widthProperty().subtract(470)));
@@ -497,8 +690,11 @@ public final class MoleculeView {
         modeLine.maxWidthProperty().bind(error.maxWidthProperty());
         modeLine.setVisible(false);
         modeLine.setManaged(false);
-        VBox top = new VBox(3, controls, title, census, modeLine, error);
-        top.setPadding(new Insets(10, 14, 0, 16));
+        // Les espèces présentes sont dans la colonne de droite (et nommées dans la scène) : l'en-tête garde le titre.
+        title.setStyle("");
+        title.getStyleClass().add("scene-title");
+        VBox top = new VBox(3, title, modeLine, error);
+        top.setPadding(new Insets(12, 14, 0, 16));
         top.setPickOnBounds(false);
         top.setMaxHeight(Region.USE_PREF_SIZE);
         StackPane.setAlignment(top, Pos.TOP_CENTER);
@@ -557,18 +753,38 @@ public final class MoleculeView {
         spark.setTooltip(I18n.tooltip("Étincelle : de l'énergie cinétique déposée sur un atome et ses voisins (clic "
                 + "droit sur l'atome, puis ✦ dans sa fiche), quantité de mouvement conservée"));
         sparkHint.managedProperty().bind(sparkHint.visibleProperty());
-        sparkHint.visibleProperty().bind(holder.widthProperty().greaterThan(860));
-        HBox row = new HBox(10, segment, text("T", 11, "#8FB3D9"), temperature, temperatureLabel, pause,
-                sparkName, spark, sparkLabel, sparkHint);
+        sparkHint.setVisible(false);              // le geste est dans l'infobulle du curseur : moins de texte à l'écran
+        // Une rangée qui passe à la ligne quand la place manque (petite fenêtre), au lieu d'élargir l'écran.
+        HBox heat = new HBox(8, org.genesis.common.Plan.label("T"), temperature, temperatureLabel);
+        heat.setAlignment(Pos.CENTER_LEFT);
+        HBox sparkBox = new HBox(8, sparkName, spark, sparkLabel, sparkHint);
+        sparkBox.setAlignment(Pos.CENTER_LEFT);
+        solventBox.setTooltip(I18n.tooltip("Le milieu : le vide, ou un solvant implicite (ALPB de GFN1-xTB, ses "
+                + "paramètres publiés) — un continuum diélectrique qui écrante les charges, avec la cavité et les liaisons "
+                + "hydrogène à la surface ; les électrons y répondent"));
+        solventBox.setVisibleRowCount(14);
+        solventBox.setOnAction(e -> {
+            if (updating || solventBox.getSelectionModel().getSelectedIndex() < 0) return;
+            actions.solvent(solventBox.getSelectionModel().getSelectedIndex() - 1);
+        });
+        solvationLabel.getStyleClass().add("plan-note");
+        solvationLabel.setTooltip(I18n.tooltip("L'énergie libre de solvatation calculée : polaire (Born généralisé), liaisons "
+                + "hydrogène, cavité et dispersion, décalage du solvant"));
+        HBox medium = new HBox(8, org.genesis.common.Plan.label("Milieu"), solventBox, solvationLabel);
+        medium.setAlignment(Pos.CENTER_LEFT);
+        javafx.scene.layout.FlowPane row = new javafx.scene.layout.FlowPane(14, 6, pause, segment, heat, sparkBox, medium);
         row.setAlignment(Pos.CENTER_LEFT);
         status.setWrapText(true);
-        VBox dock = new VBox(6, row, chart, status);
-        dock.setPadding(new Insets(10, 14, 10, 14));
-        dock.getStyleClass().add("glass-section");
-        dock.setMaxWidth(Region.USE_PREF_SIZE);
-        dock.setMaxHeight(Region.USE_PREF_SIZE);
-        StackPane.setAlignment(dock, Pos.BOTTOM_CENTER);
-        StackPane.setMargin(dock, new Insets(0, 0, 12, 0));
+        // Une ligne d'état, une seule : le reste est dans l'infobulle.
+        status.setWrapText(false);
+        status.setTextOverrun(OverrunStyle.ELLIPSIS);
+        status.setMaxWidth(Double.MAX_VALUE);
+        Tooltip statusTip = I18n.tooltip();
+        status.setTooltip(statusTip);
+        status.textProperty().addListener((o, was, now) -> statusTip.setText(now));
+        VBox dock = new VBox(4, row, status);
+        dock.setPadding(new Insets(8, 14, 8, 14));
+        dock.getStyleClass().add("plan-foot");
         return dock;
     }
 
@@ -611,7 +827,7 @@ public final class MoleculeView {
                 text("Calculé ↔ mesuré", 14, "#FFD27A"), validation, close);
         modelBanner.setPadding(new Insets(16));
         modelBanner.getStyleClass().add("glass-section");
-        modelBanner.setStyle("-fx-background-color:rgba(6,10,22,0.94);");
+        modelBanner.getStyleClass().add("plan-card");
         modelBanner.setMaxSize(700, Region.USE_PREF_SIZE);
         modelBanner.setVisible(false);
         StackPane.setAlignment(modelBanner, Pos.CENTER);
@@ -627,8 +843,8 @@ public final class MoleculeView {
         Button empty = button("Établi vide", false);
         empty.setOnAction(e -> newScene(actions::clear));
         empty.setTooltip(I18n.tooltip("Tout retirer, puis construire une molécule atome par atome"));
-        Label paletteHint = text("Choisir un élément, puis cliquer sur un atome pour l'y attacher (ou dans le vide). "
-                + "La géométrie sort du calcul.", 10.5, "#8FA4C2");
+        Label paletteHint = new Label("Choisir un élément, puis cliquer un atome pour l'y attacher (ou dans le vide).");
+        paletteHint.getStyleClass().add("plan-quiet-note");
         paletteHint.setWrapText(true);
         experimentNote.setWrapText(true);
         experimentPhase.setWrapText(true);
@@ -651,27 +867,27 @@ public final class MoleculeView {
             chargeRow.getChildren().add(b);
         }
         chargeButtons[1].setSelected(true);
-        VBox show = new VBox(4);
-        ToggleButton bondsToggle = toggle("liaisons", true, v -> scene.showBonds = v,
+        VBox show = new VBox(8);
+        javafx.scene.control.CheckBox bondsToggle = toggle("liaisons", true, v -> scene.showBonds = v,
                 "Les paires d'électrons partagées, localisées (Pipek–Mezey). Entre deux atomes : un brin par paire "
                         + "(indice de Mayer : 1, 2, 3 ; le second en tirets pour une liaison conjuguée), à plat quand la part π "
                         + "a un côté (la liaison ne tourne pas), torsadés quand elle entoure l'axe ; couleur selon la force "
                         + "interne le long de la liaison (bleu nulle, blanc traction, orange compression), grains tirés de la "
                         + "densité de la paire. Une paire sur trois atomes ou plus (métaux, pont B–H–B) : une étoile de son "
                         + "barycentre vers ses atomes. Deux ions sans paire partagée (NaCl) : des pointillés.");
-        ToggleButton arcsToggle = toggle("arcs des atomes", true, v -> scene.showInner = v,
+        javafx.scene.control.CheckBox arcsToggle = toggle("arcs des atomes", true, v -> scene.showInner = v,
                 "Dans chaque bulle, des arcs partis du noyau, captés par les liaisons et penchés par la déformation du "
                         + "nuage de l'atome (son dipôle calculé)");
-        ToggleButton contacts = toggle("attractions et répulsions sans liaison", true, v -> scene.showContacts = v,
+        javafx.scene.control.CheckBox contacts = toggle("attractions et répulsions sans liaison", true, v -> scene.showContacts = v,
                 "Entre atomes qui ne partagent pas de paire d'électrons (au moins quatre liaisons d'écart, deux molécules, "
                         + "ou deux ions) : des points qui glissent vers le milieu quand la force calculée les attire ; "
                         + "quand elle les repousse, des points orange qui partent de là où leurs nuages se touchent et "
                         + "s'écartent vers les deux atomes, d'autant plus vite et plus vifs que la force est grande");
-        ToggleButton envelope = toggle("halo de polarisation", true, v -> scene.showHalo = v,
+        javafx.scene.control.CheckBox envelope = toggle("halo de polarisation", true, v -> scene.showHalo = v,
                 "Le nuage des électrons de valence de chaque molécule, vu en transparence ; son bord : là où le regard "
                         + "croise 0,3 électron par Å². Chaque atome y apporte les électrons qu'il garde (charge de Mulliken) : "
                         + "fourni et magenta autour des atomes δ−, mince et cyan autour des atomes δ+");
-        ToggleButton potential = toggle("carte de potentiel (0,002 u.a.)", false, v -> {
+        javafx.scene.control.CheckBox potential = toggle("carte de potentiel (0,002 u.a.)", false, v -> {
                     scene.showPotential = v;
                     scene.retint();
                     // Le moteur ne calcule la grille (densité et potentiel) que lorsqu'une vue la montre.
@@ -679,43 +895,64 @@ public final class MoleculeView {
                 },
                 "La convention des cartes de potentiel électrostatique : le potentiel exact de la molécule (noyaux et "
                         + "nuage) sur la surface ρ = 0,002 électron par bohr³ ; magenta négatif, cyan positif (±2,5 V)");
-        ToggleButton lines = toggle("champ électrique", false, v -> {
+        javafx.scene.control.CheckBox lines = toggle("champ électrique", false, v -> {
                     scene.showField = v;
                     scene.computeField();
                 },
                 "Les lignes du champ des charges partielles, du + vers le −, en nombre proportionnel à la charge (Gauss)");
-        ToggleButton arrows = toggle("flèche de la force nette", false, v -> scene.showArrows = v,
+        javafx.scene.control.CheckBox arrows = toggle("flèche de la force nette", false, v -> scene.showArrows = v,
                 "Une seule flèche par atome : la somme de toutes les forces sur son noyau");
-        ToggleButton charge = toggle("valeurs des charges δ", false, v -> scene.showCharges = v,
+        javafx.scene.control.CheckBox charge = toggle("valeurs des charges δ", false, v -> scene.showCharges = v,
                 "Charges de Mulliken : δ− là où les électrons s'accumulent, δ+ là où ils manquent (la couleur des "
                         + "bulles les montre déjà)");
-        ToggleButton orders = toggle("indices de liaison (Mayer)", false, v -> scene.showOrders = v,
+        javafx.scene.control.CheckBox orders = toggle("indices de liaison (Mayer)", false, v -> scene.showOrders = v,
                 "Le nombre de paires d'électrons partagées : ≈ 1 simple, 2 double, 3 triple");
-        ToggleButton symbols = toggle("symboles", true, v -> scene.showSymbols = v, "Le symbole de chaque élément");
-        ToggleButton names = toggle("noms des molécules", true, v -> scene.showNames = v,
+        javafx.scene.control.CheckBox symbols = toggle("symboles", true, v -> scene.showSymbols = v, "Le symbole de chaque élément");
+        javafx.scene.control.CheckBox names = toggle("noms des molécules", true, v -> scene.showNames = v,
                 "Le nom de chaque molécule que le dictionnaire reconnaît (d'après qui est lié à qui, et sa charge) ; un "
                         + "cercle vert quand une espèce vient de se former");
-        ToggleButton legend = toggle("légende", true, v -> scene.showLegend = v, "Ce que veut dire chaque signe de la scène");
+        javafx.scene.control.CheckBox legend = toggle("légende", true, v -> scene.showLegend = v, "Ce que veut dire chaque signe de la scène");
         show.getChildren().addAll(envelope, bondsToggle, arcsToggle, contacts, potential, lines, arrows, charge, orders,
                 symbols, names, legend);
-        return new VBox(10,
-                section("01", "Molécules", presetBox),
-                section("02", "Expériences", experimentBox, experimentPhase, experimentNote),
-                section("03", "Réacteur", reactionBox, reactorHint(), pistonRow(), enclosure),
-                section("04", "Établi", paletteBox, table, chosenElement, paletteHint, empty),
-                section("05", "Charge totale", chargeRow),
-                section("06", "Afficher", show));
+        table.setMaxWidth(Double.MAX_VALUE);
+        empty.setMaxWidth(Double.MAX_VALUE);
+        HBox tools = new HBox(6, table, empty);
+        HBox.setHgrow(table, Priority.ALWAYS);
+        HBox.setHgrow(empty, Priority.ALWAYS);
+        Label reactorNote = new Label("Des molécules serrées dans une sphère : chauffer, une étincelle ou le piston pour qu'elles réagissent.");
+        reactorNote.getStyleClass().add("plan-quiet-note");
+        reactorNote.setWrapText(true);
+        reactorNote.setTooltip(org.genesis.common.Plan.tooltip(REACTOR_HINT));
+        Label experimentLead = new Label("Deux réactifs relaxés, lancés l'un vers l'autre ; le dictionnaire reconnaît les produits.");
+        experimentLead.getStyleClass().add("plan-quiet-note");
+        experimentLead.setWrapText(true);
+        library = new org.genesis.common.Tabs(false, new String[]{"Molécules", "Expériences", "Réacteur", "Établi"},
+                page(presetBox),
+                page(experimentLead, experimentBox, experimentPhase, experimentNote),
+                page(reactorNote, reactionBox, pistonRow(), enclosure),
+                page(paletteBox, tools, chosenElement, paletteHint, org.genesis.common.Plan.row("Charge totale", chargeRow)));
+        library.button(0).setTooltip(org.genesis.common.Plan.tooltip("Des molécules toutes faites, relaxées par le calcul"));
+        library.button(1).setTooltip(org.genesis.common.Plan.tooltip("Cinq réactions réelles, lancées et suivies pas à pas"));
+        library.button(2).setTooltip(org.genesis.common.Plan.tooltip("Des mélanges dans une enceinte, le piston"));
+        library.button(3).setTooltip(org.genesis.common.Plan.tooltip("Construire atome par atome, n'importe quel élément de H à Rn"));
+        library.bar().getStyleClass().add("compact");
+        VBox layers = org.genesis.common.Plan.foldable("Calques de la scène", false, show);
+        // La marge sur un conteneur à part : celle de la section vient de la feuille de style (elle l'emporterait).
+        VBox layersBox = new VBox(layers);
+        layersBox.setPadding(new Insets(12, 16, 0, 16));
+        layersBox.getStyleClass().add("plan-dock-top");
+        VBox column = new VBox(library, layersBox);
+        VBox.setVgrow(library, Priority.ALWAYS);
+        return column;
     }
 
+    /** Les pages de la colonne de gauche (molécules, expériences, réacteur, établi). */
+    private org.genesis.common.Tabs library;
+
     /** Ce qu'est le réacteur, et ce qu'il n'est pas : une enceinte très dense, sans spin, où tout va trop vite. */
-    private static Label reactorHint() {
-        Label hint = text("Des molécules dans une sphère : chauffer, lancer une étincelle ou serrer le piston pour "
-                + "franchir la barrière d'activation. Un nanoréacteur, pas une flamme : des centaines à des milliers "
-                + "d'atmosphères, et O₂ sans barrière de spin. Il montre des mécanismes possibles, pas des vitesses réelles.",
-                10.5, "#8FA4C2");
-        hint.setWrapText(true);
-        return hint;
-    }
+    static final String REACTOR_HINT = "Des molécules dans une sphère : chauffer, lancer une étincelle ou serrer le piston pour "
+            + "franchir la barrière d'activation. Un nanoréacteur, pas une flamme : des centaines à des milliers "
+            + "d'atmosphères, et O₂ sans barrière de spin. Il montre des mécanismes possibles, pas des vitesses réelles.";
 
     /**
      * Le piston : allumé, la paroi de l'enceinte suit la pression choisie — elle se resserre tant que les molécules la
@@ -743,6 +980,7 @@ public final class MoleculeView {
         pressureLabel.setText(MoleculeFormat.atm(3000));
         pressureLabel.setMinWidth(Region.USE_PREF_SIZE);
         enclosure.setWrapText(true);
+        enclosure.setTooltip(enclosureTip);
         HBox row = new HBox(6, piston, pressure, pressureLabel);
         row.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(pressure, Priority.ALWAYS);
@@ -772,8 +1010,8 @@ public final class MoleculeView {
         int active = s.getExperiment();
         for (int i = 0; i < experimentButtons.size(); i++) {
             var classes = experimentButtons.get(i).getStyleClass();
-            classes.removeAll("glass-primary", "glass-button");
-            classes.add(i == active ? "glass-primary" : "glass-button");
+            classes.remove("plan-row-on");
+            if (i == active) classes.add("plan-row-on");
         }
         boolean running = active >= 0 && active < s.getExperimentsCount();
         String phase = "", color = "#C7D6EA";
@@ -797,14 +1035,14 @@ public final class MoleculeView {
             }
             experimentNote.setText(I18n.text(x.getExplanation()));
         } else {
-            experimentNote.setText(I18n.text("Cinq réactions réelles, de la plus exigeante à la plus simple : les réactifs, "
-                    + "relaxés chacun par GFN1-xTB, sont lancés l'un vers l'autre ; le thermostat joue ensuite le gaz "
-                    + "autour, qui emporte l'énergie libérée."));
+            experimentNote.setText("");
         }
         experimentPhase.setText(phase);
         experimentPhase.setStyle("-fx-text-fill:" + color + ";-fx-font-size:11.5px;");
         experimentPhase.setVisible(running);
         experimentPhase.setManaged(running);
+        experimentNote.setVisible(running);
+        experimentNote.setManaged(running);
     }
 
     private void enclosure(MoleculeLabState s) {
@@ -824,8 +1062,7 @@ public final class MoleculeView {
         StringBuilder b = new StringBuilder();
         b.append(I18n.text("paroi")).append(" ").append(MoleculeFormat.atm(measured)).append(" ").append(I18n.text("mesurée"));
         if (wanted > 0) {
-            b.append(" · ").append(I18n.text("consigne du piston")).append(" ").append(MoleculeFormat.atm(wanted))
-                    .append('\n').append(I18n.text(pistonMotion(measured, wanted)));
+            b.append(" · ").append(I18n.text("consigne du piston")).append(" ").append(MoleculeFormat.atm(wanted));
         }
         b.append('\n').append(I18n.text("gaz parfait NkT/V")).append(" ").append(MoleculeFormat.atm(ideal));
         // Le facteur de compressibilité, l'écart au gaz parfait : sur la moyenne longue du moteur, et seulement quand la
@@ -833,23 +1070,23 @@ public final class MoleculeView {
         // deux. Au-dessus de 1, les molécules se gênent (leur volume propre, leur répulsion) ; en dessous, elles s'attirent.
         int hits = s.getWallHits();
         double z = Double.NaN;
+        String meaning = "";
         if (hits >= 30 && s.getPressureMean() > 0 && s.getVolumeMean() > 0) {
             z = s.getPressureMean() * 101325 * s.getVolumeMean() * 1e-30 / (molecules * 1.380649e-23 * kelvin);
             b.append('\n').append("Z = PV/NkT = ").append(MoleculeFormat.decimal(z, 2)).append(" ")
                     .append(I18n.text("sur")).append(" ").append(MoleculeFormat.rough(s.getPressureSpanFs()))
-                    .append(" (").append(hits).append(" ").append(I18n.text("chocs")).append(")").append('\n')
-                    .append(I18n.text(z > 1.15 ? "plus que le gaz parfait : les molécules se gênent (leur volume propre, leur répulsion)"
-                            : z < .85 ? "moins que le gaz parfait : les molécules s'attirent" : "presque le gaz parfait"));
+                    .append(" (").append(hits).append(" ").append(I18n.text("chocs")).append(")");
+            meaning = I18n.text(z > 1.15 ? "plus que le gaz parfait : les molécules se gênent (leur volume propre, leur répulsion)"
+                    : z < .85 ? "moins que le gaz parfait : les molécules s'attirent" : "presque le gaz parfait");
         } else {
-            b.append('\n').append(I18n.text("Z = PV/NkT : la paroi n'a reçu que")).append(" ").append(hits).append(" ")
-                    .append(I18n.text("chocs, trop peu pour le dire"));
+            b.append('\n').append("Z = PV/NkT : ").append(hits).append(" ").append(I18n.text("chocs, trop peu pour le dire"));
         }
         b.append('\n').append("V ").append(MoleculeFormat.decimal(volume, 0)).append(" Å³ (R ").append(MoleculeFormat.decimal(radius, 2))
                 .append(" Å) · ").append(molecules).append(" ").append(I18n.text(molecules > 1 ? "molécules" : "molécule"));
         // La fréquence des rencontres vient de la théorie des gaz : à densité de liquide (Z > 2), elle n'a plus de sens.
         boolean dense = !Double.isNaN(z) ? z > 2 : measured > 2 * ideal;
         if (molecules > 1 && dense) {
-            b.append('\n').append(I18n.text("densité de liquide : les molécules se touchent en permanence"));
+            b.append('\n').append(I18n.text("densité de liquide"));
         } else if (molecules > 1) {
             b.append('\n').append(I18n.text("une rencontre toutes les")).append(" ~").append(MoleculeFormat.rough(between));
             if (s.getStepsPerSecond() > 0) {
@@ -858,6 +1095,7 @@ public final class MoleculeView {
             }
         }
         enclosure.setText(b.toString());
+        enclosureTip.setText(meaning.isEmpty() ? I18n.text(pistonMotion(measured, wanted)) : meaning);
     }
 
     /**
@@ -870,13 +1108,12 @@ public final class MoleculeView {
         return "à l'équilibre : la pression fluctue autour de la consigne";
     }
 
-    private ToggleButton toggle(String label, boolean on, java.util.function.Consumer<Boolean> set, String tip) {
-        ToggleButton b = new ToggleButton(label);
-        b.getStyleClass().add("glass-toggle");
+    private javafx.scene.control.CheckBox toggle(String label, boolean on, java.util.function.Consumer<Boolean> set, String tip) {
+        javafx.scene.control.CheckBox b = new javafx.scene.control.CheckBox(label);
         b.setFocusTraversable(false);
         b.setSelected(on);
         b.setMaxWidth(Double.MAX_VALUE);
-        b.setTooltip(I18n.tooltip(tip));
+        b.setTooltip(org.genesis.common.Plan.tooltip(tip));
         b.setOnAction(e -> set.accept(b.isSelected()));
         return b;
     }
@@ -908,30 +1145,30 @@ public final class MoleculeView {
         quantaLabel.setText("1 hν");
         HBox quantaRow = new HBox(8, text("énergie donnée", 10.5, "#8FB3D9"), quanta, quantaLabel);
         quantaRow.setAlignment(Pos.CENTER_LEFT);
-        // La limite de GFN1 sur les énergies de liaison : sous le ⓘ du bilan, pas dans le panneau.
-        VBox energy = section("07", "Bilan énergétique", balance);
-        Label info = text("ⓘ", 12, "#8FB3D9");
-        info.setCursor(Cursor.HAND);
-        Tooltip limit = I18n.tooltip("GFN1-xTB surestime les énergies de liaison par rapport aux atomes isolés : 1,3 à 2,2 fois "
-                + "selon la molécule (CH₄ + 2 O₂ : 47,8 eV au lieu de 28,6). "
+        // La limite de GFN1 sur les énergies de liaison : sous le « ? » du bilan, pas dans le panneau.
+        chart.setWidth(org.genesis.common.Plan.RIGHT_WIDTH - 34);
+        Label info = org.genesis.common.Plan.why("Ce que vaut ce bilan", "GFN1-xTB surestime les énergies de liaison par "
+                + "rapport aux atomes isolés : 1,3 à 2,2 fois selon la molécule (CH₄ + 2 O₂ : 47,8 eV au lieu de 28,6). "
                 + "Les énergies de réaction aussi : CH₄ + 2 O₂ → CO₂ + 2 H₂O donne −15,5 eV au lieu de −8,5. "
                 + "Un décalage par élément ne le corrigerait pas : une réaction garde ses atomes. "
-                + "Les géométries sont fiables (voir Méthode & validation). La cohésion et sa balance "
-                + "sont comptées depuis les atomes isolés et neutres, calculés par le même modèle.");
-        limit.setWrapText(true);
-        limit.setMaxWidth(320);
-        limit.setShowDelay(javafx.util.Duration.millis(120));
-        Tooltip.install(info, limit);
-        Region push = new Region();
-        HBox.setHgrow(push, Priority.ALWAYS);
-        ((HBox) energy.getChildren().get(0)).getChildren().addAll(push, info);
-        return new VBox(10,
-                energy,
-                section("08", "Orbitales", levels, levelKey(), orbitalLine),
-                section("09", "Espèces", speciesLines, dipoleLine, eventLines),
-                section("10", "Atome", atomCard, atomCanvas, isotopeRow),
-                section("11", "Vibrations", compute, modeHeader, quantaRow, modeList));
+                + "Les géométries sont fiables (voir Méthode). La cohésion et sa balance sont comptées depuis les atomes "
+                + "isolés et neutres, calculés par le même modèle.", null);
+        VBox energy = org.genesis.common.Plan.trailing(org.genesis.common.Plan.section("Bilan énergétique", balance, chart), info);
+        VBox speciesSection = org.genesis.common.Plan.section("Espèces présentes", speciesLines, dipoleLine, eventLines);
+        VBox species = new VBox(speciesSection);
+        species.setPadding(new Insets(16, 16, 0, 16));
+        readingTabs = new org.genesis.common.Tabs(false, new String[]{"Énergie", "Orbitales", "Atome", "Vibrations"},
+                page(energy),
+                page(org.genesis.common.Plan.section("Niveaux d'énergie", levels, levelKey(), orbitalLine)),
+                page(org.genesis.common.Plan.section("L'atome choisi", atomCard, atomCanvas, isotopeRow)),
+                page(org.genesis.common.Plan.section("Modes de vibration", compute, modeHeader, quantaRow, modeList)));
+        VBox column = new VBox(species, readingTabs);
+        VBox.setVgrow(readingTabs, Priority.ALWAYS);
+        return column;
     }
+
+    /** Les pages de la colonne de droite (énergie, orbitales, atome, vibrations). */
+    private org.genesis.common.Tabs readingTabs;
 
     // ================================================================== la souris
     private void press(MouseEvent e) {
@@ -1059,6 +1296,7 @@ public final class MoleculeView {
 
     private void select(int atom) {
         scene.selected = scene.selected == atom ? -1 : atom;
+        if (scene.selected >= 0 && readingTabs != null) readingTabs.select(2);
         refreshAtomCard();
         drawSketch();
     }
@@ -1088,7 +1326,7 @@ public final class MoleculeView {
      * menée), le zoom et le retour à la vue d'ensemble. Ses bulles d'aide disent tous les gestes de la souris.
      */
     private HBox navigation() {
-        Button out = button("−", false), in = button("+", false), all = button("⌖  Tout voir", false);
+        Button out = button("−", false), in = button("+", false), all = button("Tout voir", false);
         for (Button b : new Button[]{out, in}) b.setMinWidth(30);
         out.setOnAction(e -> zoomStep(-1));
         in.setOnAction(e -> zoomStep(1));
@@ -1105,8 +1343,7 @@ public final class MoleculeView {
         HBox box = new HBox(4, viewLine, out, in, all);
         box.setAlignment(Pos.CENTER_RIGHT);
         box.setPadding(new Insets(3, 4, 3, 10));
-        box.setStyle("-fx-background-color:rgba(8,16,28,.72);-fx-background-radius:15;-fx-border-color:#24384F;"
-                + "-fx-border-radius:15;");
+        box.getStyleClass().add("plan-overlay");
         box.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
         Tooltip.install(box, gestures);             // les boutons gardent la leur
         return box;
@@ -1187,7 +1424,7 @@ public final class MoleculeView {
         }
         double left = maxX + 14 + w <= holder.getWidth() - 8 ? maxX + 14 : minX - 14 - w;
         if (left < 8) left = Math.max(8, Math.min(holder.getWidth() - w - 8, x + 16));
-        double floor = holder.getHeight() - dock.getHeight() - 26;
+        double floor = holder.getHeight() - 14;
         double top = Math.max(8, Math.min(y - h / 3, floor - h));
         card.relocate(left, top);
         card.setVisible(true);
@@ -1259,6 +1496,22 @@ public final class MoleculeView {
     public void applyFrame(UniverseFrame frame) {
         MoleculeLabState s = frame.getMoleculeLab();
         assembler.update(s);
+        if (s.hasScheme()) lastScheme = merged(s.getScheme(), lastScheme);
+        schemeEditor.update(s, lastScheme);
+        schemePlayer.update(s, lastScheme);
+        schemeStage.update(lastScheme);
+        playPath(s);
+        if (pendingScene >= 0) {
+            // La scène 3D s'ouvre quand le moteur y joue l'étape demandée (au plus tard après 8 s).
+            boolean arrived = s.hasPlay() && s.getPlay().getStep() == pendingScene;
+            if (!schemeStage.isOpen()) {
+                pendingScene = -1;
+            } else if (arrived || System.nanoTime() - sceneAskedAt > 8e9) {
+                pendingScene = -1;
+                schemeStage.opening(false);
+                showStage(false, -1);
+            }
+        }
         if (!s.getActive()) return;
         state = s;
         updating = true;
@@ -1267,7 +1520,7 @@ public final class MoleculeView {
             if (!s.getModel().isEmpty()) modelText.setText(s.getModel());
             if (s.getValidationCount() > 0) fillValidation(s.getValidationList());
             if (!s.getReady()) {
-                status.setText(s.getStatus());
+                status.setText(I18n.text(s.getStatus()));
                 return;
             }
             for (MoleculeCloud c : s.getCloudsList()) {
@@ -1310,7 +1563,15 @@ public final class MoleculeView {
             } else if (titleSpecies.isEmpty()) {
                 titleSpecies = present;
             }
-            title.setText(MoleculeFormat.names(present.isEmpty() || present.equals(titleSpecies) ? s.getLabel() : present));
+            // Pendant la lecture d'un chemin, le nom de l'étape : les espèces vues image par image s'y trompaient (Co₂(CO)₈,
+            // dont GFN1-xTB ne voit pas la liaison Co–Co comme une liaison ordinaire, lu « 2 C₄CoO₄ » ; les 2 CO déjà
+            // parmi les réactifs en revenant en arrière).
+            String shownTitle = MoleculeFormat.names(scene.playing || present.isEmpty() || present.equals(titleSpecies)
+                    ? s.getLabel() : present);
+            if (!shownTitle.equals(title.getText())) {
+                title.setText(shownTitle);
+                title.setTooltip(new javafx.scene.control.Tooltip(shownTitle));   // le nom entier, s'il est coupé
+            }
             census.setText(s.getCensus().isEmpty() ? "" : I18n.text("Espèces présentes")
                     + (I18n.language() == I18n.Language.FR ? " : " : ": ") + s.getCensus());
             error.setText(s.getError());
@@ -1354,6 +1615,19 @@ public final class MoleculeView {
                 framedLabel = s.getLabel();
                 framedCount = scene.positions.length;
             }
+            // Le milieu : la liste (une fois), le solvant de la scène, son énergie de solvatation.
+            if (s.getSolventsCount() > 0 && solventBox.getItems().isEmpty()) {
+                solventBox.getItems().add(I18n.text("le vide"));
+                for (String name : s.getSolventsList()) solventBox.getItems().add(I18n.text(name));
+            }
+            if (!solventBox.getItems().isEmpty() && !solventBox.isShowing()
+                    && solventBox.getSelectionModel().getSelectedIndex() != s.getSolvent() + 1) {
+                solventBox.getSelectionModel().select(s.getSolvent() + 1);
+            }
+            boolean solvated = s.getSolvent() >= 0;
+            solvationLabel.setVisible(solvated);
+            solvationLabel.setManaged(solvated);
+            if (solvated) solvationLabel.setText(String.format(I18n.locale(), "ΔG solv. %+.2f eV", s.getSolvation()));
         } finally {
             updating = false;
         }
@@ -1388,6 +1662,7 @@ public final class MoleculeView {
         reactionBox.getChildren().clear();
         for (int i = 0; i < reactions.size(); i++) {
             Button b = button(reactions.get(i), false);
+            b.setTooltip(I18n.tooltip(REACTOR_HINT));
             final int index = i;
             b.setOnAction(e -> newScene(() -> actions.reaction(index)));
             reactionBox.getChildren().add(b);
@@ -1396,7 +1671,7 @@ public final class MoleculeView {
         experimentButtons.clear();
         for (int i = 0; i < s.getExperimentsCount(); i++) {
             MoleculeExperiment x = s.getExperiments(i);
-            Label name = text(I18n.text(x.getTitle()), 12, "#EAF2FF"), equation = text(I18n.text(x.getEquation()), 10.5, "#8FD8FF");
+            Label name = text(I18n.text(x.getTitle()), 12, "#ECEFF3"), equation = text(I18n.text(x.getEquation()), 10.5, "#8FD8FF");
             name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
             equation.setWrapText(true);
             Label rank = text(String.valueOf(i + 1), 10, "#36CDF2");
@@ -1435,7 +1710,7 @@ public final class MoleculeView {
         validation.add(text("mesuré", 10.5, "#8FB3D9"), 2, 0);
         for (int i = 0; i < facts.size(); i++) {
             LabFact f = facts.get(i);
-            validation.add(text(f.getQuantity(), 11.5, "#DCE8F7"), 0, i + 1);
+            validation.add(text(f.getQuantity(), 11.5, "#ECEFF3"), 0, i + 1);
             validation.add(text(localized(f.getValue()), 11.5, "#8FE3FF"), 1, i + 1);
             validation.add(text(localized(f.getMeaning()), 11.5, "#FFD27A"), 2, i + 1);
         }
@@ -1600,7 +1875,7 @@ public final class MoleculeView {
             }
             scc += " · " + held + " " + I18n.text("tenu à −2,5 e");
         }
-        return s.getStatus() + "  ·  " + time + rate + scc;
+        return I18n.text(s.getStatus()) + "  ·  " + time + rate + scc;
     }
 
     /** La lecture de la carte de l'atome (pour les aperçus) : AtomMap.ESSENTIAL, BY_PAIR ou BY_TERM. */
@@ -1639,7 +1914,7 @@ public final class MoleculeView {
         if (key.equals(isotopeKey) || choices.isEmpty()) return;
         isotopeKey = key;
         isotopeRow.getChildren().clear();
-        isotopeRow.getChildren().add(text(I18n.text("isotope"), 10.5, "#8FA4C2"));
+        isotopeRow.getChildren().add(text(I18n.text("isotope"), 10.5, "#A2ABB8"));
         int[] numbers = new int[choices.size() + 1];
         for (int k = 0; k < choices.size(); k++) numbers[k + 1] = choices.get(k).getMassNumber();
         for (int k = 0; k < numbers.length; k++) {
@@ -1729,8 +2004,7 @@ public final class MoleculeView {
         }
         target.layout(orbitals, homo, w, h);
         target.draw(g, w, h, orbitals, viewKind == 2 ? viewOrbital : -1, levelHover);
-        orbitalLine.setText(I18n.text("Le rayon suit l'énergie, pas une distance : au centre, les électrons les plus liés ; "
-                + "au bord, le vide. Survoler un cercle pour lire son niveau, cliquer pour voir son orbitale."));
+        orbitalLine.setText("");
     }
 
     /** La clé de la cible : ce que veut dire chaque cercle. */
@@ -1750,10 +2024,9 @@ public final class MoleculeView {
     private void drawChart() {
         GraphicsContext g = chart.getGraphicsContext2D();
         double w = chart.getWidth(), h = chart.getHeight();
-        g.setFill(Color.web("#070C18", .9));
-        g.fillRect(0, 0, w, h);
+        org.genesis.common.Plan.frame(g, 0, 0, w, h, org.genesis.common.Plan.DEEP.deriveColor(0, 1, 1, .92));
         int n = historyTime.length;
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         if (n < 2) {
             g.setFill(Color.web("#6F82A0"));
             g.fillText(I18n.text("L'énergie au fil du calcul s'affichera ici."), 10, h / 2);
@@ -1808,6 +2081,12 @@ public final class MoleculeView {
 
     // ================================================================== l'horloge
     public void tick(double dt) {
+        // La vue du chemin couvre tout le laboratoire : la scène, cachée dessous, n'est pas dessinée pour rien.
+        if (schemeStage.isOpen()) {
+            schemeStage.tick(dt);
+            return;
+        }
+        if (schemeEditor.getNode().isVisible()) schemeEditor.tick(dt);
         GraphicsContext g = sceneCanvas.getGraphicsContext2D();
         double w = sceneCanvas.getWidth(), h = sceneCanvas.getHeight();
         if (w < 2 || h < 2) return;
@@ -1816,6 +2095,10 @@ public final class MoleculeView {
         // La vignette dépliée couvre le bas de la bande gauche : la molécule se centre à sa droite (en douceur quand on
         // la plie), sauf dans une fenêtre trop étroite pour cela.
         scene.insetTarget = !sketch.folded && sketchCanvas.isVisible() && w > 3 * MoleculeSketch.W ? MoleculeSketch.W + 20 : 0;
+        // La carte du chemin joué couvre le bas de la bande gauche : la molécule se centre à sa droite.
+        Region card = schemePlayer.getNode();
+        double cardWidth = card.getWidth() > 0 ? card.getWidth() : card.getPrefWidth();
+        if (card.isVisible() && w > 1.8 * cardWidth) scene.insetTarget = Math.max(scene.insetTarget, cardWidth + 28);
         scene.render(g, glowNear.getGraphicsContext2D(), glowFar.getGraphicsContext2D(), w, h, dt, rotating || panning);
         refreshViewLine();
         if (orbitalLayer != null) {
@@ -1826,8 +2109,64 @@ public final class MoleculeView {
         drawChart();
     }
 
-    /** Aperçus et tests : le panneau Méthode ouvert. */
-    void showModel() {
-        modelBanner.setVisible(true);
+    /**
+     * Le chemin joué dans la scène : ses liaisons qui changent et leurs indices de Mayer à l'image montrée (la scène les
+     * dessine), et, au début de la lecture d'une étape, un cadre qui tient tout le chemin, à droite de la carte.
+     */
+    /**
+     * Le schéma reçu, complet : pendant le calcul, le moteur n'envoie les étapes (lourdes : les images de chaque chemin)
+     * qu'à leur changement ; entre-temps, ses messages les disent gardées, et ce sont celles du message précédent de la
+     * même demande — les mêmes objets, si bien que ce qui les montre n'a rien à refaire.
+     */
+    static com.studio.genesis.grpc.MoleculeScheme merged(com.studio.genesis.grpc.MoleculeScheme incoming,
+                                                          com.studio.genesis.grpc.MoleculeScheme previous) {
+        if (!incoming.getStepsKept() || previous == null || previous.getRequest() != incoming.getRequest()) return incoming;
+        return incoming.toBuilder().clearSteps().addAllSteps(previous.getStepsList()).build();
+    }
+
+    private void playPath(MoleculeLabState s) {
+        com.studio.genesis.grpc.MoleculeSchemePlay p = s.getPlay();
+        boolean playing = s.hasPlay() && p.getStep() >= 0 && lastScheme != null && p.getStep() < lastScheme.getStepsCount();
+        if (!playing) {
+            if (scene.playing) {
+                scene.playing = false;
+                scene.pathChanges = new int[0];
+                scene.pathMayer = new double[0];
+                playedStep = -1;
+                playMode(false);
+            }
+            return;
+        }
+        com.studio.genesis.grpc.MoleculeSchemeStep st = lastScheme.getSteps(p.getStep());
+        int count = st.getChangesCount() / 4;
+        int frames = Math.max(1, st.getEnergiesCount());
+        int frame = Math.max(0, Math.min(frames - 1, p.getFrame()));
+        int[] changes = new int[st.getChangesCount()];
+        for (int k = 0; k < changes.length; k++) changes[k] = st.getChanges(k);
+        double[] mayer = new double[count];
+        for (int k = 0; k < count; k++) {
+            int index = frame * count + k;
+            mayer[k] = index < st.getOrdersCount() ? st.getOrders(index) : 0;
+        }
+        boolean started = !scene.playing;
+        scene.playing = true;
+        scene.pathNumbers = st.getIdsList().stream().mapToInt(Integer::intValue).toArray();
+        scene.pathChanges = changes;
+        scene.pathMayer = mayer;
+        scene.pathRadius = p.getRadius();
+        // Recadrer une seule fois par étape jouée : l'objet du schéma change à chaque publication pendant que les
+        // étapes suivantes se calculent (toutes les 0,15 s), et la vue reprenait la main sur le zoom à chaque fois.
+        if (started || playedStep != p.getStep() || lastScheme.getRequest() != playedRequest) {
+            playedStep = p.getStep();
+            playedRequest = lastScheme.getRequest();
+            playedScheme = lastScheme;
+            scene.frame();
+        }
+        playMode(true);
+    }
+
+    /** La méthode du laboratoire (bouton « Méthode » de l'en-tête commun) : ouvre ou referme son panneau. */
+    public void showModel() {
+        modelBanner.setVisible(!modelBanner.isVisible());
     }
 }

@@ -61,21 +61,32 @@ def _one_dimension(pa, pb, inv2p, imax, jmax):
     return table
 
 
-def shell_pairs(la, lb, centers_a, centers_b, alpha_a, coef_a, alpha_b, coef_b, derivative=False, moment=False):
+def shell_pairs(la, lb, centers_a, centers_b, alpha_a, coef_a, alpha_b, coef_b, derivative=False, moment=False,
+                cache=None):
     """Recouvrements (et dérivées par rapport au centre A) pour une liste de paires de couches de moments la, lb.
 
     centers : (n, 3) ; alpha, coef : (n, k) (les primitives manquantes ont un coefficient nul).
     Rend S (n, 2la+1, 2lb+1) et, si demandé, dS/dA (n, 3, 2la+1, 2lb+1). dS/dB = −dS/dA.
     Avec moment=True, rend à la place de dS/dA les moments ⟨a|(r − A)|b⟩ (n, 3, 2la+1, 2lb+1) ; avec les deux, rend
     S, dS/dA et les moments, tirés des mêmes tables.
+
+    `cache` (un dict propre à ces listes de couches, que garde l'appelant) : ce qui ne dépend que des exposants —
+    p, 1/2p, −ab/p, (π/p)^3/2 — calculé une fois, puis repris tel quel d'un calcul à l'autre.
     """
     a = alpha_a[:, :, None]
     b = alpha_b[:, None, :]
-    p = a + b
-    inv2p = 0.5 / p
+    if cache is not None and "p" in cache:
+        p, inv2p, decay, volume = cache["p"], cache["inv2p"], cache["decay"], cache["volume"]
+    else:
+        p = a + b
+        inv2p = 0.5 / p
+        decay = -a * b / p
+        volume = (math.pi / p) ** 1.5
+        if cache is not None:
+            cache.update(p=p, inv2p=inv2p, decay=decay, volume=volume)
     ab = centers_a - centers_b                                          # (n, 3)
     r2 = np.sum(ab * ab, axis=1)[:, None, None]
-    prefactor = np.exp(-a * b / p * r2) * (math.pi / p) ** 1.5 * coef_a[:, :, None] * coef_b[:, None, :]
+    prefactor = np.exp(decay * r2) * volume * coef_a[:, :, None] * coef_b[:, None, :]
     extra = 1 if derivative or moment else 0
     tables = []
     for axis in range(3):
@@ -120,19 +131,28 @@ def shell_pairs(la, lb, centers_a, centers_b, alpha_a, coef_a, alpha_b, coef_b, 
     return overlap, grad
 
 
-def gaussian_values(l, points, center, alpha, coef):
-    """Valeurs de la couche (2l+1 fonctions sphériques) aux points (m, 3), en bohr."""
-    d = points - center
-    r2 = np.einsum("pk,pk->p", d, d)
+def gaussian_values(l, points, center, alpha, coef, offsets=None):
+    """Valeurs de la couche (2l+1 fonctions sphériques) aux points (m, 3), en bohr ; en simple précision pour des
+    points en simple précision, sinon en double. `offsets` : (points − centre, leurs carrés), déjà calculés pour une
+    autre couche du même atome."""
+    d, r2 = offsets if offsets is not None else point_offsets(points, center)
     # Au-delà de ce rayon, la couche vaut moins de 10⁻¹² : on ne calcule que les points en deçà.
     live = alpha[np.abs(coef) > 0]
     reach = (math.log(float(np.sum(np.abs(coef))) + 1e-300) + 12 * math.log(10) + 8) / float(live.min())
     near = np.nonzero(r2 < reach)[0]
-    out = np.zeros((2 * l + 1, len(points)))
+    out = np.zeros((2 * l + 1, len(points)), np.float32 if points.dtype == np.float32 else np.float64)
     if not len(near):
         return out
-    dn, rn = d[near], r2[near]
-    radial = np.exp(-rn[:, None] * alpha[None, :]) @ coef
+    # Presque toujours, tous les points sont en deçà : ni copie des points proches, ni recopie du résultat.
+    whole = len(near) == len(points)
+    dn, rn, cols = (d, r2, slice(None)) if whole else (d[near], r2[near], near)
+    radial = normal_exp(-rn[:, None] * alpha[None, :]) @ coef
+    if l <= 1:
+        # s : la radiale ; p : (y, z, x). La matrice sphérique ne fait ici que recopier ou permuter les rangées.
+        rows = (radial,) if l == 0 else (radial * dn[:, 1], radial * dn[:, 2], radial * dn[:, 0])
+        for m, row in enumerate(rows):
+            out[m, cols] = row
+        return out
     cart = np.empty((len(CARTESIAN[l]), len(near)))
     for i, (x, y, z) in enumerate(CARTESIAN[l]):
         value = radial
@@ -140,5 +160,23 @@ def gaussian_values(l, points, center, alpha, coef):
             for _ in range(power):
                 value = value * dn[:, axis]
         cart[i] = value
-    out[:, near] = SPHERICAL[l] @ cart
+    out[:, cols] = SPHERICAL[l] @ cart
     return out
+
+
+def point_offsets(points, center):
+    """Les vecteurs centre → points et leurs carrés : communs à toutes les couches d'un atome."""
+    d = points - center
+    return d, np.einsum("pk,pk->p", d, d)
+
+
+def normal_exp(x):
+    """exp(x) (x ≤ 0), sans nombre sous-normal : ce qui tomberait sous le plus petit nombre normal du type (10⁻³⁸ en
+    simple précision) vaut 0. Toute autre valeur est celle de np.exp, au bit près. Loin d'un noyau, les primitives
+    serrées tombent dans cette zone, où le processeur calcule des dizaines de fois plus lentement (l'exponentielle
+    cinq fois, le produit qui suit plus de cent) ; des valeurs si petites ne changent aucune somme."""
+    tiny = np.finfo(x.dtype).tiny
+    cut = math.log(float(tiny)) - 1.0             # en deçà, exp(x) est sûrement sous-normal (ou nul) : 0 d'emblée
+    e = np.exp(np.where(x < cut, 2 * cut, x))     # exp(2·cut) vaut 0 exactement, dans les deux précisions
+    e *= e >= tiny                                # la frange qui reste (au plus e⁻¹ sous le seuil) : 0 aussi
+    return e

@@ -346,7 +346,8 @@ class MoleculeSceneTest {
         double[] q = scene.camera.project(3, 0, 0);
         assertEquals(p[0], q[0], .5);
         assertEquals(p[1], q[1], .5);
-        assertTrue(q[3] > 2 * p[3], "plus près : " + p[3] + " → " + q[3]);
+        // Trois crans : ×1,12³ ≈ 1,40 (un cran passait du simple au double, et au-delà).
+        assertEquals(Math.pow(1.12, 3), q[3] / p[3], .03, "plus près : " + p[3] + " → " + q[3]);
         // Glisser la vue : ce qui est au point visé suit la main, pixel pour pixel.
         double[] target = scene.center(), before = scene.camera.project(target[0], target[1], target[2]);
         scene.panBy(100, -40);

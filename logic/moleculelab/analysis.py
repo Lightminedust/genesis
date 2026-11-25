@@ -111,19 +111,20 @@ def bond_symmetry(result, a, b, directions=False):
     axis = positions[b] - positions[a]
     axis /= np.linalg.norm(axis)
     helper = np.array([1.0, 0, 0]) if abs(axis[0]) < 0.8 else np.array([0, 1.0, 0])
-    e1 = np.cross(axis, helper)
+    e1 = _cross(axis, helper)
     e1 /= np.linalg.norm(e1)
-    e2 = np.cross(axis, e1)
+    e2 = _cross(axis, e1)
     # Les p sphériques sont rangées (y, z, x) : la rotation vers (∥, ⊥1, ⊥2). Elle ne touche que les orbitales p des
     # deux atomes : seuls les blocs A–B et B–A de P S tournés sont lus, R_Aᵀ (PS)_AB R_B et R_Bᵀ (PS)_BA R_A.
     frame = np.array([[v[1], v[2], v[0]] for v in (axis, e1, e2)])
-    orbitals = {atom: np.where(basis.ao_atom == atom)[0] for atom in (a, b)}
+    atom_orbitals, atom_shells = _atom_index(basis)
+    orbitals = {atom: atom_orbitals[atom] for atom in (a, b)}
     rotations = {atom: np.eye(len(orbitals[atom])) for atom in (a, b)}
     is_pi = {atom: np.zeros(len(orbitals[atom]), bool) for atom in (a, b)}
     perpendicular = {a: [], b: []}
-    for shell, l in enumerate(basis.shell_l):
-        atom = basis.shell_atom[shell]
-        if l != 1 or atom not in (a, b):
+    for shell in sorted(atom_shells[a] + atom_shells[b]):
+        l, atom = basis.shell_l[shell], basis.shell_atom[shell]
+        if l != 1:
             continue
         o = basis.shell_offset[shell] - orbitals[atom][0]
         rotations[atom][o:o + 3, o:o + 3] = frame.T
@@ -155,8 +156,36 @@ def bond_symmetry(result, a, b, directions=False):
     return sigma, pi, direction, [float(values[main]), float(values[1 - main])]
 
 
+def _cross(u, v):
+    """u × v pour deux vecteurs de 3 composantes : les opérations de np.cross, sans son coût d'appel."""
+    return np.array([u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]])
+
+
+def _atom_index(basis):
+    """Les orbitales (indices) et les couches de chaque atome de la base, calculées une fois par base."""
+    cached = getattr(basis, "_atom_index", None)
+    if cached is None:
+        nat = len(basis.numbers)
+        orbitals = [np.where(basis.ao_atom == atom)[0] for atom in range(nat)]
+        shells = [[] for _ in range(nat)]
+        for shell, atom in enumerate(basis.shell_atom):
+            shells[int(atom)].append(shell)
+        cached = (orbitals, shells)
+        basis._atom_index = cached
+    return cached
+
+
 def mayer_bond_orders(result):
-    """La matrice B_AB (nat, nat), diagonale nulle."""
+    """La matrice B_AB (nat, nat), diagonale nulle. Calculée une fois par résultat (le recensement de chaque pas et
+    l'instantané la lisent tous deux) ; chaque appel en reçoit sa copie."""
+    cached = getattr(result, "_mayer", None)
+    if cached is None:
+        cached = _mayer_bond_orders(result)
+        result._mayer = cached
+    return cached.copy()
+
+
+def _mayer_bond_orders(result):
     basis = result.basis
     nat = len(basis.numbers)
     total = np.zeros((nat, nat))
@@ -209,6 +238,19 @@ def shared_density(result, pairs):
     indice 1,06, partage 0,005 ; H₂ à 2,5 Å : 1,00 et 0,03). Rend {(a, b): partage}."""
     if not pairs:
         return {}
+    # Le même résultat et la même liste de paires (le recensement de chaque pas, puis l'instantané) : la réponse déjà
+    # calculée. Seul un appel identique la reprend — calculée dans un autre lot, une paire peut différer au dernier
+    # chiffre (les produits matriciels ne somment pas dans le même ordre).
+    key = tuple((int(a), int(b)) for a, b in pairs)
+    memo = result.__dict__.setdefault("_shared", {})
+    if key in memo:
+        return dict(memo[key])
+    shared = _shared_density(result, pairs)
+    memo[key] = shared
+    return dict(shared)
+
+
+def _shared_density(result, pairs):
     basis, p = result.basis, result.positions
     first = np.array([a for a, _ in pairs])
     second = np.array([b for _, b in pairs])
@@ -348,19 +390,22 @@ def localize(result, sweeps=300, tolerance=1e-6, seed=7, orbitals=False):
         generator = np.random.default_rng(seed).normal(scale=0.02, size=(n, n))
         rotation, _ = np.linalg.qr(np.eye(n) + generator - generator.T)
         L = L @ rotation
-    SL = S @ L
-    Q = np.empty((nat, n, n))
-    for atom in range(nat):
-        mask = basis.ao_atom == atom
-        block = L[mask].T @ SL[mask]
-        Q[atom] = 0.5 * (block + block.T)
+    # Q^A_ij = ½ Σ_μ∈A (L_μi (SL)_μj + L_μj (SL)_μi). Plutôt que de faire tourner les matrices Q^A entières (n × n
+    # pour chaque atome, à chaque tour), L et SL = S L tournent ensemble — seules leurs colonnes i et j changent — et
+    # les Q^A_ii, Q^A_jj, Q^A_ij du tour s'en déduisent : les mêmes équations, trente fois moins de calcul.
+    T = np.stack((L, S @ L))                                      # (2, nao, n) : L et SL
+    owner = (np.asarray(basis.ao_atom)[None, :] == np.arange(nat)[:, None]).astype(float)     # (atomes, nao)
     # Jacobi parallèle : chaque tour fait tourner n/2 couples disjoints à la fois (ordre du tournoi à la ronde) ; des
     # rotations sur des couples disjoints commutent, donc un tour vaut ces rotations faites l'une après l'autre.
     rounds = _round_robin(n)
     for _ in range(sweeps):
         largest = 0.0
         for i, j in rounds:
-            qii, qjj, qij = Q[:, i, i], Q[:, j, j], Q[:, i, j]
+            ti, tj = T[:, :, i], T[:, :, j]
+            m = len(i)
+            li, si, lj, sj = ti[0], ti[1], tj[0], tj[1]
+            q = owner @ np.concatenate((li * si, lj * sj, li * sj + lj * si), axis=1)
+            qii, qjj, qij = q[:, :m], q[:, m:2 * m], 0.5 * q[:, 2 * m:]
             a = np.sum(qij * qij - 0.25 * (qii - qjj) ** 2, axis=0)
             b = np.sum(qij * (qii - qjj), axis=0)
             gamma = np.where(a * a + b * b < 1e-24, 0.0, 0.25 * np.arctan2(b, -a))
@@ -369,13 +414,11 @@ def localize(result, sweeps=300, tolerance=1e-6, seed=7, orbitals=False):
                 continue
             largest = max(largest, float(np.max(np.abs(gamma))))
             c, s = np.cos(gamma), np.sin(gamma)
-            R = np.eye(n)
-            R[i, i], R[j, j], R[j, i], R[i, j] = c, c, s, -s        # L[:, i] ← c lᵢ + s lⱼ, L[:, j] ← −s lᵢ + c lⱼ
-            L = L @ R
-            Q = R.T @ Q @ R
+            T[:, :, i], T[:, :, j] = ti * c + tj * s, tj * c - ti * s       # lᵢ ← c lᵢ + s lⱼ, lⱼ ← −s lᵢ + c lⱼ
         if largest < tolerance:
             break
-    populations = np.stack([np.diagonal(Q[atom]) for atom in range(nat)], axis=1)
+    L, SL = np.ascontiguousarray(T[0]), T[1]
+    populations = np.ascontiguousarray((owner @ (L * SL)).T)
     # Les barycentres : ⟨i|r|i⟩ = Σ_μν L_μi L_νi ⟨μ|r|ν⟩, ⟨μ|r|ν⟩ = ⟨μ|(r − R_μ)|ν⟩ + R_μ ⟨μ|ν⟩.
     M = result.moments if getattr(result, "moments", None) is not None else basis.moments(result.positions)
     centres = result.positions[basis.ao_atom]

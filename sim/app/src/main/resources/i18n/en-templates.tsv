@@ -576,3 +576,46 @@ Expérience : le gaz autour (thermostat à {0} K) emporte l'énergie du choc	Exp
 Expérience réussie en {0} fs	Experiment succeeded in {0} fs
 Expérience réussie : les produits attendus se sont formés en {0} fs	Experiment succeeded: the expected products formed in {0} fs
 Expérience manquée : rien ne s'est formé en {0} fs ; relancez, l'agitation change	Experiment missed: nothing formed in {0} fs; run it again, the thermal motion changes
+Un point toutes les {0} fm/c : plus ils sont espacés, plus il va vite.	One dot every {0} fm/c: the further apart, the faster it goes.
+Un point toutes les {0} fm/c : il va presque à la vitesse de la lumière.	One dot every {0} fm/c: it moves at nearly the speed of light.
+Il repart avec l'énergie qu'il n'a pas cédée : {0} MeV sont restés dans le nucléon.	It leaves with the energy it did not give away: {0} MeV stayed in the nucleon.
+cet événement {0}° (le trait blanc)	this event {0}° (the white line)
+{0} × la barrière	{0} × the barrier
+franchit en {0} × {1} fs des barrières jusqu'à ≈ {2} eV	crosses barriers up to ≈ {2} eV in {0} × {1} fs
+essai {0}/{1}	trial {0}/{1}
+essai {0}/{1} : ses produits se relaxent, chacun seul…	trial {0}/{1}: its products relax, each on its own…
+{0} essais de {1} fs à {2} K	{0} trials of {1} fs at {2} K
+refroidi à {0} K	cooled to {0} K
+encore ≈ {0} s	≈ {0} s left
+encore ≈ {0} min {1} s	≈ {0} min {1} s left
+premier changement ≈ {0} fs	first change ≈ {0} fs
+Étape {0} : les réactifs se relaxent…	Step {0}: the reactants relax…
+Étape {0} : les molécules se rapprochent…	Step {0}: the molecules come together…
+Étape {0} : le chemin, {1} %	Step {0}: the path, {1} %
+Étape {0} : la structure d'arrivée se relaxe…	Step {0}: the final structure relaxes…
+Étape {0} : les produits se relaxent seuls…	Step {0}: the products relax alone…
+Étape {0} : le chemin calculé, joué	Step {0}: the computed path, playing
+Étape {0} : le chemin calculé, à l'arrêt	Step {0}: the computed path, paused
+Étape {0} : arrivée — la scène est libre (chauffer, relaxer, tirer)	Step {0}: arrived — the scene is free (heat, relax, pull)
+{0} atomes dans cette étape : au plus {1} pour un chemin calculé	{0} atoms in this step: at most {1} for a computed path
+Étape {0} : les produits se posent ensemble…	Step {0}: the products are placed together…
+Étape {0} : les réactifs se posent ensemble…	Step {0}: the reactants are placed together…
+chemin à rebours, palier {0}/{1}	path backwards, point {0}/{1}
+chemin à l'endroit, palier {0}/{1}	path forwards, point {0}/{1}
+E {0} Eh	E {0} Eh
+ΔE {0} eV · barrière {1} eV	ΔE {0} eV · barrier {1} eV
+{0} calculs GFN1-xTB · {1} s	{0} GFN1-xTB calculations · {1} s
+{0} étapes	{0} steps
+{0} étape	{0} step
+{0} molécules	{0} molecules
+{0} molécule	{0} molecule
+Scène {0}D	{0}D scene
+Continuer dans la scène {0}D du laboratoire : le même chemin, puis la scène libre (chauffer, relaxer, tirer un atome)	Continue in the {0}D scene of the lab: the same path, then the free scene (heat, relax, pull an atom)
+liaison : {0}, {1} ou {2} bâtonnets selon son indice de Mayer, calculé à cette géométrie	bond: {0}, {1} or {2} sticks after its Mayer index, computed at this geometry
+se forme ; en tirets tant que son indice est sous {0}	forms; dashed while its index is below {0}
+se rompt ; en tirets tant que son indice est sous {0}	breaks; dashed while its index is below {0}
+Boules : {0} × rayon covalent. L'éclairage, le voile du fond et les ombres sur le sol ne servent qu'à lire la profondeur.	Balls: {0} × covalent radius. The lighting, the haze at the back and the shadows on the floor only help read depth.
+saut de branche entre les images {0} et {1}	branch jump between images {0} and {1}
+{0} eV au milieu	{0} eV in the middle
+Les charges bougent de moins de {0} e du début à la fin.	The charges move by less than {0} e from start to end.
+Piston : dynamique à {0} K (thermostat) mise en route	Piston: dynamics at {0} K (thermostat) started

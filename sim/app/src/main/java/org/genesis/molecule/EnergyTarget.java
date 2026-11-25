@@ -34,7 +34,7 @@ final class EnergyTarget {
     record Ring(int first, int count, double energy, double electrons, double radius) {}
 
     static final Color FILLED = Color.web("#6FC3FF"), HOMO = Color.web("#FFB35C"), LUMO = Color.web("#B79CFF"),
-            EMPTY = Color.web("#8E86B8"), GAP = Color.web("#F2C46B"), VACUUM = Color.web("#7F90AC");
+            EMPTY = Color.web("#8E86B8"), GAP = Color.web("#F2C14E"), VACUUM = Color.web("#7F90AC");
     /** Le cœur : un disque réservé à la lecture du niveau survolé ou choisi. */
     private static final double CORE = 44;
     /** Les niveaux vides montrés : jusqu'à 6 eV au-dessus de la LUMO (un niveau très haut écraserait les autres). */
@@ -202,13 +202,13 @@ final class EnergyTarget {
         Ring read = marked != null ? marked : top;
         if (read != null) {
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
             g.setFill(colour(read));
             g.fillText(name(representative(read), homo) + (read.count > 1 ? "  ×" + read.count : ""), cx, cy - 9);
-            g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
-            g.setFill(Color.web("#EAF2FF"));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
+            g.setFill(Color.web("#ECEFF3"));
             g.fillText(MoleculeFormat.decimal(read.energy, 2) + " eV", cx, cy + 6);
-            g.setFont(Font.font("Segoe UI", 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
             g.setFill(Color.web("#A9BCD6"));
             double e = read.electrons;
             String electrons = e <= .05 ? I18n.text("vide") : Math.abs(e - Math.rint(e)) < .05
@@ -220,15 +220,15 @@ final class EnergyTarget {
 
     /** Une cote : un texte sur fond sombre, centré sur (x, y), posé sur le cercle qu'il nomme. */
     private static void pill(GraphicsContext g, String text, double x, double y, Color colour, boolean strong) {
-        Font font = Font.font("Segoe UI", strong ? FontWeight.SEMI_BOLD : FontWeight.NORMAL, 9.5);
+        Font font = Font.font(org.genesis.common.Plan.SANS, strong ? FontWeight.SEMI_BOLD : FontWeight.NORMAL, 9.5);
         Text probe = new Text(text);
         probe.setFont(font);
         double width = probe.getLayoutBounds().getWidth() + 10, height = 14;
-        g.setFill(Color.web("#081120", .92));
-        g.fillRoundRect(x - width / 2, y - height / 2, width, height, height, height);
+        g.setFill(Color.web("#111419", .92));
+        g.fillRect(x - width / 2, y - height / 2, width, height);
         g.setStroke(colour.deriveColor(0, 1, 1, strong ? .55 : .35));
         g.setLineWidth(.8);
-        g.strokeRoundRect(x - width / 2, y - height / 2, width, height, height, height);
+        g.strokeRect(x - width / 2, y - height / 2, width, height);
         g.setFont(font);
         g.setTextAlign(TextAlignment.CENTER);
         g.setFill(colour.deriveColor(0, .85, 1.15, 1));

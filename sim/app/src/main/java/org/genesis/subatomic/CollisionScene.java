@@ -87,7 +87,10 @@ public final class CollisionScene {
         render.camera.pitch = .42;
         render.camera.friction = 3.2;
         render.camera.fovHalfDeg = 15;                                  // une figure : perspective douce
-        main.flags = true;                                              // des panneaux sur poteaux, pas des pastilles flottantes
+        main.flags = true;
+        // Des noms en petit à côté des objets ; leur détail et ce qu'ils sont, au survol (les panneaux sur poteaux encombraient).
+        main.compactTags = true;
+        main.explain = CollisionScene::explain;
         canvas.setOnMousePressed(e -> { dragging = true; previousX = e.getX(); previousY = e.getY(); });
         canvas.setOnMouseDragged(e -> {
             render.camera.drag(e.getX() - previousX, e.getY() - previousY);
@@ -205,6 +208,7 @@ public final class CollisionScene {
         int key = run * 1000 + (collision == null ? 0 : collisionRun);
         if (key != storyRun && !samples.isEmpty()) {
             storyRun = key;
+            aimOn = false;
             NucleonSample hit = samples.get(index(0.0));
             origin = new double[3];
             for (int i = 0; i < hit.getQuarksCount(); i++)
@@ -218,6 +222,118 @@ public final class CollisionScene {
             pendingSince = -1;
             steady = false;
         }
+    }
+
+    // ================================================================== la visée : le prochain tir, avant de le lancer
+    private boolean aimOn;
+    private int aimProjectile;
+    private double aimEnergyMev = 2000, aimAngleDeg = Double.NaN, aimPower = .5;
+
+    /**
+     * La visée du prochain tir, dès qu'on change un réglage : le faisceau qui arrive sur le nucléon, et (pour un lepton dont on
+     * choisit l'angle) la direction de sortie demandée. Sa couleur dit l'énergie, du bleu (faible) au rouge (forte) ; `power`
+     * est la place de l'énergie dans la plage du curseur (0 à 1). angleDeg : NaN quand la physique tire l'angle.
+     */
+    void aim(int projectile, double energyMev, double angleDeg, double power) {
+        aimOn = true;
+        aimProjectile = projectile;
+        aimEnergyMev = energyMev;
+        aimAngleDeg = angleDeg;
+        aimPower = power;
+    }
+
+    private void drawAim() {
+        GraphicsContext g = canvas.getGraphicsContext2D();
+        Color c = org.genesis.common.Plan.energy(aimPower);
+        double[] target = collision != null && !hadronic() ? vertex() : origin;
+        double[] dir = {0, 0, 1};
+        if (collision != null && !hadronic() && collision.getElectronPathFmCount() >= 6) {
+            double[] first = {collision.getElectronPathFm(0), collision.getElectronPathFm(1), collision.getElectronPathFm(2)};
+            double[] d = SubRender.sub(target, first);
+            if (SubRender.norm(d) > 1e-6) dir = SubRender.scale(d, 1 / SubRender.norm(d));
+        }
+        double reach = .45 * figure.radius();
+        double[] start = SubRender.sub(target, SubRender.scale(dir, reach));
+        double[] a = render.project(start), b = render.project(target);
+        if (a == null || b == null) return;
+        g.setLineCap(javafx.scene.shape.StrokeLineCap.ROUND);
+        g.setLineDashes();
+        g.setStroke(c.deriveColor(0, 1, 1, .25));
+        g.setLineWidth(6);
+        g.strokeLine(a[0], a[1], b[0], b[1]);
+        g.setStroke(c);
+        g.setLineWidth(2);
+        g.strokeLine(a[0], a[1], b[0], b[1]);
+        arrow(g, a, b, c);
+        String symbol = QuantumLab.SYMBOLS[Math.max(0, Math.min(QuantumLab.SYMBOLS.length - 1, aimProjectile))];
+        boolean lepton = aimProjectile < 6;
+        String energy = aimEnergyMev >= 1000 ? String.format(I18n.locale(), "%.2f GeV", aimEnergyMev / 1000) : String.format(I18n.locale(), "%.0f MeV", aimEnergyMev);
+        String angle = !lepton ? "" : Double.isNaN(aimAngleDeg) ? " · angle tiré par dσ/dΩ" : String.format(I18n.locale(), " · θ %.0f°", aimAngleDeg);
+        if (lepton && !Double.isNaN(aimAngleDeg)) {
+            // la sortie demandée : tournée de θ autour d'un axe perpendiculaire au faisceau
+            double[] side = SubRender.perpendicular(dir);
+            double th = Math.toRadians(aimAngleDeg);
+            double[] out = SubRender.add(SubRender.scale(dir, Math.cos(th)), SubRender.scale(side, Math.sin(th)));
+            double[] tip = render.project(SubRender.add(target, SubRender.scale(out, reach * .8)));
+            if (tip != null) {
+                g.setLineDashes(6, 6);
+                g.setStroke(c.deriveColor(0, 1, 1, .85));
+                g.setLineWidth(1.6);
+                g.strokeLine(b[0], b[1], tip[0], tip[1]);
+                g.setLineDashes();
+                double[] on = render.project(SubRender.add(target, SubRender.scale(dir, reach * .25)));
+                double[] around = render.project(SubRender.add(target, SubRender.scale(out, reach * .25)));
+                if (on != null && around != null) {
+                    g.setStroke(c.deriveColor(0, 1, 1, .6));
+                    g.setLineWidth(1);
+                    g.strokeLine(on[0], on[1], around[0], around[1]);
+                }
+            }
+        }
+        g.setFont(org.genesis.common.Plan.semibold(11.5));
+        g.setTextAlign(TextAlignment.LEFT);
+        g.setFill(c);
+        I18n.fillText(g, "visée · " + symbol + " · " + energy + angle, a[0] + 8, a[1] - 10);
+        List<double[]> line = List.of(start, target);
+        render.hitPath(line, "La visée du prochain tir", List.of(symbol + " · " + energy + angle,
+                "La couleur dit l'énergie : bleu faible, rouge forte.",
+                lepton && !Double.isNaN(aimAngleDeg) ? "Le pointillé : la direction de sortie demandée." : "",
+                "Lancer : le moteur calcule les cas possibles et en tire un."), c);
+    }
+
+    private static void arrow(GraphicsContext g, double[] from, double[] to, Color c) {
+        double dx = to[0] - from[0], dy = to[1] - from[1], n = Math.hypot(dx, dy);
+        if (n < 1e-6) return;
+        dx /= n;
+        dy /= n;
+        double bx = to[0] - dx * 10, by = to[1] - dy * 10;
+        g.setFill(c);
+        g.fillPolygon(new double[]{to[0], bx - dy * 5, bx + dy * 5}, new double[]{to[1], by + dx * 5, by - dx * 5}, 3);
+    }
+
+    /** Ce qu'est un objet d'après son nom : une phrase, ajoutée à sa fiche au survol. */
+    static List<String> explain(String title) {
+        String line = explainLine(title);
+        return line.isEmpty() ? List.of() : List.of(line);
+    }
+
+    static String explainLine(String title) {
+        String t = title == null ? "" : title;
+        if (t.startsWith("π")) return "Un pion : un quark et un antiquark, le plus léger des hadrons.";
+        if (t.startsWith("K")) return "Un kaon : un méson qui porte un quark étrange.";
+        if (t.startsWith("proton") || t.equals("p")) return "Un proton : trois quarks (u u d), stable.";
+        if (t.startsWith("neutron") || t.equals("n")) return "Un neutron : trois quarks (u d d).";
+        if (t.startsWith("Δ")) return "Le Δ(1232) : un nucléon excité, ses trois spins alignés ; il se défait en nucléon + pion en ~10⁻²³ s.";
+        if (t.startsWith("W")) return "Le boson W : il porte l'interaction faible et change la saveur d'un quark.";
+        if (t.startsWith("γ")) return "Le photon virtuel : il emporte l'énergie ν et l'impulsion q du projectile vers le nucléon.";
+        if (t.startsWith("corde")) return "Le tube de gluons entre quarks : son énergie croît avec sa longueur, jusqu'à se rompre.";
+        if (t.startsWith("paire")) return "Une paire quark–antiquark née de la rupture de la corde.";
+        if (t.startsWith("contact")) return "Le choc entre les deux hadrons.";
+        if (t.startsWith("puits")) return "Le champ électrique du nucléon, vu par une particule chargée.";
+        if (t.contains("frappé")) return "Le quark qui a reçu le choc.";
+        if (t.startsWith("ν")) return "Un neutrino : sans charge, il ne laisse pas de trace et n'interagit que par la force faible.";
+        if (t.startsWith("e") || t.startsWith("μ")) return "Un lepton : il ne ressent pas la force forte, seulement le photon (ou le W).";
+        return "";
     }
 
     private String channel() {
@@ -721,7 +837,18 @@ public final class CollisionScene {
             back.setEffect(null);
             DocStyle.background(gb, w, h);
             g.clearRect(0, 0, w, h);
-            DocStyle.label(g, "en attente du calcul", w / 2, h / 2, 14, TextAlignment.CENTER, .8);
+            if (aimOn) {
+                // Avant tout calcul : la boîte par défaut et la visée.
+                double stage = Math.max(320, w - FusionDashboard.WIDTH - 32);
+                render.begin(g, w, h, 0, stage, h, focus, fitDistance(), false);
+                render.box(figure, gridStep, 1);
+                drawAim();
+                main.hoverX = mouseX;
+                main.hoverY = mouseY;
+                render.drawHover();
+            } else {
+                DocStyle.label(g, "en attente du calcul", w / 2, h / 2, 14, TextAlignment.CENTER, .8);
+            }
             return;
         }
         double[] now = physical();
@@ -760,6 +887,7 @@ public final class CollisionScene {
         boardBottom = 16 + boardHeight;
         render.reserve(w - FusionDashboard.WIDTH - 16, 16, FusionDashboard.WIDTH, boardHeight);
         render.reserve(0, 0, Math.min(stage * .52, 540), headerHeight(stage));
+        if (aimOn) drawAim();
         drawElectron(beat, now, false);
         long t1 = System.nanoTime();
         drawHadrons(sample, at, beat, now);
@@ -769,10 +897,13 @@ public final class CollisionScene {
         drawPhoton(at, beat, now);
         drawBreakFlash(beat, now);
         drawContact(beat, now);
+        main.hoverX = mouseX;
+        main.hoverY = mouseY;
         render.drawTags();
         drawHeader(g, stage, now);
         if (board != null) dashboard.draw(g, w - FusionDashboard.WIDTH - 16, 16, board, lastDt, compactBoard);
         if (pendingSince >= 0) drawPending(g, w, h);
+        render.drawHover();
         render.commitLens(back);
         drawClose(sample, at, beat, now, w, h);
         drawLegend(g, stage, h);
@@ -990,6 +1121,11 @@ public final class CollisionScene {
             if (pts.size() >= 2) {
                 render.projections(pts, figure, c, .9);
                 render.trace(pts, c, .35, 1.2);
+                List<double[]> whole = new ArrayList<>(lead);
+                whole.addAll(pts);
+                render.hitPath(whole, pretty(tr.name()[0]), List.of("Sa trace : le chemin de son centre.",
+                        "Un point toutes les " + DocStyle.number(dotStep) + " fm/c : plus ils sont espacés, plus il va vite.",
+                        explainLine(tr.name()[0])), c);
                 // ce qui bouge encore : une comète, tête lumineuse et traînée qui s'effile vers l'arrière
                 boolean alive = v != null || tr.times().get(tr.times().size() - 1) >= t - 1e-9;
                 double moved = SubRender.norm(SubRender.sub(pts.get(pts.size() - 1), pts.get(Math.max(0, pts.size() - 8))));
@@ -1032,6 +1168,10 @@ public final class CollisionScene {
                 render.projections(arrival, figure, in, .9);
                 render.trace(arrival, in, .35, 1.2);
             }
+            render.hitPath(arrival, beamLabel() + " · le projectile", List.of(DocStyle.number(collision.getEnergyMev())
+                    + " MeV", weak() ? "Sans charge, il ne laisse aucune trace : son chemin est en pointillé."
+                    : "En ligne droite jusqu'au choc : à cette énergie, le champ du nucléon le dévie à peine.",
+                    "Un point toutes les " + DocStyle.number(dotStep) + " fm/c : il va presque à la vitesse de la lumière."), in);
             if (beat.equals("approach") && arrival.size() > 1)
                 render.comet(arrival, in, weak() ? .5 : 1, .3, Math.min(10, .25 * figure.radius()), .9);
             render.timeDots(arrivalDots, in, .9);
@@ -1052,6 +1192,10 @@ public final class CollisionScene {
                 }
                 render.projections(leaving, figure, out, .9);
                 render.trace(leaving, out, .35, 1.2);
+                render.hitPath(leaving, outLabel() + (weak() ? " · créé" : " · diffusé"), List.of(
+                        DocStyle.number(collision.getEOutMev()) + " MeV · θ " + String.format(I18n.locale(), "%.0f°", collision.getAngleDeg()),
+                        "Il repart avec l'énergie qu'il n'a pas cédée : " + DocStyle.number(collision.getNuMev())
+                                + " MeV sont restés dans le nucléon."), out);
                 if (leaving.size() > 1) render.comet(leaving, out, 1, .3, Math.min(10, .25 * figure.radius()), .9);
                 render.timeDots(leavingDots, out, .9);
             }
@@ -1128,11 +1272,16 @@ public final class CollisionScene {
             double radius = Math.min((decay ? .16 : .3) * figure.radius(), Math.max(1.5, room * .9));
             Color c = decay ? Color.web("#FFB86B") : Color.web("#7FE3FF");
             double alpha = decay ? (beat.startsWith("break") ? 1 : .75) : early ? 1 : .7;
-            render.polarFloor(foot, flat, angles, density, lb.getLogScale(), lb.getSpanDecades(), radius, lb.getChosenDeg(), sign, c, alpha);
+            String name = decay ? "Δ → N π" : hadronic() ? "dσ/dΩ*" : "dσ/dΩ";
+            boolean full = main.hovered != null && main.hovered.title().equals(name);
+            render.polarFloor(foot, flat, angles, density, lb.getLogScale(), lb.getSpanDecades(), radius, lb.getChosenDeg(), sign, c,
+                    full ? 1 : alpha, full);
             String law = decay ? lb.getLabel().replace("désintégration du Δ : le pion sort selon ", "").replace(" (repos du Δ)", "")
                     : lb.getLogScale() ? I18n.text("échelle log, ") + String.format(I18n.locale(), "%.0f", lb.getSpanDecades()) + I18n.text(" décades") : "échelle linéaire";
-            render.tag(SubRender.add(foot, SubRender.scale(flat, -radius * .2)), .1, decay ? "Δ → N π (au sol)" : hadronic() ? "dσ/dΩ* (au sol)" : "dσ/dΩ (au sol)",
-                    law + I18n.text(" · cet événement ") + String.format(I18n.locale(), "%.0f°", lb.getChosenDeg()), c, alpha);
+            render.hitDisc(foot, radius, name, List.of(decay
+                            ? "Comment le Δ se défait : la probabilité qu'en sorte le pion à chaque angle."
+                            : "La probabilité de repartir à chaque angle, posée au sol : plus la courbe va loin, plus cet angle est fréquent.",
+                    law + " · cet événement " + String.format(I18n.locale(), "%.0f°", lb.getChosenDeg()) + " (le trait blanc)"), c);
         }
     }
 
@@ -1217,11 +1366,7 @@ public final class CollisionScene {
         gc.clearRect(0, 0, CLOSE_W, ch);
         gc.save();
         gc.beginPath();
-        gc.moveTo(10, 0);
-        gc.arcTo(CLOSE_W, 0, CLOSE_W, ch, 10);
-        gc.arcTo(CLOSE_W, ch, 0, ch, 10);
-        gc.arcTo(0, ch, 0, 0, 10);
-        gc.arcTo(0, 0, CLOSE_W, 0, 10);
+        gc.rect(0, 0, CLOSE_W, ch);
         gc.closePath();
         gc.clip();
         gc.setFill(new javafx.scene.paint.LinearGradient(0, 0, 0, 1, true, javafx.scene.paint.CycleMethod.NO_CYCLE,
@@ -1243,14 +1388,13 @@ public final class CollisionScene {
         }
         gc.restore();
         // le cadre, le grossissement, l'échelle
-        gc.setStroke(Color.web("#36CDF2").deriveColor(0, 1, 1, .55));
-        gc.setLineWidth(1.2);
-        gc.strokeRoundRect(.6, .6, CLOSE_W - 1.2, ch - 1.2, 20, 20);
+        org.genesis.common.Plan.frame(gc, 0, 0, CLOSE_W, ch, null);
         double zoom = close.scaleAt(closeFocus) / Math.max(1e-9, main.scaleAt(closeFocus));
-        gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFill(Color.web("#36CDF2"));
-        I18n.fillText(gc, FusionDashboard.spaced("LOUPE") + "   ×" + String.format(I18n.locale(), "%.0f", zoom), 12, 18);
+        gc.setFont(org.genesis.common.Plan.mono(10));
+        gc.setFill(org.genesis.common.Plan.INK2);
+        I18n.fillText(gc, "LOUPE ×" + String.format(I18n.locale(), "%.0f", zoom), 12, 18);
         double fm = close.scaleAt(closeFocus);
         if (fm > 1) {
             double bar = fm * (fm > 120 ? .5 : 1);
@@ -1258,7 +1402,7 @@ public final class CollisionScene {
             gc.strokeLine(12, ch - 14, 12 + bar, ch - 14);
             gc.strokeLine(12, ch - 18, 12, ch - 10);
             gc.strokeLine(12 + bar, ch - 18, 12 + bar, ch - 10);
-            gc.setFont(Font.font("Consolas", 10));
+            gc.setFont(Font.font(org.genesis.common.Plan.MONO, 10));
             gc.setFill(Color.web("#C9D7EA"));
             I18n.fillText(gc, fm > 120 ? "0,5 fm" : "1 fm", 18 + bar, ch - 10);
         }
@@ -1364,11 +1508,13 @@ public final class CollisionScene {
         closeDepth += closeDepthSpeed * dt;
     }
 
-    /** La légende de la figure, en bas de la scène. */
+    /** La légende de la figure, en bas de la scène : retirée (trop de texte à l'écran), gardée pour mémoire. */
+    private static final boolean LEGEND = false;
+
     private void drawLegend(GraphicsContext g, double stage, double h) {
-        if (collision == null) return;
+        if (collision == null || !LEGEND) return;
         double x = 16;
-        g.setFont(Font.font("Segoe UI", 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         g.setTextAlign(TextAlignment.LEFT);
         g.setFill(Color.web("#9FB0C8"));
         String dt = DocStyle.number(dotStep);
@@ -2027,7 +2173,7 @@ public final class CollisionScene {
     }
 
     private double headerHeight(double stage) {
-        return 150 + 16 * wrap(currentCaption(), Font.font("Segoe UI", 12.5), Math.min(stage * .5, 520)).size();
+        return 150 + 16 * wrap(currentCaption(), Font.font(org.genesis.common.Plan.SANS, 12.5), Math.min(stage * .5, 520)).size();
     }
 
     private String currentCaption() {
@@ -2060,25 +2206,29 @@ public final class CollisionScene {
         Beat b = beats.get(beatIndex());
         double x = 20, y = 28;
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
-        g.setFill(Color.web("#36CDF2"));
-        I18n.fillText(g, FusionDashboard.spaced((I18n.text("étape ") + (beatIndex() + 1) + "/" + beats.size() + " · " + b.title()).toUpperCase(I18n.locale())), x, y);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 21));
-        g.setFill(Color.web("#EEF2FF"));
-        I18n.fillText(g, reactionTitle(), x, y + 30);
+        // L'étape : son numéro dans la couleur du laboratoire, son titre en encre secondaire.
+        String number = I18n.text("Étape ") + (beatIndex() + 1) + "/" + beats.size();
+        g.setFont(org.genesis.common.Plan.medium(11.5));
+        g.setFill(Color.web("#B39DFF"));
+        g.fillText(number, x, y);
+        g.setFill(org.genesis.common.Plan.INK2);
+        g.fillText("  ·  " + org.genesis.common.Plan.sentence(I18n.text(b.title())), x + ReactorView.width(number, org.genesis.common.Plan.medium(11.5)), y);
+        g.setFont(org.genesis.common.Plan.light(24));
+        g.setFill(org.genesis.common.Plan.INK);
+        I18n.fillText(g, reactionTitle(), x, y + 31);
         // l'échelle réelle
         double[] a = render.project(focus), r = render.camera.right();
         double[] e = render.project(SubRender.add(focus, r));
         if (a != null && e != null) {
             double perFm = Math.hypot(e[0] - a[0], e[1] - a[1]);
             double fm = DocStyle.niceLength(110 / Math.max(1e-6, perFm)), px = fm * perFm, sy = y + 66;
-            g.setStroke(Color.web("#E8F0FF", .85));
-            g.setLineWidth(1.2);
+            g.setStroke(org.genesis.common.Plan.INK2);
+            g.setLineWidth(1);
             g.strokeLine(x, sy, x + px, sy);
-            g.strokeLine(x, sy - 5, x, sy + 5);
-            g.strokeLine(x + px, sy - 5, x + px, sy + 5);
-            g.setFont(Font.font("Segoe UI", 10.5));
-            g.setFill(Color.web("#E8F0FF"));
+            g.strokeLine(x, sy - 4, x, sy + 4);
+            g.strokeLine(x + px, sy - 4, x + px, sy + 4);
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
+            g.setFill(org.genesis.common.Plan.INK2);
             I18n.fillText(g, (fm < 1 ? String.format(I18n.locale(), "%.1f", fm) : String.format(I18n.locale(), "%.0f", fm)) + I18n.text(" fm · échelle réelle"), x, sy - 9);
         }
         // le temps physique et le ralenti
@@ -2087,26 +2237,35 @@ public final class CollisionScene {
         String clock = "t = " + scientific(seconds) + " s";
         if (span > 1e-9) clock += "   ·   ralenti ×10" + superscript((int) Math.round(Math.log10(filmSeconds / (span * 3.33564095e-24))));
         else clock += "   ·   instant figé : l'échange dure ~10⁻²⁵ s";
-        g.setFont(Font.font("Segoe UI", 11));
-        g.setFill(Color.web("#B9C6D8"));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
+        g.setFill(org.genesis.common.Plan.INK3);
         I18n.fillText(g, clock, x, y + 84);
-        // le récit
+        // Le récit de l'étape, en une phrase ; son détail attend le survol de « En savoir plus ».
         double width = Math.min(stage * .5, 520), line = y + 112;
-        Font font = Font.font("Segoe UI", 12.5);
+        Font font = Font.font(org.genesis.common.Plan.SANS, 13);
         g.setFont(font);
-        g.setFill(Color.web("#D6DEEA"));
+        g.setFill(org.genesis.common.Plan.INK.deriveColor(0, 1, 1, .92));
         for (String l : wrap(b.caption(), font, width)) {
             I18n.fillText(g, l, x, line);
-            line += 16;
+            line += 17;
         }
         if (!b.detail().isEmpty()) {
-            Font small = Font.font("Segoe UI", 11);
+            double qy = line + 4;
+            String more = I18n.text("En savoir plus");
+            Font small = org.genesis.common.Plan.medium(11.5);
+            boolean over = render.hoverX >= x - 4 && render.hoverX <= x + 22 + ReactorView.width(more, small)
+                    && Math.abs(render.hoverY - qy) < 10;
+            g.setStroke(over ? org.genesis.common.Plan.INK : org.genesis.common.Plan.INK3);
+            g.setLineWidth(1);
+            g.strokeOval(x, qy - 7, 14, 14);
+            g.setFont(org.genesis.common.Plan.medium(9.5));
+            g.setFill(over ? org.genesis.common.Plan.INK : org.genesis.common.Plan.INK3);
+            g.setTextAlign(TextAlignment.CENTER);
+            g.fillText("?", x + 7, qy + 3.5);
+            g.setTextAlign(TextAlignment.LEFT);
             g.setFont(small);
-            g.setFill(Color.web("#8EA6C0"));
-            for (String l : wrap(b.detail(), small, width)) {
-                I18n.fillText(g, l, x, line + 2);
-                line += 14;
-            }
+            g.fillText(more, x + 21, qy + 4);
+            render.hitScreen(x + 7, qy, 10, I18n.text(b.title()), List.of(b.detail()), Color.web("#B39DFF"));
         }
     }
 
@@ -2174,12 +2333,12 @@ public final class CollisionScene {
     private void drawPending(GraphicsContext g, double w, double h) {
         double age = render.clock - pendingSince;
         g.setFill(Color.color(.02, .1, .18, .7));
-        g.fillRoundRect(w / 2 - 210, h / 2 - 40, 420, 80, 16, 16);
+        g.fillRect(w / 2 - 210, h / 2 - 40, 420, 80);
         g.setStroke(DocStyle.RIM);
         g.setLineWidth(3);
         g.strokeArc(w / 2 - 190, h / 2 - 15, 30, 30, -age * 360, 270, javafx.scene.shape.ArcType.OPEN);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
         g.setFill(DocStyle.WHITE);
         I18n.fillText(g, pendingText, w / 2 - 145, h / 2 + 5, 340);
     }

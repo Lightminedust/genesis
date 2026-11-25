@@ -107,6 +107,9 @@ class Session:
         self.chain = None
         # Le laboratoire moléculaire : des molécules entières, leurs électrons (GFN1-xTB) et leurs forces.
         self.molecule_lab = None
+        # Le laboratoire moléculaire mis de côté pendant qu'un autre est ouvert : ses molécules, son schéma calculé
+        # (des minutes de calcul) et ses résultats l'attendent ; un schéma en cours de calcul continue.
+        self.parked_molecule_lab = None
         # Laboratoire few-body indépendant de l'atome construit à l'accueil.
         self.subatomic = None
         # Le nucléon de l'intérieur : trois quarks dans une corde de couleur.
@@ -372,13 +375,24 @@ class Session:
         return [_event("structure", self.time_s, "Retour à l'atome")]
 
     def _close_chain(self):
-        """Arrête les laboratoires qui calculent dans leur propre fil (réaction en chaîne, molécules)."""
+        """Arrête les laboratoires qui calculent dans leur propre fil (réaction en chaîne) ; le laboratoire moléculaire,
+        lui, est mis de côté — plus de pas ni de grille, mais ce qu'il a calculé reste pour le retour."""
         if self.chain is not None:
             self.chain.close()
             self.chain = None
         if self.molecule_lab is not None:
-            self.molecule_lab.close()
+            self.molecule_lab.park()
+            if self.parked_molecule_lab is not None and self.parked_molecule_lab is not self.molecule_lab:
+                self.parked_molecule_lab.close()
+            self.parked_molecule_lab = self.molecule_lab
             self.molecule_lab = None
+
+    def close_labs(self):
+        """Le client s'en va : chaque laboratoire qui a son propre fil s'arrête, celui mis de côté aussi."""
+        self._close_chain()
+        if self.parked_molecule_lab is not None:
+            self.parked_molecule_lab.close()
+            self.parked_molecule_lab = None
 
     # ------------------------------------------------------------------
     # Le laboratoire moléculaire
@@ -388,6 +402,14 @@ class Session:
         self._close_chain()
         self.reactor = self.lab = self.star = self.matter = self.molecule = None
         self.subatomic = self.nucleon = None
+        parked, self.parked_molecule_lab = self.parked_molecule_lab, None
+        if parked is not None and not parked.closed():
+            # Le retour : la scène, le schéma calculé, l'assembleur, tels qu'on les a laissés.
+            parked.resume()
+            self.molecule_lab = parked
+            return [_event("structure", self.time_s, "Laboratoire moléculaire", "repris tel qu'il a été laissé",
+                           "Les molécules de la scène, le schéma calculé et ses chemins sont gardés d'un laboratoire à "
+                           "l'autre.")]
         self.molecule_lab = MoleculeLab(rng_seed=self.rng.randrange(1 << 30))
         return [_event("structure", self.time_s, "Laboratoire moléculaire",
                        "F = −∇E, E calculée par GFN1-xTB",

@@ -1,5 +1,8 @@
 package org.genesis.fusion;
 
+import org.genesis.common.Icons;
+import org.genesis.common.Plan;
+
 import org.genesis.app.I18n;
 import org.genesis.atom.SimCanvas;
 
@@ -30,6 +33,9 @@ import static org.genesis.fusion.FusionField.*;
 public final class ReactorView {
     private final BorderPane root = new BorderPane();
     private final StackPane stage = new StackPane();
+    /** La scène seule (ses deux canevas) : ce que montre une image enregistrée. */
+    private Pane holder;
+    private Region transportBar;
     private final Canvas sceneCanvas = new Canvas(), overlayCanvas = new Canvas();
     private final FusionRenderer renderer = new FusionRenderer();
     /** La seconde fenêtre : le même instant, au plus près des noyaux. */
@@ -38,7 +44,7 @@ public final class ReactorView {
     private final ToggleButton resultsButton = new ToggleButton("Bilan");
     private boolean resultsWanted = true, resultsOffscreen, keepResults, lastInsist;
     /** Un tir refusé par le moteur : dit en grand, avec de quoi le corriger. */
-    private final Label errorTitle = text("", 15, "#FFD27A"), errorBody = text("", 12, "#E6EEFA");
+    private final Label errorTitle = text("", 15, "#FFD27A"), errorBody = text("", 12, "#ECEFF3");
     private final Button errorFix = button("", true), errorClose = button("Fermer", false);
     private final VBox errorBanner = new VBox(8);
     private double zoomVelocity, zoomGoal = Double.NaN;
@@ -49,24 +55,25 @@ public final class ReactorView {
     private final List<LabElement> catalog = new ArrayList<>();
     private CollisionNucleus selectedA, selectedB;
     private final Button chooseA = new Button(), chooseB = new Button();
-    private final Label aTitle = text("²H · deutérium", 16, "#FFBC75"), bTitle = text("³H · tritium", 16, "#FFA76A");
-    private final Label aData = text("1 proton · 1 neutron", 11, "#A4B6CD"), bData = text("1 proton · 2 neutrons", 11, "#A4B6CD");
+    private final Label aTitle = new Label("Deutérium"), bTitle = new Label("Tritium");
+    private final Label aTile = new Label("²H"), bTile = new Label("³H");
+    private final Label aData = text("1 proton · 1 neutron", 11, "#A2ABB8"), bData = text("1 proton · 2 neutrons", 11, "#A2ABB8");
     private final Slider beam = new Slider(-1, Math.log10(2e6), Math.log10(64)), impact = new Slider(0, 50, 0), magnetic = new Slider(0, 12, 5.3);
     private final Slider temperature = new Slider(Math.log10(.5), Math.log10(5000), Math.log10(15));
     private final Slider density = new Slider(16, 33, 20), confinement = new Slider(-6, 10, Math.log10(3));
     private final TextField beamInput = new TextField("64");
-    private final Label impactLabel = text("0 fm", 12, "#E4EEFF"), fieldLabel = text(fmt(5.3) + " T", 12, "#E4EEFF");
-    private final Label temperatureLabel = text("", 12, "#E4EEFF"), densityLabel = text("", 12, "#E4EEFF"), confinementLabel = text("", 12, "#E4EEFF");
-    private final Label barrier = text("Barrière : —", 11, "#8196B4");
-    private final Label evidence = text("", 11, "#A8C1D8");
+    private final Label impactLabel = text("0 fm", 12, "#ECEFF3"), fieldLabel = text(fmt(5.3) + " T", 12, "#ECEFF3");
+    private final Label temperatureLabel = text("", 12, "#ECEFF3"), densityLabel = text("", 12, "#ECEFF3"), confinementLabel = text("", 12, "#ECEFF3");
+    private final Label barrier = text("Barrière : —", 11, "#A2ABB8");
+    private final Label evidence = text("", 11, "#A2ABB8");
     private final ToggleButton beamMode = new ToggleButton("Faisceau"), plasmaMode = new ToggleButton("Plasma");
     private final VBox beamBox = new VBox(6), plasmaShotBox = new VBox(4);
-    private final Label plasmaShot = text("", 11, "#9FB4CE");
-    private final Label lawsonText = text("", 11, "#C6D4E8"), verdict = text("", 11.5, "#F0F5FF");
+    private final Label plasmaShot = text("", 11, "#A2ABB8");
+    private final Label lawsonText = text("", 11, "#A2ABB8"), verdict = text("", 11.5, "#ECEFF3");
     private final Canvas lawsonChart = new Canvas(250, 150);
-    private final Label phase = text("PRÉPARATION", 10, "#71CDBF"), outcome = text("", 18, "#EEF4FF"), status = text("", 11, "#90A3BE");
-    private final Button fire = button("Calculer la collision  →", true), force = button("⚛  Jusqu'à la fusion", false);
-    private final Button pause = button("▶", false), replay = button("↺ Rejouer", false);
+    private final Label phase = text("PRÉPARATION", 10, "#71CDBF"), outcome = text("", 18, "#ECEFF3"), status = text("", 11, "#A2ABB8");
+    private final Button fire = button("Calculer la collision", true), force = button("Jusqu'à la fusion", false);
+    private final Button pause = button("▶", false), replay = button("Rejouer", false);
     private final Slider timeline = new Slider(0, 1, 0), speed = new Slider(.25, 2, 1);
     private final ToggleButton loop = new ToggleButton("Boucle"), series = new ToggleButton("Nouveaux tirs");
     private final VBox sidebar = new VBox();
@@ -78,7 +85,7 @@ public final class ReactorView {
     private boolean updating, playing, waiting, dragging;
     private double progress, lastX, lastY, suggested = 64;
     /** Le mode Inspecter : un clic dans la scène y pose une sonde (la zone touchée, les équations du lieu, chiffrées). */
-    private final ToggleButton inspect = new ToggleButton("⌖  Inspecter");
+    private final ToggleButton inspect = new ToggleButton("Inspecter");
     private final FusionDashboard dashboard = new FusionDashboard();
     /** Le plasma où a lieu le choc, à son échelle propre (panneau Lawson) ; ses champs écrantent ceux de la scène. */
     private final PlasmaInset plasma = new PlasmaInset();
@@ -94,6 +101,7 @@ public final class ReactorView {
      * « Complet » ajoute toutes les métriques, les calques et le milieu. Rien n'est calculé différemment.
      */
     private final ToggleButton simpleView = new ToggleButton("Essentiel"), fullView = new ToggleButton("Complet");
+    private final HBox modes = new HBox(0);
     private final List<javafx.scene.Node> advanced = new ArrayList<>();
     private final FusionReadouts readouts = new FusionReadouts((z, a) -> z == 0 ? (a == 0 ? "γ" : "n") : nuclide(z, a, symbolOfZ(z)));
     /** Ce que couvrent déjà le tableau de bord et le bilan (x, y, largeur, hauteur) : les étiquettes s'en écartent. */
@@ -104,9 +112,10 @@ public final class ReactorView {
     public ReactorView(Runnable exit, IntConsumer legacyFuel, DoubleConsumer legacyTemperature, Runnable fireCallback) {
         onFire = fireCallback;
         onTemperature = legacyTemperature;
-        root.getStyleClass().add("fusion-lab");
-        root.setStyle("-fx-background-color:#04070D;-fx-font-family:'Segoe UI';");
+        root.getStyleClass().addAll("fusion-lab", "lab-fusion");     // lab-fusion : sa couleur (genesis.css)
+
         Pane holder = new Pane(sceneCanvas, overlayCanvas);
+        this.holder = holder;
         holder.setMinSize(100, 100);
         for (Canvas c : new Canvas[]{sceneCanvas, overlayCanvas}) {
             c.widthProperty().bind(holder.widthProperty());
@@ -149,8 +158,6 @@ public final class ReactorView {
                 renderer.camera.orient(-.55, .34);
             }
         });
-        Button back = button("← Atome", false);
-        back.setOnAction(e -> exit.run());
         resultsButton.setId("collision-results");
         resultsButton.getStyleClass().add("glass-toggle");
         inspect.setId("collision-inspect");
@@ -207,15 +214,13 @@ public final class ReactorView {
         errorBanner.getChildren().addAll(errorTitle, errorBody, new HBox(8, errorFix, errorClose));
         errorBanner.setPadding(new Insets(14, 16, 14, 16));
         errorBanner.setMaxSize(540, Region.USE_PREF_SIZE);
-        errorBanner.setStyle("-fx-background-color:linear-gradient(to bottom, rgba(16,27,43,0.96), rgba(7,12,20,0.97));-fx-background-radius:14;"
-                + "-fx-border-color:rgba(255,178,74,0.7);-fx-border-radius:14;-fx-effect:dropshadow(gaussian, rgba(0,0,0,0.6), 24, 0.2, 0, 6);");
+        errorBanner.getStyleClass().add("plan-card");
+        errorBanner.setStyle("-fx-border-color:" + Plan.MARK_HEX + ";");
         errorBody.setWrapText(true);
         errorBanner.setVisible(false);
         errorFix.setId("collision-error-fix");
         errorClose.setOnAction(e -> errorBanner.setVisible(false));
         StackPane.setAlignment(errorBanner, Pos.CENTER);
-        Button model = button("Modèle & données", false);
-        model.setOnAction(e -> model());
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
         // Les calques tiennent en une lettre : l'en-tête reste court, le nom est dans l'infobulle.
@@ -230,8 +235,13 @@ public final class ReactorView {
         for (ToggleButton t : new ToggleButton[]{fieldE, fieldB, wave, medium}) t.setStyle("-fx-padding:6 9;-fx-font-size:12px;");
         HBox layers = new HBox(5, fieldE, fieldB, wave, medium);
         advanced.addAll(List.of(layers, inspect));
-        HBox controls = new HBox(8, phase, gap, layers, new HBox(0, simpleView, fullView),
-                mapMode, inspect, resultsButton, model, back);
+        // Essentiel | Complet : le mode du laboratoire, dans l'en-tête commun (voir modes()) ; ici, les calques.
+        modes.getChildren().setAll(simpleView, fullView);
+        phase.setStyle("");
+        phase.getStyleClass().add("scene-caption");
+        outcome.setStyle("");
+        outcome.getStyleClass().add("scene-title");
+        HBox controls = new HBox(8, phase, gap, layers, mapMode, inspect, resultsButton);
         controls.setAlignment(Pos.CENTER_LEFT);
         outcome.setTextOverrun(OverrunStyle.ELLIPSIS);
         outcome.setMaxWidth(Double.MAX_VALUE);
@@ -245,6 +255,7 @@ public final class ReactorView {
         StackPane.setAlignment(header, Pos.TOP_CENTER);
         header.setMaxHeight(Region.USE_PREF_SIZE);
         Region transport = transport();
+        transportBar = transport;
         StackPane.setAlignment(transport, Pos.BOTTOM_CENTER);
         // Le calque du bilan flottant : il ne prend la souris que sur la fenêtre elle-même.
         Pane floating = new Pane(results.panel());
@@ -258,6 +269,39 @@ public final class ReactorView {
 
     public Region getNode() {
         return root;
+    }
+
+    /** Le guide du laboratoire (touche H) : ce qu'on y fait, par où commencer, ce que montre chaque zone. */
+    public org.genesis.common.Guide guide() {
+        return new org.genesis.common.Guide("Fusion", "Deux noyaux lancés l'un vers l'autre. Le moteur calcule leur rencontre : "
+                + "la répulsion électrique, l'effet tunnel, la fusion ou le rebond, puis ce qui en sort.")
+                .step("Choisir les deux noyaux (deutérium et tritium au départ).")
+                .step("Régler l'énergie du choc : au-dessus de la barrière ça passe ; en dessous, seulement par effet tunnel.")
+                .step("Calculer la collision, puis la revoir au ralenti avec la barre du bas.")
+                .spot(modes, "Deux lectures", "Essentiel : la loi de l'instant et trois mesures. Complet : toutes les mesures et les calques.")
+                .spot(sidebar, "Préparer", "Les deux noyaux, l'énergie, la visée, le champ magnétique ; le plasma plus bas.")
+                .spot(holder, "La scène", "Glisser pour tourner, molette pour zoomer. Le tableau suit chaque instant du choc.")
+                .spot(transportBar, "Le temps", "Lecture, retour, ralenti. Boucle rejoue ; Nouveaux tirs relance à chaque fin.");
+    }
+
+    /** Les panneaux du laboratoire (la colonne de réglages) : cachés, la scène prend toute la place. */
+    public void showPanels(boolean shown) {
+        Plan.show(sidebar, shown);
+    }
+
+    /** La scène seule, pour en enregistrer une image. */
+    public javafx.scene.Node sceneNode() {
+        return holder;
+    }
+
+    /** Le mode du laboratoire (lecture essentielle ou complète), posé dans l'en-tête commun. */
+    public Region modes() {
+        return modes;
+    }
+
+    /** La méthode du laboratoire : le modèle, ses données et ses limites. */
+    public void showModel() {
+        model();
     }
 
     /** Le bilan comme nœud (pour l'enregistrer hors écran). */
@@ -352,27 +396,32 @@ public final class ReactorView {
     }
 
     // ================================================================== le panneau
-    private void card(Button button, Label title, Label data, String side) {
-        Label eyebrow = text(FusionDashboard.spaced(I18n.text("NOYAU ") + side), 9, "#7F97B6"), pick = text("CHOISIR  ↗", 9, "#8FE6FF");
+    /**
+     * La carte d'un noyau : sa case (le nuclide dans la couleur de l'élément), son nom, ses nucléons et sa stabilité ; le
+     * reste (charge, rayon, spin, moment magnétique, masse) au survol. Un clic ouvre le choix.
+     */
+    private void card(Button button, Label tile, Label title, Label data, String side) {
+        tile.getStyleClass().add("nucleus-tile");
+        tile.setMinSize(46, 46);
+        tile.setMaxSize(46, 46);
+        tile.setAlignment(Pos.CENTER);
+        title.setStyle("");
+        title.getStyleClass().add("element-name");
+        data.setStyle("");
+        data.getStyleClass().add("element-meta");
+        data.setWrapText(false);
+        Label which = new Label(side);
+        which.getStyleClass().add("plan-quiet-note");
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox top = new HBox(6, eyebrow, gap, pick);
-        top.setAlignment(Pos.CENTER_LEFT);
-        data.setWrapText(true);
-        title.setMaxWidth(226);
-        data.setMaxWidth(226);
-        VBox box = new VBox(3, top, title, data);
-        box.setAlignment(Pos.CENTER_LEFT);
-        box.setPrefWidth(226);
-        box.setMaxWidth(226);
-        button.setGraphic(box);
+        VBox words = new VBox(3, title, data);
+        words.setAlignment(Pos.CENTER_LEFT);
+        HBox content = new HBox(12, tile, words, gap, which, Icons.path("chevron-right", 14));
+        content.setAlignment(Pos.CENTER_LEFT);
+        button.setGraphic(content);
         button.setMaxWidth(Double.MAX_VALUE);
-        button.setPrefHeight(96);
-        button.setMinHeight(96);
-        button.setMaxHeight(96);
         button.setAlignment(Pos.CENTER_LEFT);
-        button.getStyleClass().add("nucleus-card");
-        styleCard(button, Color.web(side.equals("A") ? "#FFBC75" : "#FFA76A"));
+        button.getStyleClass().addAll("nucleus-card", "element-card");
         button.setFocusTraversable(false);
         button.setId("collision-select-" + side.toLowerCase(Locale.ROOT));
         button.setOnAction(e -> {
@@ -386,41 +435,26 @@ public final class ReactorView {
         });
     }
 
-    /** La carte d'un noyau : un liseré et un dégradé à la couleur de l'élément, sur du verre fumé. */
-    private static void styleCard(Button button, Color color) {
-        String c = hex(color);
-        // Une carte plate : un fond uni, un trait de couleur à gauche, un filet fin autour.
-        button.setStyle("-fx-background-color:" + c + ", #0E1420;-fx-background-insets:0, 0 0 0 3;-fx-background-radius:8, 0 8 8 0;"
-                + "-fx-border-color:rgba(255,255,255,0.09);-fx-border-radius:8;-fx-padding:9 12 9 13;-fx-cursor:hand;");
+    /** Une section du panneau : le même dessin dans tous les laboratoires (voir Plan.section). */
+    private static VBox section(String index, String title, Node... nodes) {
+        return Plan.section(index, title, nodes);
     }
 
-    /** Une section du panneau : son numéro, son titre en capitales espacées, son contenu, sur une plaque de verre. */
-    private static VBox section(String index, String title, Node... nodes) {
-        Label number = text(index, 9.5, "#36CDF2"), name = text(FusionDashboard.spaced(title), 9.5, "#8FB3D9");
-        number.setStyle(number.getStyle() + "-fx-font-weight:bold;");
-        name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
-        HBox head = new HBox(9, number, name);
-        head.setAlignment(Pos.CENTER_LEFT);
-        head.setPadding(new Insets(0, 0, 2, 0));
-        VBox box = new VBox(7);
-        box.getChildren().add(head);
-        box.getChildren().addAll(nodes);
-        box.getStyleClass().add("glass-section");
-        return box;
+    /** Un nom propre ou un nom d'élément écrit en minuscules (« carbone 12 ») : sa première lettre en capitale. */
+    private static String capitalized(String text) {
+        return text == null || text.isEmpty() ? "" : Character.toUpperCase(text.charAt(0)) + text.substring(1);
     }
 
     /** Un réglage : son nom à gauche, sa valeur à droite. */
     private static HBox row(String title, Label value) {
-        Region gap = new Region();
-        HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox row = new HBox(8, text(title, 11, "#8EA6C0"), gap, value);
-        row.setAlignment(Pos.CENTER_LEFT);
-        return row;
+        value.setStyle("");
+        value.getStyleClass().add("plan-value");
+        return Plan.row(title, value);
     }
 
     private Region sidebar() {
-        card(chooseA, aTitle, aData, "A");
-        card(chooseB, bTitle, bData, "B");
+        card(chooseA, aTile, aTitle, aData, "A");
+        card(chooseB, bTile, bTitle, bData, "B");
         beamInput.setId("collision-energy-input");
         beamInput.setPrefColumnCount(8);
         beamInput.setOnAction(e -> submitEnergy());
@@ -438,6 +472,7 @@ public final class ReactorView {
         beam.valueChangingProperty().addListener((o, a, b) -> { if (!b && !updating) onEnergy.accept(Math.pow(10, beam.getValue())); });
         impact.valueProperty().addListener((o, a, b) -> {
             impactLabel.setText(fmt(b.doubleValue()) + " fm");
+            portrait = portrait();
             if (!updating && !impact.isValueChanging()) onImpact.accept(b.doubleValue());
         });
         impact.valueChangingProperty().addListener((o, a, b) -> { if (!b && !updating) onImpact.accept(impact.getValue()); });
@@ -446,12 +481,25 @@ public final class ReactorView {
             if (!updating && !magnetic.isValueChanging()) onField.accept(b.doubleValue());
         });
         magnetic.valueChangingProperty().addListener((o, a, b) -> { if (!b && !updating) onField.accept(magnetic.getValue()); });
-        Button near = button("Énergie au-dessus de la barrière", false);
-        near.setMaxWidth(Double.MAX_VALUE);
+        Button near = Plan.quiet("Au-dessus");
+        near.setTooltip(Plan.tooltip("Une énergie un peu au-dessus de la barrière de Coulomb : la fusion devient probable"));
         near.setOnAction(e -> onEnergy.accept(suggested));
-        HBox typed = new HBox(8, beamInput, text("keV", 12, "#ADC4DB"));
-        typed.setAlignment(Pos.CENTER_LEFT);
-        beamBox.getChildren().addAll(text("Énergie du choc (centre de masse)", 11, "#8EA6C0"), typed, beam, barrier, near, row("Visée b", impactLabel), impact);
+        beamInput.setPrefColumnCount(6);
+        beamInput.setAlignment(Pos.CENTER_RIGHT);
+        HBox typed = new HBox(6, beamInput, Plan.label("keV"));
+        typed.setAlignment(Pos.CENTER_RIGHT);
+        HBox energyRow = Plan.row("Énergie du choc", typed);
+        Plan.explained(energyRow.getChildren().get(0), "Énergie du choc", "L'énergie des deux noyaux dans leur centre de masse : "
+                + "c'est elle qui se mesure à la barrière de Coulomb. On peut la taper, ou glisser le curseur.", null);
+        barrier.setStyle("");
+        barrier.getStyleClass().add("plan-quiet-note");
+        Region barrierGap = new Region();
+        HBox.setHgrow(barrierGap, Priority.ALWAYS);
+        barrier.setMinWidth(Region.USE_PREF_SIZE);
+        near.setMinWidth(Region.USE_PREF_SIZE);
+        HBox barrierRow = new HBox(6, barrier, barrierGap, near);
+        barrierRow.setAlignment(Pos.CENTER_LEFT);
+        beamBox.getChildren().addAll(energyRow, beam, barrierRow, row("Visée b", impactLabel), impact);
         plasmaShotBox.getChildren().add(plasmaShot);
         plasmaShot.setWrapText(true);
         ToggleGroup mode = new ToggleGroup();
@@ -478,17 +526,26 @@ public final class ReactorView {
         status.setWrapText(true);
         evidence.setWrapText(true);
         evidence.setId("collision-model-evidence");
-        HBox modes = new HBox(0, beamMode, plasmaMode);
-        VBox box = new VBox(10,
-                section("01", "LES DEUX NOYAUX", chooseA, chooseB),
-                section("02", "LE CHOC", modes, beamBox, plasmaShotBox, row("Champ externe B", fieldLabel), magnetic, evidence),
-                section("03", "LE PLASMA · LAWSON", row("Température", temperatureLabel), temperature, row("Densité", densityLabel), density,
-                        row("Confinement τ", confinementLabel), confinement, lawsonChart, lawsonText, verdict),
+        HBox modes = Plan.segmented(true, beamMode, plasmaMode);
+        beamMode.setTooltip(Plan.tooltip("Un faisceau : un noyau lancé sur l'autre, à l'énergie choisie"));
+        plasmaMode.setTooltip(Plan.tooltip("Un plasma : l'énergie du choc tirée de la température (Maxwell–Boltzmann)"));
+        for (Label l : new Label[]{evidence, status}) {
+            l.setStyle("");
+            l.getStyleClass().add("plan-quiet-note");
+        }
+        for (Label l : new Label[]{lawsonText, verdict, plasmaShot}) {
+            l.setStyle("");
+            l.getStyleClass().add("plan-note");
+        }
+        plasmaSection = Plan.foldable("Plasma · Lawson", false, row("Température", temperatureLabel), temperature,
+                row("Densité", densityLabel), density, row("Confinement τ", confinementLabel), confinement, lawsonChart,
+                lawsonText, verdict);
+        VBox box = new VBox(0,
+                Plan.section("Noyaux", chooseA, chooseB),
+                Plan.section("Le choc", modes, beamBox, plasmaShotBox, row("Champ magnétique", fieldLabel), magnetic, evidence),
+                plasmaSection,
                 status);
-        box.setPadding(new Insets(2, 12, 12, 12));
-        box.setPrefWidth(296);
-        box.setMaxWidth(296);
-        box.setStyle("-fx-background-color:transparent;");
+        box.setPadding(new Insets(16, 16, 12, 16));
         ScrollPane scroll = new ScrollPane(box);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -501,26 +558,13 @@ public final class ReactorView {
         force.setMaxWidth(Double.MAX_VALUE);
         force.setOnAction(e -> launch(true));
         force.setTooltip(I18n.tooltip("Montre une fusion : la capture est retenue, sa vraie probabilité reste affichée"));
-        collapse.setOnAction(e -> toggleSidebar());
-        javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle(3.5, Color.web("#36CDF2"));
-        dot.setEffect(new javafx.scene.effect.DropShadow(8, Color.web("#36CDF2")));
-        Label brand = text(FusionDashboard.spaced("GENESIS"), 10, "#DCE8F7"), room = text(FusionDashboard.spaced("CHAMBRE DE COLLISION"), 8.5, "#7F98B8");
-        brand.setStyle(brand.getStyle() + "-fx-font-weight:bold;");
-        VBox title = new VBox(1, brand, room);
-        HBox named = new HBox(9, dot, title);
-        named.setAlignment(Pos.CENTER_LEFT);
-        Region gap = new Region();
-        HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox top = new HBox(8, named, gap, collapse);
-        top.setAlignment(Pos.CENTER_LEFT);
-        top.setPadding(new Insets(12, 10, 10, 14));
+        // L'action en bas de la colonne, comme dans les autres laboratoires : calculer, ou forcer jusqu'à la fusion.
         VBox dock = new VBox(7, fire, force);
-        dock.setPadding(new Insets(10, 12, 12, 12));
-        dock.setStyle("-fx-border-color:rgba(150,200,255,0.12) transparent transparent transparent;");
-        sidebar.getChildren().addAll(top, scroll, dock);
+        dock.getStyleClass().add("plan-dock");
+        sidebar.getChildren().addAll(scroll, dock);
         VBox.setVgrow(scroll, Priority.ALWAYS);
-        setSidebarWidth(300);
-        sidebar.getStyleClass().add("glass-side");
+        setSidebarWidth(Plan.LEFT_WIDTH);
+        sidebar.getStyleClass().addAll("plan-side", "left");
         return sidebar;
     }
 
@@ -547,7 +591,10 @@ public final class ReactorView {
         beamBox.setManaged(!plasma);
         plasmaShotBox.setVisible(plasma);
         plasmaShotBox.setManaged(plasma);
+        if (plasma && plasmaSection != null) Plan.open(plasmaSection, true);       // en plasma, ses réglages s'ouvrent
     }
+
+    private VBox plasmaSection;
 
     private void logSlider(Slider slider, DoubleConsumer consumer) {
         slider.valueProperty().addListener((o, a, b) -> {
@@ -559,7 +606,9 @@ public final class ReactorView {
 
     private void refreshPlasmaLabels() {
         double kev = Math.pow(10, temperature.getValue());
-        temperatureLabel.setText(energy(kev) + " · " + kelvin(kev * 1.160451812e7));
+        temperatureLabel.setText(energy(kev));
+        if (temperatureLabel.getTooltip() == null) temperatureLabel.setTooltip(I18n.tooltip());
+        temperatureLabel.getTooltip().setText(kelvin(kev * 1.160451812e7));
         densityLabel.setText(scientificShort(Math.pow(10, density.getValue())) + " ions/m³");
         confinementLabel.setText(duration(Math.pow(10, confinement.getValue())));
     }
@@ -603,14 +652,14 @@ public final class ReactorView {
             if (run != null) {
                 if (progress >= 1) progress = 0;
                 playing = !playing;
-                pause.setText(playing ? "Ⅱ" : "▶");
+                pauseIcon(playing);
             }
         });
         replay.setOnAction(e -> {
             if (run != null) {
                 progress = 0;
                 playing = true;
-                pause.setText("Ⅱ");
+                pauseIcon(true);
             }
         });
         timeline.setMaxWidth(Double.MAX_VALUE);
@@ -630,14 +679,29 @@ public final class ReactorView {
         for (ToggleButton t : new ToggleButton[]{loop, series}) { t.getStyleClass().add("glass-toggle"); t.setFocusTraversable(false); }
         loop.setTooltip(I18n.tooltip("Rejouer le même calcul"));
         series.setTooltip(I18n.tooltip("Calculer une nouvelle collision à chaque fin"));
-        HBox controls = new HBox(7, pause, replay, timeline, closest, products, text("×", 10, "#9DB1C8"), speed, loop, series);
+        pause.getStyleClass().setAll("button", "tl-play");
+        pauseIcon(false);
+        pause.setTooltip(Plan.tooltip("Lire ou arrêter la collision"));
+        replay.setGraphic(Icons.path("replay", 14));
+        replay.setTooltip(Plan.tooltip("Revoir depuis le début"));
+        closest.setTooltip(Plan.tooltip("Aller à l'instant où les noyaux sont au plus près"));
+        products.setTooltip(Plan.tooltip("Aller à l'issue : ce qui sort du choc"));
+        Plan.filled(timeline);
+        Plan.filled(speed);
+        Label speedName = Plan.label("Vitesse");
+        HBox controls = new HBox(8, pause, replay, timeline, closest, products, speedName, speed, loop, series);
         controls.setAlignment(Pos.CENTER_LEFT);
         VBox bar = new VBox(3, controls);
-        bar.setPadding(new Insets(7, 14, 7, 14));
+        bar.setPadding(new Insets(8, 14, 8, 14));
         bar.setMaxHeight(Region.USE_PREF_SIZE);
-        bar.setStyle("-fx-background-color:linear-gradient(to bottom, rgba(10,18,30,0.8), rgba(5,9,16,0.93));"
-                + "-fx-border-color:rgba(150,200,255,0.14) transparent transparent transparent;");
+        bar.getStyleClass().add("plan-foot");
         return bar;
+    }
+
+    /** Le bouton de lecture : ▶ arrêté, ‖ en lecture (une icône, pas un caractère). */
+    private void pauseIcon(boolean playing) {
+        pause.setText("");
+        pause.setGraphic(Icons.path(playing ? "pause" : "play", 13));
     }
 
     private void launch(boolean insist) {
@@ -670,10 +734,10 @@ public final class ReactorView {
             selectedB = s.getSelectedB();
             FusionRenderer.registerColor(selectedA.getZ(), selectedA.getColorHex());
             FusionRenderer.registerColor(selectedB.getZ(), selectedB.getColorHex());
-            updateCard(selectedA, aTitle, aData, chooseA);
-            updateCard(selectedB, bTitle, bData, chooseB);
+            updateCard(selectedA, aTile, aTitle, aData, chooseA);
+            updateCard(selectedB, bTile, bTitle, bData, chooseB);
             portrait = portrait();
-            force.setText(I18n.text(beyondIron() ? "⚛  Jusqu'à la transmutation" : "⚛  Jusqu'à la fusion"));
+            force.setText(I18n.text(beyondIron() ? "Jusqu'à la transmutation" : "Jusqu'à la fusion"));
             force.setTooltip(I18n.tooltip(beyondIron()
                     ? "Au-delà du fer (Z = 26), souder deux noyaux coûte de l'énergie au lieu d'en libérer : le noyau formé est une "
                     + "transmutation, qui fissionne souvent. La capture est retenue, sa vraie probabilité reste affichée"
@@ -701,7 +765,9 @@ public final class ReactorView {
         updating = false;
         refreshPlasmaLabels();
         suggested = s.getSuggestedEnergyKev() > 0 ? s.getSuggestedEnergyKev() : 64;
-        barrier.setText(I18n.text("Barrière de Coulomb : ") + energy(s.getBarrierKev()));
+        barrier.setText(I18n.text("Barrière : ") + energy(s.getBarrierKev()));
+        barrier.setTooltip(Plan.tooltip("La barrière de Coulomb : l'énergie qu'il faudrait pour que les deux noyaux se touchent "
+                + "malgré leur répulsion électrique. En dessous, ils ne se rencontrent que par effet tunnel."));
         barrierKev = s.getBarrierKev();
         if (s.getRequestedEnergyKev() > 0) requestedKev = s.getRequestedEnergyKev();
         if (!s.getError().isBlank()) {
@@ -723,7 +789,7 @@ public final class ReactorView {
             waiting = false;
             fire.setDisable(false);
             force.setDisable(false);
-            pause.setText("Ⅱ");
+            pauseIcon(true);
             renderer.zoom = 1;
             zoomVelocity = 0;
             zoomGoal = Double.NaN;
@@ -743,7 +809,7 @@ public final class ReactorView {
             updating = true;
             timeline.setValue(0);
             updating = false;
-            pause.setText("▶");
+            pauseIcon(false);
             quietlyHideResults();
             waiting = false;
             fire.setDisable(false);
@@ -800,14 +866,14 @@ public final class ReactorView {
         double w = lawsonChart.getWidth(), h = lawsonChart.getHeight(), left = 30, bottom = 18, top = 6, right = 6;
         g.clearRect(0, 0, w, h);
         g.setFill(Color.color(1, 1, 1, .035));
-        g.fillRoundRect(0, 0, w, h, 10, 10);
+        g.fillRect(0, 0, w, h);
         if (lawson == null) return;
         double x0 = Math.log10(.5), x1 = Math.log10(5000), y0 = 18, y1 = 28;
         java.util.function.DoubleUnaryOperator px = t -> left + (Math.log10(t) - x0) / (x1 - x0) * (w - left - right);
         java.util.function.DoubleUnaryOperator py = v -> h - bottom - (Math.log10(v) - y0) / (y1 - y0) * (h - bottom - top);
         g.setStroke(Color.color(.6, .8, 1, .1));
         g.setLineWidth(1);
-        g.setFont(Font.font("Segoe UI", 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         g.setFill(Color.web("#6F86A3"));
         g.setTextAlign(TextAlignment.LEFT);
         for (double t : new double[]{1, 10, 100, 1000}) {
@@ -830,7 +896,7 @@ public final class ReactorView {
         I18n.fillText(g, "ignition", w - 46, top + 10);
         g.setFill(Color.web("#FFC870"));
         I18n.fillText(g, "Q = 1", w - 46, top + 21);
-        g.setFill(Color.web("#9FB4CE"));
+        g.setFill(Color.web("#A2ABB8"));
         I18n.fillText(g, "nτT", 3, top + 8);
     }
 
@@ -849,23 +915,93 @@ public final class ReactorView {
         }
     }
 
-    private void updateCard(CollisionNucleus n, Label title, Label data, Button card) {
-        title.setText(nuclide(n.getZ(), n.getA(), n.getSymbol()) + "  ·  " + n.getName());
-        title.setStyle("-fx-text-fill:" + hex(FusionRenderer.bodyColor(n.getZ(), n.getA())) + ";-fx-font-size:16px;-fx-font-weight:bold;");
-        styleCard(card, FusionRenderer.bodyColor(n.getZ(), n.getA()));
-        title.setWrapText(false);
-        data.setText(n.getZ() + " p⁺ / " + (n.getA() - n.getZ()) + " n  ·  charge +" + n.getChargeState() + "e  ·  r ≈ " + fmt(n.getRadiusFm()) + " fm\n"
-                + "spin " + n.getSpinParity() + "  ·  μ " + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : "inconnu") + "  ·  "
-                + (n.getStable() ? "stable" : n.getHalfLifeS() > 0 ? "demi-vie " + duration(n.getHalfLifeS()) : "radioactif"));
-        if (card.getTooltip() == null) card.setTooltip(I18n.tooltip());
-        card.getTooltip().setText(nuclide(n.getZ(), n.getA(), n.getSymbol()) + "\nMasse : " + fmt(n.getMassU()) + " u · "
-                + (n.getMassSource().isBlank() ? "source non renseignée" : n.getMassSource())
-                + "\nRayon : " + fmt(n.getRadiusFm()) + " fm · " + (n.getRadiusMeasured() ? "valeur mesurée" : "estimation du modèle")
-                + I18n.text("\nMoment magnétique : ") + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : "valeur non connue"));
+    private void updateCard(CollisionNucleus n, Label tile, Label title, Label data, Button card) {
+        String colour = hex(FusionRenderer.bodyColor(n.getZ(), n.getA()));
+        String symbol = nuclide(n.getZ(), n.getA(), n.getSymbol());
+        tile.setText(symbol);
+        tile.setStyle("-fx-background-color:" + colour + "22;-fx-text-fill:" + colour + ";");
+        title.setText(capitalized(n.getName()));
+        int neutrons = n.getA() - n.getZ();
+        data.setText(n.getZ() + " p · " + neutrons + " n · "
+                + (n.getStable() ? I18n.text("stable") : n.getHalfLifeS() > 0 ? I18n.text("demi-vie") + " " + duration(n.getHalfLifeS())
+                : I18n.text("radioactif")));
+        String body = n.getZ() + I18n.text(" protons, ") + neutrons + I18n.text(" neutrons · charge +") + n.getChargeState() + "e\n"
+                + I18n.text("Rayon ≈ ") + fmt(n.getRadiusFm()) + " fm (" + I18n.text(n.getRadiusMeasured() ? "mesuré" : "estimé") + ")\n"
+                + I18n.text("Spin ") + n.getSpinParity() + " · " + I18n.text("moment magnétique ")
+                + (n.getMomentKnown() ? fmt(n.getMagneticMoment()) + " μN" : I18n.text("inconnu")) + "\n"
+                + I18n.text("Masse ") + fmt(n.getMassU()) + " u" + (n.getMassSource().isBlank() ? "" : " (" + n.getMassSource() + ")");
+        card.setTooltip(Plan.explain(symbol + " · " + n.getName(), body, null));
     }
 
     private static String hex(Color c) {
         return String.format("#%02X%02X%02X", Math.round(c.getRed() * 255), Math.round(c.getGreen() * 255), Math.round(c.getBlue() * 255));
+    }
+
+    /** La visée se montre avant le premier tir, et dès qu'un réglage (énergie, visée b) diffère du tir montré. */
+    private boolean aimShown() {
+        if (plasmaMode.isSelected()) return false;
+        double kev = Math.pow(10, beam.getValue());
+        if (run == null) return true;
+        return Math.abs(Math.log(kev / Math.max(1e-9, run.getEnergyKev()))) > 1e-3 || Math.abs(impact.getValue() - run.getImpactFm()) > .05;
+    }
+
+    /**
+     * La visée du prochain tir : les deux noyaux arrivent l'un vers l'autre en ligne droite (ce que serait leur chemin sans
+     * aucune force), écartés du paramètre d'impact b ; au-delà du point de rencontre, le même chemin en pointillé. Leur couleur
+     * dit l'énergie rapportée à la barrière de Coulomb : bleu loin dessous, ambre à la barrière, rouge bien au-dessus.
+     */
+    private void drawAim(GraphicsContext gc) {
+        double kev = Math.pow(10, beam.getValue()), b = impact.getValue();
+        double ratio = barrierKev > 0 ? kev / barrierKev : 1;
+        Color c = Plan.energy((Math.log10(Math.max(1e-6, ratio)) + 1) / 1.6);     // 0,1 × B → bleu ; B → ambre ; 4 × B → rouge
+        double ra = selectedA == null ? 2.77 : selectedA.getRadiusFm(), rb = selectedB == null ? 2.27 : selectedB.getRadiusFm();
+        double reach = (2.6 * (ra + rb) + 6) * .65;
+        gc.setLineCap(javafx.scene.shape.StrokeLineCap.ROUND);
+        for (int side = 0; side < 2; side++) {
+            double sign = side == 0 ? -1 : 1, y = side == 0 ? b / 2 : -b / 2;
+            double[] from = renderer.project(new V(sign * reach, y, 0)), meet = renderer.project(new V(0, y, 0)),
+                    beyond = renderer.project(new V(-sign * reach * .6, y, 0));
+            if (from == null || meet == null || beyond == null) continue;
+            gc.setLineDashes();
+            gc.setStroke(c.deriveColor(0, 1, 1, .22));
+            gc.setLineWidth(6);
+            gc.strokeLine(from[0], from[1], meet[0], meet[1]);
+            gc.setStroke(c);
+            gc.setLineWidth(1.8);
+            gc.strokeLine(from[0], from[1], meet[0], meet[1]);
+            double dx = meet[0] - from[0], dy = meet[1] - from[1], n = Math.hypot(dx, dy);
+            if (n > 1e-6) {
+                dx /= n;
+                dy /= n;
+                double bx = meet[0] - dx * 10, by = meet[1] - dy * 10;
+                gc.setFill(c);
+                gc.fillPolygon(new double[]{meet[0], bx - dy * 5, bx + dy * 5}, new double[]{meet[1], by + dx * 5, by - dx * 5}, 3);
+            }
+            gc.setLineDashes(4, 6);
+            gc.setStroke(c.deriveColor(0, 1, 1, .45));
+            gc.setLineWidth(1);
+            gc.strokeLine(meet[0], meet[1], beyond[0], beyond[1]);
+            gc.setLineDashes();
+        }
+        // b : l'écart entre les deux droites, au point de rencontre
+        double[] top = renderer.project(new V(0, b / 2, 0)), bottom = renderer.project(new V(0, -b / 2, 0)),
+                start = renderer.project(new V(-reach, b / 2 + 1.6 * Math.max(ra, rb), 0));    // l'étiquette, au-dessus du noyau
+        if (top != null && bottom != null && b > .05) {
+            gc.setStroke(Color.web(Plan.INK2_HEX));
+            gc.setLineWidth(1);
+            gc.strokeLine(top[0], top[1], bottom[0], bottom[1]);
+            gc.setFont(Plan.mono(10));
+            gc.setFill(Color.web(Plan.INK2_HEX));
+            gc.setTextAlign(TextAlignment.LEFT);
+            I18n.fillText(gc, "b " + fmt(b) + " fm", Math.max(top[0], bottom[0]) + 6, (top[1] + bottom[1]) / 2 + 3);
+        }
+        if (start != null) {
+            gc.setFont(Plan.semibold(11.5));
+            gc.setFill(c);
+            gc.setTextAlign(TextAlignment.LEFT);
+            String barrierText = barrierKev > 0 ? " · " + fmt(ratio) + " × la barrière" : "";
+            I18n.fillText(gc, "visée · " + energy(kev) + barrierText, start[0], start[1]);
+        }
     }
 
     private FusionRenderer.Snapshot portrait() {
@@ -876,7 +1012,8 @@ public final class ReactorView {
         for (int i = 0; i < 2; i++) {
             CollisionNucleus n = i == 0 ? selectedA : selectedB;
             int z = n == null ? 1 : n.getZ(), a = n == null ? i + 2 : n.getA();
-            bodies.add(new Body(z, a, n == null ? (i == 0 ? "D" : "T") : n.getLabel(), new V((i == 0 ? -.5 : .5) * separation, 0, 0), ZERO,
+            double offset = (i == 0 ? .5 : -.5) * impact.getValue();
+            bodies.add(new Body(z, a, n == null ? (i == 0 ? "D" : "T") : n.getLabel(), new V((i == 0 ? -.5 : .5) * separation, offset, 0), ZERO,
                     new V(i == 0 ? .5 : -.4, .9, .3).unit(), n == null ? (i == 0 ? 2.77 : 2.27) : n.getRadiusFm(),
                     n == null ? (i == 0 ? .857 : 2.979) : n.getMagneticMoment()));
             looks.add(new FusionRenderer.Look(n == null ? "" : n.getColorHex(), 0, n == null ? (i == 0 ? 1 : .5) : FusionRenderer.spinValue(n.getSpinParity()),
@@ -894,7 +1031,7 @@ public final class ReactorView {
         if (run != null) {
             progress = Math.max(0, Math.min(1, fraction));
             playing = false;
-            pause.setText("▶");
+            pauseIcon(false);
         }
     }
 
@@ -947,9 +1084,9 @@ public final class ReactorView {
             progress = Math.min(1, progress + step * speed.getValue() / timeMap.durationSeconds());
             if (progress >= 1) {
                 playing = false;
-                pause.setText("▶");
+                pauseIcon(false);
                 if (series.isSelected()) launch(false);
-                else if (loop.isSelected()) { progress = 0; playing = true; pause.setText("Ⅱ"); }
+                else if (loop.isSelected()) { progress = 0; playing = true; pauseIcon(true); }
             }
         }
         double w = sceneCanvas.getWidth(), h = sceneCanvas.getHeight();
@@ -986,13 +1123,14 @@ public final class ReactorView {
         String stageName = r.stage;
         boolean contactRebound = run != null && run.getOutcome().equals("elastic") && timeMap != null
                 && timeMap.phaseStart("contact") >= 0;
-        phase.setText(run != null && stageName.equals("products") && run.getOutcome().equals("quasi_fission")
+        phase.setText(FusionDashboard.spaced(run != null && stageName.equals("products") && run.getOutcome().equals("quasi_fission")
                 ? "RÉSULTAT · QUASI-FISSION" : contactRebound && stageName.equals("contact")
                 ? "CONTACT · AUCUN ÉTAT LIÉ" : contactRebound && stageName.equals("scattered")
-                ? "REBOND · SÉPARATION ÉLASTIQUE" : stageTitle(stageName));
+                ? "REBOND · SÉPARATION ÉLASTIQUE" : stageTitle(stageName)));
         outcome.setText(run == null ? identity(selectedA, "²H") + "  +  " + identity(selectedB, "³H")
                 : stageName.equals("approach") || stageName.equals("tunnel") ? identity(selectedA, "A") + "  +  " + identity(selectedB, "B") : reaction(run));
         occupied.clear();
+        if (aimShown()) drawAim(gc);
         if (results.panel().isVisible()) {
             javafx.geometry.Bounds b = results.panel().getBoundsInParent();
             occupied.add(new double[]{b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight()});
@@ -1039,7 +1177,7 @@ public final class ReactorView {
         renderer.insetRight += (cover - renderer.insetRight) * (1 - Math.exp(-Math.max(0, dt) / .35));
         if (onMap()) {
             // La carte dit ce qu'elle fait : les directions sont calculées, les distances comprimées pour tenir à l'écran.
-            gc.setFont(Font.font("Segoe UI", 10));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(Color.web("#8896AB"));
             I18n.fillText(gc, "centre fixe : l'élément créé · clic : zoomer", 20, 126);
@@ -1048,7 +1186,7 @@ public final class ReactorView {
         nucleusCards(gc, w, h, r);
         if (full && renderer.showElectric && !r.map) saddleLabels(gc, w, h, r);
         if (!r.spinText.isEmpty() && r.spinSum != null) {
-            gc.setFont(Font.font("Segoe UI Semibold", 13));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
             gc.setFill(Color.web("#F2F7FF"));
             gc.setTextAlign(TextAlignment.LEFT);
             I18n.fillText(gc, r.spinText, r.spinSum[0] + 8, r.spinSum[1] - 6);
@@ -1060,7 +1198,7 @@ public final class ReactorView {
     /** Le col du potentiel combiné (point de selle, E = 0) : un repère discret et la valeur de U = eφ pour une charge +e. */
     private void saddleLabels(GraphicsContext gc, double w, double h, FusionRenderer.Report r) {
         int shown = 0;
-        Font font = Font.font("Segoe UI Semibold", 10.5);
+        Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5);
         for (double[] s : r.saddles) {
             if (shown >= 3 || s[0] < 8 || s[0] > w - 8 || s[1] < 64 || s[1] > h - 96) continue;
             double top = Math.max(r.potentialTop, 1e-12);
@@ -1155,10 +1293,10 @@ public final class ReactorView {
     /** Une pastille de verre fumé, liserée de `accent`. */
     private static void pill(GraphicsContext gc, double x, double y, double w, double h, Color accent) {
         gc.setFill(Color.color(.03, .06, .11, .66));
-        gc.fillRoundRect(x, y, w, h, h, h);
+        gc.fillRect(x, y, w, h);
         gc.setStroke(accent.deriveColor(0, 1, 1, .42));
         gc.setLineWidth(1);
-        gc.strokeRoundRect(x + .5, y + .5, w - 1, h - 1, h, h);
+        gc.strokeRect(x + .5, y + .5, w - 1, h - 1);
     }
 
     private String stageTitle(String stage) {
@@ -1204,14 +1342,14 @@ public final class ReactorView {
         else tags.sort(Comparator.comparingDouble(FusionRenderer.Tag::x));
         List<double[]> placed = new ArrayList<>(occupied);
         int outside = 0, labelled = 0;
-        Font big = Font.font("Segoe UI Semibold", 13.5), small = Font.font("Segoe UI", 10.5);
+        Font big = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13.5), small = Font.font(org.genesis.common.Plan.SANS, 10.5);
         for (FusionRenderer.Tag t : tags) {
             Body body = t.body();
             FusionRenderer.Look look = t.look();
             if (t.alpha() < .5) continue;
             if (t.x() < 0 || t.x() > w || t.y() < 0 || t.y() > h) {
                 if (body.a() > 4 && outside < 4) {
-                    gc.setFont(Font.font("Segoe UI", 10.5));
+                    gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
                     gc.setFill(Color.web("#8FA7C4"));
                     gc.setTextAlign(TextAlignment.LEFT);
                     I18n.fillText(gc, symbolOf(body) + I18n.text(" → hors du cadre"), 20, 150 + outside++ * 14);
@@ -1320,17 +1458,17 @@ public final class ReactorView {
         gc.strokeLine(edge, central.y(), x > central.x() ? x : x + boxW, y + 20);
         FusionDashboard.glass(gc, x, y, boxW, boxH, color);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 17));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 17));
         gc.setFill(color);
         String symbol = symbolOf(b);
         I18n.fillText(gc, symbol, x + 14, y + 25);
-        gc.setFont(Font.font("Segoe UI", 12));
-        gc.setFill(Color.web("#E6EEFA"));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 12));
+        gc.setFill(Color.web("#ECEFF3"));
         boolean fragmented = run != null && (run.getOutcome().equals("quasi_fission") || run.getOutcome().equals("fission"));
         String role = central != heaviest ? "projeté par la réaction" : r.stage.equals("compound") ? "noyau composé"
                 : fragmented ? "fragment de la rupture" : "créé par la fusion";
-        I18n.fillText(gc, name + "  ·  " + role, x + 22 + width(symbol, Font.font("Segoe UI Semibold", 17)), y + 24);
-        gc.setFont(Font.font("Segoe UI", 11));
+        I18n.fillText(gc, name + "  ·  " + role, x + 22 + width(symbol, Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 17)), y + 24);
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         double row = y + 44;
         for (String line : lines) {
             gc.setFill(Color.web(line.startsWith("excité") ? "#FFB27A" : line.startsWith("vitesse") ? "#9FE0FF" : "#B9C9DF"));
@@ -1368,7 +1506,7 @@ public final class ReactorView {
         probe = new double[]{x, y};
         if (playing) {
             playing = false;
-            pause.setText("▶");
+            pauseIcon(false);
         }
     }
 
@@ -1380,12 +1518,12 @@ public final class ReactorView {
         if (hoverX >= 0 && (probe == null || Math.hypot(hoverX - probe[0], hoverY - probe[1]) > 14)) {
             FusionReadouts.Card c = readouts.probe(r, hoverX, hoverY);
             String text = c.zone() + (probe == null ? "   ·   clic : sonder ici" : "   ·   clic : déplacer la sonde");
-            Font f = Font.font("Segoe UI Semibold", 10.5);
+            Font f = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5);
             double tw = Math.min(width(text, f), 380), x = Math.max(8, Math.min(w - tw - 26, hoverX + 18)), y = Math.max(72, hoverY - 16);
             pill(gc, x - 9, y - 14, tw + 18, 21, c.accent());
             gc.setFont(f);
             gc.setTextAlign(TextAlignment.LEFT);
-            gc.setFill(Color.web("#EAF2FF"));
+            gc.setFill(Color.web("#ECEFF3"));
             I18n.fillText(gc, text, x, y + 1, 380);
         }
         boolean pinned = probe != null;
@@ -1457,21 +1595,21 @@ public final class ReactorView {
         if (pinned && gap > 16) gc.strokeLine(px + (ex - px) * 15 / gap, py + (ey - py) * 15 / gap, ex, ey);
         FusionDashboard.glass(gc, cx, cy, cw, ch, c.accent());
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
         gc.setFill(Color.web("#7FA6CF"));
         I18n.fillText(gc, FusionDashboard.spaced(pinned ? "SONDE" : "THÉORIE"), cx + 16, cy + 19);
-        gc.setFont(Font.font("Segoe UI Semibold", 13.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13.5));
         gc.setFill(c.accent().interpolate(Color.WHITE, .3));
         I18n.fillText(gc, c.zone(), cx + 16, cy + 37, cw - 30);
         double y = cy + 54;
-        gc.setFont(Font.font("Segoe UI", 10.5));
-        gc.setFill(Color.web("#9FB4CE"));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
+        gc.setFill(Color.web("#A2ABB8"));
         for (String line : about) {
             I18n.fillText(gc, line, cx + 16, y, cw - 30);
             y += 14.5;
         }
         y += 6;
-        gc.setFont(Font.font("Segoe UI", 11.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11.5));
         for (String line : c.lines()) {
             gc.setFill(Color.web("#5FD3F5", .8));
             gc.fillOval(cx + 16, y - 6, 3, 3);
@@ -1479,7 +1617,7 @@ public final class ReactorView {
             I18n.fillText(gc, line, cx + 25, y, cw - 40);
             y += 16.5;
         }
-        gc.setFont(Font.font("Segoe UI", 9.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         gc.setFill(Color.web("#6F86A3"));
         I18n.fillText(gc, pinned ? "clic sur la sonde : revenir à la théorie · ▶ : reprendre"
                 : "cliquer dans la scène : sonder le champ à cet endroit", cx + 16, cy + ch - 10, cw - 30);
@@ -1548,7 +1686,7 @@ public final class ReactorView {
         double px = r.pxPerFm;
         if (px <= 0) return;
         double x = 20, y = 92;
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(Color.web("#E8F0FF"));
         gc.setTextAlign(TextAlignment.LEFT);
         if (r.map) {
@@ -1577,7 +1715,7 @@ public final class ReactorView {
         String slow = rate > 0 && !r.stage.equals("tunnel") && !staged && !r.stage.equals("relax")
                 ? "   ·   ralenti ×10" + superscript((int) Math.round(-Math.log10(rate))) : "";
         // L'horloge tient sur une ligne : le temps physique, puis le ralenti.
-        gc.setFont(Font.font("Segoe UI", 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         gc.setFill(Color.web("#B9C6D8"));
         I18n.fillText(gc, clock + slow, x, y + 18);
     }
@@ -1587,7 +1725,7 @@ public final class ReactorView {
      * potentiel combiné U = eφ, du bas de l'échelle au col au contact.
      */
     private void pressureLegend(GraphicsContext gc, double x, double y, FusionRenderer.Report r) {
-        Font font = Font.font("Segoe UI", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS, 10);
         gc.setFont(font);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.web("#BFCBDD"));
@@ -1598,7 +1736,7 @@ public final class ReactorView {
             javafx.scene.paint.Stop[] stops = new javafx.scene.paint.Stop[6];
             for (int i = 0; i < 6; i++) stops[i] = new javafx.scene.paint.Stop(i / 5.0, FusionRenderer.heatColor(i / 5.0));
             gc.setFill(new javafx.scene.paint.LinearGradient(x, 0, x + bw, 0, false, javafx.scene.paint.CycleMethod.NO_CYCLE, stops));
-            gc.fillRoundRect(x, row, bw, 6, 3, 3);
+            gc.fillRect(x, row, bw, 6);
             gc.setFill(Color.web("#BFCBDD"));
             I18n.fillText(gc, I18n.text("entre eux : U = eφ, ") + energy(r.potentialTop * Math.pow(10, -FusionRenderer.POTENTIAL_DECADES) * 1000) + " → "
                     + energy(r.potentialTop * 1000) + " (col au contact) · lignes : isopotentielles", x + bw + 8, row + 7);

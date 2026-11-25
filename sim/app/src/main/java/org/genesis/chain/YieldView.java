@@ -73,7 +73,7 @@ final class YieldView {
     void draw(GraphicsContext gc, double x, double y, double w, double h) {
         if (state == null || curveA.length == 0) {
             gc.setFill(LABEL);
-            gc.setFont(Font.font("Segoe UI", 13));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 13));
             gc.setTextAlign(TextAlignment.CENTER);
             I18n.fillText(gc, "Bilan des masses en cours…", x + w / 2, y + h / 2);
             return;
@@ -93,16 +93,16 @@ final class YieldView {
         ChainBoard.glass(gc, x, y, w, h);
         double left = x + 54, right = x + w - 20, top = y + 52, bottom = y + h - 34;
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(ChainBoard.spaced("ÉNERGIE DE LIAISON PAR NUCLÉON — COURBE D'ASTON"), x + 16, y + 21);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         I18n.fillText(gc, "noyaux stables pesés (AME) · survol : lire un noyau", right, y + 21);
         double amax = 260, bmin = 0, bmax = 9.2;
         // Graduations
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         for (double b = 0; b <= 9; b += 1) {
             double py = bottom - (b - bmin) / (bmax - bmin) * (bottom - top);
             gc.setStroke(Color.color(1, 1, 1, b == 0 ? .14 : .05));
@@ -128,7 +128,7 @@ final class YieldView {
         gc.fillRect(left, top, peakX - left, bottom - top);
         gc.setFill(Color.web("#FFC94A", .04));
         gc.fillRect(peakX, top, right - peakX, bottom - top);
-        gc.setFont(Font.font("Segoe UI Semibold", 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         gc.setFill(Color.web("#7FE3D6"));
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "FUSION →  les légers gagnent à s'unir", left + 10, bottom - 14);
@@ -155,7 +155,7 @@ final class YieldView {
         gc.strokeOval(peakX - 6, peakY - 6, 12, 12);
         String peak = I18n.text("sommet de la courbe : " + label(state.getPeakZ(), state.getPeakA()) + " · "
                 + ChainFormat.decimal(state.getPeakBa(), 3) + " MeV");
-        Font peakFont = Font.font("Segoe UI Semibold", 10);
+        Font peakFont = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
         double labelX = right - ChainBoard.width(peak, peakFont) - 6, labelY = top - 10;
         gc.setStroke(TEAL.deriveColor(0, 1, 1, .5));
         gc.setLineWidth(1);
@@ -183,7 +183,7 @@ final class YieldView {
             gc.fillOval(sx - 11, sy - 11, 22, 22);
             gc.setFill(mine);
             gc.fillOval(sx - 5, sy - 5, 10, 10);
-            gc.setFont(Font.font("Segoe UI Semibold", 13));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 13));
             gc.setTextAlign(sx > (left + right) / 2 ? TextAlignment.RIGHT : TextAlignment.LEFT);
             gc.fillText(state.getLabel() + "  " + ChainFormat.decimal(state.getBindingPerNucleon(), 3) + " MeV",
                     sx + (sx > (left + right) / 2 ? -14 : 14), sy + 22);
@@ -192,10 +192,10 @@ final class YieldView {
             double px = left + curveA[hovered] / amax * (right - left);
             double py = bottom - (curveBa[hovered] - bmin) / (bmax - bmin) * (bottom - top);
             String text = label(curveZ[hovered], curveA[hovered]) + "   B/A = " + ChainFormat.decimal(curveBa[hovered], 3) + " MeV";
-            Font f = Font.font("Segoe UI Semibold", 10);
+            Font f = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
             double tw = ChainBoard.width(text, f) + 14, tx = Math.min(right - tw, Math.max(left, px - tw / 2));
             gc.setFill(Color.color(.02, .03, .05, .94));
-            gc.fillRoundRect(tx, py - 30, tw, 18, 5, 5);
+            gc.fillRect(tx, py - 30, tw, 18);
             gc.setFont(f);
             gc.setFill(INK);
             gc.setTextAlign(TextAlignment.LEFT);
@@ -217,7 +217,7 @@ final class YieldView {
         gc.setLineDashes(null);
         gc.setFill(color);
         gc.fillOval(tx - 4, ty - 4, 8, 8);
-        gc.setFont(Font.font("Segoe UI", 10));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         gc.setTextAlign(TextAlignment.CENTER);
         gc.fillText(label(z, a), tx, ty - 9);
     }
@@ -226,14 +226,14 @@ final class YieldView {
     private void gauge(GraphicsContext gc, double x, double y, double w, double h) {
         ChainBoard.glass(gc, x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(ChainBoard.spaced("JAUGE Q = Δm·c²"), x + 16, y + 21);
         double left = x + 16, right = x + w - 16, by = y + 40, bh = 12;
         gc.setFill(new LinearGradient(left, 0, right, 0, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#B83A35")), new Stop(.5, Color.web("#3A3F4B")), new Stop(1, GOLD)));
-        gc.fillRoundRect(left, by, right - left, bh, 6, 6);
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.fillRect(left, by, right - left, bh);
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         gc.setTextAlign(TextAlignment.LEFT);
         I18n.fillText(gc, "endothermique", left, by + bh + 13);
@@ -259,11 +259,11 @@ final class YieldView {
         gc.setFill(c);
         gc.fillPolygon(new double[]{mx - 5, mx + 5, mx}, new double[]{by - 8, by - 8, by - 1}, 3);
         gc.fillRect(mx - 1, by - 1, 2, bh + 2);
-        gc.setFont(Font.font("Segoe UI", 11));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(LABEL);
         I18n.fillText(gc, name, left, row);
-        gc.setFont(Font.font("Segoe UI Semibold", 12));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12));
         gc.setFill(c);
         gc.setTextAlign(TextAlignment.RIGHT);
         gc.fillText("Q = " + ChainFormat.signed(q) + " MeV", right, row);
@@ -274,7 +274,7 @@ final class YieldView {
     private void balance(GraphicsContext gc, double x, double y, double w, double h) {
         ChainBoard.glass(gc, x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(ChainBoard.spaced("BILAN DES MASSES"), x + 16, y + 21);
         double row = y + 40;
@@ -289,11 +289,11 @@ final class YieldView {
         }
         boolean wall = (!state.getFissionKnown() || state.getFissionQMev() <= 0) && (!state.getFusionKnown() || state.getFusionQMev() <= 0);
         if (wall) {
-            gc.setFont(Font.font("Segoe UI Semibold", 11));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
             gc.setFill(RED.interpolate(Color.WHITE, .25));
             gc.setTextAlign(TextAlignment.LEFT);
             for (String line : ChainBoard.wrap("Les produits pèsent plus que le noyau de départ : il faudrait fournir l'énergie manquante.",
-                    Font.font("Segoe UI Semibold", 11), w - 32)) {
+                    Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11), w - 32)) {
                 gc.fillText(line, x + 16, row + 6);
                 row += 14;
             }
@@ -302,7 +302,7 @@ final class YieldView {
 
     private double massRow(GraphicsContext gc, double x, double y, double w, String before, double mBefore, String after,
                            double mAfter, double q) {
-        Font small = Font.font("Segoe UI", 10.5), bold = Font.font("Segoe UI Semibold", 10.5);
+        Font small = Font.font(org.genesis.common.Plan.SANS, 10.5), bold = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5);
         double max = Math.max(mBefore, mAfter), min = Math.min(mBefore, mAfter);
         // Les barres montrent l'écart : on part de 99,5 % de la plus petite masse, pour que Δm soit visible.
         double floor = min * .995;
@@ -328,7 +328,7 @@ final class YieldView {
         gc.fillText(ChainFormat.decimal(mAfter, 4) + " u", x + w, y + 34);
         bar(gc, x + 44, y + 38, barW, (mAfter - floor) / (max - floor), qColor(q));
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
         gc.setFill(qColor(q));
         String delta = I18n.text("Δm = " + ChainFormat.signed((mBefore - mAfter)) + " u, " + (q > 0 ? "libère " : "coûte ")
                 + ChainFormat.number(Math.abs(q)) + " MeV");
@@ -347,12 +347,12 @@ final class YieldView {
     private void table(GraphicsContext gc, double x, double y, double w, double h) {
         ChainBoard.glass(gc, x, y, w, h);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(ChainBoard.spaced("FISSION, FUSION, RADIOACTIVITÉ : CE QUE RAPPORTE UN KILOGRAMME"), x + 16, y + 21);
         double[] cols = {16, 90, 230, 330, 470};
         String[] heads = {"noyau", "voie", "Q par réaction", "par kilogramme", "condition"};
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         for (int i = 0; i < heads.length; i++) I18n.fillText(gc, heads[i], x + cols[i], y + 40);
         double row = y + 52;
@@ -363,10 +363,10 @@ final class YieldView {
                 gc.fillRect(x + 8, row - 1, w - 16, 25);
             }
             Color tint = c.getPossible() ? GOLD : RED.interpolate(Color.WHITE, .2);
-            gc.setFont(Font.font("Segoe UI Semibold", 12));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12));
             gc.setFill(tint);
             gc.fillText(c.getLabel(), x + cols[0], row + 16);
-            gc.setFont(Font.font("Segoe UI", 10.5));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
             gc.setFill(INK);
             I18n.fillText(gc, c.getProcess(), x + cols[1], row + 16, cols[2] - cols[1] - 8);
             gc.setFill(qColor(c.getQMev()));

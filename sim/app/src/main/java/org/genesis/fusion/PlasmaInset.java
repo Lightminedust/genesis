@@ -199,17 +199,17 @@ public final class PlasmaInset {
         gc.save();
         FusionDashboard.glass(gc, x, y, WIDTH, height(compact), null);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9.5));
         gc.setFill(Color.web("#9FB6D2"));
         I18n.fillText(gc, FusionDashboard.spaced("LE PLASMA AUTOUR"), x + 14, y + 19);
-        gc.setFont(Font.font("Segoe UI", 9.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         gc.setFill(Color.web("#7F98B8"));
         gc.setTextAlign(TextAlignment.RIGHT);
         I18n.fillText(gc, fmt(medium.temperatureKev()) + " keV · " + scientificShort(medium.densityM3()) + " ions/m³", x + WIDTH - 14, y + 19);
         // La boîte : quatre longueurs de Debye de côté.
         double bx = x + 14, by = y + 28;
         gc.setFill(Color.color(.01, .02, .05, .7));
-        gc.fillRoundRect(bx, by, bw, bh, 8, 8);
+        gc.fillRect(bx, by, bw, bh);
         gc.save();
         gc.beginPath();
         gc.rect(bx, by, bw, bh);
@@ -259,15 +259,15 @@ public final class PlasmaInset {
             gc.setLineDashes(3, 4);
             gc.strokeOval(cx - rx, cy - rx, 2 * rx, 2 * rx);
             gc.setLineDashes(null);
-            gc.setFont(Font.font("Segoe UI", 9));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(Color.color(.9, .95, 1, .8));
             I18n.fillText(gc, debye >= spacing ? "λ_D" : "a", cx + rx * .72, cy - rx * .72);
         }
         if (ionCount == 0) {
-            gc.setFont(Font.font("Segoe UI", 9.5));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
             gc.setTextAlign(TextAlignment.CENTER);
-            gc.setFill(Color.web("#9FB4CE"));
+            gc.setFill(Color.web("#A2ABB8"));
             I18n.fillText(gc, "≈ " + scientificShort(ions) + I18n.text(" ion dans la boîte"), bx + bw / 2, by + bh / 2, bw - 10);
         }
         Iterator<double[]> it = flashes.iterator();
@@ -290,14 +290,14 @@ public final class PlasmaInset {
         gc.strokeLine(bx + 8, by + bh - 9, bx + 8 + ruler, by + bh - 9);
         gc.strokeLine(bx + 8, by + bh - 12, bx + 8, by + bh - 6);
         gc.strokeLine(bx + 8 + ruler, by + bh - 12, bx + 8 + ruler, by + bh - 6);
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setTextAlign(TextAlignment.LEFT);
         gc.setFill(Color.color(.85, .92, 1, .85));
         I18n.fillText(gc, lengthText(pitch), bx + 12 + ruler, by + bh - 6);
         gc.restore();
         // Les chiffres : ce qui a été calculé, et ce qu'il représente.
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 9.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         gc.setFill(Color.web("#CFE0F4"));
         double row = by + bh + 14;
         I18n.fillText(gc, debye >= spacing ? "largeur " + lengthText(box) + " = 4 λ_D · λ_D = " + lengthText(debye) + " · N_D = " + scientificShort(debyeNumber)
@@ -308,7 +308,7 @@ public final class PlasmaInset {
         I18n.fillText(gc, "freinage " + power(medium.bremsWM3()) + " : " + rate(photonsPerSecond), bx, row + 39, bw);
         double r = Math.max(1, sceneFm) * 1e-15, ratio = r / screening;
         double coupling = medium.zA() * medium.zB() * 1.43996e-9 / screening / (medium.temperatureKev() * 1e3);
-        gc.setFill(Color.web("#9FB4CE"));
+        gc.setFill(Color.web("#A2ABB8"));
         I18n.fillText(gc, I18n.text("à ") + fmt(Math.max(1, sceneFm)) + " fm : e^(−r/λ) = " + (ratio < 1e-3 ? "1 − " + scientificShort(ratio) : fmt(Math.exp(-ratio)))
                 + (coupling < 1 ? " · Salpeter f = " + factor(Math.exp(coupling)) : I18n.text(" · fortement couplé : Γ = Z₁Z₂e²/λkT = ") + number(coupling)), bx, row + 52, bw);
         gc.setFill(Color.web("#6F86A3"));

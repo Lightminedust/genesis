@@ -28,8 +28,8 @@ import java.util.List;
 final class AtomCard {
     static final double W = 272;
     private static final double ROW = 17;
-    private static final Color CARD = Color.web("#070D18"), EDGE = Color.web("#2A3B52"), TEXT = Color.web("#DCE8F7"),
-            GREY = Color.web("#8FA4C2"), DIM = Color.web("#5E718E");
+    private static final Color CARD = org.genesis.common.Plan.PAPER, EDGE = org.genesis.common.Plan.LINE, TEXT = Color.web("#ECEFF3"),
+            GREY = Color.web("#A2ABB8"), DIM = Color.web("#5E718E");
 
     private AtomCard() {
     }
@@ -44,34 +44,34 @@ final class AtomCard {
         GraphicsContext g = canvas.getGraphicsContext2D();
         g.clearRect(0, 0, W, h);
         g.setFill(CARD.deriveColor(0, 1, 1, .94));
-        g.fillRoundRect(0, 0, W, h, 12, 12);
+        g.fillRect(0, 0, W, h);
         g.setStroke(EDGE);
         g.setLineWidth(1);
-        g.strokeRoundRect(.5, .5, W - 1, h - 1, 12, 12);
+        g.strokeRect(.5, .5, W - 1, h - 1);
         g.setLineCap(StrokeLineCap.ROUND);
         // La tuile de l'élément.
         Color element = MoleculeScene.elementColor(atom.getZ());
         g.setFill(element.deriveColor(0, 1, 1, .16));
-        g.fillRoundRect(10, 10, 44, 44, 9, 9);
+        g.fillRect(10, 10, 44, 44);
         g.setStroke(element.deriveColor(0, 1, 1, .85));
         g.setLineWidth(1.2);
-        g.strokeRoundRect(10, 10, 44, 44, 9, 9);
+        g.strokeRect(10, 10, 44, 44);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", 8.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
         g.setFill(GREY);
         g.fillText(String.valueOf(atom.getZ()), 14, 20);
         g.setTextAlign(TextAlignment.CENTER);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 18));
         g.setFill(element.deriveColor(0, 1, 1.15, 1));
         g.fillText(MoleculeView.nuclide(atom.getSymbol(), atom.getMassNumber()), 32, 39);
-        g.setFont(Font.font("Segoe UI", 8));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8));
         g.setFill(GREY);
         g.fillText(MoleculeFormat.decimal(atom.getMassU(), 3), 32, 51);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 14));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 14));
         g.setFill(TEXT);
         g.fillText(atom.getSymbol() + (i + 1) + "  ·  " + MoleculeFormat.element(atom.getZ()), 64, 26);
-        g.setFont(Font.font("Segoe UI", 10.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         g.setFill(GREY);
         g.fillText(molecule(scene, i), 64, 44);
         // La charge : une jauge de −1 à +1 e, remplie depuis le neutre.
@@ -79,26 +79,26 @@ final class AtomCard {
         double x0 = 64, x1 = W - 74, mid = (x0 + x1) / 2;
         label(g, I18n.text("charge"), 10, y + 4);
         g.setFill(Color.web("#132238"));
-        g.fillRoundRect(x0, y - 3, x1 - x0, 7, 7, 7);
+        g.fillRect(x0, y - 3, x1 - x0, 7);
         float[] c = MoleculeScene.chargeColour(q);
         Color tint = Color.color(c[0], c[1], c[2]);
         double reach = Math.max(-1, Math.min(1, q)) * (x1 - x0) / 2;
         g.setFill(tint.deriveColor(0, 1, 1, .9));
-        g.fillRoundRect(Math.min(mid, mid + reach), y - 3, Math.abs(reach), 7, 7, 7);
-        g.setStroke(Color.web("#E6EEFA", .5));
+        g.fillRect(Math.min(mid, mid + reach), y - 3, Math.abs(reach), 7);
+        g.setStroke(Color.web("#ECEFF3", .5));
         g.setLineWidth(1);
         g.strokeLine(mid, y - 6, mid, y + 7);
-        g.setFont(Font.font("Segoe UI", 8));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 8));
         g.setFill(DIM);
         g.setTextAlign(TextAlignment.CENTER);
         g.fillText("−1", x0 + 4, y + 16);
         g.fillText("0", mid, y + 16);
         g.fillText("+1", x1 - 5, y + 16);
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12));
         g.setFill(tint);
         g.fillText(MoleculeFormat.signed(q, 2) + " e", x1 + 8, y + 4);
-        g.setFont(Font.font("Segoe UI", FontPosture.ITALIC, 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, FontPosture.ITALIC, 9.5));
         g.setFill(GREY);
         String gained = Math.abs(q) < .05 ? I18n.text("presque neutre")
                 : I18n.text(q < 0 ? "a gagné" : "a perdu") + " " + MoleculeFormat.decimal(Math.abs(q), 2) + " e⁻";
@@ -122,16 +122,16 @@ final class AtomCard {
             g.fillOval(dx - 2, dy - 2, 4, 4);
         }
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setFill(AtomMap.NET);
         g.fillText(I18n.text("force nette") + "  " + MoleculeFormat.decimal(magnitude, 2) + " eV/Å", 40, y + 2);
         String toward = magnitude < .02 ? I18n.text("à l'équilibre : les forces s'annulent") : towards(scene, i, net);
-        g.setFont(Font.font("Segoe UI", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 9.5));
         g.setFill(GREY);
         if (!toward.isEmpty()) g.fillText(toward, 40, y + 15);
         y = 128;
         if (confined) {
-            g.setFont(Font.font("Segoe UI", FontPosture.ITALIC, 9.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS, FontPosture.ITALIC, 9.5));
             g.setFill(Color.web("#FFB48A"));
             g.fillText(I18n.text("charge tenue à −2,5 e (contrainte des anions)"), 10, y);
             y += 14;
@@ -141,7 +141,7 @@ final class AtomCard {
             g.setStroke(EDGE);
             g.setLineWidth(.8);
             g.strokeLine(10, y - 6, W - 10, y - 6);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 8.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 8.5));
             g.setFill(GREY);
             g.fillText(I18n.text("VOISINS"), 10, y + 6);
             g.setTextAlign(TextAlignment.RIGHT);
@@ -157,7 +157,7 @@ final class AtomCard {
                 y += ROW;
             }
         }
-        g.setFont(Font.font("Segoe UI", FontPosture.ITALIC, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, FontPosture.ITALIC, 9));
         g.setFill(DIM);
         g.setTextAlign(TextAlignment.LEFT);
         g.fillText(I18n.text("clic : sa carte (09) · clic droit : sa molécule"), 10, h - 9);
@@ -169,7 +169,7 @@ final class AtomCard {
         MoleculeScene.Bond bond = scene.bond(i, other);
         boolean linked = scene.linked(i, other);
         // Le glyphe : 1, 2, 3 traits (comme les brins de la scène), des points sans liaison.
-        g.setStroke(Color.web("#C9D6E8", .9));
+        g.setStroke(Color.web("#A2ABB8", .9));
         g.setLineWidth(1.2);
         if (linked && bond != null) {
             int strokes = MoleculeScene.strokes(bond.order());
@@ -180,14 +180,14 @@ final class AtomCard {
                 g.setLineDashes();
             }
         } else {
-            g.setFill(Color.web("#C9D6E8", .6));
+            g.setFill(Color.web("#A2ABB8", .6));
             for (int s = 0; s < 4; s++) g.fillOval(10 + s * 4.5, y - 5, 1.8, 1.8);
         }
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setFill(MoleculeScene.elementColor(scene.z[other]).deriveColor(0, .8, 1.25, 1));
         g.fillText(scene.symbols[other] + (other + 1), 33, y);
-        g.setFont(Font.font("Segoe UI", 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS, 10));
         g.setFill(TEXT);
         g.fillText(MoleculeFormat.decimal(p.distance(), 2) + " Å", 72, y);
         double[] f = AtomMap.pairForce(scene, p, i);
@@ -196,11 +196,11 @@ final class AtomCard {
         double x0 = 122, x1 = W - 48;
         double share = Math.log1p(force / .02) / Math.log1p(biggest / .02);
         g.setFill(Color.web("#132238"));
-        g.fillRoundRect(x0, y - 7, x1 - x0, 5, 5, 5);
+        g.fillRect(x0, y - 7, x1 - x0, 5);
         g.setFill((pulls ? AtomMap.ATTRACT : AtomMap.REPEL).deriveColor(0, 1, 1, .9));
-        g.fillRoundRect(x0, y - 7, Math.max(2, (x1 - x0) * share), 5, 5, 5);
+        g.fillRect(x0, y - 7, Math.max(2, (x1 - x0) * share), 5);
         g.setTextAlign(TextAlignment.RIGHT);
-        g.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 10));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10));
         g.setFill(pulls ? AtomMap.ATTRACT : AtomMap.REPEL);
         g.fillText((pulls ? "← " : "→ ") + MoleculeFormat.decimal(force, 2), W - 10, y);
     }
@@ -240,7 +240,7 @@ final class AtomCard {
 
     private static void label(GraphicsContext g, String text, double x, double y) {
         g.setTextAlign(TextAlignment.LEFT);
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 9));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         g.setFill(GREY);
         g.fillText(text.toUpperCase(I18n.locale()), x, y);
     }

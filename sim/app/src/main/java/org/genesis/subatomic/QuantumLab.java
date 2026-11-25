@@ -1,5 +1,7 @@
 package org.genesis.subatomic;
 
+import org.genesis.common.Plan;
+
 import org.genesis.app.I18n;
 import org.genesis.fusion.FusionDashboard;
 
@@ -51,6 +53,7 @@ public final class QuantumLab {
     private final CollisionScene collision;
     private final HadronBench bench;
     private final Actions actions;
+    private final HBox modes = new HBox(0);
     private final ToggleButton collisionTab = tab("collision"), benchTab = tab("atelier de hadrons"), partonTab = tab("mer de partons");
     private final ToggleButton proton = segment("proton", "left"), neutron = segment("neutron", "right");
     private final Slider energy = new Slider(Math.log10(300), Math.log10(10000), Math.log10(2000)), angle = new Slider(5, 170, 40);
@@ -88,30 +91,24 @@ public final class QuantumLab {
     public QuantumLab(Actions actions) {
         this.actions = actions;
         this.collision = new CollisionScene(actions::force);
-        root.getStyleClass().add("doc-lab");
+        root.getStyleClass().addAll("doc-lab", "lab-subatomic");     // lab-subatomic : sa couleur (genesis.css)
         bench = new HadronBench(table, new HadronBench.Actions() {
             @Override public void test(int spinIndex, double[] triples) { actions.test(spinIndex, triples); }
             @Override public void decay() { actions.decay(); }
             @Override public void clear() { actions.clear(); }
         });
 
-        Label title = new Label(DocStyle.caps("le monde subatomique"));
-        title.getStyleClass().add("doc-title");
         ToggleGroup tabs = new ToggleGroup();
         for (ToggleButton t : new ToggleButton[]{collisionTab, benchTab, partonTab}) t.setToggleGroup(tabs);
         collisionTab.setSelected(true);
         collisionTab.setOnAction(e -> show(0));
         benchTab.setOnAction(e -> show(1));
         partonTab.setOnAction(e -> show(2));
-        Button back = button("← atome", false);
-        back.setOnAction(e -> actions.back());
-        Region gap = new Region();
-        HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox head = new HBox(26, title, new HBox(4, collisionTab, benchTab, partonTab), gap, back);
-        head.setAlignment(Pos.CENTER_LEFT);
-        head.setPadding(new Insets(12, 20, 10, 20));
-        head.getStyleClass().add("doc-head");
-        root.setTop(head);
+        // Les trois écrans sont les modes du laboratoire : ils vont dans l'en-tête commun (voir modes()).
+        collisionTab.getStyleClass().add("left");
+        benchTab.getStyleClass().add("middle");
+        partonTab.getStyleClass().add("right");
+        modes.getChildren().setAll(collisionTab, benchTab, partonTab);
 
         // ---- la collision : comme la chambre de collision (fusion) — une colonne de réglages, la scène, la barre de lecture
         root.getStyleClass().add("fusion-lab");
@@ -127,11 +124,11 @@ public final class QuantumLab {
         proton.setSelected(true);
         proton.setOnAction(e -> { proton.setSelected(true); targetChanged(); });
         neutron.setOnAction(e -> { neutron.setSelected(true); targetChanged(); });
-        energy.valueProperty().addListener((o, a, b) -> energyLabel.setText(energyText()));
-        angle.valueProperty().addListener((o, a, b) -> angleLabel.setText(angleText()));
+        energy.valueProperty().addListener((o, a, b) -> { energyLabel.setText(energyText()); aim(); });
+        angle.valueProperty().addListener((o, a, b) -> { angleLabel.setText(angleText()); aim(); });
         energyLabel.setText(energyText());
-        for (Label l : new Label[]{energyLabel, angleLabel}) l.setStyle("-fx-text-fill:#FCD34D;-fx-font-family:Consolas;-fx-font-size:13px;-fx-font-weight:bold;");
-        clock.setStyle("-fx-text-fill:#B9C6D8;-fx-font-size:11px;");
+        for (Label l : new Label[]{energyLabel, angleLabel}) l.getStyleClass().add("plan-value");
+        clock.getStyleClass().add("plan-label");
         energy.setMaxWidth(Double.MAX_VALUE);
         angle.setMaxWidth(Double.MAX_VALUE);
         // 01 le projectile : neuf boutons, et la fiche de celui choisi
@@ -181,6 +178,7 @@ public final class QuantumLab {
         physicsAngle.setOnAction(e -> {
             angle.setDisable(hadronBeam() || physicsAngle.isSelected());
             angleLabel.setText(angleText());
+            aim();
         });
         angle.setDisable(true);
         angleLabel.setText(angleText());
@@ -193,32 +191,29 @@ public final class QuantumLab {
                 section("03", "LE TIR", row("Énergie du faisceau", energyLabel), energy, row("Angle de diffusion", angleLabel), angle,
                         physicsAngle, presetRow),
                 section("04", "LES CAS POSSIBLES", casesBox));
-        sections.setPadding(new Insets(2, 12, 12, 12));
+        sections.setPadding(new Insets(14, 16, 12, 16));
         javafx.scene.control.ScrollPane scroll = new javafx.scene.control.ScrollPane(sections);
         scroll.setFitToWidth(true);
         scroll.setHbarPolicy(javafx.scene.control.ScrollPane.ScrollBarPolicy.NEVER);
         scroll.setStyle("-fx-background:transparent;-fx-background-color:transparent;-fx-border-color:transparent;");
-        javafx.scene.shape.Circle dot = new javafx.scene.shape.Circle(3.5, javafx.scene.paint.Color.web("#36CDF2"));
-        dot.setEffect(new javafx.scene.effect.DropShadow(8, javafx.scene.paint.Color.web("#36CDF2")));
-        Label brand = text(FusionDashboard.spaced("GENESIS"), 10, "#DCE8F7"), room = text(FusionDashboard.spaced("MONDE SUBATOMIQUE"), 8.5, "#7F98B8");
-        brand.setStyle(brand.getStyle() + "-fx-font-weight:bold;");
-        HBox named = new HBox(9, dot, new VBox(1, brand, room));
-        named.setAlignment(Pos.CENTER_LEFT);
-        named.setPadding(new Insets(12, 10, 10, 14));
         VBox dock = new VBox(7, fire, again);
-        dock.setPadding(new Insets(10, 12, 12, 12));
-        dock.setStyle("-fx-border-color:rgba(150,200,255,0.12) transparent transparent transparent;");
-        VBox side = new VBox(named, scroll, dock);
+        dock.getStyleClass().add("plan-dock");
+        VBox side = new VBox(scroll, dock);
+        this.side = side;
         VBox.setVgrow(scroll, Priority.ALWAYS);
-        side.getStyleClass().add("glass-side");
-        side.setPrefWidth(300);
-        side.setMinWidth(300);
-        side.setMaxWidth(300);
+        side.getStyleClass().addAll("plan-side", "left");
+        side.setPrefWidth(Plan.LEFT_WIDTH);
+        side.setMinWidth(Plan.LEFT_WIDTH);
+        side.setMaxWidth(Plan.LEFT_WIDTH);
         collisionPane.setLeft(side);
         collisionPane.setCenter(collision.getNode());
         // la barre de lecture
         play.setSelected(true);
-        play.getStyleClass().setAll("toggle-button", "glass-toggle");
+        play.getStyleClass().setAll("toggle-button", "tl-play");
+        play.setText("");
+        play.setGraphic(org.genesis.common.Icons.path("pause", 13));
+        play.selectedProperty().addListener((o, was, now) -> play.setGraphic(org.genesis.common.Icons.path(now ? "pause" : "play", 13)));
+        play.setTooltip(Plan.tooltip("Lire ou arrêter l'histoire · Espace"));
         play.setFocusTraversable(false);
         play.setOnAction(e -> collision.setPlaying(play.isSelected()));
         scrub.valueProperty().addListener((o, a, b) -> {
@@ -228,13 +223,8 @@ public final class QuantumLab {
                 play.setSelected(false);
             }
         });
-        Button previous = new Button("⏮ étape"), next = new Button("étape ⏭");
-        for (Button bt : new Button[]{previous, next}) {
-            bt.getStyleClass().add("glass-button");
-            bt.setFocusTraversable(false);
-        }
-        previous.setTooltip(I18n.tooltip("Revenir au début de l'étape (ou à la précédente)"));
-        next.setTooltip(I18n.tooltip("Passer à l'étape suivante"));
+        Button previous = Plan.icon("step-back", null, "Revenir au début de l'étape (ou à la précédente)");
+        Button next = Plan.icon("step-forward", null, "Passer à l'étape suivante");
         previous.setOnAction(e -> collision.jump(-1));
         next.setOnAction(e -> collision.jump(1));
         ToggleGroup speeds = new ToggleGroup();
@@ -251,12 +241,13 @@ public final class QuantumLab {
             speedButtons[i].setOnAction(e -> collision.setSpeed(r));
         }
         normal.setSelected(true);
-        HBox playback = new HBox(8, previous, play, next, scrub, clock, new HBox(slow, normal, fast));
+        Plan.filled(scrub);
+        HBox playback = new HBox(8, previous, play, next, scrub, clock, Plan.segmented(false, slow, normal, fast));
+        this.playback = playback;
         HBox.setHgrow(scrub, Priority.ALWAYS);
         playback.setAlignment(Pos.CENTER_LEFT);
         playback.setPadding(new Insets(7, 14, 7, 14));
-        playback.setStyle("-fx-background-color:linear-gradient(to bottom, rgba(10,18,30,0.8), rgba(5,9,16,0.93));"
-                + "-fx-border-color:rgba(150,200,255,0.14) transparent transparent transparent;");
+        playback.getStyleClass().add("plan-foot");
         collisionPane.setBottom(playback);
         projectileChanged();
         targetChanged();
@@ -303,8 +294,7 @@ public final class QuantumLab {
         }
         mould[0].setSelected(true);
         bench.setOnMode(m -> mould[m].setSelected(true));
-        Label mouldLabel = new Label("moule");
-        mouldLabel.setStyle("-fx-text-fill:#9FB0C8;-fx-font-size:11px;");
+        Label mouldLabel = Plan.label("moule");
         HBox mouldBox = new HBox(0, mould);
         HBox mouldRow = new HBox(8, mouldLabel, mouldBox);
         mouldRow.setAlignment(Pos.CENTER_LEFT);
@@ -321,6 +311,44 @@ public final class QuantumLab {
     }
 
     public BorderPane getNode() { return root; }
+
+    private VBox side;
+    private HBox playback;
+
+    /** Le guide du laboratoire (touche H) : ce qu'on y fait, par où commencer, ce que montre chaque zone. */
+    public org.genesis.common.Guide guide() {
+        org.genesis.common.Guide guide = new org.genesis.common.Guide("Subatomique", "Un proton ou un neutron vu de "
+                + "l'intérieur. On le frappe avec une particule, et le moteur calcule ce qui peut arriver, cas par cas.");
+        if (benchPane.isVisible()) {
+            return guide.step("Poser des quarks dans le moule : trois pour un baryon, un quark et un antiquark pour un méson.")
+                    .step("Tester : le moteur dit si l'objet existe, sa masse, sa charge, son spin, et comment il se désintègre.")
+                    .spot(modes, "Trois ateliers", "La collision, l'atelier de hadrons, la mer de partons.")
+                    .spot(benchPane.getTop(), "Composer", "Le moule, les essais, les hadrons célèbres en un clic.")
+                    .spot(benchPane.getCenter(), "L'établi", "Tirer un quark pour étirer son tube de gluons ; il casse en créant une paire.");
+        }
+        return guide.step("Choisir le projectile (un électron au départ) et la cible.")
+                .step("Régler l'énergie : basse, le nucléon rebondit entier ; haute, on voit ses quarks.")
+                .step("Lancer, puis suivre l'histoire étape par étape, en bas.")
+                .spot(modes, "Trois ateliers", "La collision, l'atelier de hadrons (composer des quarks), la mer de partons.")
+                .spot(side, "Préparer", "Le projectile, la cible, l'énergie et l'angle ; les cas possibles et leurs probabilités.")
+                .spot(collision.getNode(), "La scène", "Glisser : tourner · molette : zoomer · survoler un objet ou une trace : sa fiche.")
+                .spot(playback, "L'histoire", "Les étapes de l'événement, au ralenti : revenir, avancer, changer la vitesse.");
+    }
+
+    /** La colonne de réglages : cachée, la scène prend toute la place. */
+    public void showPanels(boolean shown) {
+        if (side != null) Plan.show(side, shown);
+    }
+
+    /** La scène de l'écran montré, pour en enregistrer une image. */
+    public Node sceneNode() {
+        if (benchPane.isVisible()) return bench.getNode();
+        if (partonNode != null && partonNode.isVisible()) return partonNode;
+        return collision.getNode();
+    }
+
+    /** Les trois écrans du laboratoire (collision, atelier, mer de partons), posés dans l'en-tête commun. */
+    public Region modes() { return modes; }
 
     /** La mer de partons (une vue à part) se range dans le même cadre. */
     public void attachPartons(Node node) {
@@ -354,19 +382,9 @@ public final class QuantumLab {
         return 0;
     }
 
-    /** Une section de la colonne, comme dans la chambre de collision : son numéro, son titre en capitales espacées, son contenu. */
+    /** Une section de la colonne : le même dessin dans tous les laboratoires (voir Plan.section). */
     private static VBox section(String index, String title, Node... nodes) {
-        Label number = text(index, 9.5, "#36CDF2"), name = text(FusionDashboard.spaced(title), 9.5, "#8FB3D9");
-        number.setStyle(number.getStyle() + "-fx-font-weight:bold;");
-        name.setStyle(name.getStyle() + "-fx-font-weight:bold;");
-        HBox head = new HBox(9, number, name);
-        head.setAlignment(Pos.CENTER_LEFT);
-        head.setPadding(new Insets(0, 0, 2, 0));
-        VBox box = new VBox(7);
-        box.getChildren().add(head);
-        box.getChildren().addAll(nodes);
-        box.getStyleClass().add("glass-section");
-        return box;
+        return Plan.section(index, title, nodes);
     }
 
     private static Label text(String value, double size, String color) {
@@ -379,16 +397,15 @@ public final class QuantumLab {
     private static HBox row(String title, Label value) {
         Region gap = new Region();
         HBox.setHgrow(gap, Priority.ALWAYS);
-        HBox row = new HBox(8, text(title, 11, "#8EA6C0"), gap, value);
+        HBox row = new HBox(8, Plan.label(title), gap, value);
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
     }
 
-    /** Une fiche plate : un trait de couleur à gauche, un fond uni, un filet fin (les cartes de noyaux de la chambre). */
+    /** La fiche du projectile ou de la cible : une surface douce, ses caractéristiques en encre secondaire. */
     private static void card(Label label, javafx.scene.paint.Color color) {
-        String c = String.format("#%02X%02X%02X", (int) (color.getRed() * 255), (int) (color.getGreen() * 255), (int) (color.getBlue() * 255));
-        label.setStyle("-fx-background-color:" + c + ", #0E1420;-fx-background-insets:0, 0 0 0 3;-fx-background-radius:8, 0 8 8 0;"
-                + "-fx-border-color:rgba(255,255,255,0.09);-fx-border-radius:8;-fx-padding:9 12 9 13;-fx-text-fill:#C7D2FE;-fx-font-size:11px;");
+        label.setStyle("");
+        if (!label.getStyleClass().contains("plan-fact")) label.getStyleClass().add("plan-fact");
     }
 
     private void targetChanged() {
@@ -410,13 +427,13 @@ public final class QuantumLab {
         }
         for (CollisionScene.ChannelInfo ch : list) {
             Label name = text((ch.chosen() ? "▸ " : "") + ch.name(), 11.5, ch.chosen() ? "#EEF2FF" : "#C7D2FE");
-            Label pct = text(String.format(I18n.locale(), "%.1f %%", 100 * ch.probability()), 11.5, "#FCD34D");
-            pct.setStyle(pct.getStyle() + "-fx-font-family:Consolas;-fx-font-weight:bold;");
+            Label pct = new Label(String.format(I18n.locale(), "%.1f %%", 100 * ch.probability()));
+            pct.getStyleClass().add("plan-value");
             Region gap = new Region();
             HBox.setHgrow(gap, Priority.ALWAYS);
             Region track = new Region(), fill = new Region();
-            track.setStyle("-fx-background-color:rgba(255,255,255,0.08);-fx-background-radius:2;");
-            fill.setStyle("-fx-background-color:" + (ch.chosen() ? "#36CDF2" : "#3DD6C6") + ";-fx-background-radius:2;");
+            track.setStyle("-fx-background-color:" + Plan.css(Plan.FAINT) + ";");
+            fill.setStyle("-fx-background-color:" + (ch.chosen() ? Plan.INK_HEX : Plan.INK3_HEX) + ";");
             track.setPrefHeight(4);
             fill.setPrefHeight(4);
             fill.setMaxWidth(Math.max(2, 230 * ch.probability()));
@@ -428,7 +445,7 @@ public final class QuantumLab {
             rowButton.setGraphic(cell);
             rowButton.setMaxWidth(Double.MAX_VALUE);
             rowButton.getStyleClass().add("glass-button");
-            if (ch.chosen()) rowButton.setStyle("-fx-border-color:rgba(54,205,242,0.65);");
+            if (ch.chosen()) rowButton.setStyle("-fx-border-color:-accent;");
             rowButton.setFocusTraversable(false);
             rowButton.setDisable(ch.probability() <= 0);
             rowButton.setTooltip(I18n.tooltip("Tirer un événement de ce cas (sa probabilité reste affichée)"));
@@ -465,6 +482,18 @@ public final class QuantumLab {
         for (Button b : presets) b.setDisable(hadronBeam());
         energyLabel.setText(energyText());
         angleLabel.setText(angleText());
+        aim();
+    }
+
+    /**
+     * La visée dans la scène : dès qu'un réglage change, le prochain tir se dessine (le faisceau, la sortie demandée), dans la
+     * couleur de son énergie ; elle s'efface quand le moteur rend la nouvelle collision.
+     */
+    private void aim() {
+        if (updating || collision == null) return;
+        double power = (energy.getValue() - Math.log10(150)) / (Math.log10(10000) - Math.log10(150));
+        collision.aim(projectileIndex(), Math.pow(10, energy.getValue()), hadronBeam() || physicsAngle.isSelected() ? Double.NaN
+                : angle.getValue(), power);
     }
 
 
@@ -514,8 +543,8 @@ public final class QuantumLab {
     }
 
     private static ToggleButton tab(String text) {
-        ToggleButton t = new ToggleButton(DocStyle.caps(text));
-        t.getStyleClass().add("doc-tab");
+        ToggleButton t = new ToggleButton(Character.toUpperCase(text.charAt(0)) + text.substring(1));
+        t.getStyleClass().add("segment");
         t.setFocusTraversable(false);
         return t;
     }
@@ -553,7 +582,7 @@ public final class QuantumLab {
             scrub.setValue(collision.story() / collision.total());
             updating = false;
             play.setSelected(collision.playing());
-            play.setText(collision.playing() ? "Ⅱ" : "▶");
+            // l'icône suit l'état (voir le constructeur) : ‖ en lecture, ▶ à l'arrêt
             clock.setText(collision.beatCount() == 0 ? "" : String.format(I18n.locale(), I18n.text("étape %d / %d"), collision.beatIndex() + 1,
                     collision.beatCount()));
         }

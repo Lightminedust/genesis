@@ -41,7 +41,7 @@ final class ChainBoard {
     static final Color INK = Color.web("#E8EEF7"), LABEL = Color.web("#8896AB"), DIM = Color.web("#5F6C80");
     static final Color TEAL = Color.web("#3DD6C6"), AMBER = Color.web("#F5B84B"), CORAL = Color.web("#FF7A6B");
     private static final double PAD = 16, HEAD = 34, HERO = 64, ROW = 29, PLOT = 150, FACT = 17.5, SECTION = 24, LINE = 14.5;
-    private static final Font NOTE = Font.font("Segoe UI", 10.5);
+    private static final Font NOTE = Font.font(org.genesis.common.Plan.SANS, 10.5);
     private static final Text MEASURE = new Text();
     private final Map<String, Double> shown = new HashMap<>();
     private double hoverX = -1, hoverY = -1;
@@ -89,10 +89,10 @@ final class ChainBoard {
     /** Un panneau plat : fond sombre presque opaque, filet fin. */
     static void glass(GraphicsContext gc, double x, double y, double w, double h) {
         gc.setFill(Color.color(.039, .055, .078, .9));
-        gc.fillRoundRect(x, y, w, h, 12, 12);
+        gc.fillRect(x, y, w, h);
         gc.setLineWidth(1);
         gc.setStroke(Color.color(1, 1, 1, .09));
-        gc.strokeRoundRect(x + .5, y + .5, w - 1, h - 1, 12, 12);
+        gc.strokeRect(x + .5, y + .5, w - 1, h - 1);
     }
 
     void hover(double x, double y) {
@@ -120,7 +120,7 @@ final class ChainBoard {
     }
 
     private static int legendLines(List<Part> parts) {
-        Font font = Font.font("Segoe UI", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS, 10);
         double x = 0;
         int line = 0;
         for (Part p : parts) {
@@ -139,7 +139,7 @@ final class ChainBoard {
         gc.save();
         glass(gc, x, y, w, height(b));
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(spaced(b.stage()), x + PAD, y + 21);
         gc.setFill(TEAL);
@@ -193,7 +193,7 @@ final class ChainBoard {
     static void heading(GraphicsContext gc, double x, double y, double w, String text) {
         rule(gc, x, y, w);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(spaced(text), x, y + 17);
     }
@@ -204,34 +204,34 @@ final class ChainBoard {
             gc.fillRect(x - 6, y - 1, w + 12, FACT - 1);
         }
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, key, x, y + 11.5, w * .4);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI Semibold", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
         gc.setFill(AMBER.interpolate(Color.WHITE, .25));
         I18n.fillText(gc, value, x + w, y + 11.5, w * .62);
     }
 
     private double split(GraphicsContext gc, double x, double y, double w, Board b, double dt) {
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(spaced(b.splitLabel()), x, y + 13);
         double by = y + 22, bh = 7, sum = 0;
         for (Part p : b.parts()) sum += Math.max(0, p.share());
         gc.setFill(Color.color(1, 1, 1, .06));
-        gc.fillRoundRect(x, by, w, bh, 2, 2);
+        gc.fillRect(x, by, w, bh);
         double at = x, gap = 2;
         for (Part p : b.parts()) {
             double share = sum > 0 ? smooth("split:" + p.name(), Math.max(0, p.share()) / sum, dt) : 0;
             double len = (w - gap * Math.max(0, b.parts().size() - 1)) * share;
             if (len < .5) continue;
             gc.setFill(p.color());
-            gc.fillRoundRect(at, by, len, bh, 2, 2);
+            gc.fillRect(at, by, len, bh);
             at += len + gap;
         }
-        Font font = Font.font("Segoe UI", 10);
+        Font font = Font.font(org.genesis.common.Plan.SANS, 10);
         gc.setFont(font);
         double lx = 0;
         int line = 0;
@@ -257,15 +257,15 @@ final class ChainBoard {
     private void hero(GraphicsContext gc, double x, double y, double w, Board b, double dt) {
         double f = smooth("hero", b.heroFill(), dt);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, b.heroLabel(), x, y + 13);
-        Font big = Font.font("Segoe UI Semibold", 28);
+        Font big = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 28);
         gc.setFont(big);
         gc.setFill(level(b.heroFill()).interpolate(Color.WHITE, .35));
         gc.fillText(b.heroValue(), x, y + 42, w * .7);
         if (b.heroUnit() != null && !b.heroUnit().isBlank()) {
-            gc.setFont(Font.font("Segoe UI", 11));
+            gc.setFont(Font.font(org.genesis.common.Plan.SANS, 11));
             gc.setFill(LABEL);
             I18n.fillText(gc, b.heroUnit(), x + Math.min(w * .7, width(b.heroValue(), big)) + 8, y + 42, w * .3);
         }
@@ -280,11 +280,11 @@ final class ChainBoard {
     private void metric(GraphicsContext gc, double x, double y, double w, Row r, double dt) {
         double f = smooth("metric:" + r.key(), r.fill(), dt);
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI", 10.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 10.5));
         gc.setFill(LABEL);
         I18n.fillText(gc, r.label(), x, y + 11, w * .55);
         gc.setTextAlign(TextAlignment.RIGHT);
-        gc.setFont(Font.font("Segoe UI Semibold", 11.5));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5));
         gc.setFill(INK);
         I18n.fillText(gc, r.value(), x + w, y + 11, w * .52);
         gauge(gc, x, y + 17, w, 2.5, f, false);
@@ -293,7 +293,7 @@ final class ChainBoard {
             gc.setFill(INK);
             gc.fillRect(mx - .75, y + 14, 1.5, 8.5);
             if (r.markLabel() != null && !r.markLabel().isEmpty()) {
-                gc.setFont(Font.font("Segoe UI", 8.5));
+                gc.setFont(Font.font(org.genesis.common.Plan.SANS, 8.5));
                 gc.setTextAlign(TextAlignment.CENTER);
                 gc.setFill(DIM);
                 I18n.fillText(gc, r.markLabel(), Math.max(x + 8, Math.min(x + w - 8, mx)), y + 28);
@@ -340,7 +340,7 @@ final class ChainBoard {
     void plot(GraphicsContext gc, double x, double y, double w, Plot p) {
         double top = y + 20, height = PLOT - 40, left = x, right = x + w;
         gc.setTextAlign(TextAlignment.LEFT);
-        gc.setFont(Font.font("Segoe UI Semibold", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
         gc.setFill(LABEL);
         gc.fillText(spaced(p.title()), x, y + 11);
         gc.setFill(Color.color(1, 1, 1, .03));
@@ -354,7 +354,7 @@ final class ChainBoard {
                 gc.setLineDashes(5, 3);
                 gc.strokeLine(left, ey, right, ey);
                 gc.setLineDashes(null);
-                gc.setFont(Font.font("Segoe UI Semibold", 9));
+                gc.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 9));
                 gc.setFill(AMBER);
                 I18n.fillText(gc, p.levelLabel(), left + 4, ey - 4);
             }
@@ -380,7 +380,7 @@ final class ChainBoard {
             gc.setLineWidth(1.3);
             gc.strokeOval(mx - 5.5, my - 5.5, 11, 11);
         }
-        gc.setFont(Font.font("Segoe UI", 9));
+        gc.setFont(Font.font(org.genesis.common.Plan.SANS, 9));
         gc.setFill(DIM);
         gc.setTextAlign(TextAlignment.LEFT);
         gc.fillText(p.xText().apply(p.xmin()), left, top + height + 12);
@@ -395,12 +395,12 @@ final class ChainBoard {
             gc.setFill(TEAL);
             gc.fillOval(hoverX - 3, hy - 3, 6, 6);
             String text = p.xText().apply(xv) + "   " + p.yText().apply(yv);
-            Font f = Font.font("Segoe UI Semibold", 10);
+            Font f = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10);
             double tw = width(text, f) + 14, tx = Math.min(right - tw, Math.max(left, hoverX - tw / 2));
             gc.setFill(Color.color(.02, .03, .05, .94));
-            gc.fillRoundRect(tx, top + 2, tw, 18, 5, 5);
+            gc.fillRect(tx, top + 2, tw, 18);
             gc.setStroke(Color.color(1, 1, 1, .14));
-            gc.strokeRoundRect(tx + .5, top + 2.5, tw - 1, 17, 5, 5);
+            gc.strokeRect(tx + .5, top + 2.5, tw - 1, 17);
             gc.setFont(f);
             gc.setTextAlign(TextAlignment.LEFT);
             gc.setFill(INK);

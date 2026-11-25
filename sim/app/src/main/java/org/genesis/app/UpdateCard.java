@@ -41,14 +41,14 @@ final class UpdateCard {
     private boolean wanted;
 
     UpdateCard() {
-        title.setStyle("-fx-text-fill: #E6EDF7; -fx-font-size: 13.5px; -fx-font-weight: bold;");
-        detail.setStyle("-fx-text-fill: #8B9BB8; -fx-font-size: 11.5px;");
+        title.getStyleClass().add("plan-heading");
+        detail.getStyleClass().add("plan-note");
         detail.setWrapText(true);
         progress.setMaxWidth(Double.MAX_VALUE);
         progress.getStyleClass().add("update-progress");
         progress.setVisible(false);
         progress.setManaged(false);
-        install.getStyleClass().add("update-primary");
+        install.getStyleClass().add("plan-primary");
         page.getStyleClass().add("dash-button");
         later.getStyleClass().add("update-quiet");
         skip.getStyleClass().add("update-quiet");
@@ -70,8 +70,8 @@ final class UpdateCard {
         HBox quiet = new HBox(10, later, grow, skip);
         quiet.setAlignment(Pos.CENTER_LEFT);
 
-        Label badge = new Label("MISE À JOUR");
-        badge.setStyle("-fx-text-fill: #7DD3FC; -fx-font-size: 9.5px; -fx-font-weight: bold;");
+        Label badge = new Label("Mise à jour");
+        badge.getStyleClass().add("plan-quiet-note");
         card.getChildren().addAll(badge, title, detail, progress, buttons, quiet);
         card.getStyleClass().add("update-card");
         card.setMaxSize(360, Region.USE_PREF_SIZE);

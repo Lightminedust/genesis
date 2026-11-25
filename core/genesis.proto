@@ -165,11 +165,21 @@ message UserAction {
     MOLECULE_PRESSURE = 110;  // amount = pression imposée (atm) : la paroi devient un piston ; 0 : volume fixe
                               // (0 : le mélange naturel)
     MOLECULE_EXPERIMENT = 111;  // value = indice dans MoleculeLabState.experiments : la scène devient l'expérience
+    MOLECULE_REACT = 112;     // la réaction du dessin (nanoréacteur) : value = numéro de la demande (−1 : annuler) ;
+                              // amount = température (K) ; vector = le dessin
+    // Le schéma réactionnel (moleculelab/scheme.py) : text = le dessin en JSON (atomes, liaisons, flèches, flèches
+    // courbes) ; value = numéro de la demande (−1 : annuler).
+    MOLECULE_SCHEME = 113;
+    MOLECULE_SCHEME_PLAY = 114;   // value = étape (−1 : arrêter) ; amount = position 0 → 1 (< 0 : garder) ;
+                                  // vector[0] = 1 : jouer, 0 : à l'arrêt
+    MOLECULE_SMILES = 115;    // value = numéro de la demande ; text = un SMILES, à dessiner (MoleculeLabState.smiles)
+    MOLECULE_SOLVENT = 116;   // value = indice dans MoleculeLabState.solvents (−1 : le vide) : le solvant implicite ALPB
   }
   ActionType type = 1;
   int32 value = 2;
   double amount = 3;
   repeated double vector = 4;
+  string text = 5;
 }
 
 // --------------------------------------------------------
@@ -1727,6 +1737,171 @@ message MoleculeLabState {
   int32 experiment = 75;                     // l'expérience en cours (−1 : aucune)
   int32 experiment_phase = 76;               // 0 approche, 1 refroidissement (thermostat), 2 réussie, 3 manquée
   double experiment_time_fs = 77;            // réussie : quand les produits sont apparus ; manquée : la limite
+  MoleculeReaction reaction = 78;            // la réaction du dessin de l'assembleur, quand elle change
+  MoleculeScheme scheme = 79;                // le schéma réactionnel calculé, quand il change
+  repeated MoleculeSchemeDrawing scheme_examples = 80;   // des schémas tout faits (une fois)
+  MoleculeSmiles smiles = 81;                // la réponse à MOLECULE_SMILES, quand elle change
+  MoleculeSchemePlay play = 82;              // le chemin d'une étape joué dans la scène
+  repeated string solvents = 83;             // les solvants ALPB proposés, noms affichés (une fois)
+  int32 solvent = 84;                        // celui de la scène (indice dans solvents ; −1 : le vide)
+  double solvation = 85;                     // eV : l'énergie libre de solvatation de la scène (G_pol + G_hb + G_np + décalage)
+  double solvation_polar = 86;               // eV : sa part polaire (Born généralisé)
+}
+
+// Un schéma dessiné : atomes (Z, x, y, charge ; Z = 0 : une abréviation), liaisons (a, b, ordre), flèches droites
+// (queue x, y, pointe x, y ; texte au-dessus et au-dessous), flèches courbes (source a, b ; cible a, b ; −1 : aucun).
+message MoleculeSchemeDrawing {
+  string title = 1;
+  repeated double atoms = 2;
+  repeated string labels = 3;                // une par atome, vide sauf pour une abréviation (Me, Ph…)
+  repeated int32 bonds = 4;
+  repeated double arrows = 5;
+  repeated string above = 6;
+  repeated string below = 7;
+  repeated int32 curly = 8;
+}
+
+message MoleculeSmiles {
+  int32 request = 1;
+  string error = 2;
+  MoleculeSchemeDrawing drawing = 3;
+}
+
+// Le schéma compilé puis calculé, étape par étape.
+message MoleculeScheme {
+  int32 request = 1;
+  bool done = 2;
+  string error = 3;
+  string status = 4;                         // ce qui se calcule
+  double fraction = 5;
+  double remaining_s = 6;
+  repeated MoleculeSchemeStep steps = 7;
+  repeated MoleculeSchemeLine log = 8;       // le journal du calcul (les dernières lignes)
+  MoleculeSchemeLive live = 9;               // ce qui se calcule en ce moment (vide une fois le schéma calculé)
+  // Vrai quand ce message ne répète pas les étapes : ce sont celles du message précédent de la même demande, que le
+  // client garde. Les étapes (les images de chaque chemin, lourdes) ne repartent qu'à leur changement ; la progression,
+  // le journal et l'écran de calcul partent à chaque publication (toutes les 0,15 s).
+  bool steps_kept = 10;
+}
+
+// Une ligne du journal du calcul : ce qui vient d'être calculé, sur quelle molécule, le nombre qui en sort.
+message MoleculeSchemeLine {
+  double time_s = 1;                         // depuis le début du calcul
+  int32 step = 2;                            // −1 : le schéma entier
+  string what = 3;                           // « produit relaxé seul, il tient » (texte traduit par le client)
+  string subject = 4;                        // la molécule (formule · nom)
+  string value = 5;                          // « E −45,12345 Eh », « +0,83 eV · C2–Co13 2,41 Å » (virgule décimale)
+}
+
+// La géométrie en cours de calcul (à chaque pas de L-BFGS) et le profil qui se remplit.
+message MoleculeSchemeLive {
+  int32 step = 1;
+  string caption = 2;                        // « chemin à rebours, palier 4/12 », « produit seul · C₆H₁₀ »
+  repeated int32 numbers = 3;
+  repeated double positions = 4;             // Å, x y z par atome, centrés
+  repeated int32 bonds = 5;                  // paires liées (distance < 1,25 × somme des rayons covalents)
+  repeated int32 pulled = 6;                 // paires tirées par le chemin imposé
+  double energy_eh = 7;
+  repeated double backward = 8;              // (x, eV) : paliers à rebours ; x de 0 (réactifs) à 1 (produits)
+  repeated double forward = 9;               // (x, eV) : paliers à l'endroit ; eV depuis le premier palier
+  int32 calls = 10;                          // calculs GFN1-xTB faits depuis le début du schéma
+}
+
+// Une étape : une flèche du dessin, ses molécules, ce que le calcul en dit, et le chemin calculé.
+message MoleculeSchemeStep {
+  int32 arrow = 1;
+  repeated int32 reactant_atoms = 2;         // les atomes du dessin, côté réactifs
+  repeated int32 product_atoms = 3;
+  string reagents = 4;                       // le texte au-dessus de la flèche
+  string conditions = 5;
+  string reactants = 6;                      // « C₄H₆ · buta-1,3-diène + C₂H₄ · éthylène »
+  string products = 7;
+  string byproducts = 8;                     // déduits (non dessinés)
+  string mapping = 9;                        // « flèches » (flèches courbes) ou « correspondance » (sous-structures)
+  double delta_ev = 10;                      // Σ E(produits seuls) − Σ E(réactifs seuls), GFN1-xTB
+  double barrier_ev = 11;                    // la plus haute énergie du chemin imposé − celle de son départ
+  string verdict = 12;
+  bool confirmed = 13;
+  repeated string notes = 14;
+  bool computed = 15;
+  repeated double energies = 16;             // eV, une par image du chemin (la première : 0)
+  int32 scan_start = 17;                     // les images du chemin imposé : [scan_start, scan_end)
+  int32 scan_end = 18;
+  repeated int32 changes = 19;               // (a, b, ordre avant, ordre après) : atomes de la scène jouée
+  repeated float orders = 20;                // l'indice de Mayer de chaque changement, image par image
+  repeated int32 arrows = 21;                // les flèches courbes, atomes de la scène : (sa, sb, ta, tb), −1 : aucun
+  repeated int32 drawn = 22;                 // l'atome du dessin de chaque atome de la scène (−1 : H, réactif écrit)
+  string solvent = 23;                       // le solvant de l'étape (écrit sur la flèche ; vide : phase gazeuse)
+  // Les images du chemin telles que la vue 2.5D les montre : les atomes de la scène jouée, puis, image après image,
+  // leurs positions (Å, x y z par atome, chaque image centrée sur ses masses comme la scène la pose) et leurs charges
+  // de Mulliken (e) — le calcul GFN1-xTB de chaque image, celui qui a donné son énergie.
+  repeated int32 numbers = 24;
+  repeated float path = 25;
+  repeated float charges = 26;
+  // Les images k après lesquelles le chemin saute d'une branche à l'autre (à rebours, à l'endroit : il garde la plus
+  // basse à chaque palier) : un atome y bouge de plus de 0,4 Å hors de son corps rigide, et aucune géométrie n'est
+  // calculée entre k et k + 1 — la scène passe de l'une à l'autre.
+  repeated int32 jumps = 27;
+  // Les liaisons de chaque image, calculées : chaque paire liée (indice de Mayer ≥ 0,3) dans au moins une image (a, b),
+  // puis, image après image, l'indice de Mayer de chaque paire. La vue 2.5D rejoue le chemin seule, sans le moteur.
+  repeated int32 bond_pairs = 28;
+  repeated float bond_orders = 29;
+  repeated float radii = 30;                 // Å : le rayon covalent de chaque atome (celui du laboratoire)
+  // Le numéro montré de chaque atome de la scène, gardé d'une étape à l'autre : un atome du produit de l'étape 1 repris
+  // par l'étape 2 y garde son numéro (C3 reste C3) ; ceux d'un réactif écrit en prennent de nouveaux, à la suite. Deux
+  // étapes qui ont un même numéro partagent cet atome : la vue de tout le schéma les enchaîne par lui.
+  repeated int32 ids = 31;
+  // Les énergies du chemin (depuis sa première image) posées dans le profil de tout le schéma : la première et la
+  // dernière image par rapport aux molécules relaxées chacune seule (celles de ΔE), en eV.
+  double start_ev = 32;
+  double end_ev = 33;
+  // eV : ce qu'a coûté aux réactifs repris d'une étape précédente le changement de milieu (du toluène à l'eau ; 0 : le
+  // même milieu). Le profil de tout le schéma passe d'un palier à l'autre par lui.
+  double transfer_ev = 34;
+  double temperature = 35;                   // K : écrite sur la flèche (« 80 °C »), sinon 300
+  // eV : −TΔS estimé (translations et rotations de chaque molécule relaxée seule, gaz parfait à 1 bar, rotor
+  // rigide) à cette température : ce que ΔE ignore quand des molécules partent (2 CO du complexe au cobalt).
+  double entropy_ev = 36;
+}
+
+message MoleculeSchemePlay {
+  int32 step = 1;                            // −1 : aucun chemin joué
+  double position = 2;                       // 0 → 1
+  bool running = 3;
+  int32 frame = 4;                           // l'image du chemin la plus proche
+  double radius = 5;                         // Å : le plus grand écart d'un atome au centre, sur tout le chemin
+  double energy = 6;                         // eV : l'énergie de la géométrie montrée (calculée là, entre deux images
+                                             // aussi), depuis celle de la première image
+  double speed = 7;                          // images du chemin par seconde (0 : au rythme du calcul)
+}
+
+// Réactifs → produits : les molécules du dessin, chacune relaxée seule, agitées ensemble dans la sphère du réacteur à
+// une température choisie, en plusieurs essais ; les issues trouvées, regroupées.
+message MoleculeReaction {
+  int32 request = 1;
+  bool done = 2;
+  string error = 3;
+  int32 phase = 4;                           // 0 les réactifs se relaxent, 1 un essai, 2 ses produits se relaxent, 3 fini
+  double fraction = 5;                       // 0 → 1
+  string reactants = 6;                      // « H · atome d'hydrogène + HO · radical hydroxyle »
+  repeated MoleculeOutcome outcomes = 7;     // les plus fréquentes d'abord
+  double temperature = 8;                    // K
+  int32 trials = 9;
+  double duration_fs = 10;                   // la durée d'un essai à chaud
+  int32 trial = 11;                          // l'essai en cours (1…trials)
+  double time_fs = 12;                       // son temps simulé
+  string census = 13;                        // ses espèces à cet instant (« 2 H₂O · eau + … »)
+  double remaining_s = 14;                   // le temps de calcul restant, estimé (0 : inconnu)
+}
+
+// Une issue : les produits d'un ou plusieurs essais, chacun relaxé seul.
+message MoleculeOutcome {
+  string label = 1;                          // « H₂O · eau »
+  int32 count = 2;                           // combien d'essais y mènent
+  double delta_ev = 3;                       // Σ E(produits seuls) − Σ E(réactifs seuls), GFN1-xTB
+  double first_fs = 4;                       // quand les espèces ont changé pour la première fois (moyenne ; 0 : jamais)
+  repeated MoleculeEntry products = 5;       // dessinables : atomes, charges formelles, liaisons, départ de dessin
+  bool unchanged = 6;                        // les réactifs eux-mêmes
 }
 
 // Une expérience guidée : des réactifs relaxés posés face à face puis lancés l'un vers l'autre.

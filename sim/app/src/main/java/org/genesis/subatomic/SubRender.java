@@ -86,6 +86,7 @@ public final class SubRender {
         this.height = stageH;
         tags.clear();
         taken.clear();
+        hits.clear();
         membranesUsed = 0;
         lenses.clear();
         shells.clear();
@@ -106,6 +107,7 @@ public final class SubRender {
         this.height = stageH;
         tags.clear();
         taken.clear();
+        hits.clear();
         membranesUsed = 0;
         g.setLineCap(StrokeLineCap.ROUND);
     }
@@ -152,7 +154,7 @@ public final class SubRender {
     void quark(double[] p, double radiusFm, Color c, String label, double alpha) {
         double[] s = project(p);
         if (s == null || alpha <= .01) return;
-        double r = Math.max(3.5, radiusFm * s[3]);
+        double r = Math.max(1.2, radiusFm * s[3]);
         double fog = Math.max(.7, Math.min(1, 1.25 - .06 * (s[2] - camera.distance())));
         double a = alpha * fog;
         g.setGlobalBlendMode(BlendMode.ADD);
@@ -167,7 +169,7 @@ public final class SubRender {
         g.setGlobalBlendMode(BlendMode.SRC_OVER);
         if (label != null && r >= 7) {
             g.setTextAlign(TextAlignment.CENTER);
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, Math.min(14, r * .85)));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, Math.min(14, r * .85)));
             g.setFill(Color.color(.02, .04, .09, .72 * a));
             I18n.fillText(g, label, s[0] + r * .05, s[1] + Math.min(14, r * .85) * .36);
         }
@@ -385,7 +387,7 @@ public final class SubRender {
         drawCharged(s, c, alpha, energyMev);
         double glow = 4.5 + 7 * defocus(s[2]);
         g.setFill(Color.WHITE.deriveColor(0, 1, 1, .9 * alpha));
-        g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11));
         g.setTextAlign(TextAlignment.CENTER);
         I18n.fillText(g, charge < 0 ? "−" : "+", s[0] + glow + 5, s[1] - glow);
         if (anti) {
@@ -429,7 +431,7 @@ public final class SubRender {
 
     private void drawCharged(double[] s, Color c, double alpha, double energyMev) {
         double blur = defocus(s[2]);
-        double aura = Math.max(10, Math.min(90, (.08 + .05 * Math.log10(Math.max(1, energyMev))) * s[3])) * (1 + blur);
+        double aura = Math.max(3, Math.min(60, (.08 + .05 * Math.log10(Math.max(1, energyMev))) * s[3])) * (1 + blur);
         g.setGlobalBlendMode(BlendMode.ADD);
         g.setFill(new RadialGradient(0, 0, s[0], s[1], aura, false, CycleMethod.NO_CYCLE,
                 new Stop(0, c.deriveColor(0, 1, 1, .5 * alpha)), new Stop(.2, c.deriveColor(0, 1, 1, .22 * alpha)),
@@ -575,7 +577,7 @@ public final class SubRender {
         double[] s = project(p);
         if (s == null || alpha <= .01) return;
         g.setGlobalBlendMode(BlendMode.ADD);
-        DocStyle.flash(g, s[0], s[1], Math.max(8, radiusFm * s[3]), c, alpha);
+        DocStyle.flash(g, s[0], s[1], Math.max(2, radiusFm * s[3]), c, alpha);
         g.setGlobalBlendMode(BlendMode.SRC_OVER);
     }
 
@@ -937,7 +939,7 @@ public final class SubRender {
     void glow(double[] p, double radiusFm, Color c, double alpha) {
         double[] sp = project(p);
         if (sp == null || alpha <= .01) return;
-        double r = Math.max(6, radiusFm * sp[3]);
+        double r = Math.max(2, radiusFm * sp[3]);
         g.setGlobalBlendMode(BlendMode.ADD);
         g.setFill(new RadialGradient(0, 0, sp[0], sp[1], r, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.WHITE.deriveColor(0, 1, 1, .7 * alpha)), new Stop(.25, c.deriveColor(0, 1, 1, .5 * alpha)),
@@ -1393,37 +1395,37 @@ public final class SubRender {
         double fx = wx == b.x0() ? b.x1() : b.x0(), fz = wz == b.z0() ? b.z1() : b.z0(), top = fy == b.y0() ? b.y1() : b.y0();
         Color ink = Color.web("#C9D7EA");
         // les faces, à peine teintées
-        quad(new double[][]{{b.x0(), fy, b.z0()}, {b.x1(), fy, b.z0()}, {b.x1(), fy, b.z1()}, {b.x0(), fy, b.z1()}}, ink.deriveColor(0, 1, 1, .05 * alpha));
-        quad(new double[][]{{wx, b.y0(), b.z0()}, {wx, b.y1(), b.z0()}, {wx, b.y1(), b.z1()}, {wx, b.y0(), b.z1()}}, ink.deriveColor(0, 1, 1, .03 * alpha));
-        quad(new double[][]{{b.x0(), b.y0(), wz}, {b.x1(), b.y0(), wz}, {b.x1(), b.y1(), wz}, {b.x0(), b.y1(), wz}}, ink.deriveColor(0, 1, 1, .03 * alpha));
+        quad(new double[][]{{b.x0(), fy, b.z0()}, {b.x1(), fy, b.z0()}, {b.x1(), fy, b.z1()}, {b.x0(), fy, b.z1()}}, ink.deriveColor(0, 1, 1, .03 * alpha));
+        quad(new double[][]{{wx, b.y0(), b.z0()}, {wx, b.y1(), b.z0()}, {wx, b.y1(), b.z1()}, {wx, b.y0(), b.z1()}}, ink.deriveColor(0, 1, 1, .015 * alpha));
+        quad(new double[][]{{b.x0(), b.y0(), wz}, {b.x1(), b.y0(), wz}, {b.x1(), b.y1(), wz}, {b.x0(), b.y1(), wz}}, ink.deriveColor(0, 1, 1, .015 * alpha));
         // les grilles
         g.setLineWidth(1);
         g.setLineCap(StrokeLineCap.BUTT);
         for (double v = Math.ceil(b.x0() / step) * step; v <= b.x1() + 1e-9; v += step) {
-            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .32 : .14) * alpha));
+            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .2 : .07) * alpha));
             line3(new double[]{v, fy, b.z0()}, new double[]{v, fy, b.z1()});
             line3(new double[]{v, b.y0(), wz}, new double[]{v, b.y1(), wz});
         }
         for (double v = Math.ceil(b.z0() / step) * step; v <= b.z1() + 1e-9; v += step) {
-            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .32 : .14) * alpha));
+            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .2 : .07) * alpha));
             line3(new double[]{b.x0(), fy, v}, new double[]{b.x1(), fy, v});
             line3(new double[]{wx, b.y0(), v}, new double[]{wx, b.y1(), v});
         }
         for (double v = Math.ceil(b.y0() / step) * step; v <= b.y1() + 1e-9; v += step) {
-            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .32 : .14) * alpha));
+            g.setStroke(ink.deriveColor(0, 1, 1, (Math.abs(v) < 1e-9 ? .2 : .07) * alpha));
             line3(new double[]{wx, v, b.z0()}, new double[]{wx, v, b.z1()});
             line3(new double[]{b.x0(), v, wz}, new double[]{b.x1(), v, wz});
         }
         // les arêtes des trois faces ; celles où elles se rejoignent, plus marquées
-        g.setStroke(ink.deriveColor(0, 1, 1, .32 * alpha));
+        g.setStroke(ink.deriveColor(0, 1, 1, .2 * alpha));
         line3(new double[]{fx, fy, b.z0()}, new double[]{fx, fy, b.z1()});
         line3(new double[]{b.x0(), fy, fz}, new double[]{b.x1(), fy, fz});
         line3(new double[]{wx, top, b.z0()}, new double[]{wx, top, b.z1()});
         line3(new double[]{b.x0(), top, wz}, new double[]{b.x1(), top, wz});
         line3(new double[]{wx, b.y0(), fz}, new double[]{wx, b.y1(), fz});
         line3(new double[]{fx, b.y0(), wz}, new double[]{fx, b.y1(), wz});
-        g.setStroke(ink.deriveColor(0, 1, 1, .5 * alpha));
-        g.setLineWidth(1.3);
+        g.setStroke(ink.deriveColor(0, 1, 1, .3 * alpha));
+        g.setLineWidth(1);
         line3(new double[]{wx, fy, b.z0()}, new double[]{wx, fy, b.z1()});
         line3(new double[]{b.x0(), fy, wz}, new double[]{b.x1(), fy, wz});
         line3(new double[]{wx, b.y0(), wz}, new double[]{wx, b.y1(), wz});
@@ -1438,8 +1440,8 @@ public final class SubRender {
     private void axis(double[] from, double[] to, int k, double step, double[] outward, String name, double alpha) {
         double len = SubRender.norm(outward);
         double[] out = len < 1e-9 ? new double[]{0, 0, 0} : scale(outward, 1 / len);
-        Color ink = Color.web("#AFC0D6");
-        g.setFont(Font.font("Consolas", 10));
+        Color ink = Color.web("#A2ABB8");
+        g.setFont(Font.font(org.genesis.common.Plan.MONO, 10));
         g.setTextAlign(TextAlignment.CENTER);
         g.setLineWidth(1);
         int index = 0;
@@ -1461,7 +1463,7 @@ public final class SubRender {
         mid[k] = (from[k] + to[k]) / 2;
         double[] title = project(add(mid, scale(out, step * 1.25)));
         if (title != null) {
-            g.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10.5));
+            g.setFont(Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 10.5));
             g.setFill(ink.deriveColor(0, 1, 1, .85 * alpha));
             I18n.fillText(g, name, title[0], title[1] + 3.5);
         }
@@ -1508,16 +1510,15 @@ public final class SubRender {
         double[] planes = backPlanes(b);
         g.setLineCap(StrokeLineCap.ROUND);
         g.setLineWidth(1.2);
-        for (int axis = 0; axis < 3; axis++) {
-            List<double[]> flat = new ArrayList<>(path.size());
-            for (double[] p : path) {
-                double[] q = p.clone();
-                q[axis] = planes[axis];
-                flat.add(q);
-            }
-            g.setStroke(c.deriveColor(0, 1, 1, (axis == 1 ? .42 : .26) * alpha));
-            polyline(flat);
+        List<double[]> flat = new ArrayList<>(path.size());
+        for (double[] p : path) {
+            double[] q = p.clone();
+            q[1] = planes[1];
+            flat.add(q);
         }
+        g.setLineWidth(1);
+        g.setStroke(c.deriveColor(0, 1, 1, .2 * alpha));
+        polyline(flat);
     }
 
     /** Une trajectoire tracée dans la boîte : un trait fin et lumineux. */
@@ -1539,7 +1540,7 @@ public final class SubRender {
         for (double[] p : dots) {
             double[] s = project(p);
             if (s == null) continue;
-            double r = Math.max(2.3, Math.min(4, .06 * s[3]));
+            double r = Math.max(1.1, Math.min(3.2, .05 * s[3]));
             g.setFill(c.deriveColor(0, 1, 1, .95 * alpha));
             g.fillOval(s[0] - r, s[1] - r, 2 * r, 2 * r);
             g.setFill(Color.WHITE.deriveColor(0, 1, 1, .85 * alpha));
@@ -1553,14 +1554,14 @@ public final class SubRender {
         double fy = backPlanes(b)[1];
         double[] a = project(p), foot = project(new double[]{p[0], fy, p[2]});
         if (a == null || foot == null) return;
-        g.setStroke(c.deriveColor(0, 1, 1, .4 * alpha));
+        g.setStroke(c.deriveColor(0, 1, 1, .16 * alpha));
         g.setLineWidth(1);
         g.setLineDashes(2, 4);
         g.strokeLine(a[0], a[1], foot[0], foot[1]);
         g.setLineDashes((double[]) null);
         double arm = Math.max(3, Math.min(7, .15 * foot[3]));
-        g.setStroke(c.deriveColor(0, 1, 1, .8 * alpha));
-        g.setLineWidth(1.3);
+        g.setStroke(c.deriveColor(0, 1, 1, .35 * alpha));
+        g.setLineWidth(1);
         double[] e1 = project(new double[]{p[0] + arm / Math.max(1e-6, foot[3]), fy, p[2]}), e2 = project(new double[]{p[0], fy, p[2] + arm / Math.max(1e-6, foot[3])});
         if (e1 != null) g.strokeLine(2 * foot[0] - e1[0], 2 * foot[1] - e1[1], e1[0], e1[1]);
         if (e2 != null) g.strokeLine(2 * foot[0] - e2[0], 2 * foot[1] - e2[1], e2[0], e2[1]);
@@ -1592,6 +1593,12 @@ public final class SubRender {
      */
     void polarFloor(double[] centre, double[] axis, double[] thetaDeg, double[] density, boolean log, double span, double radiusFm,
                     double chosenDeg, int side, Color c, double alpha) {
+        polarFloor(centre, axis, thetaDeg, density, log, span, radiusFm, chosenDeg, side, c, alpha, true);
+    }
+
+    /** `full` : avec l'échelle (cercles, rayons, angles, sens du faisceau) ; sinon la loi seule et la direction tirée. */
+    void polarFloor(double[] centre, double[] axis, double[] thetaDeg, double[] density, boolean log, double span, double radiusFm,
+                    double chosenDeg, int side, Color c, double alpha, boolean full) {
         if (thetaDeg.length < 2 || alpha <= .01 || radiusFm <= 0) return;
         double n = Math.hypot(axis[0], axis[2]);
         double[] u = n < 1e-6 ? new double[]{0, 0, 1} : new double[]{axis[0] / n, 0, axis[2] / n}, sd = {u[2], 0, -u[0]};
@@ -1600,10 +1607,10 @@ public final class SubRender {
             return log ? Math.max(0, 1 + Math.log10(Math.max(1e-12, d)) / Math.max(1, span)) : Math.max(0, d);
         };
         g.setLineCap(StrokeLineCap.ROUND);
-        g.setFont(Font.font("Consolas", 9.5));
+        g.setFont(Font.font(org.genesis.common.Plan.MONO, 9.5));
         g.setTextAlign(TextAlignment.CENTER);
         // les cercles de l'échelle
-        int rings = log ? (int) Math.floor(span + 1e-9) : 4;
+        int rings = !full ? -1 : log ? (int) Math.floor(span + 1e-9) : 4;
         for (int k = 0; k <= rings; k++) {
             double r = log ? radiusFm * (1 - k / span) : radiusFm * (1 - k / 4.0);
             if (r <= radiusFm * .04) continue;
@@ -1617,7 +1624,7 @@ public final class SubRender {
             }
         }
         // les rayons tous les 30°, des deux côtés
-        for (int a = 0; a <= 180; a += 30) {
+        for (int a = 0; full && a <= 180; a += 30) {
             double th = Math.toRadians(a);
             for (int sgn : new int[]{1, -1}) {
                 double[] dir = add(scale(u, Math.cos(th)), scale(sd, sgn * Math.sin(th)));
@@ -1652,23 +1659,24 @@ public final class SubRender {
             m++;
         }
         if (m > 2) {
-            g.setFill(c.deriveColor(0, 1, 1, .13 * alpha));
+            g.setFill(c.deriveColor(0, 1, 1, (full ? .13 : .05) * alpha));
             g.fillPolygon(xs, ys, m);
-            g.setStroke(c.deriveColor(0, 1, 1, .9 * alpha));
-            g.setLineWidth(1.6);
+            g.setStroke(c.deriveColor(0, 1, 1, (full ? .9 : .4) * alpha));
+            g.setLineWidth(full ? 1.6 : 1);
             g.strokePolygon(xs, ys, m);
         }
         // la direction de l'événement
         double th = Math.toRadians(chosenDeg), rc = radiusFm * shape.applyAsDouble(chosenDeg);
         double[] tip = add(centre, scale(add(scale(u, Math.cos(th)), scale(sd, side * Math.sin(th))), Math.max(rc, radiusFm * .08)));
-        g.setStroke(Color.WHITE.deriveColor(0, 1, 1, .9 * alpha));
-        g.setLineWidth(2.2);
+        g.setStroke(Color.WHITE.deriveColor(0, 1, 1, (full ? .9 : .5) * alpha));
+        g.setLineWidth(full ? 2.2 : 1.2);
         line3(centre, tip);
         double[] sp = project(tip);
-        if (sp != null) {
+        if (sp != null && full) {
             g.setFill(Color.WHITE.deriveColor(0, 1, 1, alpha));
             g.fillOval(sp[0] - 3, sp[1] - 3, 6, 6);
         }
+        if (!full) return;
         // le sens du faisceau
         double[] f0 = project(add(centre, scale(u, radiusFm * 1.02))), f1 = project(add(centre, scale(u, radiusFm * 1.3)));
         if (f0 != null && f1 != null) {
@@ -1713,10 +1721,10 @@ public final class SubRender {
                 double[] a = project(tail.get(k)), b = project(tail.get(k - 1));
                 if (a == null || b == null) continue;
                 double f = 1 - (along.get(k) + along.get(k - 1)) / 2 / Math.max(1e-9, lengthFm);
-                double w = Math.max(1, Math.min(18, Math.max(3.2, 2 * widthFm * b[3]) * Math.pow(f, .85)));
+                double w = Math.max(.8, Math.min(12, 2 * widthFm * b[3] * Math.pow(f, .85)));
                 if (pass == 0) {
-                    g.setStroke(c.deriveColor(0, 1, 1, .22 * alpha * f));
-                    g.setLineWidth(w * 2.6);
+                    g.setStroke(c.deriveColor(0, 1, 1, .12 * alpha * f));
+                    g.setLineWidth(w * 2);
                 } else {
                     g.setStroke(c.interpolate(Color.WHITE, .35 * f).deriveColor(0, 1, 1, .85 * alpha * f * f));
                     g.setLineWidth(w);
@@ -1727,7 +1735,7 @@ public final class SubRender {
         g.setGlobalBlendMode(BlendMode.SRC_OVER);
         double[] s = project(head);
         if (s == null) return;
-        double r = Math.max(5, Math.min(26, headFm * s[3]));
+        double r = Math.max(2, Math.min(16, headFm * s[3]));
         g.setGlobalBlendMode(BlendMode.ADD);
         g.setFill(new RadialGradient(0, 0, s[0], s[1], r, false, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.WHITE.deriveColor(0, 1, 1, .9 * alpha)), new Stop(.25, c.deriveColor(0, 1, 1, .7 * alpha)),
@@ -1740,17 +1748,9 @@ public final class SubRender {
     void floorRing(double[] centre, double radiusFm, Color c, double alpha) {
         if (alpha <= .01 || radiusFm <= .05) return;
         g.setLineCap(StrokeLineCap.ROUND);
-        g.setGlobalBlendMode(BlendMode.ADD);
-        g.setStroke(c.deriveColor(0, 1, 1, .25 * alpha));
-        g.setLineWidth(4);
-        polyline(flatCircle(centre, radiusFm, 72));
-        g.setGlobalBlendMode(BlendMode.SRC_OVER);
-        g.setStroke(c.deriveColor(0, 1, 1, .85 * alpha));
-        g.setLineWidth(1.3);
-        polyline(flatCircle(centre, radiusFm, 72));
-        g.setStroke(c.deriveColor(0, 1, 1, .35 * alpha));
+        g.setStroke(c.deriveColor(0, 1, 1, .32 * alpha));
         g.setLineWidth(1);
-        polyline(flatCircle(centre, radiusFm * .94, 72));
+        polyline(flatCircle(centre, radiusFm, 72));
     }
 
     /**
@@ -1789,7 +1789,7 @@ public final class SubRender {
             if (sp != null && sp[1] < best) { best = sp[1]; at = sp; }
         }
         if (at != null && label != null) {
-            g.setFont(Font.font("Consolas", 10));
+            g.setFont(Font.font(org.genesis.common.Plan.MONO, 10));
             g.setTextAlign(TextAlignment.LEFT);
             g.setFill(c.deriveColor(0, 1, 1, .9 * alpha));
             I18n.fillText(g, label, at[0] + 6, at[1] - 6);
@@ -1866,11 +1866,15 @@ public final class SubRender {
 
     /** Pose les étiquettes : à droite de leur objet si possible, sinon au-dessus, à gauche, en dessous ; jamais l'une sur l'autre. */
     void drawTags() {
+        if (compactTags) {
+            drawCompactTags();
+            return;
+        }
         if (flags) {
             drawFlags();
             return;
         }
-        Font bold = Font.font("Segoe UI", FontWeight.BOLD, 12), light = Font.font("Segoe UI", 11);
+        Font bold = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 12), light = Font.font(org.genesis.common.Plan.SANS, 11);
         for (Tag t : tags) {
             double tw = ReactorView.width(t.title(), bold) + (t.detail().isEmpty() ? 0 : ReactorView.width(t.detail(), light) + 14) + 22;
             double th = 24;
@@ -1897,9 +1901,9 @@ public final class SubRender {
             g.setLineWidth(1);
             if (Math.hypot(lx - t.x(), ly - t.y()) > t.r() + 4) g.strokeLine(t.x(), t.y(), lx, ly);
             g.setFill(Color.color(.03, .06, .11, .78 * t.alpha()));
-            g.fillRoundRect(spot[0], spot[1], tw, th, th, th);
+            g.fillRect(spot[0], spot[1], tw, th);
             g.setStroke(t.accent().deriveColor(0, 1, 1, .42 * t.alpha()));
-            g.strokeRoundRect(spot[0] + .5, spot[1] + .5, tw - 1, th - 1, th, th);
+            g.strokeRect(spot[0] + .5, spot[1] + .5, tw - 1, th - 1);
             g.setTextAlign(TextAlignment.LEFT);
             g.setFont(bold);
             g.setFill(Color.web("#EEF2FF").deriveColor(0, 1, 1, t.alpha()));
@@ -1918,7 +1922,7 @@ public final class SubRender {
      * de l'autre côté du poteau ; aucun ne recouvre un autre, ni l'en-tête, ni le tableau de bord.
      */
     private void drawFlags() {
-        Font bold = Font.font("Segoe UI", FontWeight.BOLD, 11.5), light = Font.font("Segoe UI", 10.5);
+        Font bold = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11.5), light = Font.font(org.genesis.common.Plan.SANS, 10.5);
         List<Tag> list = new ArrayList<>(tags);
         list.sort((a, b) -> Double.compare(a.x(), b.x()));
         for (Tag t : list) {
@@ -1974,6 +1978,169 @@ public final class SubRender {
                 I18n.fillText(g, t.detail(), spot[0] + 10, spot[1] + 28.5);
             }
         }
+    }
+
+    /**
+     * Les étiquettes discrètes : le nom seul, petit, à côté de son objet (sans cadre ni poteau) ; le détail s'affiche au
+     * survol de l'objet (voir drawHover). Deux noms ne se chevauchent jamais.
+     */
+    private void drawCompactTags() {
+        Font font = Font.font(org.genesis.common.Plan.SANS_SEMIBOLD, 11);
+        for (Tag t : tags) {
+            hits.add(new Hit(null, null, t.x(), t.y(), Math.max(9, t.r()), t.title(), lines(t.detail(), explain.apply(t.title())),
+                    t.accent(), 2));
+            double tw = ReactorView.width(t.title(), font), th = 13;
+            double gap = t.r() + 5;
+            double[][] spots = {{t.x() + gap, t.y() - gap - th}, {t.x() - gap - tw, t.y() - gap - th},
+                    {t.x() + gap, t.y() + gap}, {t.x() - gap - tw, t.y() + gap}};
+            double[] spot = null;
+            for (double[] c : spots) {
+                if (c[0] < left + 4 || c[0] + tw > width - 4 || c[1] < 4 || c[1] + th > height - 4) continue;
+                boolean clash = false;
+                for (double[] o : taken) if (c[0] < o[0] + o[2] && c[0] + tw > o[0] && c[1] < o[1] + o[3] && c[1] + th > o[1]) { clash = true; break; }
+                if (!clash) { spot = c; break; }
+            }
+            if (spot == null) continue;
+            taken.add(new double[]{spot[0], spot[1], tw, th});
+            g.setFont(font);
+            g.setTextAlign(TextAlignment.LEFT);
+            g.setFill(Color.color(.02, .04, .08, .55 * t.alpha()));
+            g.fillRect(spot[0] - 3, spot[1] - 1, tw + 6, th + 3);
+            g.setFill(t.accent().interpolate(Color.WHITE, .55).deriveColor(0, 1, 1, .95 * t.alpha()));
+            I18n.fillText(g, t.title(), spot[0], spot[1] + 10.5);
+        }
+    }
+
+    private static List<String> lines(String first, List<String> rest) {
+        List<String> out = new ArrayList<>();
+        if (first != null && !first.isEmpty()) out.add(first);
+        out.addAll(rest);
+        return out;
+    }
+
+    // ================================================================== le survol : ce qu'est chaque objet, au passage de la souris
+    /** Ce qu'on peut survoler : une ligne (xs, ys à l'écran) ou un disque (cx, cy, radius) ; rank : priorité (objet > ligne > sol). */
+    record Hit(double[] xs, double[] ys, double cx, double cy, double radius, String title, List<String> lines, Color accent, int rank) {}
+
+    private final List<Hit> hits = new ArrayList<>();
+    /** La souris (−1 : hors de la scène) ; l'objet survolé à l'image précédente (pour dessiner un objet en détail). */
+    double hoverX = -1, hoverY = -1;
+    Hit hovered;
+    /** Les noms en petit, le détail au survol (plutôt que des panneaux sur poteaux). */
+    boolean compactTags;
+    /** L'explication d'un objet d'après son nom (ajoutée sous son détail, au survol). */
+    java.util.function.Function<String, List<String>> explain = title -> List.of();
+
+    /** Une ligne survolable : son chemin (fm), son nom, ce qu'elle montre. */
+    void hitPath(List<double[]> path, String title, List<String> lines, Color c) {
+        double[] xs = new double[path.size()], ys = new double[path.size()];
+        int n = 0;
+        for (double[] p : path) {
+            double[] sp = project(p);
+            if (sp == null) continue;
+            xs[n] = sp[0];
+            ys[n] = sp[1];
+            n++;
+        }
+        if (n < 2) return;
+        hits.add(new Hit(java.util.Arrays.copyOf(xs, n), java.util.Arrays.copyOf(ys, n), 0, 0, 0, title, lines, c, 1));
+    }
+
+    /** Une zone posée au sol (un diagramme) : survolée dans le disque de rayon radiusFm autour de centre. */
+    void hitDisc(double[] centre, double radiusFm, String title, List<String> lines, Color c) {
+        double[] a = project(centre);
+        if (a == null) return;
+        hits.add(new Hit(null, null, a[0], a[1], Math.max(14, radiusFm * a[3] * .8), title, lines, c, 0));
+    }
+
+    /** Une zone de l'écran (px) survolable : un texte posé sur la scène, comme « En savoir plus ». */
+    void hitScreen(double x, double y, double radius, String title, List<String> lines, Color c) {
+        hits.add(new Hit(null, null, x, y, radius, title, lines, c, 3));
+    }
+
+    /** Ce qui est sous la souris : l'objet le plus prioritaire, puis le plus proche. */
+    private Hit pick() {
+        if (hoverX < 0) return null;
+        Hit best = null;
+        double bestDistance = 1e9;
+        for (Hit h : hits) {
+            double d;
+            if (h.xs() != null) {
+                d = 1e9;
+                for (int i = 1; i < h.xs().length; i++) d = Math.min(d, segment(hoverX, hoverY, h.xs()[i - 1], h.ys()[i - 1], h.xs()[i], h.ys()[i]));
+                if (d > 7) continue;
+            } else {
+                d = Math.hypot(hoverX - h.cx(), hoverY - h.cy());
+                if (d > h.radius() + 4) continue;
+            }
+            if (best == null || h.rank() > best.rank() || h.rank() == best.rank() && d < bestDistance) {
+                best = h;
+                bestDistance = d;
+            }
+        }
+        return best;
+    }
+
+    private static double segment(double px, double py, double ax, double ay, double bx, double by) {
+        double dx = bx - ax, dy = by - ay, len2 = dx * dx + dy * dy;
+        double t = len2 < 1e-9 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
+        return Math.hypot(px - ax - t * dx, py - ay - t * dy);
+    }
+
+    /** L'objet survolé, mis en évidence, et sa fiche à côté de la souris : son nom, son détail, ce qu'il montre. */
+    void drawHover() {
+        hovered = pick();
+        if (hovered == null) return;
+        Hit h = hovered;
+        g.setLineCap(StrokeLineCap.ROUND);
+        if (h.xs() != null) {
+            g.setStroke(h.accent().interpolate(Color.WHITE, .5).deriveColor(0, 1, 1, .95));
+            g.setLineWidth(2.4);
+            g.strokePolyline(h.xs(), h.ys(), h.xs().length);
+        } else if (h.rank() > 0 && h.rank() < 3) {
+            g.setStroke(h.accent().interpolate(Color.WHITE, .5).deriveColor(0, 1, 1, .9));
+            g.setLineWidth(1.4);
+            g.strokeOval(h.cx() - h.radius() - 3, h.cy() - h.radius() - 3, 2 * h.radius() + 6, 2 * h.radius() + 6);
+        }
+        Font title = org.genesis.common.Plan.semibold(12.5), text = org.genesis.common.Plan.sans(12);
+        double maxWidth = 300, pad = 10;
+        List<String> wrapped = new ArrayList<>();
+        for (String line : h.lines()) if (line != null && !line.isBlank()) wrapped.addAll(wrapText(I18n.text(line), text, maxWidth - 2 * pad));
+        double w = ReactorView.width(h.title(), title) + 2 * pad;
+        for (String line : wrapped) w = Math.max(w, ReactorView.width(line, text) + 2 * pad);
+        w = Math.min(maxWidth, w);
+        double hgt = 2 * pad + 16 + wrapped.size() * 16;
+        double x = hoverX + 16, y = hoverY + 14;
+        if (x + w > width - 6) x = hoverX - 16 - w;
+        if (y + hgt > height - 6) y = Math.max(6, hoverY - 14 - hgt);
+        x = Math.max(left + 6, x);
+        org.genesis.common.Plan.frame(g, x, y, w + 10, hgt, org.genesis.common.Plan.RAISED.deriveColor(0, 1, 1, .97));
+        // La couleur de l'objet : un point devant son nom (un filet au bord ne suivrait pas les coins arrondis).
+        g.setFill(h.accent());
+        g.fillOval(x + pad, y + pad + 4.5, 6, 6);
+        g.setTextAlign(TextAlignment.LEFT);
+        g.setFont(title);
+        g.setFill(org.genesis.common.Plan.INK);
+        I18n.fillText(g, h.title(), x + pad + 11, y + pad + 11);
+        g.setFont(text);
+        g.setFill(org.genesis.common.Plan.INK2);
+        for (int i = 0; i < wrapped.size(); i++) g.fillText(wrapped.get(i), x + pad, y + pad + 12 + 16 * (i + 1));
+    }
+
+    private static List<String> wrapText(String text, Font font, double maxWidth) {
+        List<String> out = new ArrayList<>();
+        StringBuilder line = new StringBuilder();
+        for (String word : text.split(" ")) {
+            String trial = line.length() == 0 ? word : line + " " + word;
+            if (line.length() > 0 && ReactorView.width(trial, font) > maxWidth) {
+                out.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(trial);
+            }
+        }
+        if (line.length() > 0) out.add(line.toString());
+        return out;
     }
 
     /** Une zone déjà occupée à l'écran (sous-titre, pastilles…) : les étiquettes l'éviteront. */
