@@ -1,6 +1,13 @@
-# Genesis — Atomic Simulator
+# Genesis — Quantum Physics & Chemistry Simulator
 
-**English** · [Français](README.fr.md)
+**English** · [Français](README.fr.md) · [Downloads for Windows, macOS and Linux](https://github.com/Lightminedust/genesis-releases)
+
+Atoms, molecules, reaction mechanisms drawn on paper and computed (GFN1-xTB), nuclear fusion and the subatomic world.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Lightminedust/genesis-releases/main/images/molecules.jpg" alt="Caffeine in the molecular laboratory, its polarization halo coloured by the computed charges" width="49%">
+  <img src="https://raw.githubusercontent.com/Lightminedust/genesis-releases/main/images/path.jpg" alt="The replay of a computed Diels–Alder step, the forming C–C bonds glowing with their Mayer bond order" width="49%">
+</p>
 
 An atom that lives by the rules of physics. The engine runs time; at every
 instant it applies the rules, and whatever happens follows from them: an
